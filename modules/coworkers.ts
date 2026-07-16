@@ -1,5 +1,13 @@
-import { Check, FileSpreadsheet, FileText, ReceiptText } from "lucide-react";
+import { Check, FileSpreadsheet, FileText, ReceiptText, Sparkles } from "lucide-react";
 import type { CoworkerDefinition } from "./types";
+
+export const bioazHelperCoworker: CoworkerDefinition = {
+  id: "bioaz-helper",
+  name: "BioAZ Helper",
+  icon: Sparkles,
+  description: "识别任务意图并分派给合适的数字同事",
+  owner: "默认入口",
+};
 
 export const dmpkQuotationCoworker: CoworkerDefinition = {
   id: "dmpk-quotation-coworker",

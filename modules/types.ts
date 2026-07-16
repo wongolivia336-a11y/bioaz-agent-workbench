@@ -41,6 +41,7 @@ export type QuickStartDefinition = {
   label: string;
   prompt: string;
   icon: LucideIcon;
+  availability?: ModuleAvailability;
 };
 
 export type StageDefinition = {
@@ -78,6 +79,7 @@ export type AgentModuleSessionProps = {
   activeCoworkerId: string;
   onCoworkerChange: (coworkerId: string) => void;
   onBackToNewTask: () => void;
+  handoffNotice?: string;
 };
 
 export type AgentModuleDefinition = {

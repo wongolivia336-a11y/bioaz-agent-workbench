@@ -19,7 +19,7 @@ export const dmpkQuotationModule: AgentModuleDefinition = {
     },
   ],
   quickStarts: [
-    { id: "dmpk-quotation", label: "发起 DMPK 报价", prompt: "我要发起一份 DMPK 报价", icon: FileSpreadsheet },
+    { id: "dmpk-quotation", label: "DMPK 报价", prompt: "我要发起一份 DMPK 报价", icon: FileSpreadsheet },
   ],
   stages: [
     { id: "identify", label: "识别业务线" },

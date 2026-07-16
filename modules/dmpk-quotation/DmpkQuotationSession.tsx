@@ -18,13 +18,12 @@ import {
   DmpkArtifactPreviewModal,
   DmpkComposer,
   DmpkConversation,
-  DmpkParameterPanel,
   DmpkQuotationPreviewModal,
   type DmpkChatMessage,
   type DmpkInspectorPanelId,
 } from "./views";
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, handoffNotice }: AgentModuleSessionProps) {
   const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
@@ -35,9 +34,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [previewOpen, setPreviewOpen] = useState(false);
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [inspectorPinned, setInspectorPinned] = useState(false);
-  const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
+  const [inspectorPinned, setInspectorPinned] = useState(true);
+  const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("parameters");
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
   const startedInitialRequest = useRef(false);
 
   const missingFields = useMemo(() => fields.filter((field) => field.required && !field.value), [fields]);
@@ -165,11 +165,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <section className="dmpkWorkspace">
         <header className="topbar"><div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div></header>
         <header className="agentHeader"><div className="agentTitle"><span className="agentIcon pending"><ActiveCoworkerIcon size={18} /></span><span>{activeCoworker?.name ?? "DMPK报价同事"}</span></div></header>
-        <div className="dmpkChatScroller"><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={coworkers} activeCoworkerId={activeCoworkerId} onCoworkerChange={onCoworkerChange} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
+        <div className="dmpkChatScroller"><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
+        <DmpkComposer stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={coworkers} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
-      <aside className={`dmpkPanel ${inspectorPinned ? "hasPinnedInspector" : ""}`}>
-        <DmpkParameterPanel fields={fields} activeGroup={activeGroup} openGroups={openGroups} completedCount={completedCount} totalRequired={totalRequired} stage={stage} onToggle={(id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }))} onEdit={requestFieldEdit} />
+      <aside className={`dmpkPanel moduleInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}>
         <WorkbenchInspector panels={inspectorPanels} activePanelId={inspectorPanelId} open={inspectorOpen} pinned={inspectorPinned} onOpenChange={setInspectorOpen} onPinnedChange={setInspectorPinned} onPanelChange={(panelId) => setInspectorPanelId(panelId as DmpkInspectorPanelId)} />
       </aside>
       {previewOpen ? <DmpkQuotationPreviewModal fields={fields} onClose={() => setPreviewOpen(false)} /> : null}

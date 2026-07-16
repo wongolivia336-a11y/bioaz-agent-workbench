@@ -863,3 +863,219 @@ textarea {
     animation: none;
   }
 }
+
+/* Integrated module pass: one inspector, shared composer, and contextual file assistant. */
+.taskExampleGrid {
+  width: min(860px, 100%);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.taskExampleGrid button:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.taskExampleGrid button:disabled:hover {
+  border-color: #e1e5eb;
+  background: #fff;
+}
+
+.taskExampleGrid button small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.contextDivider {
+  display: grid;
+  grid-template-columns: minmax(24px, 1fr) auto minmax(24px, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.contextDivider::before,
+.contextDivider::after {
+  height: 1px;
+  background: var(--line);
+  content: "";
+}
+
+.coworkerSwitchCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 13px 14px;
+  box-shadow: 0 12px 34px rgba(17, 19, 24, 0.07);
+}
+
+.coworkerSwitchCard > div { display: grid; gap: 2px; }
+.coworkerSwitchCard span,
+.coworkerSwitchCard p,
+.coworkerSwitchCard > small { color: var(--muted); font-size: 11px; }
+.coworkerSwitchCard p { margin: 0; }
+.coworkerSwitchCard > small { grid-column: 1 / -1; }
+
+.dmpkComposer:has(.composerAddButton) {
+  grid-template-columns: 40px minmax(0, 1fr) 52px;
+}
+
+.composerAddButton {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  align-self: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--body);
+  cursor: pointer;
+}
+
+.composerAddButton:hover { background: var(--surface); color: var(--ink); }
+.composerAddButton input { display: none; }
+
+.inspectorParameterGroup {
+  display: grid;
+  gap: 2px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+
+.inspectorParameterGroup > header {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inspectorParameterGroup > header strong { font-size: 13px; }
+.inspectorParameterGroup > header span { color: var(--muted); font-size: 11px; }
+.inspectorParameterGroup > button {
+  display: grid;
+  min-height: 36px;
+  grid-template-columns: 90px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--body);
+  padding: 0 6px;
+  text-align: left;
+}
+.inspectorParameterGroup > button:hover { background: var(--surface); }
+.inspectorParameterGroup > button strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.inspectorParameterGroup > button strong.empty { color: var(--muted); font-weight: 500; }
+
+.tumorConversation { padding-bottom: 10px; }
+.tumorActionCard {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.98);
+  padding: 14px 16px;
+  box-shadow: 0 12px 34px rgba(17,19,24,0.07);
+}
+.tumorActionCard > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tumorActionCard > header > div { display: grid; gap: 2px; }
+.tumorActionCard > header span,
+.tumorActionCard > header small { color: var(--muted); font-size: 11px; }
+.tumorActionCard > header strong { font-size: 15px; }
+.tumorActionCard > p { margin: 0; color: var(--body); font-size: 12px; line-height: 1.55; }
+.tumorActionCard > footer { display: flex; justify-content: flex-end; gap: 8px; }
+.tumorActionCard > footer > button:not(.primaryButton) { border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--body); padding: 0 12px; font-size: 12px; }
+.tumorMaterialChecks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tumorMaterialChecks span { display: flex; min-width: 0; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 8px; color: var(--body); padding: 9px 10px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tumorMaterialChecks span.done { background: #f3faf6; color: #287a4f; }
+
+.tumorActivity {
+  display: grid;
+  width: min(620px, 100%);
+  gap: 8px;
+  border-left: 2px solid #d7dce3;
+  padding: 6px 0 6px 16px;
+}
+.tumorActivity header,
+.tumorActivity span { display: flex; align-items: center; gap: 8px; }
+.tumorActivity header strong { font-size: 13px; }
+.tumorActivity span { color: var(--body); font-size: 12px; }
+.tumorActivity .spin { animation: inspectorSpin 900ms linear infinite; }
+
+.tumorArtifactCards { display: grid; width: min(720px, 100%); gap: 8px; }
+.tumorArtifactCards > header { display: flex; align-items: center; justify-content: space-between; }
+.tumorArtifactCards > header button { border: 0; background: transparent; color: var(--bioaz-blue); font-size: 12px; }
+.tumorArtifactCards article { display: grid; grid-template-columns: 34px minmax(0,1fr) 34px; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 12px; }
+.tumorArtifactCards article > div { display: grid; gap: 3px; }
+.tumorArtifactCards article span { color: var(--muted); font-size: 11px; }
+.tumorArtifactCards article button { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+
+.tumorInspectorList { display: grid; gap: 10px; }
+.tumorPanelIntro { display: grid; gap: 3px; padding-bottom: 4px; }
+.tumorPanelIntro strong { font-size: 15px; }
+.tumorPanelIntro span { color: var(--muted); font-size: 11px; }
+.tumorMaterialRow,
+.tumorRiskRow,
+.tumorReviewRow,
+.tumorArtifactRow { display: grid; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 10px; }
+.tumorMaterialRow { grid-template-columns: 20px minmax(0,1fr) auto; }
+.tumorMaterialRow > div,
+.tumorArtifactRow > div,
+.tumorReviewRow > div,
+.tumorRiskRow > div { display: grid; min-width: 0; gap: 3px; }
+.tumorMaterialRow small,
+.tumorArtifactRow small,
+.tumorReviewRow small,
+.tumorRiskRow small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.tumorMaterialRow > span { color: var(--muted); font-size: 10px; }
+.tumorMaterialRow > span.ready { color: #2f8f5b; }
+.tumorInspectorNote { border-left: 2px solid #cfd5dd; color: var(--body); padding: 4px 10px; font-size: 11px; line-height: 1.5; }
+.tumorRiskRow { grid-template-columns: 38px minmax(0,1fr); }
+.tumorRiskRow > span { color: #9b6b16; font-size: 11px; font-weight: 700; }
+.tumorRiskRow em { grid-column: 2; color: var(--body); font-size: 10px; font-style: normal; }
+.tumorReviewRow { grid-template-columns: 22px minmax(0,1fr) auto; }
+.tumorReviewRow > span { display: grid; width: 20px; height: 20px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); }
+.tumorReviewRow > span.confirmed { border-color: #b7dec8; background: #edf8f1; color: #2f8f5b; }
+.tumorReviewRow em { color: var(--muted); font-size: 10px; font-style: normal; }
+.tumorArtifactRow { width: 100%; grid-template-columns: 22px minmax(0,1fr) 18px; text-align: left; }
+
+.tumorPreviewBody { display: grid; min-height: 360px; place-items: center; align-content: center; gap: 10px; padding: 44px; text-align: center; }
+.tumorPreviewBody > span { display: grid; width: 56px; height: 56px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.tumorPreviewBody h3,
+.tumorPreviewBody p { margin: 0; }
+.tumorPreviewBody p { color: var(--muted); }
+.tumorPreviewBody > div { display: grid; width: min(520px,100%); grid-template-columns: 120px minmax(0,1fr); gap: 12px; border-top: 1px solid var(--line); padding: 12px 0; text-align: left; font-size: 12px; }
+
+.libraryAssistant { right: 0; bottom: 26px; left: 0; width: 100%; justify-items: center; }
+.libraryAssistant .workspaceAssistantLauncher { width: auto; min-width: 164px; height: 46px; grid-auto-flow: column; gap: 9px; border-radius: 23px; padding: 0 18px; }
+.libraryAssistant .workspaceAssistantLauncher span { font-size: 13px; font-weight: 650; }
+.assistantBackdrop { position: fixed; z-index: 80; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(17,19,24,0.16); backdrop-filter: blur(2px); }
+.libraryAssistant .workspaceAssistantPanel { position: fixed; z-index: 85; top: 50%; left: 50%; width: min(680px, calc(100vw - 40px)); max-height: min(620px, calc(100vh - 80px)); transform: translate(-50%, -50%); border-radius: 16px; }
+.libraryAssistant .workspaceAssistantBody { min-height: 380px; padding: 28px; }
+.assistantHeroMark { display: grid; width: 52px; height: 52px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.assistantHeroMark img { width: 31px; }
+.libraryAssistant .assistantWelcome { justify-items: center; text-align: center; }
+.libraryAssistant .assistantSuggestions { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.libraryAssistant .assistantSuggestions button { min-height: 86px; align-content: space-between; text-align: left; }
+.libraryAssistant .assistantSuggestions button svg { color: var(--body); }
+.assistantReferences { display: grid; gap: 8px; }
+.assistantReferences button { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 11px 12px; text-align: left; }
+.assistantReferences button span { display: grid; gap: 2px; }
+.assistantReferences button small { color: var(--muted); font-size: 11px; }
+
+@media (max-width: 1100px) {
+  .taskExampleGrid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+@media (max-width: 760px) {
+  .tumorMaterialChecks,
+  .libraryAssistant .assistantSuggestions { grid-template-columns: 1fr; }
+  .libraryAssistant .workspaceAssistantPanel { top: 20px; bottom: 20px; width: calc(100vw - 24px); max-height: none; transform: translateX(-50%); }
+}

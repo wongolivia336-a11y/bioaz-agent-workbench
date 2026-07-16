@@ -10,7 +10,7 @@ export const qaReviewModule: AgentModuleDefinition = {
   availability: "placeholder",
   suggestedCoworker: qaReviewCoworker,
   supportedIntents: [{ id: "qa-review", label: "QA 审核", examples: ["复核报告交付包"], keywords: /qa|审核|复核|检查.*交付包|交付包.*检查/i }],
-  quickStarts: [{ id: "qa-review", label: "复核交付包", prompt: "我要复核一份报告交付包", icon: Check }],
+  quickStarts: [{ id: "qa-review", label: "QA 审核", prompt: "我要复核一份报告交付包", icon: Check, availability: "placeholder" }],
   stages: [{ id: "placeholder", label: "暂未接入" }],
   composerActions: [],
   artifacts: [],

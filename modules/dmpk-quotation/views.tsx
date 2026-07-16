@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, ChevronDown, Edit3, Eye, FileSpreadsheet, FileText, Send, X } from "lucide-react";
+import { Check, ChevronDown, Edit3, Eye, FileSpreadsheet, FileText, Plus, Send, X } from "lucide-react";
 import { useState } from "react";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
+import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
 import type { CoworkerDefinition } from "../types";
 import {
   dmpkFieldOptions,
@@ -15,12 +16,13 @@ import {
   type DmpkStage,
 } from "./fields";
 
-export type DmpkInspectorPanelId = "process" | "materials" | "gaps" | "evidence" | "artifacts" | "review";
+export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "review";
 export type DmpkChatMessage = { id: string; role: "user" | "agent"; text: string };
 
-export function DmpkConversation({ messages, stage, currentMissing, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
+export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
   return (
     <div className="dmpkConversation">
+      {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
       {messages.map((message) => message.role === "agent" ? <AgentReply key={message.id}>{message.text}</AgentReply> : <UserBubble key={message.id} text={message.text} />)}
       {stage !== "idle" ? (
         <DmpkActivityChain
@@ -65,14 +67,20 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ stage, text, setText, activeGroup, fields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, activeCoworkerId, onCoworkerChange, disabled }: { stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; disabled: boolean }) {
+export function DmpkComposer({ stage, text, setText, activeGroup, fields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled }: { stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean }) {
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const currentCoworker = coworkers.find((item) => item.id === activeCoworkerId);
+  const pendingCoworker = coworkers.find((item) => item.id === pendingCoworkerId);
   return (
     <footer className="dmpkComposerWrap">
       {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} draftTabs={draftTabs} mode={mode} onSelect={onSelect} /> : null}
       {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} /> : null}
+      {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} onChange={onCoworkerChange} />
       <div className="dmpkComposer">
+        <label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple onChange={(event) => { setAttachments(Array.from(event.target.files ?? []).map((file) => file.name)); event.target.value = ""; }} /></label>
         <div className="composerInputStack">
+          {attachments.length ? <div className="draftTabs">{attachments.map((name) => <button type="button" key={name} onClick={() => setAttachments((items) => items.filter((item) => item !== name))}>{name}<X size={13} /></button>)}</div> : null}
           {draftTabs.length ? <div className="draftTabs">{draftTabs.map((tab) => <button type="button" key={tab.fieldId} onClick={() => onRemove(tab.fieldId)}>{tab.label}：{tab.value}<X size={13} /></button>)}</div> : null}
           <input value={text} onChange={(event) => setText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") onSend(); }} placeholder={draftTabs.length ? "" : stage === "idle" ? "例如：PK小分子，SD大鼠，每组2只，2组，试验周期1周，周期内3个非加班时间点" : ""} />
         </div>

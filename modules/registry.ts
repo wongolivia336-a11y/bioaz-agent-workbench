@@ -1,14 +1,24 @@
 import { dmpkQuotationModule } from "./dmpk-quotation";
+import { qaReviewModule } from "./qa-review";
+import { tumorQuotationModule } from "./tumor-quotation";
 import { tumorReportModule } from "./tumor-report";
+import { bioazHelperCoworker } from "./coworkers";
 import type { AgentModuleDefinition, IntentResolution } from "./types";
 
 export const moduleRegistry: AgentModuleDefinition[] = [
   dmpkQuotationModule,
   tumorReportModule,
+  tumorQuotationModule,
+  qaReviewModule,
 ];
 
-export const coworkerRegistry = moduleRegistry.map((module) => module.suggestedCoworker);
-export const quickStartRegistry = moduleRegistry.flatMap((module) => module.quickStarts.map((quickStart) => ({ ...quickStart, moduleId: module.moduleId })));
+export const availableModuleRegistry = moduleRegistry.filter((module) => module.availability === "available");
+export const coworkerRegistry = [bioazHelperCoworker, ...availableModuleRegistry.map((module) => module.suggestedCoworker)];
+export const quickStartRegistry = moduleRegistry.flatMap((module) => module.quickStarts.map((quickStart) => ({
+  ...quickStart,
+  moduleId: module.moduleId,
+  availability: module.availability,
+})));
 
 export function getAgentModule(moduleId: string) {
   return moduleRegistry.find((module) => module.moduleId === moduleId) ?? null;
@@ -19,7 +29,7 @@ export function getModuleForCoworker(coworkerId: string) {
 }
 
 export function resolveModuleIntent(text: string): IntentResolution {
-  const matches = moduleRegistry.filter((module) => module.supportedIntents.some((intent) => intent.keywords.test(text)));
+  const matches = availableModuleRegistry.filter((module) => module.supportedIntents.some((intent) => intent.keywords.test(text)));
   if (matches.length === 1) return { module: matches[0], confidence: "matched" };
   if (matches.length > 1) {
     return {

@@ -12,6 +12,7 @@ import {
   FileText,
   History,
   ListChecks,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   resolveInspectorPanels,
@@ -67,10 +68,17 @@ const withError = (
 
 const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> = [
   {
+    id: "parameters",
+    label: "参数收集",
+    icon: SlidersHorizontal,
+    defaultWhen: (context) => context.stage !== "generated",
+    state: (context) => withError(context),
+    render: (context) => <ParametersPanel context={context} />,
+  },
+  {
     id: "process",
     label: "处理过程",
     icon: ListChecks,
-    defaultWhen: (context) => context.stage !== "generated",
     state: (context) => withError(
       context,
       context.stage === "thinking" || context.stage === "generating" ? "loading" : "populated",
@@ -149,6 +157,14 @@ function ProcessPanel({ context }: { context: DmpkInspectorContext }) {
       ))}
     </div>
   );
+}
+
+function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
+  const completed = context.fields.filter((field) => field.value).length;
+  return <div className="dmpkInspectorList"><PanelIntro title={`${completed}/${context.fields.length} 项已确认`} meta="计价参数会随对话实时更新" />{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
+    const fields = context.fields.filter((field) => field.group === group);
+    return <section className="inspectorParameterGroup" key={group}><header><strong>{groupLabels[group]}</strong><span>{fields.every((field) => field.value) ? "已完成" : group === context.activeGroup ? "进行中" : "待填写"}</span></header>{fields.map((field) => <button type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong className={field.value ? "" : "empty"}>{field.value || "待填写"}</strong><Edit3 size={13} /></button>)}</section>;
+  })}</div>;
 }
 
 function MaterialsPanel({ context }: { context: DmpkInspectorContext }) {
