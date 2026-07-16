@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, ChevronRight, FileSpreadsheet, SlidersHorizontal } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
 import type { AgentModuleSessionProps } from "../types";
@@ -28,14 +28,15 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
   const [draftTabs, setDraftTabs] = useState<DmpkDraftTab[]>([]);
-  const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest ? [{ id: "initial-request", role: "user", text: initialRequest }] : [{ id: "context", role: "agent", text: `已打开“${taskTitle}”。可以继续补充要求或查看相关项目文件。` }]);
+  const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest ? [{ id: "initial-request", role: "user", text: initialRequest }] : [{ id: "context", role: "agent", text: "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。" }]);
   const [composerText, setComposerText] = useState("");
   const [stage, setStage] = useState<DmpkStage>("idle");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [inspectorPinned, setInspectorPinned] = useState(true);
-  const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("parameters");
+  const [inspectorPinned, setInspectorPinned] = useState(false);
+  const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
+  const [parametersExpanded, setParametersExpanded] = useState(true);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
   const startedInitialRequest = useRef(false);
@@ -159,6 +160,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     onPreviewArtifact: setArtifactPreview,
     onPreviewQuotation: () => setPreviewOpen(true),
   });
+  const parameterPanel = inspectorPanels.find((panel) => panel.id === "parameters");
+  const secondaryInspectorPanels = inspectorPanels.filter((panel) => panel.id !== "parameters");
 
   return (
     <>
@@ -168,8 +171,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         <div className="dmpkChatScroller"><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={coworkers} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
-      <aside className={`dmpkPanel moduleInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}>
-        <WorkbenchInspector panels={inspectorPanels} activePanelId={inspectorPanelId} open={inspectorOpen} pinned={inspectorPinned} onOpenChange={setInspectorOpen} onPinnedChange={setInspectorPinned} onPanelChange={(panelId) => setInspectorPanelId(panelId as DmpkInspectorPanelId)} />
+      <aside className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}>
+        <section className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""}`}>
+          <button type="button" aria-expanded={parametersExpanded} onClick={() => setParametersExpanded((current) => !current)}>
+            <span><SlidersHorizontal size={16} /><strong>参数收集</strong></span>
+            <span>{completedCount}/{fields.length}<ChevronDown size={15} /></span>
+          </button>
+          {parametersExpanded ? <div className="persistentParameterBody">{parameterPanel?.content}</div> : null}
+        </section>
+        <div className="secondaryInspectorSlot">
+          <WorkbenchInspector panels={secondaryInspectorPanels} activePanelId={inspectorPanelId} open={inspectorOpen} pinned={inspectorPinned} onOpenChange={setInspectorOpen} onPinnedChange={setInspectorPinned} onPanelChange={(panelId) => setInspectorPanelId(panelId as DmpkInspectorPanelId)} />
+        </div>
       </aside>
       {previewOpen ? <DmpkQuotationPreviewModal fields={fields} onClose={() => setPreviewOpen(false)} /> : null}
       {artifactPreview ? <DmpkArtifactPreviewModal kind={artifactPreview} onClose={() => setArtifactPreview(null)} /> : null}

@@ -49,6 +49,23 @@ export default function WorkbenchShell() {
   const confirmDispatch = () => { if (!pendingModule || !pendingRequest) return; setProject((current) => current ?? "临时任务"); setTaskTitle(`${pendingModule.moduleName}任务`); setActiveModule(pendingModule); setActiveCoworkerId(pendingModule.suggestedCoworker.id); setInitialRequest(pendingRequest); setHandoffNotice(`BioAZ Helper 已将任务分派给${pendingModule.suggestedCoworker.name}`); setActiveTaskId(null); setPendingModule(null); setPendingRequest(null); setRoute("module"); };
   const cancelDispatch = () => { setText(pendingRequest ?? ""); setPendingRequest(null); setPendingModule(null); };
 
+  const startModuleDirect = (moduleId: string) => {
+    const module = getAgentModule(moduleId);
+    if (!module || module.availability !== "available") return;
+    setProject((current) => current ?? "临时任务");
+    setTaskTitle(`${module.moduleName}任务`);
+    setActiveTaskId(null);
+    setActiveModule(module);
+    setActiveCoworkerId(module.suggestedCoworker.id);
+    setInitialRequest(undefined);
+    setHandoffNotice(undefined);
+    setText("");
+    setClarification(null);
+    setPendingRequest(null);
+    setPendingModule(null);
+    setRoute("module");
+  };
+
   const openTask = (task: WorkbenchTask) => { const module = getAgentModule(task.moduleId); if (!module) return; setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setActiveModule(module); setActiveCoworkerId(task.coworkerId); setInitialRequest(undefined); setHandoffNotice(undefined); setRoute("module"); };
   const changeCoworker = (coworkerId: string) => {
     if (coworkerId === "bioaz-helper") { resetNewTask(project); return; }
@@ -62,6 +79,6 @@ export default function WorkbenchShell() {
   const Session = activeModule?.Session;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"}`}>
     <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onToggleCollapsed={() => setCollapsed((value) => !value)} />
-    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="breadcrumb">{route === "tasks" ? <><span>我的任务</span><ChevronRight size={15} /><strong>待处理</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onActiveCoworkerChange={setActiveCoworkerId} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
+    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="breadcrumb">{route === "tasks" ? <><span>我的任务</span><ChevronRight size={15} /><strong>待处理</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }

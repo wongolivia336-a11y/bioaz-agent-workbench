@@ -974,6 +974,65 @@ textarea {
 .inspectorParameterGroup > button strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .inspectorParameterGroup > button strong.empty { color: var(--muted); font-weight: 500; }
 
+.dmpkInspectorRail {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+  gap: 12px;
+  overflow: hidden;
+  padding: 16px 14px;
+}
+
+.persistentParameterCard {
+  display: grid;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.persistentParameterCard > button {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  background: #fff;
+  color: var(--ink);
+  padding: 0 14px;
+}
+
+.persistentParameterCard > button:hover { background: var(--surface); }
+.persistentParameterCard > button > span { display: flex; align-items: center; gap: 8px; }
+.persistentParameterCard > button > span:last-child { color: var(--muted); font-size: 11px; }
+.persistentParameterCard > button svg:last-child { transition: transform 160ms ease; }
+.persistentParameterCard.isExpanded > button svg:last-child { transform: rotate(180deg); }
+
+.persistentParameterBody {
+  min-height: 0;
+  max-height: min(50vh, 520px);
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+  padding: 12px 14px 14px;
+  scrollbar-gutter: stable;
+}
+
+.persistentParameterBody .dmpkInspectorIntro { display: none; }
+.secondaryInspectorSlot { position: relative; min-height: 0; }
+.secondaryInspectorSlot .workbenchInspector.isPinned { height: 100%; }
+
+.dmpkInspectorRail:not(.hasPinnedInspector) .secondaryInspectorSlot {
+  min-height: 0;
+}
+
+.dmpkInspectorRail.hasPinnedInspector .secondaryInspectorSlot {
+  display: grid;
+  min-height: 220px;
+}
+
 .tumorConversation { padding-bottom: 10px; }
 .tumorActionCard {
   display: grid;
@@ -1070,6 +1129,91 @@ textarea {
 .assistantReferences button span { display: grid; gap: 2px; }
 .assistantReferences button small { color: var(--muted); font-size: 11px; }
 
+.libraryAssistant .workspaceAssistantLauncher {
+  width: min(420px, calc(100% - 48px));
+  height: 58px;
+  justify-content: center;
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(17, 19, 24, 0.12);
+}
+
+.libraryAssistant .libraryAssistantWorkspace {
+  position: fixed;
+  z-index: 85;
+  inset: 0 0 0 280px;
+  display: grid;
+  width: auto;
+  max-height: none;
+  grid-template-rows: 64px auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  transform: none;
+  box-shadow: none;
+}
+
+.sidebarCollapsed .libraryAssistant .libraryAssistantWorkspace { left: 72px; }
+
+.libraryAssistant .libraryAssistantWorkspace > header {
+  border-bottom: 1px solid var(--line);
+  padding: 0 28px;
+}
+
+.assistantBackButton {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--body);
+}
+
+.assistantBackButton:hover { border-color: var(--line-strong); color: var(--ink); }
+
+.assistantContextBar {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  padding: 9px 28px;
+}
+
+.assistantContextBar span {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--body);
+  padding: 6px 9px;
+  font-size: 11px;
+}
+
+.libraryAssistant .libraryAssistantWorkspace .workspaceAssistantBody {
+  display: grid;
+  width: min(860px, 100%);
+  min-height: 0;
+  align-content: center;
+  justify-self: center;
+  overflow-y: auto;
+  padding: 44px 32px 28px;
+}
+
+.libraryAssistant .libraryAssistantWorkspace .assistantWelcome strong { font-size: 28px; }
+.libraryAssistant .libraryAssistantWorkspace .assistantWelcome p { max-width: 520px; }
+.libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer {
+  width: min(900px, calc(100% - 48px));
+  justify-self: center;
+  margin: 0 24px 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08);
+}
+
 @media (max-width: 1100px) {
   .taskExampleGrid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
@@ -1077,5 +1221,6 @@ textarea {
 @media (max-width: 760px) {
   .tumorMaterialChecks,
   .libraryAssistant .assistantSuggestions { grid-template-columns: 1fr; }
-  .libraryAssistant .workspaceAssistantPanel { top: 20px; bottom: 20px; width: calc(100vw - 24px); max-height: none; transform: translateX(-50%); }
+  .libraryAssistant .workspaceAssistantPanel:not(.libraryAssistantWorkspace) { top: 20px; bottom: 20px; width: calc(100vw - 24px); max-height: none; transform: translateX(-50%); }
+  .libraryAssistant .libraryAssistantWorkspace { left: 72px; }
 }
