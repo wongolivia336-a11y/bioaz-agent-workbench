@@ -1024,6 +1024,11 @@ textarea {
 .secondaryInspectorSlot { position: relative; min-height: 0; }
 .secondaryInspectorSlot .workbenchInspector.isPinned { height: 100%; }
 
+.dmpkInspectorRail .secondaryInspectorSlot .workbenchInspector:not(.isPinned) {
+  top: var(--dmpk-secondary-top, 142px);
+  max-height: calc(100vh - var(--dmpk-secondary-top, 142px) - 24px);
+}
+
 .dmpkInspectorRail:not(.hasPinnedInspector) .secondaryInspectorSlot {
   min-height: 0;
 }
@@ -1073,6 +1078,25 @@ textarea {
   align-items: start;
   gap: 12px;
   margin: 0 auto 18px;
+}
+
+.legacyInitialRequest {
+  display: flex;
+  width: min(760px, 100%);
+  justify-content: flex-end;
+  margin: 0 auto 18px;
+}
+
+.legacyInitialRequest p {
+  max-width: min(620px, 84%);
+  margin: 0;
+  border: 1px solid #dce2ea;
+  border-radius: 13px 13px 3px 13px;
+  background: #f7f9fc;
+  color: var(--ink);
+  padding: 11px 14px;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .legacyTumorOpening img {
@@ -1188,7 +1212,7 @@ textarea {
 .tumorPreviewBody p { color: var(--muted); }
 .tumorPreviewBody > div { display: grid; width: min(520px,100%); grid-template-columns: 120px minmax(0,1fr); gap: 12px; border-top: 1px solid var(--line); padding: 12px 0; text-align: left; font-size: 12px; }
 
-.libraryAssistant { right: 0; bottom: 26px; left: 0; width: 100%; justify-items: center; }
+.libraryAssistant { right: 0; bottom: 26px; left: 0; width: 100%; align-items: center; }
 .libraryAssistant .workspaceAssistantLauncher { width: auto; min-width: 164px; height: 46px; grid-auto-flow: column; gap: 9px; border-radius: 23px; padding: 0 18px; }
 .libraryAssistant .workspaceAssistantLauncher span { font-size: 13px; font-weight: 650; }
 .assistantBackdrop { position: fixed; z-index: 80; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(17,19,24,0.16); backdrop-filter: blur(2px); }
@@ -1204,6 +1228,29 @@ textarea {
 .assistantReferences button { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 11px 12px; text-align: left; }
 .assistantReferences button span { display: grid; gap: 2px; }
 .assistantReferences button small { color: var(--muted); font-size: 11px; }
+
+.knowledgeFileCell {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.fileContextToggle {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: #fff;
+  color: #fff;
+}
+
+.fileContextToggle:hover { border-color: #7f8a9b; }
+.fileContextToggle[aria-pressed="true"] { border-color: #344054; background: #344054; }
+.knowledgeFileRow.contextSelected { background: #f8fafc; }
 
 .libraryAssistant .workspaceAssistantLauncher {
   width: min(420px, calc(100% - 48px));
@@ -1292,6 +1339,14 @@ textarea {
 
 @media (max-width: 1100px) {
   .taskExampleGrid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+
+  .dmpkShell.dmpk-quotationModuleShell {
+    grid-template-columns: minmax(190px, 22vw) minmax(360px, 1fr) minmax(300px, 34vw);
+  }
+
+  .dmpk-quotationModuleShell .dmpkPanel {
+    display: grid;
+  }
 }
 
 @media (max-width: 760px) {

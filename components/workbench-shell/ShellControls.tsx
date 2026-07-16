@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, BookOpen, Check, ChevronDown, FileSearch, FolderKanban, MessageSquare, Send, Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 export function CompactSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
@@ -23,6 +23,16 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext }: { c
   const suggestions = context === "tasks" ? ["列出我待处理的任务", "按项目整理当前任务", "发起一份 DMPK 报价"] : ["查找样本9相关文件", "找到最新 DMPK 报价规则", "整理当前项目交付物"];
   const submit = (value: string) => { const next = value.trim(); if (!next) return; setQuestion(next); setText(""); if (/DMPK.*报价|报价.*DMPK/i.test(next)) onStartTask?.(); };
   const library = context === "library";
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
   return (
     <div className={`workspaceAssistant ${library ? "libraryAssistant" : ""} ${open ? "isOpen" : ""}`}>
       {open ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronRight, FileSpreadsheet, SlidersHorizontal } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
 import type { AgentModuleSessionProps } from "../types";
 import {
@@ -39,7 +39,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [parametersExpanded, setParametersExpanded] = useState(true);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
+  const [secondaryInspectorTop, setSecondaryInspectorTop] = useState(142);
   const startedInitialRequest = useRef(false);
+  const parameterCardRef = useRef<HTMLElement>(null);
 
   const missingFields = useMemo(() => fields.filter((field) => field.required && !field.value), [fields]);
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
@@ -77,6 +79,24 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     startedInitialRequest.current = true;
     handleInitialRequest(initialRequest, true);
   }, [initialRequest]);
+
+  useEffect(() => {
+    const parameterCard = parameterCardRef.current;
+    if (!parameterCard) return;
+
+    const updateInspectorTop = () => {
+      setSecondaryInspectorTop(Math.ceil(parameterCard.getBoundingClientRect().bottom + 12));
+    };
+    updateInspectorTop();
+
+    const observer = new ResizeObserver(updateInspectorTop);
+    observer.observe(parameterCard);
+    window.addEventListener("resize", updateInspectorTop);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateInspectorTop);
+    };
+  }, []);
 
   const addDraft = (field: DmpkField, value: string) => {
     setDraftTabs((items) => [...items.filter((item) => item.fieldId !== field.id), { fieldId: field.id, label: field.label, value }]);
@@ -171,8 +191,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         <div className="dmpkChatScroller"><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={coworkers} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
-      <aside className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}>
-        <section className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""}`}>
+      <aside
+        className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}
+        style={{ "--dmpk-secondary-top": `${secondaryInspectorTop}px` } as CSSProperties}
+      >
+        <section ref={parameterCardRef} className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""}`}>
           <button type="button" aria-expanded={parametersExpanded} onClick={() => setParametersExpanded((current) => !current)}>
             <span><SlidersHorizontal size={16} /><strong>参数收集</strong></span>
             <span>{completedCount}/{fields.length}<ChevronDown size={15} /></span>
