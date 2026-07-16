@@ -1710,7 +1710,7 @@ function ReviewLaunchPanel({
   onOpenArtifacts: () => void;
 }) {
   return (
-    <article className="warningDecision reviewDecision stackDecision">
+    <article className="warningDecision reviewDecision">
       <div className="warningDecisionHeader">
         <div>
           <span>专家小队审核</span>
@@ -1754,20 +1754,14 @@ function WarningDecisionPanel({
   const pendingWarnings = warnings.filter((item) => !item.accepted);
 
   return (
-    <article
-      className={`warningDecision stackDecision ${expanded ? "isPinned" : ""}`}
-      onClick={(event) => {
-        if ((event.target as HTMLElement).closest("button")) return;
-        onToggleExpanded();
-      }}
-    >
-      <div className="warningDecisionHeader">
+    <article className={`warningDecision stackDecision ${expanded ? "isPinned" : ""}`}>
+      <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>需要确认的 warning</span>
           <strong>校验可继续，但需要授权用户接受风险</strong>
         </div>
-        <small>{acceptedCount}/{warnings.length}</small>
-      </div>
+        <small>{acceptedCount}/{warnings.length}<ChevronRight size={14} /></small>
+      </button>
       <div className="warningDecisionList">
         {pendingWarnings.slice(0, 3).map((item, index) => {
           const detail = warningEvidence(item.id);
@@ -1849,20 +1843,14 @@ function ReviewDecisionPanel({
   const pendingReviews = reviews.filter((item) => item.status === "pending").slice(0, 3);
 
   return (
-    <article
-      className={`warningDecision reviewDecision stackDecision ${expanded ? "isPinned" : ""}`}
-      onClick={(event) => {
-        if ((event.target as HTMLElement).closest("button")) return;
-        onToggleExpanded();
-      }}
-    >
-      <div className="warningDecisionHeader">
+    <article className={`warningDecision reviewDecision stackDecision ${expanded ? "isPinned" : ""}`}>
+      <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>专家建议确认</span>
           <strong>专家小队已完成检查，需要你处理关键建议</strong>
         </div>
-        <small>{confirmedCount}/{reviews.length}</small>
-      </div>
+        <small>{confirmedCount}/{reviews.length}<ChevronRight size={14} /></small>
+      </button>
       <div className="warningDecisionList">
         {pendingReviews.map((item, index) => {
           const detail = reviewEvidence(item.id);

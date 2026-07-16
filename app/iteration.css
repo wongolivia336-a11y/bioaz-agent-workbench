@@ -1133,6 +1133,29 @@ textarea {
   backdrop-filter: none;
 }
 
+.decisionExpandHeader {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.decisionExpandHeader small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.decisionExpandHeader svg {
+  transition: transform 160ms ease;
+}
+
+.stackDecision.isPinned .decisionExpandHeader svg {
+  transform: rotate(90deg);
+}
+
 .tumorConversation { padding-bottom: 10px; }
 .tumorActionCard {
   display: grid;
