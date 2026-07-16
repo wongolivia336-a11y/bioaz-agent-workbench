@@ -14,14 +14,12 @@ The Session receives only Shell context:
 - active coworker and change callback
 - return-to-new-task callback
 
-## Current Modules
+## Active Modules
 
 - `dmpk-quotation`: connected implementation, including fields, flow, business views, mock data, and Inspector renderers
-- `tumor-report`: placeholder
-- `tumor-quotation`: placeholder
-- `qa-review`: placeholder
+- `tumor-report`: integration target; its standalone business flow is being migrated into the shared Shell
 
-Placeholders are intentional. They preserve navigation and dispatch semantics without pretending the business flow exists.
+`tumor-quotation` and `qa-review` remain roadmap definitions only. They are not registered, shown in the coworker selector, or exposed as quick starts.
 
 ## Adding A Module
 

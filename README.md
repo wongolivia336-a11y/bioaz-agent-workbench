@@ -1,6 +1,6 @@
 # BioAZ Agent Workbench
 
-Reusable Next.js workbench shell with DMPK quotation as the first connected agent module.
+Reusable Next.js workbench shell for two active business modules: DMPK quotation and tumor report.
 
 This repository is for design review, user-flow validation, and engineering handoff. It is not production backend code.
 
@@ -72,7 +72,7 @@ If a previous failed deployment configured `dist`, `out`, or another output dire
   Reusable Inspector container and public types.
 
 - `modules/`
-  Agent module registry and business-owned flows. DMPK quotation is connected; tumor report, tumor quotation, and QA review are explicit placeholders.
+  Agent module registry and business-owned flows. DMPK quotation is connected and tumor report is the current integration branch.
 
 - `lib/`
   Mock data, workflow helpers, type definitions, and API contract shape.

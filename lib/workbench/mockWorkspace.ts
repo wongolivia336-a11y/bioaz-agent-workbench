@@ -13,7 +13,7 @@ export const workspacePinCatalog: PinItem[] = [
   ...workspaceProjects.map((project) => ({ id: project.id, type: "project" as const, title: project.name })),
   { id: "task-sample9", type: "task", title: "样本 9 双批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "36 分钟前", status: "pending" },
   { id: "task-balbc", type: "task", title: "Balb/c nude 报价", project: workspaceProjects[0].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done" },
-  { id: "task-qa", type: "task", title: "报告交付包 QA复核", project: workspaceProjects[0].name, moduleId: "qa-review", coworkerId: "qa-review-coworker", coworkerName: "QA审核同事", time: "1 小时前", status: "done" },
+  { id: "task-report-7", type: "task", title: "样本 7 单批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "1 小时前", status: "done" },
   { id: "task-new-quote", type: "task", title: "新建报价任务", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "刚刚", status: "running" },
   { id: "task-ba", type: "task", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done" },
   { id: "task-temp", type: "task", title: "内部试跑报价模型对比", project: "临时任务", moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "今天", status: "running" },
@@ -21,14 +21,14 @@ export const workspacePinCatalog: PinItem[] = [
 
 export const workspaceTasks: TaskCollection = {
   actionRequired: [
-    { id: "task-qa", title: "报告交付包 QA复核 · 等你审核", project: workspaceProjects[0].name, moduleId: "qa-review", coworkerId: "qa-review-coworker", coworkerName: "QA审核同事", time: "2小时前", status: "待我处理" },
+    { id: "task-report-7", title: "样本 7 单批次报告 · 等你确认", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "2小时前", status: "待我处理" },
     { id: "task-balbc", title: "Balb/c nude 报价 · 需要补充参数", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "昨天", status: "待补充" },
-    { id: "task-ct26", title: "CT26 交付包 · 待确认最终版", project: workspaceProjects[2].name, moduleId: "qa-review", coworkerId: "qa-review-coworker", coworkerName: "QA审核同事", time: "3天前", status: "待确认" },
+    { id: "task-ct26", title: "CT26 项目报价 · 待确认", project: workspaceProjects[2].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3天前", status: "待确认" },
   ],
   all: [
     { id: "task-sample9", title: "样本9 双批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "36分钟前", status: "处理中" },
     { id: "task-ba", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3天前", status: "已完成" },
-    { id: "task-qa", title: "报告交付包 QA复核", project: workspaceProjects[0].name, moduleId: "qa-review", coworkerId: "qa-review-coworker", coworkerName: "QA审核同事", time: "1小时前", status: "待审核" },
+    { id: "task-report-7", title: "样本 7 单批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "1小时前", status: "待确认" },
     { id: "task-temp", title: "内部试跑报价模型对比", project: "临时任务", moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "今天", status: "临时任务" },
   ],
 };
@@ -42,5 +42,4 @@ export const initialKnowledgeFiles: KnowledgeFile[] = [
   { id: "file-dmpk-dict", title: "DMPK_报价参数字典.xlsx", project: "组织规则", space: "rules", kind: "参数字典", business: "DMPK报价", owner: "规则管理员", updated: "7月8日", status: "已发布", agentReady: true },
   { id: "file-dmpk-template", title: "DMPK_报价单模板.docx", project: "组织规则", space: "rules", kind: "产出模板", business: "DMPK报价", owner: "规则管理员", updated: "7月6日", status: "已发布", agentReady: true },
   { id: "file-template", title: "肿瘤药效报告模板.docx", project: "组织规则", space: "rules", kind: "报告模板", business: "药效报告", owner: "规则管理员", updated: "7月5日", status: "已发布", agentReady: true },
-  { id: "file-qa", title: "QA_交付包检查清单.xlsx", project: "组织规则", space: "rules", kind: "审核清单", business: "QA审核", owner: "QA审核同事", updated: "7月2日", status: "已发布", agentReady: true },
 ];

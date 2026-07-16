@@ -1,5 +1,11 @@
 # Changelog
 
+## Tumor Report Integration Preparation
+
+- Limited the active module Registry to DMPK quotation and tumor report.
+- Added repository, deployment, and tumor migration boundaries for the canonical Workbench.
+- Removed QA and tumor quotation references from active task and file-manager mock data.
+
 ## Workbench Shell Phase 1
 
 - Established an independent BioAZ Agent Workbench repository and feature branch.
