@@ -3,8 +3,8 @@ import "./globals.css";
 import "./iteration.css";
 
 export const metadata: Metadata = {
-  title: "BioAZ Tumor Report Agent",
-  description: "Pengli tumor report agent workbench prototype",
+  title: "BioAZ Agent Workbench",
+  description: "Reusable BioAZ workbench shell and agent modules",
 };
 
 export default function RootLayout({

@@ -1,13 +1,16 @@
 # Agent Instructions
 
-This file applies to `prototype-agent-workbench`.
+This file applies to `prototype-bioaz-agent-workbench`.
 
 ## Project Boundaries
 
 - This is a clickable Next.js frontend prototype, not production backend code.
 - Do not change UI, visual style, or interaction behavior unless the user explicitly asks for it.
-- Main UI files are `components/ReportWorkbench.tsx` and `app/globals.css`.
-- Mock data and types live in `lib/`.
+- The product composition root is `components/workbench-shell/WorkbenchShell.tsx`.
+- Shared Inspector mechanics live in `components/workbench-inspector/`.
+- Business flows and renderers live in `modules/<module-id>/`.
+- Workspace mock data and shared types live in `lib/workbench/`.
+- Do not put business fields or stage checks in Shell components.
 
 ## Run and Validate
 
@@ -17,7 +20,7 @@ This file applies to `prototype-agent-workbench`.
 ```powershell
 $env:npm_config_cache='D:\.cache\npm'
 npm run typecheck
-npm run dev -- --port 4196
+npm run dev -- --port 3001
 ```
 
 - Use `npm run typecheck` as the default validation check for code changes.

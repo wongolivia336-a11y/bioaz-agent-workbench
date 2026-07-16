@@ -1,12 +1,12 @@
-# DMPK Agent Prototype
+# BioAZ Agent Workbench
 
-Clickable Next.js prototype for a DMPK quotation agent workspace.
+Reusable Next.js workbench shell with DMPK quotation as the first connected agent module.
 
 This repository is for design review, user-flow validation, and engineering handoff. It is not production backend code.
 
 ## Preview
 
-- GitHub remote: https://github.com/wongolivia336-a11y/dmpk-agent.git
+- Local phase-one branch: `codex/workbench-shell-phase-1`
 - Vercel: import this repository as a Next.js project.
 
 ## Quick Start
@@ -65,8 +65,14 @@ If a previous failed deployment configured `dist`, `out`, or another output dire
 - `app/`
   Next.js App Router entry files. `app/page.tsx` renders the prototype screen and `app/globals.css` contains the visual system.
 
-- `components/`
-  React UI components. The main workbench prototype currently lives in `components/DmpkQuotationWorkbench.tsx`.
+- `components/workbench-shell/`
+  Product shell: sidebar, task entry, Helper routing, task list, file manager, and shared controls.
+
+- `components/workbench-inspector/`
+  Reusable Inspector container and public types.
+
+- `modules/`
+  Agent module registry and business-owned flows. DMPK quotation is connected; tumor report, tumor quotation, and QA review are explicit placeholders.
 
 - `lib/`
   Mock data, workflow helpers, type definitions, and API contract shape.
@@ -87,7 +93,7 @@ If a previous failed deployment configured `dist`, `out`, or another output dire
 
 ## Prototype Scope
 
-- Mock data only
+- DMPK flow and workspace mock data only
 - No backend APIs
 - No authentication
 - No database

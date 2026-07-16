@@ -1,5 +1,13 @@
 # Changelog
 
+## Workbench Shell Phase 1
+
+- Established an independent BioAZ Agent Workbench repository and feature branch.
+- Extracted sidebar, new-task routing, BioAZ Helper dispatch, task list, and file manager into the reusable Shell.
+- Moved DMPK fields, flow, views, mock data, and Inspector renderers into the DMPK quotation module.
+- Added registry-driven digital coworkers and explicit placeholders for tumor report, tumor quotation, and QA review.
+- Preserved the existing DMPK visual baseline and interaction density.
+
 Important project iterations are recorded here. Process notes and older drafts live in `docs/archive/`.
 
 ## 2026-07-10

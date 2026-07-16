@@ -1,0 +1,34 @@
+import { Check, FileSpreadsheet, FileText, ReceiptText } from "lucide-react";
+import type { CoworkerDefinition } from "./types";
+
+export const dmpkQuotationCoworker: CoworkerDefinition = {
+  id: "dmpk-quotation-coworker",
+  name: "DMPK报价同事",
+  icon: FileSpreadsheet,
+  description: "收集参数、匹配规则并生成报价产物",
+  owner: "SD助理可调用",
+};
+
+export const tumorReportCoworker: CoworkerDefinition = {
+  id: "tumor-report-coworker",
+  name: "药效报告同事",
+  icon: FileText,
+  description: "整理原始数据并撰写肿瘤药效报告",
+  owner: "SD助理可调用",
+};
+
+export const tumorQuotationCoworker: CoworkerDefinition = {
+  id: "tumor-quotation-coworker",
+  name: "肿瘤报价同事",
+  icon: ReceiptText,
+  description: "识别肿瘤项目范围并生成报价",
+  owner: "SD助理可调用",
+};
+
+export const qaReviewCoworker: CoworkerDefinition = {
+  id: "qa-review-coworker",
+  name: "QA审核同事",
+  icon: Check,
+  description: "复核交付包完整性并追溯证据",
+  owner: "QA助理可调用",
+};
