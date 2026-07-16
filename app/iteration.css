@@ -1033,6 +1033,82 @@ textarea {
   min-height: 220px;
 }
 
+.dmpkShell.tumor-reportModuleShell {
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.dmpkShell.tumor-reportModuleShell.sidebarCollapsed {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
+
+.dmpkShell.tumor-reportModuleShell:has(.inspector.isPinned) {
+  grid-template-columns: 280px minmax(0, 1fr) 400px;
+}
+
+.dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.isPinned) {
+  grid-template-columns: 72px minmax(0, 1fr) 400px;
+}
+
+.tumor-reportModuleShell .legacyTumorWorkspace {
+  min-width: 0;
+  grid-template-rows: 58px 68px minmax(0, 1fr) auto;
+}
+
+.tumor-reportModuleShell .inspector.isPinned {
+  position: relative;
+  z-index: 1;
+  top: auto;
+  right: auto;
+  width: 100%;
+  max-height: 100vh;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.legacyTumorOpening {
+  display: grid;
+  width: min(760px, 100%);
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  margin: 0 auto 18px;
+}
+
+.legacyTumorOpening img {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 6px;
+}
+
+.legacyTumorOpening p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.legacyComposerStack {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid rgba(230, 232, 235, 0.78);
+  background: rgba(255, 255, 255, 0.94);
+  padding: 10px min(12vw, 250px) 14px;
+  backdrop-filter: blur(14px);
+}
+
+.legacyComposerStack > .coworkerSelector { justify-self: start; }
+.legacyComposerStack > .coworkerSwitchCard { width: min(660px, 100%); }
+.legacyComposerStack .composerShell {
+  position: static;
+  border-top: 0;
+  background: transparent;
+  padding: 0;
+  backdrop-filter: none;
+}
+
 .tumorConversation { padding-bottom: 10px; }
 .tumorActionCard {
   display: grid;

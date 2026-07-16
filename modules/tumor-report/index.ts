@@ -1,7 +1,7 @@
 import { FileText } from "lucide-react";
 import { tumorReportCoworker } from "../coworkers";
 import type { AgentModuleDefinition } from "../types";
-import TumorReportSession from "./TumorReportSession";
+import LegacyTumorReportWorkbench from "./LegacyTumorReportWorkbench";
 
 export const tumorReportModule: AgentModuleDefinition = {
   moduleId: "tumor-report",
@@ -17,5 +17,5 @@ export const tumorReportModule: AgentModuleDefinition = {
   requiredFiles: [{ id: "protocol", label: "实验方案", required: true }, { id: "data", label: "原始数据", required: true }],
   validationRules: [{ id: "statistics", label: "统计口径一致" }, { id: "events", label: "异常事件闭环" }],
   handoffNotes: ["上传入口由共享 Composer 提供", "Warning 必须由用户确认", "专家建议确认后才能交付"],
-  Session: TumorReportSession,
+  Session: LegacyTumorReportWorkbench,
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { coworkerRegistry, getAgentModule, getModuleForCoworker, quickStartRegistry, resolveModuleIntent } from "../../modules/registry";
 import type { AgentModuleDefinition, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
 import { FileManager } from "./FileManager";
@@ -66,6 +66,13 @@ export default function WorkbenchShell() {
     setRoute("module");
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const moduleId = params.get("module");
+    if (moduleId) startModuleDirect(moduleId);
+    if (params.get("view") === "library") setRoute("library");
+  }, []);
+
   const openTask = (task: WorkbenchTask) => { const module = getAgentModule(task.moduleId); if (!module) return; setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setActiveModule(module); setActiveCoworkerId(task.coworkerId); setInitialRequest(undefined); setHandoffNotice(undefined); setRoute("module"); };
   const changeCoworker = (coworkerId: string) => {
     if (coworkerId === "bioaz-helper") { resetNewTask(project); return; }
@@ -77,7 +84,7 @@ export default function WorkbenchShell() {
 
   const shellView = route !== "module";
   const Session = activeModule?.Session;
-  return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"}`}>
+  return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
     <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onToggleCollapsed={() => setCollapsed((value) => !value)} />
     {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="breadcrumb">{route === "tasks" ? <><span>我的任务</span><ChevronRight size={15} /><strong>待处理</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
