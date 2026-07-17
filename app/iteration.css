@@ -429,32 +429,46 @@ textarea {
 .projectFolderStrip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 14px;
+  margin-bottom: 28px;
 }
 
 .projectFolderStrip button {
   display: grid;
   min-width: 0;
-  min-height: 58px;
-  grid-template-columns: 24px minmax(0, 1fr) 18px;
+  min-height: 112px;
+  grid-template-columns: 42px minmax(0, 1fr) 20px;
   align-items: center;
-  gap: 9px;
-  border: 1px solid #e4e7ec;
-  border-radius: 9px;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
   background: #fff;
-  padding: 9px 11px;
+  padding: 18px 20px;
   color: #475467;
   text-align: left;
+  transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
-.projectFolderStrip button:hover {
-  border-color: #c8ced8;
-  background: #f9fafb;
+.projectFolderStrip button:hover,
+.projectFolderStrip button:focus-visible {
+  border-color: rgba(41, 67, 255, 0.3);
+  background: rgba(41, 67, 255, 0.025);
+  box-shadow: 0 14px 34px rgba(17, 19, 24, 0.08), 0 0 0 4px rgba(41, 67, 255, 0.055), 0 0 26px rgba(41, 67, 255, 0.09);
+  transform: translateY(-2px);
+  outline: none;
 }
 
 .projectFolderStrip button > svg:first-child {
-  color: #667085;
+  width: 32px;
+  height: 32px;
+  color: #52627a;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.projectFolderStrip button:hover > svg:first-child,
+.projectFolderStrip button:focus-visible > svg:first-child {
+  color: var(--brand);
+  transform: scale(1.04);
 }
 
 .projectFolderStrip button > svg:last-child {
@@ -474,7 +488,8 @@ textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #1d2939;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .projectFolderStrip small {
@@ -1575,6 +1590,9 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer {
   width: min(900px, calc(100% - 48px));
   min-height: 64px;
+  grid-template-columns: 40px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 8px;
   justify-self: center;
   margin: 0 24px 24px;
   border: 1px solid var(--line-strong);
@@ -1590,6 +1608,15 @@ button.inspectorParameterField:hover { background: var(--surface); }
   border: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer > input {
+  height: 42px;
+  padding: 0 8px;
+}
+
+.libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer .composerAddButton input {
+  display: none;
 }
 
 .taskWorkbenchView > header > .primaryButton { display: none; }
@@ -1785,7 +1812,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   width: 24px;
   min-width: 24px;
   height: 24px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .parameterTaskCard .decisionCopy {
