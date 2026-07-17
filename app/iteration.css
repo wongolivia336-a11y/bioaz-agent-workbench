@@ -1222,15 +1222,17 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 .tumor-reportModuleShell .inspector.pinned {
-  position: relative;
+  position: sticky;
   z-index: 1;
-  top: auto;
+  top: 86px;
   right: auto;
-  width: 100%;
-  max-height: 100vh;
-  border-width: 0 0 0 1px;
-  border-radius: 0;
-  box-shadow: none;
+  width: calc(100% - 20px);
+  height: min(620px, calc(100vh - 110px));
+  max-height: min(620px, calc(100vh - 110px));
+  align-self: start;
+  margin: 0 12px 0 8px;
+  border-radius: 14px;
+  box-shadow: 0 14px 38px rgba(17, 19, 24, 0.08);
 }
 
 .legacyTumorOpening {
@@ -1279,6 +1281,11 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .legacyTumorOpening.isCompact {
   margin-top: 4px;
 }
+.uploadReadyNotice { align-items: center; border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 13px 14px; box-shadow: 0 10px 28px rgba(17,19,24,0.05); }
+.uploadReadyNotice > div { display: grid; gap: 3px; }
+.uploadReadyNotice strong { font-size: 14px; }
+.uploadReadyNotice p { color: var(--body); font-size: 12px; line-height: 1.45; }
+.uploadReadyNotice button { width: fit-content; border: 0; background: transparent; color: var(--brand); padding: 3px 0 0; font-size: 12px; font-weight: 650; }
 
 .legacyComposerStack {
   display: grid;
@@ -1445,8 +1452,9 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .assistantHeroMark img { width: 44px; height: 38px; object-fit: contain; }
 .libraryAssistant .assistantWelcome { justify-items: center; text-align: center; }
 .libraryAssistant .assistantSuggestions { grid-template-columns: repeat(3, minmax(0,1fr)); }
-.libraryAssistant .assistantSuggestions button { min-height: 86px; align-content: space-between; text-align: left; }
-.libraryAssistant .assistantSuggestions button svg { color: var(--body); }
+.libraryAssistant .assistantSuggestions button { min-height: 118px; align-content: center; justify-items: start; gap: 18px; text-align: left; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.libraryAssistant .assistantSuggestions button svg { width: 25px; height: 25px; color: var(--brand); }
+.libraryAssistant .assistantSuggestions button:hover { border-color: rgba(41,67,255,0.28); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(17,19,24,0.08), 0 0 0 4px rgba(41,67,255,0.06), 0 0 24px rgba(41,67,255,0.09); }
 .assistantReferences { display: grid; gap: 8px; }
 .assistantReferences button { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 11px 12px; text-align: left; }
 .assistantReferences button span { display: grid; gap: 2px; }
@@ -1459,10 +1467,19 @@ button.inspectorParameterField:hover { background: var(--surface); }
   align-items: center;
 }
 .knowledgeFileCell.hasSelection { grid-template-columns: 18px minmax(0, 1fr); gap: 7px; }
-.deliveryToggle { display: grid; width: 16px; height: 16px; place-items: center; border: 1px solid var(--line-strong); border-radius: 4px; background: #fff; color: #fff; }
+.deliveryToggle { display: grid; box-sizing: border-box; width: 16px; min-width: 16px; height: 16px; place-items: center; border: 1px solid var(--line-strong); border-radius: 4px; background: #fff; color: #fff; padding: 0; line-height: 0; }
 .deliveryToggle[aria-pressed="true"] { border-color: var(--ink-soft); background: var(--ink-soft); }
-.projectFileLanes { display: grid; gap: 24px; }
-.projectFileLane { display: grid; gap: 10px; }
+.deliveryToggle svg { display: block; width: 11px; height: 11px; margin: 0; }
+.projectFileLanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; }
+.projectFileLane { display: grid; min-width: 0; gap: 10px; border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 16px; }
+.projectFileLane .knowledgeTableHeader,
+.projectFileLane .knowledgeFileRow { grid-template-columns: minmax(0, 1fr) 72px 28px; }
+.projectFileLane .knowledgeTableHeader > span:nth-child(2),
+.projectFileLane .knowledgeTableHeader > span:nth-child(3),
+.projectFileLane .knowledgeFileRow > span:nth-child(2),
+.projectFileLane .knowledgeFileRow > span:nth-child(3) { display: none; }
+.projectFileLane .knowledgeTableHeader > span:nth-child(4) { grid-column: 2; }
+.projectFileLane .knowledgeTableHeader > span:nth-child(5) { grid-column: 3; }
 .projectLaneHeader { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .projectLaneHeader > div { display: grid; gap: 3px; }
 .projectLaneHeader strong { font-size: 15px; }
@@ -1472,6 +1489,9 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .businessOutputGroup h3 { margin: 4px 0 0; color: var(--body); font-size: 12px; font-weight: 650; }
 .projectBackButton { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 5px; }
 .projectKnowledgeToolbar { justify-content: flex-start; }
+@media (max-width: 1180px) {
+  .projectFileLanes { grid-template-columns: 1fr; }
+}
 
 .libraryAssistant .workspaceAssistantLauncher {
   width: min(420px, calc(100% - 48px));
@@ -1522,7 +1542,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   min-height: 52px;
   align-items: center;
   gap: 7px;
-  overflow-x: auto;
+  overflow: visible;
   border-bottom: 1px solid var(--line);
   padding: 9px 28px;
 }
@@ -1557,6 +1577,8 @@ button.inspectorParameterField:hover { background: var(--surface); }
   border-radius: 14px;
   box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08);
 }
+.assistantContextBar .compactSelect { position: relative; z-index: 3; }
+.assistantContextBar .compactSelectMenu { z-index: 20; }
 
 .libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer input,
 .libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer input:focus {
