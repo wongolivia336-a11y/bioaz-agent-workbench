@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
 export type ModuleAvailability = "available" | "placeholder";
+export type ModuleRunStatus = "active" | "completed";
 export type WorkbenchRoute = "newTask" | "tasks" | "library" | "module";
 
 export type WorkbenchProject = {
@@ -78,6 +79,7 @@ export type AgentModuleSessionProps = {
   coworkers: CoworkerDefinition[];
   activeCoworkerId: string;
   onCoworkerChange: (coworkerId: string) => void;
+  onRunStatusChange: (status: ModuleRunStatus) => void;
   onBackToNewTask: () => void;
   handoffNotice?: string;
 };

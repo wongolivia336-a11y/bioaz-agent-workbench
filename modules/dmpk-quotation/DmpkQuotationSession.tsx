@@ -23,7 +23,7 @@ import {
   type DmpkInspectorPanelId,
 } from "./views";
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, handoffNotice }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice }: AgentModuleSessionProps) {
   const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
@@ -49,7 +49,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const composerFields = editingField ? [editingField].filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id)) : visibleCardFields;
   const completedCount = fields.filter((field) => field.value).length;
   const totalRequired = fields.filter((field) => field.required).length;
-  const activeCoworker = coworkers.find((coworker) => coworker.id === activeCoworkerId) ?? coworkers[0];
+  const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
+  const activeCoworker = businessCoworkers.find((coworker) => coworker.id === activeCoworkerId) ?? businessCoworkers[0];
   const ActiveCoworkerIcon = activeCoworker?.icon ?? FileSpreadsheet;
 
   const appendMessage = (role: DmpkChatMessage["role"], text: string) => {
@@ -79,6 +80,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     startedInitialRequest.current = true;
     handleInitialRequest(initialRequest, true);
   }, [initialRequest]);
+
+  useEffect(() => {
+    onRunStatusChange(stage === "generated" ? "completed" : "active");
+  }, [onRunStatusChange, stage]);
 
   useEffect(() => {
     const parameterCard = parameterCardRef.current;
@@ -176,6 +181,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     projectName,
     taskTitle,
     requestText: messages.find((message) => message.role === "user")?.text ?? "",
+    openGroups,
+    onToggleGroup: (group) => setOpenGroups((current) => ({
+      assay: false,
+      animal: false,
+      analysis: false,
+      delivery: false,
+      [group]: !current[group],
+    })),
     onEditField: requestFieldEdit,
     onPreviewArtifact: setArtifactPreview,
     onPreviewQuotation: () => setPreviewOpen(true),
@@ -189,7 +202,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         <header className="topbar"><div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div></header>
         <header className="agentHeader"><div className="agentTitle"><span className="agentIcon pending"><ActiveCoworkerIcon size={18} /></span><span>{activeCoworker?.name ?? "DMPK报价同事"}</span></div></header>
         <div className="dmpkChatScroller"><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={coworkers} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
+        <DmpkComposer stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
       <aside
         className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}

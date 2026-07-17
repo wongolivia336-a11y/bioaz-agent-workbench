@@ -20,6 +20,7 @@ import {
   Paperclip,
   Pin,
   PinOff,
+  Plus,
   Search,
   Sparkles,
   SearchCheck,
@@ -55,7 +56,7 @@ import type { AgentModuleSessionProps } from "../types";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
 
-export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, handoffNotice }: AgentModuleSessionProps) {
+export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice }: AgentModuleSessionProps) {
   const [stage, setStage] = useState<Stage>("empty");
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [validationProgress, setValidationProgress] = useState(0);
@@ -81,6 +82,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [followupState, setFollowupState] = useState<FollowupState>("idle");
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
+  const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
@@ -211,6 +213,10 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   }, [allReviewsConfirmed, stage]);
 
   useEffect(() => {
+    onRunStatusChange(stage === "exported" ? "completed" : "active");
+  }, [onRunStatusChange, stage]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       chatScrollerRef.current?.scrollTo({
         top: chatScrollerRef.current.scrollHeight,
@@ -229,7 +235,17 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
       size: formatSize(file.size),
       kind: classifyFile(file),
     }));
-    setFiles(nextFiles);
+    setFiles((current) => {
+      const incomingProtocol = nextFiles.filter((file) => file.kind === "protocol").slice(-1);
+      const incomingData = nextFiles.filter((file) => file.kind === "data");
+      const incomingIds = new Set(nextFiles.map((file) => file.id));
+      const retained = current.filter((file) => {
+        if (incomingIds.has(file.id)) return false;
+        if (file.kind === "protocol" && incomingProtocol.length) return false;
+        return true;
+      });
+      return [...retained, ...incomingProtocol, ...incomingData];
+    });
     setStage(nextFiles.length > 0 ? "uploaded" : "empty");
     setWarnings(initialWarnings);
     setReviews(initialReviews);
@@ -361,7 +377,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
             <span className="agentIcon pending">
               <FileCheck size={18} />
             </span>
-            <span>肿瘤报告智能体</span>
+            <span>肿瘤报告数字同事</span>
           </div>
         </header>
 
@@ -369,18 +385,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
           {stage === "empty" && initialRequest ? <div className="legacyInitialRequest"><p>{initialRequest}</p></div> : null}
           {stage === "empty" ? <div className="legacyTumorOpening"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div> : null}
-          {stage === "empty" || stage === "uploaded" ? (
-            <UploadEmptyState
-              files={files}
-              protocolCount={protocolCount}
-              dataCount={dataCount}
-              canStart={canStart}
-              onUpload={() => fileInputRef.current?.click()}
-              onRemoveFile={removeFile}
-              onStartValidation={startValidation}
-              onDrop={onFilesDropped}
-            />
-          ) : (
+          {stage === "uploaded" ? <div className="legacyTumorOpening isCompact"><img src="/logo/bioaz-logo.svg" alt="" /><p>已收到 {files.length} 个文件。你可以继续补充、移除或替换材料；满足要求后从下方开始校验。</p></div> : null}
+          {stage !== "empty" && stage !== "uploaded" ? (
             <Conversation
               files={files}
               userEvents={userEvents}
@@ -400,12 +406,12 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
                 setInspectorOpen(true);
               }}
             />
-          )}
+          ) : null}
         </div>
 
         <div className="legacyComposerStack">
-          {pendingCoworkerId ? <CoworkerSwitchCard from={coworkers.find((item) => item.id === activeCoworkerId)?.name ?? "当前数字同事"} to={coworkers.find((item) => item.id === pendingCoworkerId)?.name ?? "新数字同事"} onConfirm={() => { onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancel={() => setPendingCoworkerId(null)} /> : null}
-          <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} onChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} />
+          {pendingCoworkerId ? <CoworkerSwitchCard from={businessCoworkers.find((item) => item.id === activeCoworkerId)?.name ?? "当前数字同事"} to={businessCoworkers.find((item) => item.id === pendingCoworkerId)?.name ?? "新数字同事"} endingCurrentFlow={stage !== "exported"} onConfirm={() => { onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancel={() => setPendingCoworkerId(null)} /> : null}
+          <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={stage !== "exported"} onChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} />
           <Composer
             stage={stage}
             files={files}
@@ -1519,14 +1525,12 @@ function Composer({
         />
       ) : null}
 
-      {stage === "empty" ? (
+      {stage === "empty" || stage === "uploaded" ? (
         <div className="filePrep">
           <div className={`requirementChip ${protocolCount ? "ok" : ""}`}>
-            <FileText size={15} />
             方案 Word {protocolCount}/1
           </div>
           <div className={`requirementChip ${dataCount ? "ok" : ""}`}>
-            <FileSpreadsheet size={15} />
             实验 Excel {dataCount}/1+
           </div>
           <div className={`requirementChip ${canStart ? "ok" : ""}`}>
@@ -1535,7 +1539,7 @@ function Composer({
         </div>
       ) : null}
 
-      {files.length > 0 && stage === "empty" ? (
+      {files.length > 0 && (stage === "empty" || stage === "uploaded") ? (
         <div className="fileRows">
           {files.map((file) => (
             <div className="fileRow" key={file.id}>
@@ -1550,9 +1554,9 @@ function Composer({
         </div>
       ) : null}
 
-      <div className="composer">
+      <div className="composer workbenchComposer">
         <button className="attachIconButton" type="button" onClick={onUpload} aria-label="上传文件">
-          <Paperclip size={18} />
+          <Plus size={18} />
         </button>
         <input
           ref={inputRef}
@@ -1568,7 +1572,7 @@ function Composer({
         <button
           className="sendIconButton"
           type="button"
-          disabled={(stage === "empty" || stage === "uploaded") && !canStart}
+          disabled={(stage === "empty" || stage === "uploaded") && !canStart && !composerText.trim()}
           onClick={() => {
             if (composerText.trim()) {
               onSendMessage(composerText);
@@ -1710,7 +1714,7 @@ function ReviewLaunchPanel({
   onOpenArtifacts: () => void;
 }) {
   return (
-    <article className="warningDecision reviewDecision stackDecision">
+    <article className="warningDecision reviewDecision">
       <div className="warningDecisionHeader">
         <div>
           <span>专家小队审核</span>
@@ -1754,20 +1758,14 @@ function WarningDecisionPanel({
   const pendingWarnings = warnings.filter((item) => !item.accepted);
 
   return (
-    <article
-      className={`warningDecision stackDecision ${expanded ? "isPinned" : ""}`}
-      onClick={(event) => {
-        if ((event.target as HTMLElement).closest("button")) return;
-        onToggleExpanded();
-      }}
-    >
-      <div className="warningDecisionHeader">
+    <article className={`warningDecision stackDecision ${expanded ? "isPinned" : ""}`}>
+      <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>需要确认的 warning</span>
           <strong>校验可继续，但需要授权用户接受风险</strong>
         </div>
-        <small>{acceptedCount}/{warnings.length}</small>
-      </div>
+        <small>{acceptedCount}/{warnings.length}<ChevronRight size={14} /></small>
+      </button>
       <div className="warningDecisionList">
         {pendingWarnings.slice(0, 3).map((item, index) => {
           const detail = warningEvidence(item.id);
@@ -1849,20 +1847,14 @@ function ReviewDecisionPanel({
   const pendingReviews = reviews.filter((item) => item.status === "pending").slice(0, 3);
 
   return (
-    <article
-      className={`warningDecision reviewDecision stackDecision ${expanded ? "isPinned" : ""}`}
-      onClick={(event) => {
-        if ((event.target as HTMLElement).closest("button")) return;
-        onToggleExpanded();
-      }}
-    >
-      <div className="warningDecisionHeader">
+    <article className={`warningDecision reviewDecision stackDecision ${expanded ? "isPinned" : ""}`}>
+      <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>专家建议确认</span>
           <strong>专家小队已完成检查，需要你处理关键建议</strong>
         </div>
-        <small>{confirmedCount}/{reviews.length}</small>
-      </div>
+        <small>{confirmedCount}/{reviews.length}<ChevronRight size={14} /></small>
+      </button>
       <div className="warningDecisionList">
         {pendingReviews.map((item, index) => {
           const detail = reviewEvidence(item.id);
@@ -2370,7 +2362,7 @@ function inspectorPanels(stage: Stage): Array<{ id: InspectorTopic; label: strin
     ];
   }
 
-  return [{ id: "process", label: "任务列表" }];
+  return [{ id: "process", label: "处理过程" }];
 }
 
 function artifactIcon(kind: string) {
