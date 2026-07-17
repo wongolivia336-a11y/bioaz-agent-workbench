@@ -10,10 +10,12 @@ import { useDismissableLayer } from "./useDismissableLayer";
 export type QuickStartItem = { id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder" };
 
 type Props = {
+  conversationStarted: boolean;
   project: string | null;
   text: string;
   clarification: { request: string; question: string } | null;
   pendingRequest: string | null;
+  pendingTaskType: string | null;
   suggestedCoworker: CoworkerDefinition | null;
   coworkers: CoworkerDefinition[];
   quickStarts: QuickStartItem[];
@@ -27,11 +29,11 @@ type Props = {
 };
 
 export function NewTaskHome(props: Props) {
-  return <section className="newTaskHome">
-    <div className="newTaskIntro"><span className="newTaskMark"><img src="/logo/bioaz-logo.svg" alt="BioAZ" /></span><h1>今天要处理什么？</h1><div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => <button type="button" disabled={item.availability === "placeholder"} key={item.id} onClick={() => props.onQuickStart(item.id)}>{item.icon}<strong>{item.label}</strong>{item.availability === "placeholder" ? <small>即将接入</small> : null}</button>)}</div></div>
+  return <section className={`newTaskHome ${props.conversationStarted ? "isConversation" : ""}`}>
+    {!props.conversationStarted ? <div className="newTaskIntro"><span className="newTaskMark"><img src="/logo/bioaz-logo.svg" alt="BioAZ" /></span><h1>今天要处理什么？</h1><div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => <button type="button" disabled={item.availability === "placeholder"} key={item.id} onClick={() => props.onQuickStart(item.id)}>{item.icon}<strong>{item.label}</strong>{item.availability === "placeholder" ? <small>即将接入</small> : null}</button>)}</div></div> : null}
     <div className="newTaskComposerDock">
       <div className="newTaskIntentConversation">{props.clarification || props.pendingRequest ? <p>{props.clarification?.request ?? props.pendingRequest}</p> : null}<div><img src="/logo/bioaz-logo.svg" alt="" /><span>{props.clarification?.question ?? (props.pendingRequest && props.suggestedCoworker ? `我建议交给${props.suggestedCoworker.name}，请确认后开始任务。` : props.project ? `你想在“${props.project}”中完成什么任务？` : "你想完成什么任务？也可以先选择所属项目。")}</span></div></div>
-      {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} project={props.project ?? "临时任务"} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
+      {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard taskType={props.pendingTaskType ?? "待确认任务"} coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} project={props.project ?? "临时任务"} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
       <ProjectSelector project={props.project} onChange={props.onProjectChange} />
       <div className="newTaskComposer workbenchComposer"><textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.onSubmit(); } }} placeholder="描述你要完成的任务..." rows={2} /><button className="sendIconButton" type="button" onClick={props.onSubmit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button></div>
     </div>

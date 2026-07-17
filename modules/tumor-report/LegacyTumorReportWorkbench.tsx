@@ -56,7 +56,7 @@ import type { AgentModuleSessionProps } from "../types";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
 
-export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, handoffNotice }: AgentModuleSessionProps) {
+export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice }: AgentModuleSessionProps) {
   const [stage, setStage] = useState<Stage>("empty");
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [validationProgress, setValidationProgress] = useState(0);
@@ -82,6 +82,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [followupState, setFollowupState] = useState<FollowupState>("idle");
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
+  const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
@@ -210,6 +211,10 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
       return () => window.clearTimeout(timer);
     }
   }, [allReviewsConfirmed, stage]);
+
+  useEffect(() => {
+    onRunStatusChange(stage === "exported" ? "completed" : "active");
+  }, [onRunStatusChange, stage]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -372,7 +377,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
             <span className="agentIcon pending">
               <FileCheck size={18} />
             </span>
-            <span>肿瘤报告智能体</span>
+            <span>肿瘤报告数字同事</span>
           </div>
         </header>
 
@@ -405,8 +410,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
         </div>
 
         <div className="legacyComposerStack">
-          {pendingCoworkerId ? <CoworkerSwitchCard from={coworkers.find((item) => item.id === activeCoworkerId)?.name ?? "当前数字同事"} to={coworkers.find((item) => item.id === pendingCoworkerId)?.name ?? "新数字同事"} onConfirm={() => { onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancel={() => setPendingCoworkerId(null)} /> : null}
-          <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} onChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} />
+          {pendingCoworkerId ? <CoworkerSwitchCard from={businessCoworkers.find((item) => item.id === activeCoworkerId)?.name ?? "当前数字同事"} to={businessCoworkers.find((item) => item.id === pendingCoworkerId)?.name ?? "新数字同事"} endingCurrentFlow={stage !== "exported"} onConfirm={() => { onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancel={() => setPendingCoworkerId(null)} /> : null}
+          <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={stage !== "exported"} onChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} />
           <Composer
             stage={stage}
             files={files}

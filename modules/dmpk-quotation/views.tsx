@@ -67,7 +67,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ stage, text, setText, activeGroup, fields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled }: { stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean }) {
+export function DmpkComposer({ stage, text, setText, activeGroup, fields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled }: { stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean }) {
   const [attachments, setAttachments] = useState<string[]>([]);
   const currentCoworker = coworkers.find((item) => item.id === activeCoworkerId);
   const pendingCoworker = coworkers.find((item) => item.id === pendingCoworkerId);
@@ -75,8 +75,8 @@ export function DmpkComposer({ stage, text, setText, activeGroup, fields, mode, 
     <footer className="dmpkComposerWrap">
       {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} draftTabs={draftTabs} mode={mode} onSelect={onSelect} /> : null}
       {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} /> : null}
-      {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
-      <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} onChange={onCoworkerChange} />
+      {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
+      <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} locked={coworkerLocked} onChange={onCoworkerChange} />
       <div className="dmpkComposer workbenchComposer">
         <label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple onChange={(event) => { setAttachments(Array.from(event.target.files ?? []).map((file) => file.name)); event.target.value = ""; }} /></label>
         <div className="composerInputStack">

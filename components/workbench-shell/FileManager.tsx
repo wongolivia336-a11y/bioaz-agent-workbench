@@ -19,10 +19,12 @@ import { CompactSelect, WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 type FileSpace = "projects" | "rules";
+type FileSource = "all" | "human" | "agent";
 
 export function FileManager() {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
   const [space, setSpace] = useState<FileSpace>("projects");
+  const [source, setSource] = useState<FileSource>("all");
   const [query, setQuery] = useState("");
   const [project, setProject] = useState("全部项目");
   const [business, setBusiness] = useState("全部业务");
@@ -32,6 +34,7 @@ export function FileManager() {
   const visible = files.filter(
     (file) =>
       file.space === space &&
+      (source === "all" || (source === "human" ? file.owner === "Admin" : file.owner !== "Admin")) &&
       (space === "rules" || project === "全部项目" || file.project === project) &&
       (business === "全部业务" || file.business === business) &&
       file.title.toLowerCase().includes(query.toLowerCase()),
@@ -102,12 +105,16 @@ export function FileManager() {
       </header>
 
       <nav className="fileSpaceTabs" aria-label="文件空间">
-        <button type="button" className={space === "projects" ? "active" : ""} onClick={() => { setSpace("projects"); setBusiness("全部业务"); }}>项目文件</button>
-        <button type="button" className={space === "rules" ? "active" : ""} onClick={() => { setSpace("rules"); setProject("全部项目"); setBusiness("全部业务"); }}>规则与模板</button>
+        <button type="button" className="active" onClick={() => { setSpace("projects"); setBusiness("全部业务"); }}>项目文件</button>
       </nav>
 
       <div className="knowledgeToolbar">
         <div className="knowledgeSearch"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索文件" /></div>
+        <div className="fileSourceFilters" aria-label="文件来源">
+          <button type="button" className={source === "all" ? "active" : ""} onClick={() => setSource("all")}>全部</button>
+          <button type="button" className={source === "human" ? "active" : ""} onClick={() => setSource("human")}>人工上传</button>
+          <button type="button" className={source === "agent" ? "active" : ""} onClick={() => setSource("agent")}>数字同事产物</button>
+        </div>
         {space === "projects" ? <CompactSelect value={project} options={["全部项目", ...projectOptions.filter((item) => item !== "临时任务"), "未归档"]} onChange={setProject} /> : null}
         <CompactSelect value={business} options={["全部业务", "DMPK报价", "药效报告", "未分类"]} onChange={setBusiness} />
       </div>

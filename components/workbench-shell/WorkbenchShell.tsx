@@ -1,9 +1,9 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { coworkerRegistry, getAgentModule, getModuleForCoworker, quickStartRegistry, resolveModuleIntent } from "../../modules/registry";
-import type { AgentModuleDefinition, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
+import type { AgentModuleDefinition, ModuleRunStatus, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
 import { FileManager } from "./FileManager";
 import { NewTaskHome } from "./NewTaskHome";
 import { TaskList } from "./TaskList";
@@ -24,21 +24,57 @@ export default function WorkbenchShell() {
   const [pendingModule, setPendingModule] = useState<AgentModuleDefinition | null>(null);
   const [handoffNotice, setHandoffNotice] = useState<string | undefined>();
   const [pinnedItemIds, setPinnedItemIds] = useState<string[]>(["task-new-quote"]);
+  const [runtimeTasks, setRuntimeTasks] = useState<WorkbenchTask[]>([]);
+  const [helperConversationStarted, setHelperConversationStarted] = useState(false);
+  const [, setModuleRunStatus] = useState<ModuleRunStatus>("active");
 
   const quickStarts = useMemo(() => quickStartRegistry.map((item) => { const Icon = item.icon; return { id: item.id, label: item.label, prompt: item.prompt, availability: item.availability, icon: <Icon size={17} /> }; }), []);
   const suggestedCoworker = pendingModule?.suggestedCoworker ?? null;
 
+  const createRuntimeTask = (title: string, module: AgentModuleDefinition | null) => {
+    const taskProject = project ?? "临时任务";
+    const taskId = `task-runtime-${Date.now()}`;
+    const coworker = module?.suggestedCoworker ?? coworkerRegistry[0];
+    const task: WorkbenchTask = {
+      id: taskId,
+      title,
+      project: taskProject,
+      moduleId: module?.moduleId ?? "bioaz-helper",
+      coworkerId: coworker?.id ?? "bioaz-helper",
+      coworkerName: coworker?.name ?? "BioAZ Helper",
+      time: "刚刚",
+      status: "running",
+    };
+    setProject(taskProject);
+    setTaskTitle(title);
+    setActiveTaskId(taskId);
+    setRuntimeTasks((tasks) => [task, ...tasks]);
+    return taskId;
+  };
+
+  const updateRuntimeTask = (taskId: string, module: AgentModuleDefinition) => {
+    setRuntimeTasks((tasks) => tasks.map((task) => task.id === taskId ? {
+      ...task,
+      moduleId: module.moduleId,
+      coworkerId: module.suggestedCoworker.id,
+      coworkerName: module.suggestedCoworker.name,
+      status: "running",
+    } : task));
+  };
+
   const resetNewTask = (nextProject: string | null = null) => {
-    setProject(nextProject); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setRoute("newTask");
+    setProject(nextProject); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(false); setModuleRunStatus("active"); setRoute("newTask");
   };
 
   const submitIntent = () => {
     const next = text.trim(); if (!next) return;
     const request = clarification ? `${clarification.request}；补充：${next}` : next;
-    const manuallySelectedModule = activeCoworkerId === "bioaz-helper" ? null : getModuleForCoworker(activeCoworkerId);
-    if (manuallySelectedModule) {
-      setText(""); setProject((current) => current ?? "临时任务"); setTaskTitle(`${manuallySelectedModule.moduleName}任务`); setActiveModule(manuallySelectedModule); setInitialRequest(request); setActiveTaskId(null); setRoute("module"); return;
+    if (!activeTaskId) {
+      const title = request.length > 20 ? `${request.slice(0, 20)}…` : request;
+      createRuntimeTask(title, null);
     }
+    setHelperConversationStarted(true);
+    setActiveCoworkerId("bioaz-helper");
     const resolution = resolveModuleIntent(request);
     setText("");
     if (!resolution.module) { setClarification({ request, question: resolution.clarification ?? "请再补充一点任务目标。" }); return; }
@@ -46,15 +82,25 @@ export default function WorkbenchShell() {
   };
 
   const selectPendingCoworker = (coworkerId: string) => { const module = getModuleForCoworker(coworkerId); if (!module) return; setActiveCoworkerId(coworkerId); setPendingModule(module); };
-  const confirmDispatch = () => { if (!pendingModule || !pendingRequest) return; setProject((current) => current ?? "临时任务"); setTaskTitle(`${pendingModule.moduleName}任务`); setActiveModule(pendingModule); setActiveCoworkerId(pendingModule.suggestedCoworker.id); setInitialRequest(pendingRequest); setHandoffNotice(`BioAZ Helper 已将任务分派给${pendingModule.suggestedCoworker.name}`); setActiveTaskId(null); setPendingModule(null); setPendingRequest(null); setRoute("module"); };
+  const confirmDispatch = () => {
+    if (!pendingModule || !pendingRequest) return;
+    const taskId = activeTaskId ?? createRuntimeTask(taskTitle, pendingModule);
+    updateRuntimeTask(taskId, pendingModule);
+    setActiveModule(pendingModule);
+    setActiveCoworkerId(pendingModule.suggestedCoworker.id);
+    setInitialRequest(pendingRequest);
+    setHandoffNotice(`BioAZ Helper 已将任务分派给 ${pendingModule.suggestedCoworker.name}`);
+    setModuleRunStatus("active");
+    setPendingModule(null);
+    setPendingRequest(null);
+    setRoute("module");
+  };
   const cancelDispatch = () => { setText(pendingRequest ?? ""); setPendingRequest(null); setPendingModule(null); };
 
   const startModuleDirect = (moduleId: string) => {
     const module = getAgentModule(moduleId);
     if (!module || module.availability !== "available") return;
-    setProject((current) => current ?? "临时任务");
-    setTaskTitle(`${module.moduleName}任务`);
-    setActiveTaskId(null);
+    createRuntimeTask(`${module.moduleName}任务`, module);
     setActiveModule(module);
     setActiveCoworkerId(module.suggestedCoworker.id);
     setInitialRequest(undefined);
@@ -63,6 +109,8 @@ export default function WorkbenchShell() {
     setClarification(null);
     setPendingRequest(null);
     setPendingModule(null);
+    setHelperConversationStarted(false);
+    setModuleRunStatus("active");
     setRoute("module");
   };
 
@@ -73,19 +121,31 @@ export default function WorkbenchShell() {
     if (params.get("view") === "library") setRoute("library");
   }, []);
 
-  const openTask = (task: WorkbenchTask) => { const module = getAgentModule(task.moduleId); if (!module) return; setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setActiveModule(module); setActiveCoworkerId(task.coworkerId); setInitialRequest(undefined); setHandoffNotice(undefined); setRoute("module"); };
-  const changeCoworker = (coworkerId: string) => {
-    if (coworkerId === "bioaz-helper") { resetNewTask(project); return; }
-    const module = getModuleForCoworker(coworkerId); if (!module || module.moduleId === activeModule?.moduleId) return;
-    setHandoffNotice(`已从${activeModule?.suggestedCoworker.name ?? "当前数字同事"}切换至${module.suggestedCoworker.name}`);
-    setActiveCoworkerId(coworkerId); setActiveModule(module); setTaskTitle(`${module.moduleName}任务`); setInitialRequest(undefined);
+  const openTask = (task: WorkbenchTask) => {
+    setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setInitialRequest(undefined); setHandoffNotice(undefined);
+    if (task.moduleId === "bioaz-helper") {
+      setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setHelperConversationStarted(true); setRoute("newTask"); return;
+    }
+    const module = getAgentModule(task.moduleId); if (!module) return;
+    setActiveModule(module); setActiveCoworkerId(task.coworkerId); setHelperConversationStarted(false); setModuleRunStatus(/done|完成|交付/.test(task.status) ? "completed" : "active"); setRoute("module");
   };
+  const changeCoworker = (coworkerId: string) => {
+    if (coworkerId === "bioaz-helper") return;
+    const module = getModuleForCoworker(coworkerId); if (!module || module.moduleId === activeModule?.moduleId) return;
+    setHandoffNotice(`已从 ${activeModule?.suggestedCoworker.name ?? "当前数字同事"} 切换至 ${module.suggestedCoworker.name}`);
+    setActiveCoworkerId(coworkerId); setActiveModule(module); setInitialRequest(undefined); setModuleRunStatus("active");
+    if (activeTaskId) updateRuntimeTask(activeTaskId, module);
+  };
+  const handleRunStatusChange = useCallback((status: ModuleRunStatus) => {
+    setModuleRunStatus(status);
+    if (activeTaskId) setRuntimeTasks((tasks) => tasks.map((task) => task.id === activeTaskId ? { ...task, status: status === "completed" ? "done" : "running" } : task));
+  }, [activeTaskId]);
   const togglePin = (id: string) => setPinnedItemIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [id, ...items]);
 
   const shellView = route !== "module";
   const Session = activeModule?.Session;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
-    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onToggleCollapsed={() => setCollapsed((value) => !value)} />
-    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="breadcrumb">{route === "tasks" ? <><span>我的任务</span><ChevronRight size={15} /><strong>待处理</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
+    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onToggleCollapsed={() => setCollapsed((value) => !value)} />
+    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="breadcrumb">{route === "tasks" ? <><span>我的任务</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "临时任务"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }

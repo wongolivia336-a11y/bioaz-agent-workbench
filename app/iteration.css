@@ -1431,6 +1431,100 @@ textarea {
   box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08), 0 0 0 4px rgba(41, 67, 255, 0.06);
 }
 
+.fileSourceFilters {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 3px;
+}
+
+.fileSourceFilters button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  padding: 0 10px;
+  color: var(--body);
+  font: inherit;
+  font-size: 12px;
+}
+
+.fileSourceFilters button:hover { background: var(--soft); }
+.fileSourceFilters button.active { background: rgba(41, 67, 255, 0.08); color: #2943ff; }
+
+.workspaceAssistantHoverMenu {
+  position: absolute;
+  bottom: 68px;
+  left: 50%;
+  display: grid;
+  width: min(420px, calc(100vw - 48px));
+  gap: 3px;
+  visibility: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 48px rgba(17, 19, 24, 0.12);
+  padding: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity 150ms ease, transform 150ms ease, visibility 150ms ease;
+}
+
+.workspaceAssistantHoverMenu > span {
+  padding: 5px 9px 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.workspaceAssistantHoverMenu button {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  padding: 0 9px;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.workspaceAssistantHoverMenu button:hover { background: rgba(41, 67, 255, 0.06); }
+
+.libraryAssistant:not(.isOpen):hover .workspaceAssistantHoverMenu,
+.libraryAssistant:not(.isOpen):focus-within .workspaceAssistantHoverMenu {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.roleSelectorMenu button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.roleSelectorMenu button:disabled:hover {
+  background: transparent;
+}
+
+.roleSelectorMenu .roleSelectorForceSwitch {
+  margin-top: 5px;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding-top: 10px;
+}
+
+.roleSelectorForceSwitch span {
+  font-size: 11px;
+  text-align: right;
+}
+
 @media (max-width: 1100px) {
   .taskExampleGrid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 
