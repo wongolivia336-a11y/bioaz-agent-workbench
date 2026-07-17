@@ -1452,7 +1452,8 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .assistantHeroMark img { width: 44px; height: 38px; object-fit: contain; }
 .libraryAssistant .assistantWelcome { justify-items: center; text-align: center; }
 .libraryAssistant .assistantSuggestions { grid-template-columns: repeat(3, minmax(0,1fr)); }
-.libraryAssistant .assistantSuggestions button { min-height: 118px; align-content: center; justify-items: start; gap: 18px; text-align: left; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.libraryAssistant .assistantSuggestions button { min-height: 128px; align-content: center; justify-items: center; gap: 16px; text-align: center; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.libraryAssistant .assistantSuggestions button span { line-height: 1.45; }
 .libraryAssistant .assistantSuggestions button svg { width: 25px; height: 25px; color: var(--brand); }
 .libraryAssistant .assistantSuggestions button:hover { border-color: rgba(41,67,255,0.28); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(17,19,24,0.08), 0 0 0 4px rgba(41,67,255,0.06), 0 0 24px rgba(41,67,255,0.09); }
 .assistantReferences { display: grid; gap: 8px; }
@@ -1471,6 +1472,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .deliveryToggle[aria-pressed="true"] { border-color: var(--ink-soft); background: var(--ink-soft); }
 .deliveryToggle svg { display: block; width: 11px; height: 11px; margin: 0; }
 .projectFileLanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; }
+.projectFileLanes { width: min(1240px, 100%); margin-inline: auto; }
 .projectFileLane { display: grid; min-width: 0; gap: 10px; border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 16px; }
 .projectFileLane .knowledgeTableHeader,
 .projectFileLane .knowledgeFileRow { grid-template-columns: minmax(0, 1fr) 72px 28px; }
@@ -1480,7 +1482,8 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .projectFileLane .knowledgeFileRow > span:nth-child(3) { display: none; }
 .projectFileLane .knowledgeTableHeader > span:nth-child(4) { grid-column: 2; }
 .projectFileLane .knowledgeTableHeader > span:nth-child(5) { grid-column: 3; }
-.projectLaneHeader { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.projectLaneHeader { display: flex; min-height: 38px; align-items: center; justify-content: space-between; gap: 16px; }
+.projectLaneHeader > .primaryButton { flex: 0 0 auto; }
 .projectLaneHeader > div { display: grid; gap: 3px; }
 .projectLaneHeader strong { font-size: 15px; }
 .projectLaneHeader span,
@@ -1571,10 +1574,12 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .libraryAssistant .libraryAssistantWorkspace .assistantWelcome p { max-width: 520px; }
 .libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer {
   width: min(900px, calc(100% - 48px));
+  min-height: 64px;
   justify-self: center;
   margin: 0 24px 24px;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
+  border-radius: 16px;
+  padding: 10px 12px;
   box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08);
 }
 .assistantContextBar .compactSelect { position: relative; z-index: 3; }

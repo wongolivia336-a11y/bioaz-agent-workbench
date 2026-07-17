@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowLeft,
@@ -96,7 +96,6 @@ export function FileManager() {
     <section className="workbenchView knowledgeBaseView">
       <header>
         <div>{!showRoot ? <button className="folderBackButton projectBackButton" type="button" onClick={() => { setProject("全部项目"); setBusiness("全部业务"); setQuery(""); }}><ArrowLeft size={15} />返回项目</button> : null}<h1>{showRoot ? "文件管理系统" : project}</h1></div>
-        {!showRoot ? <label className="primaryButton compact" htmlFor="file-upload"><Upload size={14} />上传项目资料</label> : null}
         <input className="visuallyHidden" id="file-upload" type="file" multiple onChange={upload} />
       </header>
 
@@ -115,7 +114,7 @@ export function FileManager() {
         </div>
       ) : null}
 
-      {showRoot ? <section className="rootRecentOutputs"><div className="fileListHeading"><strong>最近产出</strong><span>{recentOutputs.length} 项</span></div><FileTable files={recentOutputs} previewFile={previewFile} onPreview={setPreviewFile} onReplace={replace} /></section> : <div className="projectFileLanes"><section className="projectFileLane"><div className="projectLaneHeader"><div><strong>项目资料</strong><span>提供给数字同事的项目上下文</span></div><small>{projectInputs.length} 项</small></div><FileTable files={projectInputs} previewFile={previewFile} onPreview={setPreviewFile} onReplace={replace} /></section><section className="projectFileLane outputLane"><div className="projectLaneHeader"><div><strong>任务产物</strong><span>按业务任务整理，可选择创建客户交付包</span></div><button className="primaryButton compact" type="button" disabled={!deliverySelection.length}><PackageCheck size={14} />创建交付包{deliverySelection.length ? ` · ${deliverySelection.length}` : ""}</button></div>{outputBusinesses.map((outputBusiness) => <div className="businessOutputGroup" key={outputBusiness}><h3>{outputBusiness}</h3><FileTable files={projectOutputs.filter((file) => file.business === outputBusiness)} previewFile={previewFile} selectable selectedIds={deliverySelection} onToggle={(id) => setDeliverySelection((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])} onPreview={setPreviewFile} onReplace={replace} /></div>)}</section></div>}
+      {showRoot ? <section className="rootRecentOutputs"><div className="fileListHeading"><strong>最近产出</strong><span>{recentOutputs.length} 项</span></div><FileTable files={recentOutputs} previewFile={previewFile} onPreview={setPreviewFile} onReplace={replace} /></section> : <div className="projectFileLanes"><section className="projectFileLane"><div className="projectLaneHeader"><div><strong>项目资料</strong><span>提供给数字同事的项目上下文 · {projectInputs.length} 项</span></div><label className="primaryButton compact" htmlFor="file-upload"><Upload size={14} />上传项目资料</label></div><FileTable files={projectInputs} previewFile={previewFile} onPreview={setPreviewFile} onReplace={replace} /></section><section className="projectFileLane outputLane"><div className="projectLaneHeader"><div><strong>任务产物</strong><span>按业务任务整理，可选择创建客户交付包</span></div><button className="primaryButton compact" type="button" disabled={!deliverySelection.length}><PackageCheck size={14} />创建交付包{deliverySelection.length ? ` · ${deliverySelection.length}` : ""}</button></div>{outputBusinesses.map((outputBusiness) => <div className="businessOutputGroup" key={outputBusiness}><h3>{outputBusiness}</h3><FileTable files={projectOutputs.filter((file) => file.business === outputBusiness)} previewFile={previewFile} selectable selectedIds={deliverySelection} onToggle={(id) => setDeliverySelection((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])} onPreview={setPreviewFile} onReplace={replace} /></div>)}</section></div>}
 
       <WorkspaceAssistant context="library" libraryContext={{ project, business }} />
       {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} onOpenProject={() => { setProject(previewFile.project); setBusiness("全部业务"); setPreviewFile(null); }} /> : null}
