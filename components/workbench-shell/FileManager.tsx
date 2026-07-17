@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   Check,
   ChevronRight,
   Eye,
@@ -8,6 +9,7 @@ import {
   FileText,
   Folder,
   MoreHorizontal,
+  PackageCheck,
   Search,
   Upload,
   X,
@@ -19,34 +21,23 @@ import { CompactSelect, WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 type FileSpace = "projects" | "rules";
-type FileSource = "all" | "human" | "agent";
 
 export function FileManager() {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
   const [space, setSpace] = useState<FileSpace>("projects");
-  const [source, setSource] = useState<FileSource>("all");
   const [query, setQuery] = useState("");
   const [project, setProject] = useState("全部项目");
   const [business, setBusiness] = useState("全部业务");
   const [previewFile, setPreviewFile] = useState<KnowledgeFile | null>(null);
-  const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
+  const [deliverySelection, setDeliverySelection] = useState<string[]>([]);
 
   const visible = files.filter(
     (file) =>
       file.space === space &&
-      (source === "all" || (source === "human" ? file.owner === "Admin" : file.owner !== "Admin")) &&
       (space === "rules" || project === "全部项目" || file.project === project) &&
       (business === "全部业务" || file.business === business) &&
       file.title.toLowerCase().includes(query.toLowerCase()),
   );
-  const selectedContextFiles = files.filter((file) => selectedContextIds.includes(file.id));
-
-  const toggleContextFile = (fileId: string) => {
-    setSelectedContextIds((current) =>
-      current.includes(fileId) ? current.filter((id) => id !== fileId) : [...current, fileId],
-    );
-  };
-
   const upload = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []);
     if (!selectedFiles.length) return;
@@ -95,29 +86,24 @@ export function FileManager() {
         }))
         .filter((item) => item.count);
   const showRoot = !query && (space === "projects" ? project === "全部项目" : business === "全部业务");
+  const recentOutputs = files.filter((file) => file.space === "projects" && file.owner !== "Admin").slice(0, 5);
+  const projectFiles = visible.filter((file) => file.project === project);
+  const projectInputs = projectFiles.filter((file) => file.owner === "Admin");
+  const projectOutputs = projectFiles.filter((file) => file.owner !== "Admin");
+  const outputBusinesses = Array.from(new Set(projectOutputs.map((file) => file.business)));
 
   return (
     <section className="workbenchView knowledgeBaseView">
       <header>
-        <div><h1>文件管理系统</h1></div>
-        <label className="primaryButton compact" htmlFor="file-upload"><Upload size={14} />上传资料</label>
+        <div>{!showRoot ? <button className="folderBackButton projectBackButton" type="button" onClick={() => { setProject("全部项目"); setBusiness("全部业务"); setQuery(""); }}><ArrowLeft size={15} />返回项目</button> : null}<h1>{showRoot ? "文件管理系统" : project}</h1></div>
+        {!showRoot ? <label className="primaryButton compact" htmlFor="file-upload"><Upload size={14} />上传项目资料</label> : null}
         <input className="visuallyHidden" id="file-upload" type="file" multiple onChange={upload} />
       </header>
 
-      <nav className="fileSpaceTabs" aria-label="文件空间">
-        <button type="button" className="active" onClick={() => { setSpace("projects"); setBusiness("全部业务"); }}>项目文件</button>
-      </nav>
-
-      <div className="knowledgeToolbar">
+      {!showRoot ? <div className="knowledgeToolbar projectKnowledgeToolbar">
         <div className="knowledgeSearch"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索文件" /></div>
-        <div className="fileSourceFilters" aria-label="文件来源">
-          <button type="button" className={source === "all" ? "active" : ""} onClick={() => setSource("all")}>全部文件</button>
-          <button type="button" className={source === "human" ? "active" : ""} onClick={() => setSource("human")}>工作资料</button>
-          <button type="button" className={source === "agent" ? "active" : ""} onClick={() => setSource("agent")}>交付产物</button>
-        </div>
-        {space === "projects" ? <CompactSelect value={project} options={["全部项目", ...projectOptions.filter((item) => item !== "临时任务"), "未归档"]} onChange={setProject} /> : null}
         <CompactSelect value={business} options={["全部业务", "DMPK报价", "药效报告", "未分类"]} onChange={setBusiness} />
-      </div>
+      </div> : null}
 
       {showRoot ? (
         <div className={`projectFolderStrip ${space === "rules" ? "ruleFolderStrip" : ""}`}>
@@ -129,56 +115,34 @@ export function FileManager() {
         </div>
       ) : null}
 
-      <div className="fileListHeading">
-        <strong>
-          {space === "projects"
-            ? project === "全部项目" ? "最近产出" : project
-            : business === "全部业务"
-              ? "最近更新"
-              : <><button className="folderBackButton" type="button" onClick={() => setBusiness("全部业务")}>规则与模板</button><ChevronRight size={13} />{business}</>}
-        </strong>
-        <span>{visible.length} 项{selectedContextFiles.length ? ` · 已选 ${selectedContextFiles.length}` : ""}</span>
-      </div>
+      {showRoot ? <section className="rootRecentOutputs"><div className="fileListHeading"><strong>最近产出</strong><span>{recentOutputs.length} 项</span></div><FileTable files={recentOutputs} previewFile={previewFile} onPreview={setPreviewFile} onReplace={replace} /></section> : <div className="projectFileLanes"><section className="projectFileLane"><div className="projectLaneHeader"><div><strong>项目资料</strong><span>提供给数字同事的项目上下文</span></div><small>{projectInputs.length} 项</small></div><FileTable files={projectInputs} previewFile={previewFile} onPreview={setPreviewFile} onReplace={replace} /></section><section className="projectFileLane outputLane"><div className="projectLaneHeader"><div><strong>任务产物</strong><span>按业务任务整理，可选择创建客户交付包</span></div><button className="primaryButton compact" type="button" disabled={!deliverySelection.length}><PackageCheck size={14} />创建交付包{deliverySelection.length ? ` · ${deliverySelection.length}` : ""}</button></div>{outputBusinesses.map((outputBusiness) => <div className="businessOutputGroup" key={outputBusiness}><h3>{outputBusiness}</h3><FileTable files={projectOutputs.filter((file) => file.business === outputBusiness)} previewFile={previewFile} selectable selectedIds={deliverySelection} onToggle={(id) => setDeliverySelection((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])} onPreview={setPreviewFile} onReplace={replace} /></div>)}</section></div>}
 
-      <div className="knowledgeTable" role="table">
-        <div className="knowledgeTableHeader" role="row">
-          <span>名称</span><span>{space === "projects" ? "项目" : "业务类型"}</span><span>{space === "projects" ? "业务类型" : "状态"}</span><span>更新</span><span />
-        </div>
-        {visible.map((file) => (
-          <FileRow
-            key={file.id}
-            file={file}
-            space={space}
-            previewed={previewFile?.id === file.id}
-            contextSelected={selectedContextIds.includes(file.id)}
-            onToggleContext={() => toggleContextFile(file.id)}
-            onPreview={() => setPreviewFile(file)}
-            onReplace={(event) => replace(file.id, event)}
-          />
-        ))}
-        {!visible.length ? <div className="emptyListState">没有符合当前条件的文件</div> : null}
-      </div>
-
-      <WorkspaceAssistant context="library" libraryContext={{ project, business, files: selectedContextFiles.map((file) => file.title) }} />
-      {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} /> : null}
+      <WorkspaceAssistant context="library" libraryContext={{ project, business }} />
+      {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} onOpenProject={() => { setProject(previewFile.project); setBusiness("全部业务"); setPreviewFile(null); }} /> : null}
     </section>
   );
+}
+
+function FileTable({ files, previewFile, selectable = false, selectedIds = [], onToggle, onPreview, onReplace }: { files: KnowledgeFile[]; previewFile: KnowledgeFile | null; selectable?: boolean; selectedIds?: string[]; onToggle?: (id: string) => void; onPreview: (file: KnowledgeFile) => void; onReplace: (id: string, event: ChangeEvent<HTMLInputElement>) => void }) {
+  return <div className="knowledgeTable" role="table"><div className="knowledgeTableHeader" role="row"><span>名称</span><span>项目</span><span>业务类型</span><span>更新</span><span /></div>{files.map((file) => <FileRow key={file.id} file={file} space="projects" previewed={previewFile?.id === file.id} selectable={selectable} selected={selectedIds.includes(file.id)} onToggle={() => onToggle?.(file.id)} onPreview={() => onPreview(file)} onReplace={(event) => onReplace(file.id, event)} />)}{!files.length ? <div className="emptyListState">暂无文件</div> : null}</div>;
 }
 
 function FileRow({
   file,
   space,
   previewed,
-  contextSelected,
-  onToggleContext,
+  selectable = false,
+  selected = false,
+  onToggle,
   onPreview,
   onReplace,
 }: {
   file: KnowledgeFile;
   space: FileSpace;
   previewed: boolean;
-  contextSelected: boolean;
-  onToggleContext: () => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggle?: () => void;
   onPreview: () => void;
   onReplace: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
@@ -188,14 +152,12 @@ function FileRow({
   return (
     <article
       ref={ref}
-      className={`knowledgeFileRow ${previewed ? "selected" : ""} ${contextSelected ? "contextSelected" : ""}`}
+      className={`knowledgeFileRow ${previewed ? "selected" : ""}`}
       role="row"
       onContextMenu={(event) => { event.preventDefault(); setOpen(true); }}
     >
-      <div className="knowledgeFileCell">
-        <button className="fileContextToggle" type="button" aria-label={`${contextSelected ? "取消选择" : "选择"}${file.title}作为助手上下文`} aria-pressed={contextSelected} onClick={onToggleContext}>
-          {contextSelected ? <Check size={13} strokeWidth={2.4} /> : null}
-        </button>
+      <div className={`knowledgeFileCell ${selectable ? "hasSelection" : ""}`}>
+        {selectable ? <button className="fileContextToggle deliveryToggle" type="button" aria-label={`${selected ? "取消" : "选择"}${file.title}加入交付包`} aria-pressed={selected} onClick={onToggle}>{selected ? <Check size={12} strokeWidth={2.4} /> : null}</button> : null}
         <button className="knowledgeFileMain" type="button" onClick={onPreview}>
           <span className="knowledgeFileIcon">{file.title.endsWith(".xlsx") ? <FileSpreadsheet size={17} /> : <FileText size={17} />}</span>
           <span><strong>{file.title}</strong><small>{file.owner} · {file.status}</small></span>
@@ -215,7 +177,7 @@ function FileRow({
   );
 }
 
-function FilePreview({ file, onClose }: { file: KnowledgeFile; onClose: () => void }) {
+function FilePreview({ file, onClose, onOpenProject }: { file: KnowledgeFile; onClose: () => void; onOpenProject: () => void }) {
   return (
     <div className="modalBackdrop knowledgePreviewBackdrop" role="dialog" aria-modal="true">
       <section className="knowledgePreviewDialog">
@@ -227,7 +189,7 @@ function FilePreview({ file, onClose }: { file: KnowledgeFile; onClose: () => vo
           <p>{file.space === "rules" ? "数字同事执行任务时调用的业务规则、字段字典或产出模板。" : file.kind === "交付产物" ? "项目产出文件，可供成员预览和继续协作。" : "项目工作文件，可作为当前项目任务上下文。"}</p>
           <dl className="knowledgePreviewFacts"><div><dt>类型</dt><dd>{file.kind}</dd></div><div><dt>业务</dt><dd>{file.business}</dd></div><div><dt>状态</dt><dd>{file.status}</dd></div></dl>
         </div>
-        <footer><button className="secondaryButton compact" type="button" onClick={onClose}>关闭</button></footer>
+        <footer><button className="secondaryButton compact" type="button" onClick={onClose}>关闭</button><button className="primaryButton compact" type="button" onClick={onOpenProject}>进入所属项目</button></footer>
       </section>
     </div>
   );

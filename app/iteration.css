@@ -1077,8 +1077,10 @@ textarea {
 }
 
 .inspectorParameterGroupHeader:hover { background: var(--surface); }
-.inspectorParameterGroupHeader strong { font-size: 13px; }
+.inspectorParameterGroupHeader strong { font-size: 14px; font-weight: 600; }
 .inspectorParameterGroupHeader span { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px; }
+.inspectorParameterGroupHeader span.isPartial { color: var(--warning); }
+.inspectorParameterGroupHeader span.isComplete { color: var(--success); }
 .inspectorParameterGroupHeader svg { transition: transform 160ms ease; }
 .inspectorParameterGroup.isOpen .inspectorParameterGroupHeader svg { transform: rotate(180deg); }
 
@@ -1086,8 +1088,9 @@ textarea {
   display: grid;
 }
 
-.inspectorParameterFields > button {
+.inspectorParameterField {
   display: grid;
+  width: 100%;
   min-height: 36px;
   grid-template-columns: 90px minmax(0, 1fr) 18px;
   align-items: center;
@@ -1099,9 +1102,26 @@ textarea {
   padding: 0 6px;
   text-align: left;
 }
-.inspectorParameterFields > button:hover { background: var(--surface); }
-.inspectorParameterFields > button strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.inspectorParameterFields > button strong.empty { color: var(--muted); font-weight: 500; }
+
+.priorSessionHistory { display: grid; gap: 18px; margin-bottom: 18px; }
+.priorSessionSegment { display: grid; gap: 16px; }
+.priorSessionBlock { display: grid; gap: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px 16px; }
+.priorSessionBlock > header { display: flex; min-height: 0; align-items: flex-start; justify-content: space-between; gap: 16px; border: 0; padding: 0; }
+.priorSessionBlock > header div { display: grid; gap: 2px; }
+.priorSessionBlock > header strong { font-size: 13px; }
+.priorSessionBlock > header span,
+.priorSessionBlock > header small { color: var(--muted); font-size: 11px; }
+.priorSessionEntries { display: grid; gap: 7px; }
+.priorSessionEntries p { max-width: 78%; margin: 0; color: var(--body); padding: 2px 0; font-size: 13px; line-height: 1.55; }
+.priorSessionEntries p.user { justify-self: end; border-radius: 10px; background: var(--surface-strong); color: var(--ink); padding: 8px 10px; }
+.priorSessionBlock dl { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.priorSessionBlock dl div { display: inline-flex; gap: 5px; border: 1px solid var(--line); border-radius: 7px; background: #fff; padding: 5px 7px; font-size: 10px; }
+.priorSessionBlock dt { color: var(--muted); }
+.priorSessionBlock dd { margin: 0; color: var(--ink-soft); font-weight: 600; }
+.inspectorParameterField > span:first-child { font-size: 12px; }
+button.inspectorParameterField:hover { background: var(--surface); }
+.inspectorParameterField strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.inspectorParameterField.isEmpty strong { color: var(--muted); font-weight: 500; }
 
 .dmpkInspectorRail {
   display: grid;
@@ -1142,11 +1162,10 @@ textarea {
 
 .persistentParameterBody {
   min-height: 0;
-  max-height: min(50vh, 520px);
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
   border-top: 1px solid var(--line);
   padding: 12px 14px 14px;
-  scrollbar-gutter: stable;
 }
 
 .persistentParameterBody .dmpkInspectorIntro { display: none; }
@@ -1178,11 +1197,11 @@ textarea {
   grid-template-columns: 72px minmax(0, 1fr);
 }
 
-.dmpkShell.tumor-reportModuleShell:has(.inspector.isPinned) {
+.dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) {
   grid-template-columns: 280px minmax(0, 1fr) 400px;
 }
 
-.dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.isPinned) {
+.dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) {
   grid-template-columns: 72px minmax(0, 1fr) 400px;
 }
 
@@ -1202,7 +1221,7 @@ textarea {
   max-width: 780px;
 }
 
-.tumor-reportModuleShell .inspector.isPinned {
+.tumor-reportModuleShell .inspector.pinned {
   position: relative;
   z-index: 1;
   top: auto;
@@ -1436,25 +1455,23 @@ textarea {
 .knowledgeFileCell {
   display: grid;
   min-width: 0;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
 }
-
-.fileContextToggle {
-  display: grid;
-  width: 18px;
-  height: 18px;
-  place-items: center;
-  border: 1px solid var(--line-strong);
-  border-radius: 5px;
-  background: #fff;
-  color: #fff;
-}
-
-.fileContextToggle:hover { border-color: #7f8a9b; }
-.fileContextToggle[aria-pressed="true"] { border-color: #344054; background: #344054; }
-.knowledgeFileRow.contextSelected { background: #f8fafc; }
+.knowledgeFileCell.hasSelection { grid-template-columns: 18px minmax(0, 1fr); gap: 7px; }
+.deliveryToggle { display: grid; width: 16px; height: 16px; place-items: center; border: 1px solid var(--line-strong); border-radius: 4px; background: #fff; color: #fff; }
+.deliveryToggle[aria-pressed="true"] { border-color: var(--ink-soft); background: var(--ink-soft); }
+.projectFileLanes { display: grid; gap: 24px; }
+.projectFileLane { display: grid; gap: 10px; }
+.projectLaneHeader { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.projectLaneHeader > div { display: grid; gap: 3px; }
+.projectLaneHeader strong { font-size: 15px; }
+.projectLaneHeader span,
+.projectLaneHeader small { color: var(--muted); font-size: 11px; }
+.businessOutputGroup { display: grid; gap: 7px; }
+.businessOutputGroup h3 { margin: 4px 0 0; color: var(--body); font-size: 12px; font-weight: 650; }
+.projectBackButton { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+.projectKnowledgeToolbar { justify-content: flex-start; }
 
 .libraryAssistant .workspaceAssistantLauncher {
   width: min(420px, calc(100% - 48px));
@@ -1541,6 +1558,15 @@ textarea {
   box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08);
 }
 
+.libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer input,
+.libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer input:focus {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.taskWorkbenchView > header > .primaryButton { display: none; }
+
 .assistantContextBar .compactSelect { flex: 0 0 auto; }
 
 .libraryAssistant .workspaceAssistantLauncher {
@@ -1554,7 +1580,8 @@ textarea {
 .libraryAssistant .workspaceAssistantLauncher:hover,
 .libraryAssistant .workspaceAssistantLauncher:focus-visible {
   border-color: rgba(41, 67, 255, 0.32);
-  box-shadow: 0 16px 42px rgba(17, 19, 24, 0.12), 0 0 0 4px rgba(41, 67, 255, 0.07);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 42px rgba(17, 19, 24, 0.12), 0 0 0 4px rgba(41, 67, 255, 0.09), 0 0 26px rgba(41, 67, 255, 0.1);
 }
 
 .libraryAssistant .libraryAssistantWorkspace {
@@ -1708,9 +1735,12 @@ textarea {
 }
 
 .parameterTaskCard .warningDecisionList {
-  max-height: 236px;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: visible;
 }
+
+.parameterTaskCard,
+.parameterTaskCard .warningDecisionList { transition: min-height 180ms ease, height 180ms ease; }
 
 .parameterTaskCard:not(:hover):not(:focus-within) .warningDecisionList,
 .parameterTaskCard:not(:hover):not(:focus-within) .decisionRow {
@@ -1718,26 +1748,45 @@ textarea {
 }
 
 .parameterTaskCard .decisionRow {
-  min-height: 68px;
-  grid-template-columns: 34px minmax(0, 1fr);
-  gap: 10px;
+  min-height: 62px;
+  display: block;
   border-radius: 12px;
-  padding: 9px 11px;
+  padding: 8px 11px;
 }
 
 .parameterTaskCard .decisionIndex {
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
-  font-size: 12px;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  font-size: 11px;
 }
 
 .parameterTaskCard .decisionCopy {
-  gap: 2px;
+  gap: 4px;
 }
 
-.parameterTaskCard .decisionCopy > span {
+.parameterTaskCard .decisionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.parameterTaskCard .decisionTitleRow > strong {
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.parameterTaskCard .requiredTag {
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(139, 111, 56, 0.18);
+  border-radius: 6px;
+  padding: 0 6px;
+  background: rgba(139, 111, 56, 0.06);
+  color: #80652f;
   font-size: 10px;
+  font-weight: 650;
 }
 
 .parameterTaskCard .optionGrid {
@@ -1758,8 +1807,10 @@ textarea {
   margin-top: 2px;
 }
 
-.parameterTaskCard .parameterPager span {
-  font-size: 14px;
+.parameterTaskCard .parameterPager .responsibilityNote {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--body);
 }
 
 .parameterTaskCard .parameterPager button {
@@ -1768,12 +1819,7 @@ textarea {
   font-size: 12px;
 }
 
-.inspectorParameterFields > button.isEditing {
-  background: rgba(41, 67, 255, 0.06);
-  color: var(--brand);
-}
-
-.inspectorParameterFields > button.isEditing svg {
+.inspectorParameterField.isEditing svg {
   color: var(--brand);
   animation: parameterEditNudge 420ms ease;
 }

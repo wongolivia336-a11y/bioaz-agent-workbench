@@ -168,8 +168,9 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
   return <div className="dmpkInspectorList"><PanelIntro title={`${completed}/${context.fields.length} 项已确认`} meta="计价参数会随对话实时更新" />{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
     const fields = context.fields.filter((field) => field.group === group);
     const open = context.openGroups[group];
-    const status = fields.every((field) => field.value) ? "已完成" : group === context.activeGroup ? "进行中" : "待填写";
-    return <section className={`inspectorParameterGroup ${open ? "isOpen" : ""}`} key={group}><button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => context.onToggleGroup(group)}><strong>{groupLabels[group]}</strong><span>{status}<ChevronDown size={14} /></span></button>{open ? <div className="inspectorParameterFields">{fields.map((field) => <button className={context.editingFieldId === field.id ? "isEditing" : ""} type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong className={field.value ? "" : "empty"}>{field.value || "待填写"}</strong><Edit3 size={13} /></button>)}</div> : null}</section>;
+    const groupCompleted = fields.filter((field) => field.value).length;
+    const progressClass = groupCompleted === fields.length ? "isComplete" : groupCompleted ? "isPartial" : "isEmpty";
+    return <section className={`inspectorParameterGroup ${open ? "isOpen" : ""}`} key={group}><button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => context.onToggleGroup(group)}><strong>{groupLabels[group]}</strong><span className={progressClass}>{groupCompleted}/{fields.length}<ChevronDown size={14} /></span></button>{open ? <div className="inspectorParameterFields">{fields.map((field) => field.value ? <button className={`inspectorParameterField ${context.editingFieldId === field.id ? "isEditing" : ""}`} type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong>{field.value}</strong><Edit3 size={13} /></button> : <div className="inspectorParameterField isEmpty" key={field.id}><span>{field.label}</span><strong>待填写</strong><span aria-hidden="true" /></div>)}</div> : null}</section>;
   })}</div>;
 }
 

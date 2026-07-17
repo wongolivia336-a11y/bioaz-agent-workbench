@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { ChevronDown, ChevronRight, FileSpreadsheet, SlidersHorizontal } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
+import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { AgentModuleSessionProps } from "../types";
 import {
   dmpkGroups,
@@ -23,7 +24,7 @@ import {
   type DmpkInspectorPanelId,
 } from "./views";
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange }: AgentModuleSessionProps) {
   const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
@@ -53,6 +54,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
   const activeCoworker = businessCoworkers.find((coworker) => coworker.id === activeCoworkerId) ?? businessCoworkers[0];
   const ActiveCoworkerIcon = activeCoworker?.icon ?? FileSpreadsheet;
+
+  useEffect(() => {
+    onSessionSnapshotChange?.({
+      moduleId: "dmpk-quotation",
+      coworkerName: activeCoworker?.name ?? "DMPK报价同事",
+      stageLabel: stage === "generated" ? "报价已生成" : stage === "ready" ? "参数已齐全" : stage === "collecting" ? "参数补全中" : "报价处理中",
+      entries: messages.map((message) => ({ id: message.id, role: message.role, text: message.text })),
+      facts: fields.filter((field) => field.value).map((field) => ({ label: field.label, value: field.value })),
+    });
+  }, [activeCoworker?.name, fields, messages, onSessionSnapshotChange, stage]);
 
   const appendMessage = (role: DmpkChatMessage["role"], text: string) => {
     setMessages((items) => [...items, { id: `${role}-${Date.now()}-${items.length}`, role, text }]);
@@ -114,7 +125,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setEditingFieldId(field.id);
     setDraftTabs((items) => items.filter((item) => item.fieldId !== field.id));
     setActiveGroup(field.group);
-    setOpenGroups((current) => ({ ...current, [field.group]: true }));
+    setOpenGroups({ assay: field.group === "assay", animal: field.group === "animal", analysis: field.group === "analysis", delivery: field.group === "delivery" });
     setStage("collecting");
     setComposerAttention(false);
     window.requestAnimationFrame(() => setComposerAttention(true));
@@ -139,7 +150,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       setEditingFieldId(null);
       if (nextGroup) {
         setActiveGroup(nextGroup);
-        setOpenGroups((current) => ({ ...current, [nextGroup]: true }));
+        setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
         setStage("collecting");
         appendMessage("agent", `已更新报价参数。还需补充 ${remaining.length} 项参数，请继续在下方补全卡中选择。`);
       } else {
@@ -206,7 +217,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <section className="dmpkWorkspace">
         <header className="topbar"><div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div></header>
         <header className="agentHeader"><div className="agentTitle"><span className="agentIcon pending"><ActiveCoworkerIcon size={18} /></span><span>{activeCoworker?.name ?? "DMPK报价同事"}</span></div></header>
-        <div className="dmpkChatScroller"><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
+        <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer attention={composerAttention} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
       <aside
