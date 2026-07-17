@@ -2,6 +2,7 @@
 
 import {
   Calculator,
+  ChevronDown,
   CircleAlert,
   Clock3,
   Edit3,
@@ -39,6 +40,8 @@ export type DmpkInspectorContext = {
   projectName: string;
   taskTitle: string;
   requestText: string;
+  openGroups: Record<DmpkInspectorGroup, boolean>;
+  onToggleGroup: (group: DmpkInspectorGroup) => void;
   errorMessage?: string;
   onEditField: (fieldId: string) => void;
   onPreviewArtifact: (kind: "word" | "excel") => void;
@@ -163,7 +166,9 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
   const completed = context.fields.filter((field) => field.value).length;
   return <div className="dmpkInspectorList"><PanelIntro title={`${completed}/${context.fields.length} 项已确认`} meta="计价参数会随对话实时更新" />{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
     const fields = context.fields.filter((field) => field.group === group);
-    return <section className="inspectorParameterGroup" key={group}><header><strong>{groupLabels[group]}</strong><span>{fields.every((field) => field.value) ? "已完成" : group === context.activeGroup ? "进行中" : "待填写"}</span></header>{fields.map((field) => <button type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong className={field.value ? "" : "empty"}>{field.value || "待填写"}</strong><Edit3 size={13} /></button>)}</section>;
+    const open = context.openGroups[group];
+    const status = fields.every((field) => field.value) ? "已完成" : group === context.activeGroup ? "进行中" : "待填写";
+    return <section className={`inspectorParameterGroup ${open ? "isOpen" : ""}`} key={group}><button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => context.onToggleGroup(group)}><strong>{groupLabels[group]}</strong><span>{status}<ChevronDown size={14} /></span></button>{open ? <div className="inspectorParameterFields">{fields.map((field) => <button type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong className={field.value ? "" : "empty"}>{field.value || "待填写"}</strong><Edit3 size={13} /></button>)}</div> : null}</section>;
   })}</div>;
 }
 

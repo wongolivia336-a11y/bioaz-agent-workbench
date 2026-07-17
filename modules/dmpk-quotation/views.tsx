@@ -77,7 +77,7 @@ export function DmpkComposer({ stage, text, setText, activeGroup, fields, mode, 
       {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} onChange={onCoworkerChange} />
-      <div className="dmpkComposer">
+      <div className="dmpkComposer workbenchComposer">
         <label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple onChange={(event) => { setAttachments(Array.from(event.target.files ?? []).map((file) => file.name)); event.target.value = ""; }} /></label>
         <div className="composerInputStack">
           {attachments.length ? <div className="draftTabs">{attachments.map((name) => <button type="button" key={name} onClick={() => setAttachments((items) => items.filter((item) => item !== name))}>{name}<X size={13} /></button>)}</div> : null}

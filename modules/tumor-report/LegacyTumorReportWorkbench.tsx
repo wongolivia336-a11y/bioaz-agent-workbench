@@ -20,6 +20,7 @@ import {
   Paperclip,
   Pin,
   PinOff,
+  Plus,
   Search,
   Sparkles,
   SearchCheck,
@@ -229,7 +230,17 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
       size: formatSize(file.size),
       kind: classifyFile(file),
     }));
-    setFiles(nextFiles);
+    setFiles((current) => {
+      const incomingProtocol = nextFiles.filter((file) => file.kind === "protocol").slice(-1);
+      const incomingData = nextFiles.filter((file) => file.kind === "data");
+      const incomingIds = new Set(nextFiles.map((file) => file.id));
+      const retained = current.filter((file) => {
+        if (incomingIds.has(file.id)) return false;
+        if (file.kind === "protocol" && incomingProtocol.length) return false;
+        return true;
+      });
+      return [...retained, ...incomingProtocol, ...incomingData];
+    });
     setStage(nextFiles.length > 0 ? "uploaded" : "empty");
     setWarnings(initialWarnings);
     setReviews(initialReviews);
@@ -369,18 +380,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
           {stage === "empty" && initialRequest ? <div className="legacyInitialRequest"><p>{initialRequest}</p></div> : null}
           {stage === "empty" ? <div className="legacyTumorOpening"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div> : null}
-          {stage === "empty" || stage === "uploaded" ? (
-            <UploadEmptyState
-              files={files}
-              protocolCount={protocolCount}
-              dataCount={dataCount}
-              canStart={canStart}
-              onUpload={() => fileInputRef.current?.click()}
-              onRemoveFile={removeFile}
-              onStartValidation={startValidation}
-              onDrop={onFilesDropped}
-            />
-          ) : (
+          {stage === "uploaded" ? <div className="legacyTumorOpening isCompact"><img src="/logo/bioaz-logo.svg" alt="" /><p>已收到 {files.length} 个文件。你可以继续补充、移除或替换材料；满足要求后从下方开始校验。</p></div> : null}
+          {stage !== "empty" && stage !== "uploaded" ? (
             <Conversation
               files={files}
               userEvents={userEvents}
@@ -400,7 +401,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
                 setInspectorOpen(true);
               }}
             />
-          )}
+          ) : null}
         </div>
 
         <div className="legacyComposerStack">
@@ -1519,7 +1520,7 @@ function Composer({
         />
       ) : null}
 
-      {stage === "empty" ? (
+      {stage === "empty" || stage === "uploaded" ? (
         <div className="filePrep">
           <div className={`requirementChip ${protocolCount ? "ok" : ""}`}>
             <FileText size={15} />
@@ -1535,7 +1536,7 @@ function Composer({
         </div>
       ) : null}
 
-      {files.length > 0 && stage === "empty" ? (
+      {files.length > 0 && (stage === "empty" || stage === "uploaded") ? (
         <div className="fileRows">
           {files.map((file) => (
             <div className="fileRow" key={file.id}>
@@ -1550,9 +1551,9 @@ function Composer({
         </div>
       ) : null}
 
-      <div className="composer">
+      <div className="composer workbenchComposer">
         <button className="attachIconButton" type="button" onClick={onUpload} aria-label="上传文件">
-          <Paperclip size={18} />
+          <Plus size={18} />
         </button>
         <input
           ref={inputRef}
@@ -1568,7 +1569,7 @@ function Composer({
         <button
           className="sendIconButton"
           type="button"
-          disabled={(stage === "empty" || stage === "uploaded") && !canStart}
+          disabled={(stage === "empty" || stage === "uploaded") && !canStart && !composerText.trim()}
           onClick={() => {
             if (composerText.trim()) {
               onSendMessage(composerText);

@@ -941,23 +941,66 @@ textarea {
 .composerAddButton:hover { background: var(--surface); color: var(--ink); }
 .composerAddButton input { display: none; }
 
+.workbenchComposer {
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 16px 42px rgba(17, 19, 24, 0.08);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.workbenchComposer:focus-within {
+  border-color: rgba(41, 67, 255, 0.28);
+  box-shadow: 0 16px 42px rgba(17, 19, 24, 0.09), 0 0 0 3px rgba(41, 67, 255, 0.06);
+}
+
+.workbenchComposer .sendIconButton,
+.newTaskComposer > .sendIconButton {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+}
+
+.workbenchComposer .composerAddButton,
+.workbenchComposer .attachIconButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+}
+
 .inspectorParameterGroup {
   display: grid;
   gap: 2px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 10px;
+  border-radius: 8px;
+  padding: 2px;
 }
 
-.inspectorParameterGroup > header {
+.inspectorParameterGroupHeader {
   display: flex;
+  width: 100%;
   min-height: 34px;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  padding: 0 6px;
+  text-align: left;
 }
 
-.inspectorParameterGroup > header strong { font-size: 13px; }
-.inspectorParameterGroup > header span { color: var(--muted); font-size: 11px; }
-.inspectorParameterGroup > button {
+.inspectorParameterGroupHeader:hover { background: var(--surface); }
+.inspectorParameterGroupHeader strong { font-size: 13px; }
+.inspectorParameterGroupHeader span { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px; }
+.inspectorParameterGroupHeader svg { transition: transform 160ms ease; }
+.inspectorParameterGroup.isOpen .inspectorParameterGroupHeader svg { transform: rotate(180deg); }
+
+.inspectorParameterFields {
+  display: grid;
+}
+
+.inspectorParameterFields > button {
   display: grid;
   min-height: 36px;
   grid-template-columns: 90px minmax(0, 1fr) 18px;
@@ -970,9 +1013,9 @@ textarea {
   padding: 0 6px;
   text-align: left;
 }
-.inspectorParameterGroup > button:hover { background: var(--surface); }
-.inspectorParameterGroup > button strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.inspectorParameterGroup > button strong.empty { color: var(--muted); font-weight: 500; }
+.inspectorParameterFields > button:hover { background: var(--surface); }
+.inspectorParameterFields > button strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.inspectorParameterFields > button strong.empty { color: var(--muted); font-weight: 500; }
 
 .dmpkInspectorRail {
   display: grid;
@@ -1112,6 +1155,10 @@ textarea {
   color: var(--ink-soft);
   font-size: 15px;
   line-height: 1.65;
+}
+
+.legacyTumorOpening.isCompact {
+  margin-top: 4px;
 }
 
 .legacyComposerStack {
@@ -1358,6 +1405,30 @@ textarea {
   border: 1px solid var(--line-strong);
   border-radius: 14px;
   box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08);
+}
+
+.libraryAssistant .workspaceAssistantLauncher {
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.98);
+  color: var(--ink);
+  box-shadow: 0 14px 40px rgba(17, 19, 24, 0.1);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.libraryAssistant .workspaceAssistantLauncher:hover,
+.libraryAssistant .workspaceAssistantLauncher:focus-visible {
+  border-color: rgba(41, 67, 255, 0.32);
+  box-shadow: 0 16px 42px rgba(17, 19, 24, 0.12), 0 0 0 4px rgba(41, 67, 255, 0.07);
+}
+
+.libraryAssistant .libraryAssistantWorkspace {
+  background: rgba(250, 251, 253, 0.96);
+  backdrop-filter: blur(12px);
+}
+
+.libraryAssistant .libraryAssistantWorkspace .workspaceAssistantComposer:focus-within {
+  border-color: rgba(41, 67, 255, 0.34);
+  box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08), 0 0 0 4px rgba(41, 67, 255, 0.06);
 }
 
 @media (max-width: 1100px) {
