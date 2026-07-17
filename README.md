@@ -7,7 +7,7 @@ This repository is for design review, user-flow validation, and engineering hand
 ## Preview
 
 - Local phase-one branch: `codex/workbench-shell-phase-1`
-- Vercel: import this repository as a Next.js project.
+- Vercel: https://prototype-bioaz-agent-workbench.vercel.app/
 
 ## Quick Start
 
