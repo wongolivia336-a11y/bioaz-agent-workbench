@@ -19,7 +19,7 @@ export const dmpkQuotationCoworker: CoworkerDefinition = {
 
 export const tumorReportCoworker: CoworkerDefinition = {
   id: "tumor-report-coworker",
-  name: "药效报告同事",
+  name: "肿瘤报告同事",
   icon: FileText,
   description: "整理原始数据并撰写肿瘤药效报告",
   owner: "SD助理可调用",

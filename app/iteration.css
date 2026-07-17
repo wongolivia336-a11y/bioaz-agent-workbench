@@ -1188,7 +1188,18 @@ textarea {
 
 .tumor-reportModuleShell .legacyTumorWorkspace {
   min-width: 0;
-  grid-template-rows: 58px 68px minmax(0, 1fr) auto;
+  position: relative;
+  grid-template-rows: 58px 68px minmax(0, 1fr);
+}
+
+.tumor-reportModuleShell .chatScroller {
+  padding-bottom: 210px;
+}
+
+.tumor-reportModuleShell .conversation .agentReply {
+  grid-template-columns: minmax(0, 740px);
+  width: 100%;
+  max-width: 780px;
 }
 
 .tumor-reportModuleShell .inspector.isPinned {
@@ -1252,13 +1263,17 @@ textarea {
 
 .legacyComposerStack {
   display: grid;
+  position: absolute;
+  right: 36px;
+  bottom: 18px;
+  left: 36px;
   z-index: 4;
   width: min(860px, calc(100% - 72px));
   gap: 7px;
-  justify-self: center;
+  margin: 0 auto;
   border: 0;
   background: transparent;
-  padding: 0 0 18px;
+  padding: 0;
 }
 
 .legacyComposerStack > .coworkerSelector { justify-self: start; }
@@ -1407,8 +1422,8 @@ textarea {
 .assistantBackdrop { position: fixed; z-index: 80; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(17,19,24,0.16); backdrop-filter: blur(2px); }
 .libraryAssistant .workspaceAssistantPanel { position: fixed; z-index: 85; top: 50%; left: 50%; width: min(680px, calc(100vw - 40px)); max-height: min(620px, calc(100vh - 80px)); transform: translate(-50%, -50%); border-radius: 16px; }
 .libraryAssistant .workspaceAssistantBody { min-height: 380px; padding: 28px; }
-.assistantHeroMark { display: grid; width: 52px; height: 52px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-.assistantHeroMark img { width: 31px; }
+.assistantHeroMark { display: grid; width: 58px; height: 52px; place-items: center; }
+.assistantHeroMark img { width: 44px; height: 38px; object-fit: contain; }
 .libraryAssistant .assistantWelcome { justify-items: center; text-align: center; }
 .libraryAssistant .assistantSuggestions { grid-template-columns: repeat(3, minmax(0,1fr)); }
 .libraryAssistant .assistantSuggestions button { min-height: 86px; align-content: space-between; text-align: left; }
@@ -1525,6 +1540,8 @@ textarea {
   border-radius: 14px;
   box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08);
 }
+
+.assistantContextBar .compactSelect { flex: 0 0 auto; }
 
 .libraryAssistant .workspaceAssistantLauncher {
   border: 1px solid var(--line-strong);

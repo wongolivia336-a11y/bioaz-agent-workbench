@@ -100,7 +100,7 @@ export function FileManager() {
     <section className="workbenchView knowledgeBaseView">
       <header>
         <div><h1>文件管理系统</h1></div>
-        <label className="primaryButton compact" htmlFor="file-upload"><Upload size={14} />上传文档</label>
+        <label className="primaryButton compact" htmlFor="file-upload"><Upload size={14} />上传资料</label>
         <input className="visuallyHidden" id="file-upload" type="file" multiple onChange={upload} />
       </header>
 
@@ -111,9 +111,9 @@ export function FileManager() {
       <div className="knowledgeToolbar">
         <div className="knowledgeSearch"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索文件" /></div>
         <div className="fileSourceFilters" aria-label="文件来源">
-          <button type="button" className={source === "all" ? "active" : ""} onClick={() => setSource("all")}>全部</button>
-          <button type="button" className={source === "human" ? "active" : ""} onClick={() => setSource("human")}>人工上传</button>
-          <button type="button" className={source === "agent" ? "active" : ""} onClick={() => setSource("agent")}>数字同事产物</button>
+          <button type="button" className={source === "all" ? "active" : ""} onClick={() => setSource("all")}>全部文件</button>
+          <button type="button" className={source === "human" ? "active" : ""} onClick={() => setSource("human")}>工作资料</button>
+          <button type="button" className={source === "agent" ? "active" : ""} onClick={() => setSource("agent")}>交付产物</button>
         </div>
         {space === "projects" ? <CompactSelect value={project} options={["全部项目", ...projectOptions.filter((item) => item !== "临时任务"), "未归档"]} onChange={setProject} /> : null}
         <CompactSelect value={business} options={["全部业务", "DMPK报价", "药效报告", "未分类"]} onChange={setBusiness} />
