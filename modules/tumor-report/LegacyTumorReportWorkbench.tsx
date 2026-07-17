@@ -1528,11 +1528,9 @@ function Composer({
       {stage === "empty" || stage === "uploaded" ? (
         <div className="filePrep">
           <div className={`requirementChip ${protocolCount ? "ok" : ""}`}>
-            <FileText size={15} />
             方案 Word {protocolCount}/1
           </div>
           <div className={`requirementChip ${dataCount ? "ok" : ""}`}>
-            <FileSpreadsheet size={15} />
             实验 Excel {dataCount}/1+
           </div>
           <div className={`requirementChip ${canStart ? "ok" : ""}`}>
@@ -2364,7 +2362,7 @@ function inspectorPanels(stage: Stage): Array<{ id: InspectorTopic; label: strin
     ];
   }
 
-  return [{ id: "process", label: "任务列表" }];
+  return [{ id: "process", label: "处理过程" }];
 }
 
 function artifactIcon(kind: string) {
