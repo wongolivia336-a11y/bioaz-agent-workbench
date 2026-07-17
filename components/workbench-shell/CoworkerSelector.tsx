@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightLeft, Check, ChevronDown, Lock } from "lucide-react";
+import { ArrowRightLeft, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import type { CoworkerDefinition } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
@@ -18,7 +18,6 @@ export function CoworkerSelector({ coworkers, activeCoworkerId, onChange, locked
       <button className="roleSelectorCurrent" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <ActiveIcon size={16} strokeWidth={1.9} />
         <span>{activeCoworker.name}</span>
-        {locked ? <Lock size={13} aria-label="当前业务进行中" /> : null}
         <ChevronDown size={14} strokeWidth={1.8} />
       </button>
       {open ? (
@@ -30,7 +29,6 @@ export function CoworkerSelector({ coworkers, activeCoworkerId, onChange, locked
               <button className={coworker.id === activeCoworker.id ? "active" : ""} disabled={disabled} type="button" key={coworker.id} onClick={() => { if (coworker.id !== activeCoworker.id) onChange(coworker.id); setOpen(false); setForceMode(false); }}>
                 <Icon size={16} strokeWidth={1.9} />
                 <strong>{coworker.name}</strong>
-                {coworker.id === activeCoworker.id ? <Check size={14} /> : disabled ? <Lock size={13} /> : null}
               </button>
             );
           })}

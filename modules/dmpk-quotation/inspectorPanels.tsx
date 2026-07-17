@@ -44,6 +44,7 @@ export type DmpkInspectorContext = {
   onToggleGroup: (group: DmpkInspectorGroup) => void;
   errorMessage?: string;
   onEditField: (fieldId: string) => void;
+  editingFieldId?: string | null;
   onPreviewArtifact: (kind: "word" | "excel") => void;
   onPreviewQuotation: () => void;
 };
@@ -168,7 +169,7 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
     const fields = context.fields.filter((field) => field.group === group);
     const open = context.openGroups[group];
     const status = fields.every((field) => field.value) ? "已完成" : group === context.activeGroup ? "进行中" : "待填写";
-    return <section className={`inspectorParameterGroup ${open ? "isOpen" : ""}`} key={group}><button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => context.onToggleGroup(group)}><strong>{groupLabels[group]}</strong><span>{status}<ChevronDown size={14} /></span></button>{open ? <div className="inspectorParameterFields">{fields.map((field) => <button type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong className={field.value ? "" : "empty"}>{field.value || "待填写"}</strong><Edit3 size={13} /></button>)}</div> : null}</section>;
+    return <section className={`inspectorParameterGroup ${open ? "isOpen" : ""}`} key={group}><button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => context.onToggleGroup(group)}><strong>{groupLabels[group]}</strong><span>{status}<ChevronDown size={14} /></span></button>{open ? <div className="inspectorParameterFields">{fields.map((field) => <button className={context.editingFieldId === field.id ? "isEditing" : ""} type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong className={field.value ? "" : "empty"}>{field.value || "待填写"}</strong><Edit3 size={13} /></button>)}</div> : null}</section>;
   })}</div>;
 }
 
