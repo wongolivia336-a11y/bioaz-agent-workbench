@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ArrowLeft, Check, ChevronDown, FileSearch, Lightbulb, ListChecks, MessageSquare, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -55,7 +55,7 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext }: { c
             {question ? <><div className="assistantExchange"><p>{question}</p><div><Sparkles size={14} /><span>{library ? `我已结合${assistantProject === "全部项目" ? "全部项目" : assistantProject}范围内的文件与任务整理相关内容。` : "已按最近更新时间检查任务，顶部三项需要你处理。"}</span></div></div>{library ? <div className="assistantReferences"><button type="button"><FileSearch size={16} /><span><strong>样本9_双批次报告_v3.docx</strong><small>XX药业-PD1临床前评价 · 数字同事产出</small></span></button><button type="button"><FileSearch size={16} /><span><strong>batch9_raw.xlsx</strong><small>XX药业-PD1临床前评价 · 人工资料</small></span></button><button type="button"><ListChecks size={16} /><span><strong>样本9_双批次交付包.zip</strong><small>报告、图表、QC 与证据摘要</small></span></button></div> : null}</> : <div className="assistantWelcome"><span className="assistantHeroMark"><img src="/logo/bioaz-logo.svg" alt="" /></span><strong>{library ? "需要处理什么项目资料？" : "你好，我是 BioAZ Helper"}</strong><p>{library ? "我可以基于当前范围内的文件与任务进行查找、总结和思路拓展。" : "找任务、查进度或发起新工作。"}</p></div>}
             {!question ? <div className="assistantSuggestions">{suggestions.map((item, index) => <button type="button" key={item} onClick={() => submit(item)}>{library ? [<FileSearch key="search" size={16} />, <ListChecks key="summary" size={16} />, <Lightbulb key="ideas" size={16} />][index] : null}<span>{item}</span></button>)}</div> : null}
           </div>
-          <form className="workspaceAssistantComposer" onSubmit={(event) => { event.preventDefault(); submit(text); }}><input value={text} onChange={(event) => setText(event.target.value)} placeholder={library ? "询问文件内容，或描述想拓展的思路..." : "给 BioAZ Helper 发消息..."} aria-label={library ? "给 BioAZ 文件助手发消息" : "给 BioAZ Helper 发消息"} /><button type="submit" aria-label="发送" disabled={!text.trim()}><Send size={16} /></button></form>
+          <form className="workspaceAssistantComposer workbenchComposer" onSubmit={(event) => { event.preventDefault(); submit(text); }}><input value={text} onChange={(event) => setText(event.target.value)} placeholder={library ? "询问文件内容，或描述想拓展的思路..." : "给 BioAZ Helper 发消息..."} aria-label={library ? "给 BioAZ 文件助手发消息" : "给 BioAZ Helper 发消息"} /><button className="sendIconButton" type="submit" aria-label="发送" disabled={!text.trim()}><Send size={16} /></button></form>
         </section>
       ) : null}
       {!open && library ? <div className="workspaceAssistantHoverMenu"><span>可以这样问</span>{suggestions.map((item, index) => <button type="button" key={item} onClick={() => { setOpen(true); submit(item); }}>{[<FileSearch key="search" size={15} />, <ListChecks key="summary" size={15} />, <Lightbulb key="ideas" size={15} />][index]}{item}</button>)}</div> : null}

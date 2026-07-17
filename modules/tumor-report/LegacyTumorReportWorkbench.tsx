@@ -403,7 +403,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
           {stage === "empty" && initialRequest ? <div className="legacyInitialRequest"><p>{initialRequest}</p></div> : null}
           {stage === "empty" ? <div className="legacyTumorOpening"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div> : null}
-          {stage === "uploaded" ? <div className="legacyTumorOpening isCompact"><img src="/logo/bioaz-logo.svg" alt="" /><p>已收到 {files.length} 个文件。你可以继续补充、移除或替换材料；满足要求后从下方开始校验。</p></div> : null}
+          {stage === "uploaded" ? <div className="legacyTumorOpening isCompact uploadReadyNotice"><img src="/logo/bioaz-logo.svg" alt="" /><div><strong>文件已就绪 · {files.length} 个</strong><p>可在下方检查、移除或替换材料；满足要求后即可开始校验。</p><button type="button" onClick={() => fileInputRef.current?.click()}>继续添加文件</button></div></div> : null}
           {stage !== "empty" && stage !== "uploaded" ? (
             <Conversation
               files={files}
@@ -2143,9 +2143,9 @@ function HoverInspector({
       aria-hidden={!open}
     >
       <header>
-        <div className="panelSelector">
+        <div className="workbenchPanelSelector">
           <button
-            className="panelSelectorTrigger"
+            className="workbenchPanelSelectorTrigger"
             type="button"
             onClick={() => setPanelMenuOpen((current) => !current)}
             aria-expanded={panelMenuOpen}
@@ -2155,7 +2155,7 @@ function HoverInspector({
             <ChevronRight className={panelMenuOpen ? "isOpen" : ""} size={15} />
           </button>
           {panelMenuOpen ? (
-            <div className="panelSelectorMenu">
+            <div className="workbenchPanelSelectorMenu">
               {panelOptions.map((panel) => (
                 <button
                   key={panel.id}
