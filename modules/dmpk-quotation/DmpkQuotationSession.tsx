@@ -38,6 +38,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
   const [parametersExpanded, setParametersExpanded] = useState(true);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [composerAttention, setComposerAttention] = useState(false);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
   const [secondaryInspectorTop, setSecondaryInspectorTop] = useState(142);
   const startedInitialRequest = useRef(false);
@@ -115,6 +116,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setActiveGroup(field.group);
     setOpenGroups((current) => ({ ...current, [field.group]: true }));
     setStage("collecting");
+    setComposerAttention(false);
+    window.requestAnimationFrame(() => setComposerAttention(true));
+    window.setTimeout(() => setComposerAttention(false), 720);
     appendMessage("agent", `请问您希望将${field.label}修改为什么？请在下方选择一个新值，发送后我会更新右侧参数。`);
   };
 
@@ -190,6 +194,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       [group]: !current[group],
     })),
     onEditField: requestFieldEdit,
+    editingFieldId,
     onPreviewArtifact: setArtifactPreview,
     onPreviewQuotation: () => setPreviewOpen(true),
   });
@@ -202,7 +207,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         <header className="topbar"><div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div></header>
         <header className="agentHeader"><div className="agentTitle"><span className="agentIcon pending"><ActiveCoworkerIcon size={18} /></span><span>{activeCoworker?.name ?? "DMPK报价同事"}</span></div></header>
         <div className="dmpkChatScroller"><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
+        <DmpkComposer attention={composerAttention} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
       <aside
         className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}

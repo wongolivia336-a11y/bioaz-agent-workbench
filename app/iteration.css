@@ -1188,7 +1188,18 @@ textarea {
 
 .tumor-reportModuleShell .legacyTumorWorkspace {
   min-width: 0;
-  grid-template-rows: 58px 68px minmax(0, 1fr) auto;
+  position: relative;
+  grid-template-rows: 58px 68px minmax(0, 1fr);
+}
+
+.tumor-reportModuleShell .chatScroller {
+  padding-bottom: 210px;
+}
+
+.tumor-reportModuleShell .conversation .agentReply {
+  grid-template-columns: minmax(0, 740px);
+  width: 100%;
+  max-width: 780px;
 }
 
 .tumor-reportModuleShell .inspector.isPinned {
@@ -1252,13 +1263,17 @@ textarea {
 
 .legacyComposerStack {
   display: grid;
+  position: absolute;
+  right: 36px;
+  bottom: 18px;
+  left: 36px;
   z-index: 4;
   width: min(860px, calc(100% - 72px));
   gap: 7px;
-  justify-self: center;
+  margin: 0 auto;
   border: 0;
   background: transparent;
-  padding: 0 0 18px;
+  padding: 0;
 }
 
 .legacyComposerStack > .coworkerSelector { justify-self: start; }
@@ -1407,8 +1422,8 @@ textarea {
 .assistantBackdrop { position: fixed; z-index: 80; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(17,19,24,0.16); backdrop-filter: blur(2px); }
 .libraryAssistant .workspaceAssistantPanel { position: fixed; z-index: 85; top: 50%; left: 50%; width: min(680px, calc(100vw - 40px)); max-height: min(620px, calc(100vh - 80px)); transform: translate(-50%, -50%); border-radius: 16px; }
 .libraryAssistant .workspaceAssistantBody { min-height: 380px; padding: 28px; }
-.assistantHeroMark { display: grid; width: 52px; height: 52px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-.assistantHeroMark img { width: 31px; }
+.assistantHeroMark { display: grid; width: 58px; height: 52px; place-items: center; }
+.assistantHeroMark img { width: 44px; height: 38px; object-fit: contain; }
 .libraryAssistant .assistantWelcome { justify-items: center; text-align: center; }
 .libraryAssistant .assistantSuggestions { grid-template-columns: repeat(3, minmax(0,1fr)); }
 .libraryAssistant .assistantSuggestions button { min-height: 86px; align-content: space-between; text-align: left; }
@@ -1525,6 +1540,8 @@ textarea {
   border-radius: 14px;
   box-shadow: 0 16px 45px rgba(17, 19, 24, 0.08);
 }
+
+.assistantContextBar .compactSelect { flex: 0 0 auto; }
 
 .libraryAssistant .workspaceAssistantLauncher {
   border: 1px solid var(--line-strong);
@@ -1661,4 +1678,174 @@ textarea {
   .libraryAssistant .assistantSuggestions { grid-template-columns: 1fr; }
   .libraryAssistant .workspaceAssistantPanel:not(.libraryAssistantWorkspace) { top: 20px; bottom: 20px; width: calc(100vw - 24px); max-height: none; transform: translateX(-50%); }
   .libraryAssistant .libraryAssistantWorkspace { left: 72px; }
+}
+
+/* Focused interaction polish: compact parameter editing and quiet handoff UI. */
+.dmpkComposerWrap > .parameterTaskCard {
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.parameterTaskCard .warningDecisionHeader {
+  gap: 10px;
+}
+
+.parameterTaskCard .warningDecisionHeader p {
+  max-width: 520px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.parameterTaskCard .parameterPages {
+  gap: 5px;
+}
+
+.parameterTaskCard .parameterPages button {
+  min-height: 30px;
+  border-radius: 9px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+.parameterTaskCard .warningDecisionList {
+  max-height: 236px;
+  overflow-y: auto;
+}
+
+.parameterTaskCard:not(:hover):not(:focus-within) .warningDecisionList,
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow {
+  min-height: 68px;
+}
+
+.parameterTaskCard .decisionRow {
+  min-height: 68px;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  border-radius: 12px;
+  padding: 9px 11px;
+}
+
+.parameterTaskCard .decisionIndex {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+
+.parameterTaskCard .decisionCopy {
+  gap: 2px;
+}
+
+.parameterTaskCard .decisionCopy > span {
+  font-size: 10px;
+}
+
+.parameterTaskCard .optionGrid {
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.parameterTaskCard .optionGrid button,
+.parameterTaskCard .customOptionInput {
+  min-height: 28px;
+  border-radius: 8px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+.parameterTaskCard .parameterPager {
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.parameterTaskCard .parameterPager span {
+  font-size: 14px;
+}
+
+.parameterTaskCard .parameterPager button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.inspectorParameterFields > button.isEditing {
+  background: rgba(41, 67, 255, 0.06);
+  color: var(--brand);
+}
+
+.inspectorParameterFields > button.isEditing svg {
+  color: var(--brand);
+  animation: parameterEditNudge 420ms ease;
+}
+
+.dmpkComposerWrap.needsAttention .dmpkComposer {
+  animation: composerAttention 680ms ease;
+}
+
+@keyframes parameterEditNudge {
+  0%, 100% { transform: rotate(0); }
+  35% { transform: rotate(-10deg) translateY(-1px); }
+  70% { transform: rotate(8deg); }
+}
+
+@keyframes composerAttention {
+  0%, 100% { border-color: var(--line); box-shadow: 0 18px 48px rgba(17, 19, 24, 0.09); }
+  45% { border-color: rgba(41, 67, 255, 0.42); box-shadow: 0 18px 52px rgba(41, 67, 255, 0.15), 0 0 0 3px rgba(41, 67, 255, 0.07); }
+}
+
+.roleSelectorMenu {
+  width: 356px;
+  border-radius: 14px;
+}
+
+.roleSelectorMenu > button {
+  min-height: 42px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 9px;
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+
+.roleSelectorMenu .roleSelectorForceSwitch {
+  min-height: 34px;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  margin-top: 3px;
+  padding: 7px 8px 2px;
+}
+
+.roleSelectorForceSwitch strong {
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.roleSelectorForceSwitch span {
+  font-size: 10px;
+}
+
+.coworkerSwitchCard {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 11px 12px;
+  box-shadow: 0 12px 34px rgba(17, 19, 24, 0.06);
+}
+
+.coworkerSwitchCard > button:not(.primaryButton) {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--body);
+  padding: 0 12px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.workbenchInspectorHeader {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.workbenchInspectorBody {
+  flex: 1 1 auto;
 }

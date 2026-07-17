@@ -14,7 +14,7 @@ export const dmpkQuotationModule: AgentModuleDefinition = {
       id: "dmpk-quotation",
       label: "DMPK 报价",
       examples: ["发起一份 DMPK 报价", "PK 动物实验报价"],
-      keywords: /dmpk|\bpk\b|生物分析报价|动物实验报价/i,
+      keywords: /dmpk|\bpk\b|生物分析报价|动物实验报价|(?:我要|需要|做|发起).*报价|报价任务/i,
       clarification: "这是一项 DMPK / PK 报价工作吗？",
     },
   ],
