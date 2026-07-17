@@ -3,6 +3,7 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import type { CoworkerDefinition } from "../../modules/types";
+import type { AgentSessionSnapshot } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 export function DispatchConfirmCard({ taskType, coworker, coworkers, onCoworkerChange, onConfirm, onCancel }: { taskType: string; coworker: CoworkerDefinition; coworkers: CoworkerDefinition[]; onCoworkerChange: (id: string) => void; onConfirm: () => void; onCancel: () => void }) {
@@ -21,4 +22,9 @@ export function CoworkerSwitchCard({ from, to, endingCurrentFlow = false, onConf
 
 export function ContextDivider({ children }: { children: string }) {
   return <div className="contextDivider"><span>{children}</span></div>;
+}
+
+export function PriorSessionHistory({ snapshots }: { snapshots?: AgentSessionSnapshot[] }) {
+  if (!snapshots?.length) return null;
+  return <div className="priorSessionHistory">{snapshots.map((snapshot) => <div key={snapshot.moduleId} className="priorSessionSegment"><div className="priorSessionEntries">{snapshot.entries.map((entry) => <p className={entry.role} key={entry.id}>{entry.text}</p>)}</div><ContextDivider>{`${snapshot.coworkerName} · ${snapshot.stageLabel} · 已保留上下文`}</ContextDivider></div>)}</div>;
 }

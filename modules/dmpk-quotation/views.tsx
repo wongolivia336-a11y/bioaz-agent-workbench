@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Check, ChevronDown, Edit3, Eye, FileSpreadsheet, FileText, Plus, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -70,15 +70,20 @@ function processStepDetail(step: string) {
 export function DmpkComposer({ attention, stage, text, setText, activeGroup, fields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled }: { attention?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean }) {
   const [attachments, setAttachments] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (attention) inputRef.current?.focus(); }, [attention]);
+  const wrapRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!attention) return;
+    wrapRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    inputRef.current?.focus({ preventScroll: true });
+  }, [attention]);
   const currentCoworker = coworkers.find((item) => item.id === activeCoworkerId);
   const pendingCoworker = coworkers.find((item) => item.id === pendingCoworkerId);
   return (
-    <footer className={`dmpkComposerWrap ${attention ? "needsAttention" : ""}`}>
+    <footer ref={wrapRef} className={`dmpkComposerWrap ${attention ? "needsAttention" : ""}`}>
       {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} draftTabs={draftTabs} mode={mode} onSelect={onSelect} /> : null}
       {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
-      <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} locked={coworkerLocked} onChange={onCoworkerChange} />
+      {stage !== "collecting" && stage !== "ready" ? <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} locked={coworkerLocked} onChange={onCoworkerChange} /> : null}
       <div className="dmpkComposer workbenchComposer">
         <label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple onChange={(event) => { setAttachments(Array.from(event.target.files ?? []).map((file) => file.name)); event.target.value = ""; }} /></label>
         <div className="composerInputStack">
@@ -107,15 +112,15 @@ function DmpkParameterTaskCard({ activeGroup, fields, draftTabs, mode, onSelect 
   if (!fields.length) return null;
   return (
     <section className="warningDecision parameterTaskCard">
-      <header className="warningDecisionHeader"><div><span>参数补全</span><strong>{mode === "edit" ? `修改${fields[0]?.label ?? "参数"}` : "请一次补全报价参数"}</strong><p>{mode === "edit" ? "选择新值后会写入下方参数 tab，发送后更新右侧参数。" : "按检测类型、动物实验、生物分析、报告与报价分页选择；全部补齐后统一发送给 Agent。"}</p></div><small>还需 {fields.length} 项</small></header>
+      <header className="warningDecisionHeader"><div><span>参数补全</span><strong>{mode === "edit" ? `修改${fields[0]?.label ?? "参数"}` : "请补全报价参数"}</strong>{mode === "edit" ? <p>选择新值后发送，即可更新右侧参数。</p> : null}</div><small>还需填写 {fields.length} 项</small></header>
       {mode === "collect" ? <div className="parameterPages">{dmpkGroups.map((group, index) => <button className={index === safePage ? "active" : ""} type="button" key={group.id} onClick={() => setPage(index)}>{group.title}</button>)}</div> : null}
       <div className="warningDecisionList">
         {pageFields.length ? pageFields.map((field, index) => {
           const selected = draftTabs.find((tab) => tab.fieldId === field.id);
-          return <article className={`decisionRow ${selected ? "done" : ""}`} key={field.id}><span className="decisionIndex">{selected ? <Check size={17} /> : index + 1}</span><div className="decisionCopy"><span>{field.required ? "必填 · 计价关键字段" : "可选"}</span><strong>{field.label}</strong><div className="optionGrid">{(dmpkFieldOptions[field.id] ?? ["1", "2", "3"]).map((option) => option === "自定义" && editingCustom === field.id ? <input autoFocus className="customOptionInput" key={option} onBlur={() => commitCustom(field)} onChange={(event) => setCustomValues((current) => ({ ...current, [field.id]: event.target.value }))} onKeyDown={(event) => { if (event.key === "Enter") commitCustom(field); if (event.key === "Escape") setEditingCustom(null); }} placeholder="输入" value={customValues[field.id] ?? ""} /> : <button className={selected?.value === option ? "selected" : ""} type="button" key={option} onClick={() => { if (option === "自定义") setEditingCustom(field.id); else onSelect(field, option); }}>{option}</button>)}</div></div></article>;
+          return <article className={`decisionRow ${selected ? "done" : ""}`} key={field.id}><div className="decisionCopy"><div className="decisionTitleRow"><span className="decisionIndex">{selected ? <Check size={15} /> : index + 1}</span><strong>{field.label}</strong><span className="requiredTag">{field.required ? "必填" : "可选"}</span></div><div className="optionGrid">{(dmpkFieldOptions[field.id] ?? ["1", "2", "3"]).map((option) => option === "自定义" && editingCustom === field.id ? <input autoFocus className="customOptionInput" key={option} onBlur={() => commitCustom(field)} onChange={(event) => setCustomValues((current) => ({ ...current, [field.id]: event.target.value }))} onKeyDown={(event) => { if (event.key === "Enter") commitCustom(field); if (event.key === "Escape") setEditingCustom(null); }} placeholder="输入" value={customValues[field.id] ?? ""} /> : <button className={selected?.value === option ? "selected" : ""} type="button" key={option} onClick={() => { if (option === "自定义") setEditingCustom(field.id); else onSelect(field, option); }}>{option}</button>)}</div></div></article>;
         }) : <p className="emptyPageNote">{pageGroup.title}参数已齐全，可切换下一页继续补全。</p>}
       </div>
-      <div className="parameterPager"><p className="responsibilityNote">选择会先写入下方参数 tab，全部补齐后才正式更新右侧参数台账。</p>{mode === "collect" ? <div><span>{safePage + 1}/{dmpkGroups.length}</span><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={safePage === 0}>上一页</button><button type="button" onClick={() => setPage((current) => Math.min(dmpkGroups.length - 1, current + 1))} disabled={safePage >= dmpkGroups.length - 1}>下一页</button></div> : null}</div>
+      <div className="parameterPager"><p className="responsibilityNote">还需填写 {fields.length} 项</p>{mode === "collect" ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={safePage === 0}>上一页</button><button type="button" onClick={() => setPage((current) => Math.min(dmpkGroups.length - 1, current + 1))} disabled={safePage >= dmpkGroups.length - 1}>下一页</button></div> : null}</div>
     </section>
   );
 }

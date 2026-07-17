@@ -29,6 +29,20 @@ export type CoworkerDefinition = {
   owner: string;
 };
 
+export type SessionHistoryEntry = {
+  id: string;
+  role: "user" | "agent" | "process";
+  text: string;
+};
+
+export type AgentSessionSnapshot = {
+  moduleId: string;
+  coworkerName: string;
+  stageLabel: string;
+  entries: SessionHistoryEntry[];
+  facts: Array<{ label: string; value: string }>;
+};
+
 export type IntentDefinition = {
   id: string;
   label: string;
@@ -82,6 +96,8 @@ export type AgentModuleSessionProps = {
   onRunStatusChange: (status: ModuleRunStatus) => void;
   onBackToNewTask: () => void;
   handoffNotice?: string;
+  priorSessionSnapshots?: AgentSessionSnapshot[];
+  onSessionSnapshotChange?: (snapshot: AgentSessionSnapshot) => void;
 };
 
 export type AgentModuleDefinition = {
