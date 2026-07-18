@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import {
-  ArrowLeft,
   Check,
   ChevronRight,
   Eye,
@@ -15,21 +14,30 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState, type ChangeEvent } from "react";
-import { initialKnowledgeFiles, projectOptions } from "../../lib/workbench/mockWorkspace";
+import { initialKnowledgeFiles } from "../../lib/workbench/mockWorkspace";
 import type { KnowledgeFile } from "../../lib/workbench/shellTypes";
+import type { WorkbenchProject } from "../../modules/types";
 import { CompactSelect, WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 type FileSpace = "projects" | "rules";
 
-export function FileManager() {
+export function FileManager({ projects, selectedProject, onSelectedProjectChange }: { projects: WorkbenchProject[]; selectedProject: string | null; onSelectedProjectChange: (project: string | null) => void }) {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
   const [space, setSpace] = useState<FileSpace>("projects");
   const [query, setQuery] = useState("");
-  const [project, setProject] = useState("全部项目");
+  const project = selectedProject ?? "全部项目";
+  const setProject = (value: string) => onSelectedProjectChange(value === "全部项目" ? null : value);
   const [business, setBusiness] = useState("全部业务");
   const [previewFile, setPreviewFile] = useState<KnowledgeFile | null>(null);
   const [deliverySelection, setDeliverySelection] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (selectedProject) return;
+    setBusiness("全部业务");
+    setQuery("");
+    setDeliverySelection([]);
+  }, [selectedProject]);
 
   const visible = files.filter(
     (file) =>
@@ -73,8 +81,7 @@ export function FileManager() {
   };
 
   const folders = space === "projects"
-    ? projectOptions
-        .filter((item) => item !== "临时任务")
+    ? projects.map((item) => item.name)
         .map((name) => ({
           name,
           count: files.filter((file) => file.space === "projects" && file.project === name).length,
@@ -95,7 +102,7 @@ export function FileManager() {
   return (
     <section className="workbenchView knowledgeBaseView">
       <header>
-        <div>{!showRoot ? <button className="folderBackButton projectBackButton" type="button" onClick={() => { setProject("全部项目"); setBusiness("全部业务"); setQuery(""); }}><ArrowLeft size={15} />返回项目</button> : null}<h1>{showRoot ? "文件管理系统" : project}</h1></div>
+        <div><h1>{showRoot ? "文件管理系统" : project}</h1></div>
         <input className="visuallyHidden" id="file-upload" type="file" multiple onChange={upload} />
       </header>
 

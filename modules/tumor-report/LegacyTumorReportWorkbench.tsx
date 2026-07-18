@@ -403,7 +403,6 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
           {stage === "empty" && initialRequest ? <div className="legacyInitialRequest"><p>{initialRequest}</p></div> : null}
           {stage === "empty" ? <div className="legacyTumorOpening"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div> : null}
-          {stage === "uploaded" ? <div className="legacyTumorOpening isCompact uploadReadyNotice"><img src="/logo/bioaz-logo.svg" alt="" /><div><strong>文件已就绪 · {files.length} 个</strong><p>可在下方检查、移除或替换材料；满足要求后即可开始校验。</p><button type="button" onClick={() => fileInputRef.current?.click()}>继续添加文件</button></div></div> : null}
           {stage !== "empty" && stage !== "uploaded" ? (
             <Conversation
               files={files}
@@ -429,7 +428,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
 
         <div className="legacyComposerStack">
           {pendingCoworkerId ? <CoworkerSwitchCard from={businessCoworkers.find((item) => item.id === activeCoworkerId)?.name ?? "当前数字同事"} to={businessCoworkers.find((item) => item.id === pendingCoworkerId)?.name ?? "新数字同事"} endingCurrentFlow={stage !== "exported"} onConfirm={() => { onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancel={() => setPendingCoworkerId(null)} /> : null}
-          {!["warning", "review"].includes(stage) ? <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={stage !== "exported"} onChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} /> : null}
+          {!["warning", "review", "empty", "uploaded"].includes(stage) ? <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={stage !== "exported"} onChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} /> : null}
           <Composer
             stage={stage}
             files={files}
@@ -1212,11 +1211,7 @@ function Conversation({
 
       {reviewVisible ? (
         <section className="phaseBlock">
-          {stage === "reviewing" ? (
-            <AgentReply title="专家小队审核已发起。" tone="neutral">
-              审核小队正在从数据溯源、统计口径、安全性和图表版式几个方向检查报告。审核建议生成前，产物保持可预览状态。
-            </AgentReply>
-          ) : null}
+          <UserEventBubbles events={userEvents} after="review" />
           <ThinkingCard
             running={stage === "reviewing"}
             elapsed={reviewElapsed}
@@ -1235,7 +1230,11 @@ function Conversation({
             }
             onInspector={() => onInspector("review")}
           />
-          <UserEventBubbles events={userEvents} after="review" />
+          {stage === "reviewing" ? (
+            <AgentReply title="专家小队审核已发起。" tone="neutral">
+              审核小队正在从数据溯源、统计口径、安全性和图表版式几个方向检查报告。审核建议生成前，产物保持可预览状态。
+            </AgentReply>
+          ) : null}
           {followupState !== "idle" ? <FollowupAnswer state={followupState} /> : null}
           {stage !== "reviewing" && reviews.every((item) => item.status === "confirmed") ? (
             <section className="artifactStack">
@@ -1551,9 +1550,6 @@ function Composer({
           <div className={`requirementChip ${dataCount ? "ok" : ""}`}>
             实验 Excel {dataCount}/1+
           </div>
-          <div className={`requirementChip ${canStart ? "ok" : ""}`}>
-            {canStart ? "文件已满足要求" : "等待上传"}
-          </div>
         </div>
       ) : null}
 
@@ -1588,7 +1584,7 @@ function Composer({
           }
         />
         <button
-          className="sendIconButton"
+          className={`sendIconButton ${(stage === "empty" || stage === "uploaded") && canStart && !composerText.trim() ? "validationStartButton" : ""}`}
           type="button"
           disabled={(stage === "empty" || stage === "uploaded") && !canStart && !composerText.trim()}
           onClick={() => {
@@ -1612,7 +1608,7 @@ function Composer({
           }}
           aria-label={stage === "empty" || stage === "uploaded" ? "开始校验" : "发送"}
         >
-          <Send size={17} />
+          {(stage === "empty" || stage === "uploaded") && canStart && !composerText.trim() ? <><ShieldCheck size={16} /><span>开始校验</span></> : <Send size={17} />}
         </button>
       </div>
     </footer>
@@ -2058,8 +2054,6 @@ function ArtifactCard({
   onPreview?: () => void;
   downloadable?: boolean;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <article className="artifactCard">
       <div className="artifactIcon">{icon}</div>
@@ -2069,28 +2063,14 @@ function ArtifactCard({
         <span>{meta}</span>
       </div>
       <div className="artifactActions">
-        <button type="button" onClick={onPreview} aria-label={`预览 ${title}`}>
+        <button type="button" onClick={onPreview} aria-label={`预览 ${title}`} title="预览">
           <Eye size={16} />
-          预览
         </button>
         {downloadable ? (
-          <button type="button">
+          <button type="button" aria-label={`下载 ${title}`} title="下载">
             <Download size={16} />
-            下载
           </button>
         ) : null}
-        <div className="moreMenuWrap">
-          <button type="button" aria-label="更多" onClick={() => setMenuOpen((value) => !value)}>
-            <MoreHorizontal size={18} />
-          </button>
-          {menuOpen ? (
-            <div className="moreMenu">
-              <button type="button">用其他方式打开</button>
-              <button type="button">导出副本</button>
-              <button type="button">查看业务证据</button>
-            </div>
-          ) : null}
-        </div>
       </div>
     </article>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./iteration.css";
+import "./review.css";
 
 export const metadata: Metadata = {
   title: "BioAZ Agent Workbench",
