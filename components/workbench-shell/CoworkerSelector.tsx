@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightLeft, ChevronDown } from "lucide-react";
+import { ArrowRightLeft, ChevronDown, CircleHelp } from "lucide-react";
 import { useState } from "react";
 import type { CoworkerDefinition } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
@@ -20,6 +20,10 @@ export function CoworkerSelector({ coworkers, activeCoworkerId, onChange, locked
         <span>{activeCoworker.name}</span>
         <ChevronDown size={14} strokeWidth={1.8} />
       </button>
+      <button className="roleSelectorHelp" type="button" aria-label={`查看${activeCoworker.name}职责`} title={activeCoworker.description}>
+        <CircleHelp size={14} />
+        <span role="tooltip"><strong>{activeCoworker.name}</strong>{activeCoworker.description}</span>
+      </button>
       {open ? (
         <div className="roleSelectorMenu isOpen">
           {coworkers.map((coworker) => {
@@ -28,7 +32,7 @@ export function CoworkerSelector({ coworkers, activeCoworkerId, onChange, locked
             return (
               <button className={coworker.id === activeCoworker.id ? "active" : ""} disabled={disabled} type="button" key={coworker.id} onClick={() => { if (coworker.id !== activeCoworker.id) onChange(coworker.id); setOpen(false); setForceMode(false); }}>
                 <Icon size={16} strokeWidth={1.9} />
-                <strong>{coworker.name}</strong>
+                <span className="roleSelectorOptionCopy"><strong>{coworker.name}</strong><small>{coworker.description}</small></span>
               </button>
             );
           })}

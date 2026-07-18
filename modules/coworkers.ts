@@ -6,7 +6,6 @@ export const bioazHelperCoworker: CoworkerDefinition = {
   name: "BioAZ Helper",
   icon: Sparkles,
   description: "识别任务意图并分派给合适的数字同事",
-  owner: "默认入口",
 };
 
 export const dmpkQuotationCoworker: CoworkerDefinition = {
@@ -14,7 +13,6 @@ export const dmpkQuotationCoworker: CoworkerDefinition = {
   name: "DMPK报价同事",
   icon: FileSpreadsheet,
   description: "收集参数、匹配规则并生成报价产物",
-  owner: "SD助理可调用",
 };
 
 export const tumorReportCoworker: CoworkerDefinition = {
@@ -22,7 +20,6 @@ export const tumorReportCoworker: CoworkerDefinition = {
   name: "肿瘤报告同事",
   icon: FileText,
   description: "整理原始数据并撰写肿瘤药效报告",
-  owner: "SD助理可调用",
 };
 
 export const tumorQuotationCoworker: CoworkerDefinition = {
@@ -30,7 +27,6 @@ export const tumorQuotationCoworker: CoworkerDefinition = {
   name: "肿瘤报价同事",
   icon: ReceiptText,
   description: "识别肿瘤项目范围并生成报价",
-  owner: "SD助理可调用",
 };
 
 export const qaReviewCoworker: CoworkerDefinition = {
@@ -38,5 +34,4 @@ export const qaReviewCoworker: CoworkerDefinition = {
   name: "QA审核同事",
   icon: Check,
   description: "复核交付包完整性并追溯证据",
-  owner: "QA助理可调用",
 };

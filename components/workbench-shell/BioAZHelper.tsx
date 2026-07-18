@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, HelpCircle } from "lucide-react";
 import { useState } from "react";
 import type { CoworkerDefinition } from "../../modules/types";
 import type { AgentSessionSnapshot } from "../../modules/types";
@@ -17,11 +17,11 @@ export function DispatchConfirmCard({ taskType, coworker, coworkers, onCoworkerC
 }
 
 export function CoworkerSwitchCard({ from, to, endingCurrentFlow = false, onConfirm, onCancel }: { from: string; to: string; endingCurrentFlow?: boolean; onConfirm: () => void; onCancel: () => void }) {
-  return <section className="coworkerSwitchCard"><div><span>{endingCurrentFlow ? "结束当前流程并切换" : "切换数字同事"}</span><strong>{to}</strong><p>{endingCurrentFlow ? `结束 ${from} 的当前流程，并保留已有上下文。` : "保留当前对话记录，从这里开始新的任务上下文。"}</p></div><button type="button" onClick={onCancel}>取消</button><button className="primaryButton compact" type="button" onClick={onConfirm}>{endingCurrentFlow ? "确认结束并切换" : "确认切换"}</button></section>;
+  return <section className="coworkerSwitchCard" aria-label="数字同事交接确认"><div><span>{endingCurrentFlow ? "任务交接" : "切换数字同事"}</span><strong>{from}<i aria-hidden="true">→</i>{to}</strong><p>{endingCurrentFlow ? "当前流程将结束；已确认内容、对话记录与产物会保留，未发送草稿不会带入。" : "当前对话记录会保留，新数字同事将从已确认上下文开始。"}</p></div><button type="button" onClick={onCancel}>取消</button><button className="primaryButton compact" type="button" onClick={onConfirm}>{endingCurrentFlow ? "确认交接" : "确认切换"}</button></section>;
 }
 
 export function ContextDivider({ children }: { children: string }) {
-  return <div className="contextDivider"><span>{children}</span></div>;
+  return <div className="contextDivider"><span>{children}</span><span className="contextSummaryHelp"><button type="button" aria-label="查看交接上下文摘要"><HelpCircle size={14} /></button><span className="contextSummaryCard" role="tooltip"><strong>交接上下文摘要</strong><p>已保留上一位数字同事确认过的任务目标、关键参数、材料与产物状态；未发送草稿和未确认推断不会带入新会话。</p><small>{children}</small></span></span></div>;
 }
 
 export function PriorSessionHistory({ snapshots }: { snapshots?: AgentSessionSnapshot[] }) {

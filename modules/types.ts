@@ -26,7 +26,6 @@ export type CoworkerDefinition = {
   name: string;
   icon: LucideIcon;
   description: string;
-  owner: string;
 };
 
 export type SessionHistoryEntry = {

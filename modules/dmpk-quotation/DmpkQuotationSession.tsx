@@ -97,6 +97,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   }, [onRunStatusChange, stage]);
 
   useEffect(() => {
+    if (stage === "generating" || stage === "generated") setParametersExpanded(false);
+  }, [stage]);
+
+  useEffect(() => {
     const parameterCard = parameterCardRef.current;
     if (!parameterCard) return;
 
@@ -121,6 +125,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const requestFieldEdit = (fieldId: string) => {
     const field = fields.find((item) => item.id === fieldId);
     if (!field) return;
+    const invalidatesQuotation = stage === "generated";
+    setParametersExpanded(true);
     setEditingFieldId(field.id);
     setDraftTabs((items) => items.filter((item) => item.fieldId !== field.id));
     setActiveGroup(field.group);
@@ -129,7 +135,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setComposerAttention(false);
     window.requestAnimationFrame(() => setComposerAttention(true));
     window.setTimeout(() => setComposerAttention(false), 720);
-    appendMessage("agent", `请问您希望将${field.label}修改为什么？请在下方选择一个新值，发送后我会更新右侧参数。`);
+    appendMessage("agent", invalidatesQuotation
+      ? `正在修改已确认参数“${field.label}”。提交新值后，当前报价将标记为待重新生成。`
+      : `请问您希望将${field.label}修改为什么？请在下方选择一个新值，发送后我会更新右侧参数。`);
   };
 
   const sendDraft = () => {
@@ -172,6 +180,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   const startGeneration = () => {
     setPreviewOpen(false);
+    setParametersExpanded(false);
     setStage("generating");
     setInspectorPanelId("process");
     appendMessage("user", "确认参数，生成正式报价单。");
@@ -223,10 +232,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}
         style={{ "--dmpk-secondary-top": `${secondaryInspectorTop}px` } as CSSProperties}
       >
-        <section ref={parameterCardRef} className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""}`}>
+        <section ref={parameterCardRef} className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
           <button type="button" aria-expanded={parametersExpanded} onClick={() => setParametersExpanded((current) => !current)}>
-            <span><SlidersHorizontal size={16} /><strong>参数收集</strong></span>
-            <span>{completedCount}/{fields.length}<ChevronDown size={15} /></span>
+            <span><SlidersHorizontal size={16} /><strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong></span>
+            <span>{completedCount}/{totalRequired}<ChevronDown size={15} /></span>
           </button>
           {parametersExpanded ? <div className="persistentParameterBody">{parameterPanel?.content}</div> : null}
         </section>
