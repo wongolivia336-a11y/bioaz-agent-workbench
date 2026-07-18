@@ -25,11 +25,14 @@ import {
 } from "./views";
 
 export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange }: AgentModuleSessionProps) {
+  const openingMessage = "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。";
   const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
   const [draftTabs, setDraftTabs] = useState<DmpkDraftTab[]>([]);
-  const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest ? [{ id: "initial-request", role: "user", text: initialRequest }] : [{ id: "context", role: "agent", text: "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。" }]);
+  const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest
+    ? [{ id: "initial-request", role: "user", text: initialRequest }, { id: "context", role: "agent", text: openingMessage }]
+    : [{ id: "context", role: "agent", text: openingMessage }]);
   const [composerText, setComposerText] = useState("");
   const [stage, setStage] = useState<DmpkStage>("idle");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -42,7 +45,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [composerAttention, setComposerAttention] = useState(false);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
   const [secondaryInspectorTop, setSecondaryInspectorTop] = useState(142);
-  const startedInitialRequest = useRef(false);
   const parameterCardRef = useRef<HTMLElement>(null);
 
   const missingFields = useMemo(() => fields.filter((field) => field.required && !field.value), [fields]);
@@ -69,29 +71,26 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setMessages((items) => [...items, { id: `${role}-${Date.now()}-${items.length}`, role, text }]);
   };
 
-  const patchFields = (patch: Record<string, string>) => {
-    setFields((items) => items.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field));
-  };
-
   const handleInitialRequest = (text: string, skipUserMessage = false) => {
     if (!skipUserMessage) appendMessage("user", text);
     setComposerText("");
     setStage("thinking");
     setInspectorPanelId("process");
     window.setTimeout(() => {
-      patchFields(parseDmpkRequest(text));
-      setActiveGroup("analysis");
-      setOpenGroups({ assay: false, animal: false, analysis: true, delivery: false });
+      const patch = parseDmpkRequest(text);
+      const nextFields = fields.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field);
+      const recognized = nextFields.filter((field) => patch[field.id]);
+      const remaining = nextFields.filter((field) => field.required && !field.value);
+      const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
+      setFields(nextFields);
+      setActiveGroup(nextGroup);
+      setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
       setStage("collecting");
-      appendMessage("agent", "已识别 DMPK / PK 检测、小分子、SD 大鼠、每组 2 只、2 组、试验周期 1 周和 3 个非加班采血点。还需要补充生物分析和报告与报价参数。");
+      appendMessage("agent", recognized.length
+        ? `已识别：${recognized.map((field) => `${field.label}：${field.value}`).join("、")}。还需要补充 ${remaining.length} 项报价参数，请从下方当前参数页继续填写。`
+        : "我还没有识别到可用于报价的具体参数。请先描述检测类型、分子类型、动物种属与数量、试验周期和采血点，我会继续追问缺失项。");
     }, 900);
   };
-
-  useEffect(() => {
-    if (!initialRequest || startedInitialRequest.current) return;
-    startedInitialRequest.current = true;
-    handleInitialRequest(initialRequest, true);
-  }, [initialRequest]);
 
   useEffect(() => {
     onRunStatusChange(stage === "generated" ? "completed" : "active");

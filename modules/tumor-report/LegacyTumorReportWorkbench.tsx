@@ -2307,54 +2307,6 @@ function HoverInspector({
               </div>
             </div>
           ))}
-          <div className="panelDivider" />
-          <div className="panelIntro compact">
-            <strong>风险回看</strong>
-            <p>确认后的风险项保留在这里，可在最终放行前回看来源证据和影响范围。</p>
-          </div>
-          {warnings.map((item) => {
-            const detail = warningEvidence(item.id);
-            return (
-              <div className="issueRow compact issueRowWithAction" key={item.id}>
-                <div className="issueRowMain">
-                  <span className={item.accepted ? "statusChip confirmed" : "statusChip pending"}>{item.id}</span>
-                  <strong>{item.title}</strong>
-                  <p className="issueMeta">证据：{detail.shortEvidence}</p>
-                </div>
-                <div className="deliverableActions">
-                  <button
-                    type="button"
-                    aria-label={`${item.title}预览校验问题`}
-                    onClick={() => onPreviewWorkflow("validation", "issues")}
-                  >
-                    <Eye size={14} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-          <div className="panelDivider" />
-          <div className="panelIntro compact">
-            <strong>专家建议摘要</strong>
-          </div>
-          {reviews.slice(0, 3).map((item) => (
-            <div className="issueRow compact issueRowWithAction" key={item.id}>
-              <div className="issueRowMain">
-                <span className={item.status === "confirmed" ? "statusChip confirmed" : "statusChip pending"}>{item.id}</span>
-                <strong>{item.title}</strong>
-                <p className="issueMeta">{stripExpertPrefix(item.source)}</p>
-              </div>
-              <div className="deliverableActions">
-                <button
-                  type="button"
-                  aria-label={`${item.title}预览专家建议`}
-                  onClick={() => onPreviewWorkflow("review", "issues")}
-                >
-                  <Eye size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
           <div className="auditNote">
             <ShieldCheck size={17} />
             <span>下载会先经过 CECH 项目权限校验。</span>

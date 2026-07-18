@@ -104,23 +104,33 @@ function DmpkParameterTaskCard({ activeGroup, fields, draftTabs, mode, onSelect 
   const safePage = Math.min(page, dmpkGroups.length - 1);
   const pageGroup = dmpkGroups[safePage];
   const pageFields = mode === "edit" ? fields : fields.filter((field) => field.group === pageGroup.id);
+  useEffect(() => {
+    const activePage = dmpkGroups.findIndex((group) => group.id === activeGroup);
+    if (activePage >= 0) setPage(activePage);
+  }, [activeGroup]);
+  const selectValue = (field: DmpkField, value: string) => {
+    onSelect(field, value);
+    if (mode !== "collect" || pageFields.length !== 1 || pageFields[0]?.id !== field.id) return;
+    const nextPage = dmpkGroups.findIndex((group, index) => index > safePage && fields.some((item) => item.id !== field.id && item.group === group.id));
+    if (nextPage >= 0) window.requestAnimationFrame(() => setPage(nextPage));
+  };
   const commitCustom = (field: DmpkField) => {
     const value = customValues[field.id]?.trim();
-    if (value) onSelect(field, value);
+    if (value) selectValue(field, value);
     setEditingCustom(null);
   };
   if (!fields.length) return null;
   return (
     <section className="warningDecision parameterTaskCard">
       <header className="warningDecisionHeader"><div><span>参数补全</span><strong>{mode === "edit" ? `修改${fields[0]?.label ?? "参数"}` : "请补全报价参数"}</strong>{mode === "edit" ? <p>选择新值后发送，即可更新右侧参数。</p> : null}</div><small>还需填写 {fields.length} 项</small></header>
-      {mode === "collect" ? <div className="parameterPages">{dmpkGroups.map((group, index) => <button className={index === safePage ? "active" : ""} type="button" key={group.id} onClick={() => setPage(index)}>{group.title}</button>)}</div> : null}
+      {mode === "collect" ? <div className="parameterPages">{dmpkGroups.map((group, index) => <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > safePage} onClick={() => setPage(index)}>{group.title}</button>)}</div> : null}
       <div className="warningDecisionList">
         {pageFields.length ? pageFields.map((field, index) => {
           const selected = draftTabs.find((tab) => tab.fieldId === field.id);
-          return <article className={`decisionRow ${selected ? "done" : ""}`} key={field.id}><div className="decisionCopy"><div className="decisionTitleRow"><span className="decisionIndex">{selected ? <Check size={15} /> : index + 1}</span><strong>{field.label}</strong><span className="requiredTag">{field.required ? "必填" : "可选"}</span></div><div className="optionGrid">{(dmpkFieldOptions[field.id] ?? ["1", "2", "3"]).map((option) => option === "自定义" && editingCustom === field.id ? <input autoFocus className="customOptionInput" key={option} onBlur={() => commitCustom(field)} onChange={(event) => setCustomValues((current) => ({ ...current, [field.id]: event.target.value }))} onKeyDown={(event) => { if (event.key === "Enter") commitCustom(field); if (event.key === "Escape") setEditingCustom(null); }} placeholder="输入" value={customValues[field.id] ?? ""} /> : <button className={selected?.value === option ? "selected" : ""} type="button" key={option} onClick={() => { if (option === "自定义") setEditingCustom(field.id); else onSelect(field, option); }}>{option}</button>)}</div></div></article>;
+          return <article className={`decisionRow ${selected ? "done" : ""}`} key={field.id}><div className="decisionCopy"><div className="decisionTitleRow"><span className="decisionIndex">{selected ? <Check size={15} /> : index + 1}</span><strong>{field.label}</strong><span className="requiredTag">{field.required ? "必填" : "可选"}</span></div><div className="optionGrid">{(dmpkFieldOptions[field.id] ?? ["1", "2", "3"]).map((option) => option === "自定义" && editingCustom === field.id ? <input autoFocus className="customOptionInput" key={option} onBlur={() => commitCustom(field)} onChange={(event) => setCustomValues((current) => ({ ...current, [field.id]: event.target.value }))} onKeyDown={(event) => { if (event.key === "Enter") commitCustom(field); if (event.key === "Escape") setEditingCustom(null); }} placeholder="输入" value={customValues[field.id] ?? ""} /> : <button className={selected?.value === option ? "selected" : ""} type="button" key={option} onClick={() => { if (option === "自定义") setEditingCustom(field.id); else selectValue(field, option); }}>{option}</button>)}</div></div></article>;
         }) : <p className="emptyPageNote">{pageGroup.title}参数已齐全，可切换下一页继续补全。</p>}
       </div>
-      <div className="parameterPager"><p className="responsibilityNote">还需填写 {fields.length} 项</p>{mode === "collect" ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={safePage === 0}>上一页</button><button type="button" onClick={() => setPage((current) => Math.min(dmpkGroups.length - 1, current + 1))} disabled={safePage >= dmpkGroups.length - 1}>下一页</button></div> : null}</div>
+      <div className="parameterPager"><p className="responsibilityNote">还需填写 {fields.length} 项</p>{mode === "collect" && safePage > 0 ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))}>上一页</button></div> : null}</div>
     </section>
   );
 }

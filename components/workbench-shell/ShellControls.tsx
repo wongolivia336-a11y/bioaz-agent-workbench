@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { ArrowLeft, Check, ChevronDown, FileSearch, Lightbulb, ListChecks, MessageSquare, Plus, Send, Sparkles, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 export function CompactSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
@@ -21,9 +21,20 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext }: { c
   const [question, setQuestion] = useState<string | null>(null);
   const [assistantProject, setAssistantProject] = useState(libraryContext?.project ?? "全部项目");
   const [assistantBusiness, setAssistantBusiness] = useState(libraryContext?.business ?? "全部业务");
+  const [ambientHovered, setAmbientHovered] = useState(false);
+  const [ambientLocked, setAmbientLocked] = useState(false);
+  const ambientRef = useRef<HTMLDivElement>(null);
   const suggestions = context === "tasks" ? ["列出我待处理的任务", "按项目整理当前任务", "发起一份 DMPK 报价"] : ["查找项目相关文件", "总结当前项目关键结论", "基于项目资料生成客户汇报 PPT"];
   const submit = (value: string) => { const next = value.trim(); if (!next) return; setQuestion(next); setText(""); if (/DMPK.*报价|报价.*DMPK/i.test(next)) onStartTask?.(); };
   const library = context === "library";
+  const ambientExpanded = ambientHovered || ambientLocked;
+
+  const closeAmbient = () => {
+    setAmbientHovered(false);
+    setAmbientLocked(false);
+    setText("");
+    if (ambientRef.current?.contains(document.activeElement)) (document.activeElement as HTMLElement)?.blur();
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -58,8 +69,33 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext }: { c
           <form className="workspaceAssistantComposer workbenchComposer" onSubmit={(event) => { event.preventDefault(); submit(text); }}><label className="composerAddButton" aria-label="添加文件"><Plus size={18} /><input type="file" multiple /></label><input value={text} onChange={(event) => setText(event.target.value)} placeholder={library ? "询问文件内容，或描述想拓展的思路..." : "给 BioAZ Helper 发消息..."} aria-label={library ? "给 BioAZ 文件助手发消息" : "给 BioAZ Helper 发消息"} /><button className="sendIconButton" type="submit" aria-label="发送" disabled={!text.trim()}><Send size={16} /></button></form>
         </section>
       ) : null}
-      {!open && library ? <div className="workspaceAssistantHoverMenu"><span>可以这样问</span>{suggestions.map((item, index) => <button type="button" key={item} onClick={() => { setOpen(true); submit(item); }}>{[<FileSearch key="search" size={15} />, <ListChecks key="summary" size={15} />, <Lightbulb key="ideas" size={15} />][index]}{item}</button>)}</div> : null}
-      {!open ? <button className="workspaceAssistantLauncher" type="button" aria-label={library ? "打开 BioAZ 文件助手" : "打开 BioAZ Helper"} onClick={() => setOpen(true)}><MessageSquare size={18} />{library ? <span>询问文件助手</span> : null}</button> : null}
+      {!open && library ? (
+        <div
+          ref={ambientRef}
+          className="ambientFileAssistant"
+          data-expanded={ambientExpanded ? "true" : "false"}
+          onMouseEnter={() => setAmbientHovered(true)}
+          onMouseLeave={() => setAmbientHovered(false)}
+          onFocusCapture={() => setAmbientLocked(true)}
+          onBlurCapture={() => requestAnimationFrame(() => {
+            if (!ambientRef.current?.contains(document.activeElement) && !text.trim()) setAmbientLocked(false);
+          })}
+          onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); closeAmbient(); } }}
+        >
+          <div className="ambientAssistantSuggestions" aria-hidden={!ambientExpanded}>
+            {suggestions.map((item, index) => <button type="button" tabIndex={ambientExpanded ? 0 : -1} key={item} onClick={() => { setOpen(true); submit(item); }}>{[<FileSearch key="search" />, <ListChecks key="summary" />, <Lightbulb key="ideas" />][index]}<span>{item}</span></button>)}
+          </div>
+          <div className="ambientComposerFrame">
+            <button className="ambientAssistantEntry" type="button" aria-label="展开文件助手" aria-expanded={ambientExpanded} onClick={() => setAmbientLocked(true)}><Sparkles size={17} /><span>问问文件助手</span></button>
+            <form className="ambientAssistantComposer" onSubmit={(event) => { event.preventDefault(); if (!text.trim()) return; setOpen(true); submit(text); }}>
+              <label className="ambientComposerAdd" aria-label="添加文件"><Plus size={18} /><input type="file" multiple /></label>
+              <input value={text} onChange={(event) => { setText(event.target.value); setAmbientLocked(true); }} placeholder="关于这些文件，你想知道什么？" aria-label="给 BioAZ 文件助手发消息" />
+              <button className="ambientComposerSend" type="submit" aria-label="发送" disabled={!text.trim()}><Send size={17} /></button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+      {!open && !library ? <button className="workspaceAssistantLauncher" type="button" aria-label="打开 BioAZ Helper" onClick={() => setOpen(true)}><MessageSquare size={18} /></button> : null}
     </div>
   );
 }

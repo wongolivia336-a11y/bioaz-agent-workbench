@@ -29,6 +29,9 @@ export function getModuleForCoworker(coworkerId: string) {
 }
 
 export function resolveModuleIntent(text: string): IntentResolution {
+  if (/(?:我要|需要|做|发起|创建)?.*报价|询价/i.test(text) && !/肿瘤|药效|模型/.test(text)) {
+    return { module: dmpkQuotationModule, confidence: "matched" };
+  }
   const matches = availableModuleRegistry.filter((module) => module.supportedIntents.some((intent) => intent.keywords.test(text)));
   if (matches.length === 1) return { module: matches[0], confidence: "matched" };
   if (matches.length > 1) {

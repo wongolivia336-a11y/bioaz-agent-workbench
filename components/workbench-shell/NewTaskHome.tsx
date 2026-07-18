@@ -4,6 +4,7 @@ import { Check, ChevronDown, Folder, MessageSquare, Send } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { projectOptions } from "../../lib/workbench/mockWorkspace";
 import type { CoworkerDefinition } from "../../modules/types";
+import { LogoAwakening } from "../hero/LogoAwakening";
 import { DispatchConfirmCard } from "./BioAZHelper";
 import { useDismissableLayer } from "./useDismissableLayer";
 
@@ -35,9 +36,9 @@ export function NewTaskHome(props: Props) {
       ? `我建议将这项任务分派给${props.suggestedCoworker.name}，请在下方确认。`
       : "请补充你希望完成的工作，我会识别任务并推荐合适的数字同事。");
 
-  return <section className={`newTaskHome ${props.conversationStarted ? "isConversation" : ""}`}>
+  return <section className={`newTaskHome introSequenceStarted ${props.conversationStarted ? "introSequenceSettled isConversation" : ""}`}>
     {!props.conversationStarted ? <div className="newTaskIntro">
-      <span className="newTaskMark"><img src="/logo/bioaz-logo.svg" alt="BioAZ" /></span>
+      <LogoAwakening />
       <h1>今天要处理什么？</h1>
       <div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => <button type="button" disabled={item.availability === "placeholder"} key={item.id} onClick={() => props.onQuickStart(item.id)}>
         <span className="taskExampleIcon">{item.icon}</span>
@@ -50,7 +51,7 @@ export function NewTaskHome(props: Props) {
       </div>
     </div>}
     <div className="newTaskComposerDock">
-      {!props.conversationStarted ? <div className="newTaskWelcomePrompt"><img src="/logo/bioaz-logo.svg" alt="" /><span>{props.project ? `你想在“${props.project}”中完成什么任务？` : "描述任务，或先选择所属项目。"}</span></div> : null}
+      {!props.conversationStarted ? <div className="newTaskWelcomePrompt"><span>{props.project ? `你想在“${props.project}”中完成什么任务？` : "描述任务，或先选择所属项目。"}</span></div> : null}
       {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard taskType={props.pendingTaskType ?? "待确认任务"} coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
       {!props.conversationStarted ? <ProjectSelector project={props.project} onChange={props.onProjectChange} /> : null}
       <div className="newTaskComposer workbenchComposer"><textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.onSubmit(); } }} placeholder="描述你要完成的任务..." rows={2} /><button className="sendIconButton" type="button" onClick={props.onSubmit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button></div>
