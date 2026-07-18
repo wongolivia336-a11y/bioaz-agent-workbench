@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Menu } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { coworkerRegistry, getAgentModule, getModuleForCoworker, quickStartRegistry, resolveModuleIntent } from "../../modules/registry";
 import type { AgentModuleDefinition, AgentSessionSnapshot, ModuleRunStatus, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
@@ -122,6 +122,16 @@ export default function WorkbenchShell() {
     if (params.get("view") === "library") setRoute("library");
   }, []);
 
+  useEffect(() => {
+    const compactViewport = window.matchMedia("(max-width: 899px)");
+    const syncSidebar = (event: MediaQueryList | MediaQueryListEvent) => {
+      if (event.matches) setCollapsed(true);
+    };
+    syncSidebar(compactViewport);
+    compactViewport.addEventListener("change", syncSidebar);
+    return () => compactViewport.removeEventListener("change", syncSidebar);
+  }, []);
+
   const openTask = (task: WorkbenchTask) => {
     setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setInitialRequest(undefined); setHandoffNotice(undefined);
     if (task.moduleId === "bioaz-helper") {
@@ -154,6 +164,6 @@ export default function WorkbenchShell() {
   const Session = activeModule?.Session;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
     <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onToggleCollapsed={() => setCollapsed((value) => !value)} />
-    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "临时任务"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
+    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={18} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "临时任务"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }

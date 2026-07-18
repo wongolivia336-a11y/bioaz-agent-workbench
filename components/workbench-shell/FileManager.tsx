@@ -14,7 +14,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { initialKnowledgeFiles, projectOptions } from "../../lib/workbench/mockWorkspace";
 import type { KnowledgeFile } from "../../lib/workbench/shellTypes";
 import { CompactSelect, WorkspaceAssistant } from "./ShellControls";
@@ -177,10 +177,16 @@ function FileRow({
 }
 
 function FilePreview({ file, onClose, onOpenProject }: { file: KnowledgeFile; onClose: () => void; onOpenProject: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
   return (
-    <div className="modalBackdrop knowledgePreviewBackdrop" role="dialog" aria-modal="true">
-      <section className="knowledgePreviewDialog">
-        <header><div><span>{file.kind}</span><h2>{file.title}</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={17} /></button></header>
+    <div className="modalBackdrop knowledgePreviewBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="knowledgePreviewDialog" role="dialog" aria-modal="true" aria-labelledby="knowledge-preview-title">
+        <header><div><span>{file.kind}</span><h2 id="knowledge-preview-title">{file.title}</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭" autoFocus><X size={17} /></button></header>
         <div className="knowledgePreviewMeta"><span>{file.project}</span><span>{file.owner}</span><span>{file.updated}</span></div>
         <div className="knowledgeDocumentPreview">
           <div className="documentPreviewMark">{file.title.endsWith(".xlsx") ? <FileSpreadsheet size={24} /> : <FileText size={24} />}</div>

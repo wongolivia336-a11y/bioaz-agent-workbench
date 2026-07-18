@@ -1949,3 +1949,578 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .workbenchInspectorBody {
   flex: 1 1 auto;
 }
+
+/* New task home: Diffuse Bio-Intelligence responsive shell. */
+html, body { min-height: 100dvh; overflow: hidden; background: #f8fafc; }
+body > main.dmpkShell { border: 0; border-radius: 0; outline: 0; box-shadow: none; }
+body > main.dmpkShell::before,
+body > main.dmpkShell::after { content: none; }
+
+.dmpkShell.workbenchShell {
+  width: 100%; min-height: 100dvh; height: 100dvh;
+  grid-template-columns: clamp(248px, 15vw, 280px) minmax(0, 1fr);
+  overflow: hidden; border: 0; border-radius: 0; outline: 0; background: #f8fafc; box-shadow: none;
+}
+.dmpkShell.workbenchShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr); }
+.dmpkShell.workbenchShell .sidebar { width: 100%; height: 100dvh; min-width: 0; padding: 16px 12px 12px; border-color: #e8ecf2; background: #fff; }
+.dmpkShell.workbenchShell .brand { flex: 0 0 auto; min-height: 36px; margin-bottom: 16px; }
+.dmpkShell.workbenchShell .projectTree { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.dmpkShell.workbenchShell .projectTree::-webkit-scrollbar { width: 4px; }
+.dmpkShell.workbenchShell .projectTree::-webkit-scrollbar-thumb { border-radius: 999px; background: #cbd5e1; }
+.dmpkShell.workbenchShell .account { flex: 0 0 auto; }
+.dmpkShell.workbenchShell .workspaceViewRow,
+.dmpkShell.workbenchShell .projectRow,
+.dmpkShell.workbenchShell .chatRowMain { position: relative; min-width: 0; }
+.dmpkShell.workbenchShell .workspaceViewRow svg,
+.dmpkShell.workbenchShell .projectRow svg,
+.dmpkShell.workbenchShell .chatRow svg { width: 18px; height: 18px; stroke-width: 1.5; }
+.dmpkShell.workbenchShell .workspaceViewRow.active::before,
+.dmpkShell.workbenchShell .chatRow.active::before { position: absolute; top: 8px; bottom: 8px; left: 0; width: 2px; border-radius: 999px; background: #2900ff; content: ""; }
+.dmpkShell.workbenchShell .workspaceViewRow.active,
+.dmpkShell.workbenchShell .chatRow.active { background: #f4f3ff; }
+.dmpkShell.workbenchShell .chatRowMain strong,
+.dmpkShell.workbenchShell .chatRowMain small,
+.dmpkShell.workbenchShell .projectRow strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.dmpkWorkspace.workbenchMode { min-width: 0; height: 100dvh; grid-template-rows: 64px minmax(0, 1fr); overflow: hidden; border: 0; border-radius: 0; outline: 0; background: #f8fafc; box-shadow: none; }
+.dmpkWorkspace.workbenchMode > .topbar { min-width: 0; height: 64px; padding-inline: clamp(24px, 4vw, 64px); border-color: #e8ecf2; background: rgba(248, 250, 252, 0.88); }
+.mobileSidebarTrigger { display: none; width: 38px; height: 38px; place-items: center; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; color: #334155; }
+
+.newTaskHome {
+  --home-brand: #2900ff; --home-ink: #0b1220; --home-body: #64748b; --home-muted: #94a3b8; --home-line: #e2e8f0;
+  position: relative; isolation: isolate; display: grid; width: 100%; height: 100%; min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto; overflow: hidden; background: #f8fafc;
+  padding: 0 clamp(24px, 4vw, 64px) clamp(24px, 5vh, 56px);
+}
+.newTaskHome::before { position: absolute; z-index: -1; inset: 0; opacity: 0.022; background-image: linear-gradient(rgba(41,0,255,.52) 1px, transparent 1px), linear-gradient(90deg, rgba(41,0,255,.52) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(circle at 50% 38%, #000 0, transparent 70%); content: ""; pointer-events: none; }
+.newTaskIntro { position: relative; z-index: 1; display: grid; width: min(1080px, 100%); min-height: 0; align-content: center; justify-items: center; margin-inline: auto; padding: clamp(20px, 4vh, 48px) 0 clamp(28px, 5vh, 60px); transform: translateY(clamp(-22px, -2vh, -8px)); }
+
+.logoAwakening { display: grid; width: 88px; height: 88px; place-items: center; pointer-events: none; }
+.logoAwakening svg { width: 82px; height: 81px; overflow: visible; animation: logoAwakening 900ms cubic-bezier(.22,1,.36,1) both; transform-origin: center; }
+.logoAwakeningLeft { fill: url(#bioaz-left); }
+.logoAwakeningRight { fill: url(#bioaz-right); }
+.logoAwakeningDot { fill: url(#bioaz-dot); }
+.newTaskIntro h1 { margin: 24px 0 36px; color: var(--home-ink); font-size: clamp(34px, 2.2vw, 36px); font-weight: 600; letter-spacing: -.035em; line-height: 1.18; opacity: .88; filter: blur(2px); transform: translateY(6px); }
+.introSequenceStarted .newTaskIntro h1 { animation: introTitleArrival 300ms cubic-bezier(.22,1,.36,1) 120ms both; }
+
+.taskExampleGrid { display: grid; width: min(1080px, 100%); grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.taskExampleGrid button { position: relative; min-height: 132px; overflow: hidden; gap: 20px; border: 1px solid var(--home-line); border-radius: 14px; background: rgba(255,255,255,.92); padding: 18px; color: #334155; box-shadow: 0 1px 2px rgba(15,23,42,.025); opacity: .9; filter: blur(1px); transform: translateY(8px); transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
+.introSequenceStarted .taskExampleGrid button { animation: introCardArrival 300ms cubic-bezier(.22,1,.36,1) both; }
+.introSequenceStarted .taskExampleGrid button:nth-child(1) { animation-delay: 180ms; }
+.introSequenceStarted .taskExampleGrid button:nth-child(2) { animation-delay: 215ms; }
+.introSequenceStarted .taskExampleGrid button:nth-child(3) { animation-delay: 250ms; }
+.introSequenceStarted .taskExampleGrid button:nth-child(4) { animation-delay: 285ms; }
+.taskExampleGrid button:not(:disabled)::before { position: absolute; top: 0; right: 16px; left: 16px; height: 1px; background: linear-gradient(90deg, transparent, rgba(41,0,255,.52), transparent); content: ""; }
+.taskExampleGrid button:hover,
+.taskExampleGrid button:focus-visible { border-color: rgba(41,0,255,.28); box-shadow: 0 8px 24px rgba(15,23,42,.055); transform: translateY(-2px); }
+.taskExampleGrid button:disabled { border-color: #e8edf3; background: rgba(248,250,252,.78); color: #64748b; opacity: .68; }
+.taskExampleIcon { width: 32px; height: 32px; border-radius: 10px; background: rgba(41,0,255,.055); color: var(--home-brand); }
+.taskExampleIcon svg { width: 18px; height: 18px; stroke-width: 1.5; }
+.taskExampleGrid strong { color: var(--home-ink); font-size: 15px; font-weight: 600; }
+.taskExampleGrid small { color: var(--home-muted); font-size: 12px; }
+
+.newTaskComposerDock { z-index: 20; width: min(920px, 100%); gap: 8px; margin: 0 auto; opacity: .88; transform: translateY(6px); }
+.introSequenceStarted .newTaskComposerDock { animation: introComposerArrival 300ms cubic-bezier(.22,1,.36,1) 300ms both; }
+.newTaskWelcomePrompt { display: block; min-height: 20px; padding: 0 4px; color: var(--home-body); font-size: 13px; }
+.projectSelector > button { height: 52px; grid-template-columns: 22px minmax(0,1fr) 18px; border-color: var(--home-line); border-radius: 13px; padding-inline: 16px; color: #475569; box-shadow: 0 1px 2px rgba(15,23,42,.02); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.projectSelector > button:hover,
+.projectSelector.isOpen > button { border-color: rgba(41,0,255,.25); box-shadow: 0 0 0 3px rgba(41,0,255,.045); }
+.projectSelectorMenu { border-color: var(--home-line); border-radius: 13px; box-shadow: 0 16px 36px rgba(15,23,42,.09); }
+.newTaskComposer { min-height: 100px; grid-template-columns: minmax(0,1fr) 44px; gap: 12px; border-color: var(--home-line); border-radius: 14px; box-shadow: 0 4px 18px rgba(15,23,42,.045); padding: 16px; }
+.newTaskComposer:focus-within { border-color: rgba(41,0,255,.3); box-shadow: 0 4px 18px rgba(15,23,42,.045), 0 0 0 3px rgba(41,0,255,.05); }
+.newTaskComposer textarea { min-height: 64px; color: var(--home-ink); font-size: 15px; }
+.newTaskComposer textarea::placeholder { color: var(--home-muted); }
+.newTaskComposer > .sendIconButton { width: 44px; height: 44px; border-radius: 13px; background: #17113f; }
+.newTaskComposer > .sendIconButton:disabled { background: #cbd5e1; }
+
+.introSequenceSettled .newTaskIntro h1,
+.introSequenceSettled .taskExampleGrid button,
+.introSequenceSettled .newTaskComposerDock {
+  animation: none;
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+@keyframes logoAwakening {
+  0% { opacity: .18; filter: blur(14px); transform: scale(1); }
+  11% { opacity: .28; filter: blur(12px); transform: scale(1); }
+  22% { opacity: .42; filter: blur(9px); transform: scale(1); }
+  36% { opacity: .60; filter: blur(6px); transform: scale(1); }
+  49% { opacity: .78; filter: blur(3px); transform: scale(.985); }
+  62% { opacity: .92; filter: blur(1px); transform: scale(1); }
+  78% { opacity: 1; filter: blur(.35px); transform: scale(1); }
+  100% { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+@keyframes introTitleArrival {
+  from { opacity: .88; filter: blur(2px); transform: translateY(6px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+@keyframes introCardArrival {
+  from { opacity: .9; filter: blur(1px); transform: translateY(8px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+@keyframes introComposerArrival {
+  from { opacity: .88; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1179px) {
+  .taskExampleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .taskExampleGrid button { min-height: 112px; }
+  .newTaskIntro { padding-block: 22px 32px; }
+  .logoAwakening { width: 78px; height: 78px; }
+  .logoAwakening svg { width: 72px; height: 71px; }
+  .newTaskIntro h1 { margin: 18px 0 24px; }
+}
+
+@media (max-width: 899px) {
+  .dmpkShell.workbenchShell,
+  .dmpkShell.workbenchShell.sidebarCollapsed { position: relative; grid-template-columns: minmax(0, 1fr); }
+  .dmpkShell.workbenchShell .sidebar { position: fixed; z-index: 400; top: 0; bottom: 0; left: 0; width: min(280px, calc(100vw - 48px)); box-shadow: 18px 0 48px rgba(15,23,42,.12); transform: translateX(0); transition: transform 180ms ease; }
+  .dmpkShell.workbenchShell.sidebarCollapsed .sidebar { display: flex; transform: translateX(-105%); }
+  .dmpkShell.workbenchShell.sidebarCollapsed .brand { grid-template-columns: 36px minmax(0,1fr) 32px; justify-items: initial; margin-inline: 8px; }
+  .dmpkShell.workbenchShell.sidebarCollapsed .brand img,
+  .dmpkShell.workbenchShell.sidebarCollapsed .brand span,
+  .dmpkShell.workbenchShell.sidebarCollapsed .sidebarSearchButton,
+  .dmpkShell.workbenchShell.sidebarCollapsed .navBlock p,
+  .dmpkShell.workbenchShell.sidebarCollapsed .projectRow strong,
+  .dmpkShell.workbenchShell.sidebarCollapsed .projectRow > svg:last-child,
+  .dmpkShell.workbenchShell.sidebarCollapsed .chatRow strong,
+  .dmpkShell.workbenchShell.sidebarCollapsed .chatRow small,
+  .dmpkShell.workbenchShell.sidebarCollapsed .account > div:nth-child(2) { display: initial; }
+  .dmpkShell.workbenchShell.sidebarCollapsed .sidebarActions,
+  .dmpkShell.workbenchShell.sidebarCollapsed .projectTree,
+  .dmpkShell.workbenchShell.sidebarCollapsed .projectGroup,
+  .dmpkShell.workbenchShell.sidebarCollapsed .chatTree,
+  .dmpkShell.workbenchShell.sidebarCollapsed .account { display: grid; }
+  .mobileSidebarTrigger { display: grid; }
+  .dmpkWorkspace.workbenchMode > .topbar { gap: 12px; }
+}
+
+@media (max-height: 780px) and (min-width: 1180px) {
+  .newTaskHome { padding-bottom: 24px; }
+  .newTaskIntro { padding: 12px 0 24px; transform: translateY(-8px); }
+  .logoAwakening { width: 72px; height: 72px; }
+  .logoAwakening svg { width: 68px; height: 67px; }
+  .newTaskIntro h1 { margin: 14px 0 22px; font-size: 34px; }
+  .taskExampleGrid button { min-height: 116px; }
+  .projectSelector > button { height: 48px; }
+  .newTaskComposer { min-height: 92px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logoAwakening svg,
+  .taskExampleGrid button,
+  .projectSelector > button,
+  .dmpkShell.workbenchShell .sidebar { transition: none; }
+  .logoAwakening svg { animation: none; opacity: 1; filter: none; transform: none; }
+  .introSequenceStarted .newTaskIntro h1,
+  .introSequenceStarted .taskExampleGrid button,
+  .introSequenceStarted .newTaskComposerDock { animation: none; opacity: 1; filter: none; transform: none; }
+}
+
+@keyframes reducedIntroReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sidebar selection stays intentionally neutral across every workspace state. */
+.dmpkShell .sidebar .workspaceViewRow.active::before,
+.dmpkShell .sidebar .chatRow.active::before {
+  display: none;
+}
+
+.dmpkShell .sidebar .workspaceViewRow.active,
+.dmpkShell .sidebar .chatRow.active,
+.dmpkShell .sidebar .chatRow.isPinnedShortcut {
+  background: #f2f4f7;
+  color: #101828;
+  box-shadow: none;
+}
+
+.dmpkShell .sidebar .workspaceViewRow:hover,
+.dmpkShell .sidebar .projectRow:hover,
+.dmpkShell .sidebar .projectRowWrap:hover .projectRow,
+.dmpkShell .sidebar .chatRow:hover {
+  background: #f7f8fa;
+  color: #101828;
+  box-shadow: none;
+}
+
+.dmpkShell .sidebar .newChat:hover,
+.dmpkShell .sidebar .sidebarSearchButton:hover {
+  border-color: #cbd5e1;
+  color: #101828;
+  box-shadow: none;
+}
+
+/* File workspace ambient assistant: quiet at rest, diffuse only when invited. */
+.dmpkShell.workbenchShell { --sidebar-width: clamp(248px, 15vw, 280px); }
+.dmpkShell.workbenchShell.sidebarCollapsed { --sidebar-width: 72px; }
+
+.ambientFileAssistant {
+  --ambient-ease: cubic-bezier(.22, 1, .36, 1);
+  position: fixed;
+  z-index: 120;
+  bottom: clamp(24px, 4vh, 48px);
+  left: calc(var(--sidebar-width) + (100vw - var(--sidebar-width)) / 2);
+  width: min(720px, calc(100vw - var(--sidebar-width) - 64px));
+  height: 138px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.ambientFileAssistant::before {
+  position: absolute;
+  z-index: -1;
+  inset: 42px -64px -40px;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 40% 54%, rgba(41, 67, 255, .18), transparent 58%),
+    radial-gradient(ellipse at 65% 50%, rgba(112, 53, 220, .13), rgba(45, 190, 205, .045) 35%, transparent 68%);
+  filter: blur(20px);
+  opacity: 0;
+  pointer-events: none;
+  content: "";
+  transition: opacity 300ms var(--ambient-ease), filter 300ms var(--ambient-ease), transform 300ms var(--ambient-ease);
+  transform: scaleX(.48);
+}
+
+.ambientFileAssistant[data-expanded="true"] { pointer-events: auto; }
+.ambientFileAssistant[data-expanded="true"]::before {
+  filter: blur(28px);
+  opacity: .65;
+  transform: scaleX(1);
+}
+
+.ambientComposerFrame {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 98px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0);
+  box-shadow: none;
+  clip-path: inset(27px calc((100% - 210px) / 2) 27px round 22px);
+  pointer-events: none;
+  transition: clip-path 300ms var(--ambient-ease), background-color 260ms var(--ambient-ease), box-shadow 260ms var(--ambient-ease), backdrop-filter 260ms var(--ambient-ease);
+}
+
+.ambientFileAssistant[data-expanded="true"] .ambientComposerFrame {
+  clip-path: inset(0 round 14px);
+  background: rgba(255, 255, 255, .65);
+  box-shadow: 0 16px 42px rgba(15, 23, 42, .09), inset 0 1px rgba(255, 255, 255, .72);
+  backdrop-filter: blur(24px);
+  pointer-events: auto;
+}
+
+.ambientAssistantEntry {
+  position: absolute;
+  inset: 27px calc((100% - 210px) / 2);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 210px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity 120ms ease, transform 240ms var(--ambient-ease);
+}
+
+.ambientAssistantEntry svg { color: #334155; stroke-width: 1.6; }
+.ambientFileAssistant[data-expanded="true"] .ambientAssistantEntry { opacity: 0; transform: translateY(5px); pointer-events: none; }
+
+.ambientAssistantComposer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: end;
+  gap: 8px;
+  padding: 42px 14px 12px;
+  opacity: 0;
+  transform: translateY(5px);
+  pointer-events: none;
+  transition: opacity 180ms ease 45ms, transform 280ms var(--ambient-ease);
+}
+
+.ambientFileAssistant[data-expanded="true"] .ambientAssistantComposer { opacity: 1; transform: none; pointer-events: auto; }
+.ambientAssistantComposer > input { min-width: 0; height: 42px; border: 0; outline: 0; background: transparent; color: #0b1220; font: inherit; font-size: 14px; }
+.ambientAssistantComposer > input::placeholder { color: #94a3b8; }
+.ambientComposerAdd,
+.ambientComposerSend { display: grid; width: 42px; height: 42px; place-items: center; border: 0; border-radius: 12px; }
+.ambientComposerAdd { background: rgba(248, 250, 252, .72); color: #64748b; cursor: pointer; }
+.ambientComposerAdd input { display: none; }
+.ambientComposerSend { background: #172554; color: #fff; cursor: pointer; transition: opacity 140ms ease, background-color 140ms ease; }
+.ambientComposerSend:disabled { background: #cbd5e1; opacity: .75; cursor: default; }
+.ambientComposerSend:not(:disabled):hover { background: #1e1b4b; }
+
+.ambientAssistantSuggestions {
+  position: absolute;
+  right: 12px;
+  bottom: 106px;
+  left: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  opacity: 0;
+  filter: blur(5px);
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 140ms ease, filter 180ms ease, transform 220ms var(--ambient-ease);
+}
+
+.ambientFileAssistant[data-expanded="true"] .ambientAssistantSuggestions {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 80ms;
+}
+
+.ambientAssistantSuggestions button {
+  display: flex;
+  min-width: 0;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .72);
+  color: #475569;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, .045);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.ambientAssistantSuggestions button svg { width: 14px; height: 14px; flex: 0 0 auto; color: #4338ca; stroke-width: 1.6; }
+.ambientAssistantSuggestions button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ambientAssistantSuggestions button:hover { background: rgba(255, 255, 255, .94); color: #0f172a; }
+
+@media (max-width: 900px) {
+  .dmpkShell.workbenchShell,
+  .dmpkShell.workbenchShell.sidebarCollapsed { --sidebar-width: 0px; }
+  .ambientFileAssistant { width: min(720px, calc(100vw - 32px)); }
+  .ambientAssistantSuggestions { grid-template-columns: 1fr; bottom: 106px; }
+  .ambientAssistantSuggestions button { justify-content: flex-start; padding: 0 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambientFileAssistant::before,
+  .ambientComposerFrame,
+  .ambientAssistantEntry,
+  .ambientAssistantComposer,
+  .ambientAssistantSuggestions { transition-duration: 120ms; transform: none; filter: none; }
+}
+
+/* UX audit consolidation layer — shared, quiet operational UI tokens. */
+:root {
+  --background: #f8fafc;
+  --surface-muted: #f5f7fa;
+  --text-primary: #111318;
+  --text-secondary: #5f6875;
+  --text-tertiary: #8b95a3;
+  --border: #e8ecf2;
+  --primary: #2900ff;
+  --primary-hover: #2100cc;
+  --success: #4f7f68;
+  --warning: #8b6f38;
+  --danger: #9b5a55;
+  --focus-ring: rgba(41, 0, 255, .18);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --content-max: 1200px;
+  --page-gutter: clamp(24px, 4vw, 56px);
+}
+
+.dmpkShell.workbenchShell,
+.dmpkWorkspace.workbenchMode,
+.dmpkWorkspace.workbenchMode .workbenchView,
+.newTaskHome { background-color: var(--background); }
+
+.dmpkShell.workbenchShell .sidebar,
+.dmpkWorkspace.workbenchMode > .topbar { border-color: var(--border); }
+
+.dmpkWorkspace.workbenchMode .workbenchView {
+  min-width: 0;
+  padding-inline: var(--page-gutter);
+}
+
+.dmpkWorkspace.workbenchMode .workbenchView > header,
+.knowledgeBaseView > .projectFolderStrip,
+.knowledgeBaseView > .rootRecentOutputs,
+.knowledgeBaseView > .knowledgeToolbar,
+.knowledgeBaseView > .projectFileLanes,
+.taskWorkbenchView > header,
+.taskWorkbenchView > .taskQueueShell {
+  width: min(var(--content-max), 100%);
+  margin-inline: auto;
+}
+
+.newTaskHome::before,
+.taskExampleGrid button::before { display: none; }
+
+.primaryButton {
+  border-color: transparent;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: none;
+  transition: background-color 150ms ease, opacity 150ms ease;
+}
+.primaryButton:not(:disabled):hover { background: var(--primary-hover); }
+.primaryButton:disabled { background: #c9ced8; color: #fff; opacity: 1; }
+
+.secondaryButton,
+.iconButton,
+.compactSelect > button,
+.projectSelector > button {
+  border-color: var(--border);
+  background: #fff;
+  box-shadow: none;
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.iconButton:focus-visible,
+.compactSelect > button:focus-visible,
+.projectSelector > button:focus-visible,
+.projectFolderStrip button:focus-visible,
+.knowledgeFileMain:focus-visible,
+.rowMoreButton:focus-visible,
+.deliveryToggle:focus-visible,
+.sendIconButton:focus-visible,
+.composerAddButton:focus-within,
+.ambientAssistantEntry:focus-visible,
+.ambientAssistantSuggestions button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.workbenchComposer,
+.newTaskComposer {
+  border-color: var(--border);
+  background: #fff;
+  box-shadow: none;
+}
+.workbenchComposer:focus-within,
+.newTaskComposer:focus-within {
+  border-color: rgba(41, 0, 255, .34);
+  box-shadow: 0 0 0 3px rgba(41, 0, 255, .055);
+}
+
+.taskExampleGrid button,
+.projectFolderStrip button,
+.projectFileLane,
+.knowledgeTable,
+.workbenchTaskCard,
+.knowledgeCard {
+  border-color: var(--border);
+  box-shadow: none;
+}
+.taskExampleGrid button:hover,
+.projectFolderStrip button:hover,
+.projectFolderStrip button:focus-visible,
+.workbenchTaskCard:hover,
+.knowledgeCard:hover {
+  border-color: #cfd6e2;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .045);
+  transform: translateY(-1px);
+}
+.projectFolderStrip button > svg:first-child,
+.projectFolderStrip button:hover > svg:first-child,
+.projectFolderStrip button:focus-visible > svg:first-child {
+  color: #52627a;
+  transform: none;
+}
+
+.knowledgeFileRow.selected { background: var(--surface-muted); box-shadow: none; }
+.knowledgeFileRow:focus-within { background: #f8fafc; }
+.knowledgeSearch:focus-within { border-color: rgba(41, 0, 255, .28); box-shadow: 0 0 0 3px rgba(41, 0, 255, .05); }
+
+.compactSelectMenu,
+.rowActionMenu,
+.projectSelectorMenu {
+  max-width: min(320px, calc(100vw - 32px));
+  max-height: min(360px, calc(100dvh - 96px));
+  overflow-y: auto;
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
+}
+.knowledgeToolbar .compactSelectMenu { right: 0; left: auto; }
+
+.modalBackdrop { background: rgba(15, 23, 42, .22); backdrop-filter: none; }
+.knowledgePreviewDialog,
+.previewModal {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, .14);
+}
+
+.libraryAssistant .assistantSuggestions button:hover {
+  border-color: #cfd6e2;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .045);
+  transform: translateY(-1px);
+}
+
+.ambientFileAssistant::before {
+  background: radial-gradient(ellipse at center, rgba(41, 0, 255, .14), transparent 68%);
+}
+.ambientFileAssistant[data-expanded="true"]::before { opacity: .42; }
+.ambientFileAssistant[data-expanded="true"] .ambientComposerFrame {
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .075);
+}
+
+@media (max-width: 1180px) {
+  .knowledgeTableHeader,
+  .knowledgeFileRow {
+    grid-template-columns: minmax(220px, 1fr) minmax(130px, .65fr) 110px 76px 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .dmpkWorkspace.workbenchMode .workbenchView { padding-inline: 16px; }
+  .projectFolderStrip { grid-template-columns: 1fr; }
+  .knowledgeToolbar { align-items: stretch; flex-direction: column; }
+  .knowledgeToolbar .knowledgeSearch { width: 100%; margin-right: 0; }
+  .knowledgeToolbar .compactSelect { align-self: flex-start; }
+  .knowledgeTableHeader,
+  .knowledgeFileRow { grid-template-columns: minmax(0, 1fr) 72px 32px; }
+  .knowledgeTableHeader > span:nth-child(2),
+  .knowledgeTableHeader > span:nth-child(3),
+  .knowledgeFileRow > span:nth-child(2),
+  .knowledgeFileRow > span:nth-child(3) { display: none; }
+  .knowledgeTableHeader > span:nth-child(4) { grid-column: 2; }
+  .knowledgeTableHeader > span:nth-child(5) { grid-column: 3; }
+  .projectLaneHeader { align-items: flex-start; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
