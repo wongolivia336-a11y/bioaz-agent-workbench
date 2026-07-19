@@ -16,21 +16,11 @@ export const workspacePinCatalog: PinItem[] = [
   { id: "task-report-7", type: "task", title: "样本 7 单批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "1 小时前", status: "done" },
   { id: "task-new-quote", type: "task", title: "新建报价任务", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "刚刚", status: "running" },
   { id: "task-ba", type: "task", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done" },
-  { id: "task-temp", type: "task", title: "内部试跑报价模型对比", project: "临时任务", moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "今天", status: "running" },
 ];
 
 export const workspaceTasks: TaskCollection = {
-  actionRequired: [
-    { id: "task-report-7", title: "样本 7 单批次报告 · 等你确认", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "2小时前", status: "待我处理" },
-    { id: "task-balbc", title: "Balb/c nude 报价 · 需要补充参数", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "昨天", status: "待补充" },
-    { id: "task-ct26", title: "CT26 项目报价 · 待确认", project: workspaceProjects[2].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3天前", status: "待确认" },
-  ],
-  all: [
-    { id: "task-sample9", title: "样本9 双批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "36分钟前", status: "处理中" },
-    { id: "task-ba", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3天前", status: "已完成" },
-    { id: "task-report-7", title: "样本 7 单批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "1小时前", status: "待确认" },
-    { id: "task-temp", title: "内部试跑报价模型对比", project: "临时任务", moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "今天", status: "临时任务" },
-  ],
+  actionRequired: [],
+  all: [],
 };
 
 export const initialKnowledgeFiles: KnowledgeFile[] = [

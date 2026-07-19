@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-07-19 — DMPK Quotation Management Prototype
+
+- Simplified the Workbench sidebar and removed default todo and temporary-task demo entries.
+- Added the quotation-management entry, DMPK standard prices, special rules, parameter builder, and scenario template versions.
+- Added natural-language rule drafting, editable rule fields, calculation validation, draft and publish states, and lightweight inline condition editors.
+- Added project-level quotation adjustment through the DMPK coworker with a structured confirmation preview.
+- Added custom input to numeric DMPK parameter options while preserving existing project tasks.
+
 ## Tumor Report Integration Preparation
 
 - Limited the active module Registry to DMPK quotation and tumor report.
