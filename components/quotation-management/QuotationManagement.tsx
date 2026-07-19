@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Bot, Check, ChevronRight, FileSpreadsheet, FlaskConical, GripVertical, Orbit, Plus, Search, Settings2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Bot, Check, ChevronRight, ChevronUp, FileSpreadsheet, FlaskConical, GripVertical, LogOut, Orbit, Plus, Search, Settings, Settings2, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 
 type DmpkTab = "prices" | "rules" | "parameters" | "templates";
@@ -62,6 +62,7 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
   const [dialog, setDialog] = useState<ManagementDialog>(null);
   const [activeField, setActiveField] = useState(0);
   const [activeParameterGroup, setActiveParameterGroup] = useState("animal");
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
 
   return <main className="quotationManagementShell">
     <aside className="quotationManagementSidebar">
@@ -69,7 +70,7 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
       <button className="quotationBackButton" type="button" onClick={onBack}><ArrowLeft size={17} />返回工作台</button>
       <span className="quotationSidebarLabel">报价管理</span>
       <button className="quotationSidebarItem active" type="button" onClick={() => setBusiness("root")}><Settings2 size={17} />报价规则</button>
-      <div className="quotationAdmin"><span>A</span><div><strong>Admin</strong><small>admin@example.com</small></div></div>
+      <div className={`quotationAdmin ${adminMenuOpen ? "menuOpen" : ""}`}><button type="button" onClick={() => setAdminMenuOpen((value) => !value)} aria-expanded={adminMenuOpen}><span className="avatar">A</span><span><strong>Admin</strong><small>admin@example.com</small></span><ChevronUp size={15} /></button>{adminMenuOpen ? <div className="quotationAdminMenu"><div><span className="avatar">A</span><span><strong>Admin</strong><small>admin@example.com</small></span></div><button type="button"><Settings size={15} />账户设置</button><button type="button"><LogOut size={15} />退出登录</button></div> : null}</div>
     </aside>
     <section className="quotationManagementMain">
       <header className="quotationManagementTopbar"><strong>{business === "root" ? "报价规则" : "报价规则 / DMPK 报价"}</strong><span>{business === "root" ? "管理员模式" : "草稿 2"}</span></header>
