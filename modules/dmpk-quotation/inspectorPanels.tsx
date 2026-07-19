@@ -14,7 +14,12 @@ import {
   History,
   ListChecks,
   SlidersHorizontal,
+  ShieldCheck,
+  Sparkles,
+  Plus,
+  X,
 } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import {
   resolveInspectorPanels,
   type InspectorContentState,
@@ -165,13 +170,32 @@ function ProcessPanel({ context }: { context: DmpkInspectorContext }) {
 
 function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
   const completed = context.fields.filter((field) => field.value).length;
-  return <div className="dmpkInspectorList"><PanelIntro title={`${completed}/${context.fields.length} 项已确认`} meta="计价参数会随对话实时更新" />{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
+  const [dialog, setDialog] = useState<"basis" | "adjust" | "suggest" | null>(null);
+  const [adjustmentRequest, setAdjustmentRequest] = useState("");
+  const [showAdjustmentPreview, setShowAdjustmentPreview] = useState(false);
+  const [adjustmentApplied, setAdjustmentApplied] = useState(false);
+  const [reason, setReason] = useState("");
+  const [ruleSuggestion, setRuleSuggestion] = useState("以后 SD 大鼠超过 30 只时，动物使用费按 85 折计算");
+  const goToRuleDraft = () => {
+    const params = new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: ruleSuggestion });
+    window.location.href = `/?${params.toString()}`;
+  };
+  const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
+  return <div className="dmpkInspectorList"><PanelIntro title={`${completed}/${context.fields.length} 项已确认`} meta="计价参数会随对话实时更新" />{hasQuoteDraft ? <section className="dmpkStrategySummary"><header><span><ShieldCheck size={15} /></span><div><strong>报价草稿</strong><small>DMPK 标准价格 · v1.0.13</small></div><em>{adjustmentApplied ? "已调整" : "已计算"}</em></header><p>已按当前参数计算 · 命中 5 项规则</p><footer><button type="button" onClick={() => setDialog("basis")}>查看费用明细</button><button type="button" onClick={() => { setShowAdjustmentPreview(false); setDialog("adjust"); }}>调整本次报价</button></footer></section> : null}{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
     const fields = context.fields.filter((field) => field.group === group);
     const open = context.openGroups[group];
     const groupCompleted = fields.filter((field) => field.value).length;
     const progressClass = groupCompleted === fields.length ? "isComplete" : groupCompleted ? "isPartial" : "isEmpty";
     return <section className={`inspectorParameterGroup ${open ? "isOpen" : ""}`} key={group}><button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => context.onToggleGroup(group)}><strong>{groupLabels[group]}</strong><span className={progressClass}>{groupCompleted}/{fields.length}<ChevronDown size={14} /></span></button>{open ? <div className="inspectorParameterFields">{fields.map((field) => field.value ? <button className={`inspectorParameterField ${context.editingFieldId === field.id ? "isEditing" : ""}`} type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong>{field.value}</strong><Edit3 size={13} /></button> : <div className="inspectorParameterField isEmpty" key={field.id}><span>{field.label}</span><strong>待填写</strong><span aria-hidden="true" /></div>)}</div> : null}</section>;
-  })}</div>;
+  })}{dialog === "basis" ? <StrategyDialog title="费用明细" onClose={() => setDialog(null)}><div className="strategyCostList"><div><span>动物使用费<small>36 × ¥120</small></span><strong>¥4,320</strong></div><div><span>方法开发费<small>1 × ¥6,000</small></span><strong>¥6,000</strong></div><div><span>样品检测费<small>216 × ¥180</small></span><strong>¥38,880</strong></div><div><span>报告费<small>1 × ¥3,000</small></span><strong>¥3,000</strong></div>{adjustmentApplied ? <div className="isOverride"><span>本次报价调整<small>报告费调整 · {reason || "长期合作项目"}</small></span><strong>−¥500</strong></div> : null}</div><section className="strategyMatchedRules"><strong>本次计算使用</strong><span>SD 大鼠标准价格</span><span>国内报价区域</span><span>PK 报价模板 v8</span></section></StrategyDialog> : null}{dialog === "adjust" ? <StrategyDrawer title="调整本次报价" onClose={() => setDialog(null)}><div className="strategyAssistantIntro"><span><Sparkles size={15} /></span><div><strong>DMPK 报价同事</strong><small>告诉我这次报价需要怎么调整</small></div></div><label className="strategyDialogField">调整要求<textarea rows={4} value={adjustmentRequest} onChange={(event) => { setAdjustmentRequest(event.target.value); setShowAdjustmentPreview(false); }} placeholder="例如：报告费改为 2,500 元，增加 1,200 元加急处理费，原因是长期合作项目" /></label><button className="strategyParseButton" type="button" disabled={!adjustmentRequest.trim()} onClick={() => { setShowAdjustmentPreview(true); setReason(adjustmentRequest.includes("原因") ? "长期合作项目" : "负责人本次调整"); }}><Sparkles size={14} />生成调整预览</button>{showAdjustmentPreview ? <section className="strategyAdjustmentPreview"><header><strong>请确认调整内容</strong><span>仅当前报价</span></header><div><span>报告费<small>¥3,000 → ¥2,500</small></span><strong>−¥500</strong></div><div><span><Plus size={13} /> 加急处理费<small>临时费用</small></span><strong>+¥1,200</strong></div><footer><span>报价总额</span><strong>¥52,200 → ¥52,900</strong></footer><p>调整原因：{reason}</p></section> : null}<p className="strategyScopeNote">确认后只修改当前报价草稿，并保留调整记录。</p><div className="strategyDialogActions"><button type="button" onClick={() => setDialog("suggest")}>希望以后都这样计算？</button><button className="primary" type="button" disabled={!showAdjustmentPreview} onClick={() => { setAdjustmentApplied(true); setDialog(null); }}>确认调整</button></div></StrategyDrawer> : null}{dialog === "suggest" ? <StrategyDialog title="建议更新全局规则" onClose={() => setDialog(null)}><label className="strategyDialogField">你希望以后如何计算？<textarea rows={4} value={ruleSuggestion} onChange={(event) => setRuleSuggestion(event.target.value)} /></label><p className="strategyScopeNote">AI 会结合当前报价生成规则草稿。全局规则仍需在报价管理中试算并发布。</p><div className="strategyDialogActions"><button type="button" onClick={() => setDialog(null)}>取消</button><button className="primary" type="button" onClick={goToRuleDraft}>生成并前往规则管理</button></div></StrategyDialog> : null}</div>;
+}
+
+function StrategyDialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return <div className="strategyDialogBackdrop" role="dialog" aria-modal="true"><section className="strategyDialog"><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
+}
+
+function StrategyDrawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return <div className="strategyDrawerBackdrop" role="dialog" aria-modal="true"><section className="strategyDrawer"><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
 }
 
 function MaterialsPanel({ context }: { context: DmpkInspectorContext }) {

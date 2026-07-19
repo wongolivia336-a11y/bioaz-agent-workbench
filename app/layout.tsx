@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./iteration.css";
 import "./review.css";
+import "./quotation-management.css";
+import "./quotation-rules-flow.css";
+import "./account-menu.css";
+import "./dmpk-strategy.css";
+import "./dmpk-adjustment-drawer.css";
+import "./quotation-dialogs.css";
 
 export const metadata: Metadata = {
   title: "BioAZ Agent Workbench",

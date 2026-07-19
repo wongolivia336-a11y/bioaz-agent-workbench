@@ -10,6 +10,7 @@ import { TaskList } from "./TaskList";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { WorkbenchProject } from "../../modules/types";
+import { QuotationManagement } from "../quotation-management/QuotationManagement";
 
 export default function WorkbenchShell() {
   const [collapsed, setCollapsed] = useState(false);
@@ -32,6 +33,7 @@ export default function WorkbenchShell() {
   const [helperConversationStarted, setHelperConversationStarted] = useState(false);
   const [, setModuleRunStatus] = useState<ModuleRunStatus>("active");
   const [sessionSnapshots, setSessionSnapshots] = useState<Record<string, AgentSessionSnapshot[]>>({});
+  const [quotationManagementOpen, setQuotationManagementOpen] = useState(false);
 
   const quickStarts = useMemo(() => quickStartRegistry.map((item) => { const Icon = item.icon; return { id: item.id, label: item.label, prompt: item.prompt, availability: item.availability, icon: <Icon size={17} /> }; }), []);
   const suggestedCoworker = pendingModule?.suggestedCoworker ?? null;
@@ -124,6 +126,7 @@ export default function WorkbenchShell() {
     const moduleId = params.get("module");
     if (moduleId) startModuleDirect(moduleId);
     if (params.get("view") === "library") setRoute("library");
+    if (params.get("view") === "quotation-management") setQuotationManagementOpen(true);
   }, []);
 
   useEffect(() => {
@@ -173,8 +176,9 @@ export default function WorkbenchShell() {
 
   const shellView = route !== "module";
   const Session = activeModule?.Session;
+  if (quotationManagementOpen) return <QuotationManagement onBack={() => setQuotationManagementOpen(false)} />;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
-    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} onCreateProject={createProject} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onToggleCollapsed={() => setCollapsed((value) => !value)} />
-    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={18} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "临时任务"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : route === "library" && libraryProject ? <><button type="button" onClick={() => setLibraryProject(null)}>文件管理系统</button><ChevronRight size={15} /><strong>{libraryProject}</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager projects={projects} selectedProject={libraryProject} onSelectedProjectChange={setLibraryProject} /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} projectOptions={[...projects.map((item) => item.name), "临时任务"]} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
+    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} onCreateProject={createProject} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationManagementOpen(true)} onToggleCollapsed={() => setCollapsed((value) => !value)} />
+    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={18} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "临时任务"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : route === "library" && libraryProject ? <><button type="button" onClick={() => setLibraryProject(null)}>智能项目中枢</button><ChevronRight size={15} /><strong>{libraryProject}</strong></> : <strong>{route === "library" ? "智能项目中枢" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager projects={projects} selectedProject={libraryProject} onSelectedProjectChange={setLibraryProject} /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} projectOptions={[...projects.map((item) => item.name), "临时任务"]} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }
