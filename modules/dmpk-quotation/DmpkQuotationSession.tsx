@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ChevronDown, ChevronRight, FileSpreadsheet, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, ChevronRight, FileSpreadsheet, SlidersHorizontal, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
@@ -19,8 +19,10 @@ import {
   DmpkArtifactPreviewModal,
   DmpkComposer,
   DmpkConversation,
+  DmpkEditProposalCard,
   DmpkQuotationPreviewModal,
   type DmpkChatMessage,
+  type DmpkEditProposal,
   type DmpkInspectorPanelId,
 } from "./views";
 
@@ -40,8 +42,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [inspectorPinned, setInspectorPinned] = useState(false);
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
-  const [parametersExpanded, setParametersExpanded] = useState(true);
+  const [parametersExpanded, setParametersExpanded] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [conversationEditing, setConversationEditing] = useState(false);
+  const [editProposal, setEditProposal] = useState<DmpkEditProposal | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
   const [secondaryInspectorTop, setSecondaryInspectorTop] = useState(142);
@@ -53,6 +57,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const composerFields = editingField ? [editingField].filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id)) : visibleCardFields;
   const completedCount = fields.filter((field) => field.value).length;
   const totalRequired = fields.filter((field) => field.required).length;
+  const identifiedAssayType = fields.find((field) => field.id === "assayType")?.value ?? "";
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
   const activeCoworker = businessCoworkers.find((coworker) => coworker.id === activeCoworkerId) ?? businessCoworkers[0];
   const ActiveCoworkerIcon = activeCoworker?.icon ?? FileSpreadsheet;
@@ -83,6 +88,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
       setFields(nextFields);
+      setParametersExpanded(Boolean(patch.assayType));
       setActiveGroup(nextGroup);
       setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
       setStage("collecting");
@@ -127,6 +133,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     if (!field) return;
     const invalidatesQuotation = stage === "generated";
     setParametersExpanded(true);
+    setConversationEditing(false);
     setEditingFieldId(field.id);
     setDraftTabs((items) => items.filter((item) => item.fieldId !== field.id));
     setActiveGroup(field.group);
@@ -138,6 +145,15 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     appendMessage("agent", invalidatesQuotation
       ? `正在修改已确认参数“${field.label}”。提交新值后，当前报价将标记为待重新生成。`
       : `请问您希望将${field.label}修改为什么？请在下方选择一个新值，发送后我会更新右侧参数。`);
+  };
+
+  const startConversationEdit = () => {
+    setParametersExpanded(Boolean(identifiedAssayType));
+    setEditingFieldId(null);
+    setConversationEditing(true);
+    setComposerAttention(false);
+    window.requestAnimationFrame(() => setComposerAttention(true));
+    window.setTimeout(() => setComposerAttention(false), 720);
   };
 
   const sendDraft = () => {
@@ -175,6 +191,23 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       return;
     }
     if (!text || stage === "thinking" || stage === "generating") return;
+    const reportFeeMatch = text.match(/(?:这次|本次)?.*报告费.*?(\d[\d,]*)\s*元?/);
+    const minimumSampleMatch = text.match(/以后.*?PK.*?样品.*?少于\s*(\d+)\s*个?.*?按\s*(\d+)\s*个?.*?收费/i);
+    if (reportFeeMatch) {
+      appendMessage("user", text);
+      setComposerText("");
+      setEditProposal({ kind: "current-price", request: text, previousPrice: 3000, nextPrice: Number(reportFeeMatch[1].replaceAll(",", "")) });
+      setConversationEditing(false);
+      return;
+    }
+    if (minimumSampleMatch) {
+      appendMessage("user", text);
+      setComposerText("");
+      setEditProposal({ kind: "global-rule", request: text, minimumSamples: Number(minimumSampleMatch[2]) });
+      setConversationEditing(false);
+      return;
+    }
+    setConversationEditing(false);
     handleInitialRequest(text);
   };
 
@@ -226,17 +259,22 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         <header className="topbar"><div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div></header>
         <header className="agentHeader"><div className="agentTitle"><span className="agentIcon pending"><ActiveCoworkerIcon size={18} /></span><span>{activeCoworker?.name ?? "DMPK报价同事"}</span></div></header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer attention={composerAttention} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
+        <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
       <aside
         className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}
         style={{ "--dmpk-secondary-top": `${secondaryInspectorTop}px` } as CSSProperties}
       >
-        <section ref={parameterCardRef} className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
-          <button type="button" aria-expanded={parametersExpanded} onClick={() => setParametersExpanded((current) => !current)}>
+        <section ref={parameterCardRef} className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
+          <div className="persistentParameterHeader">
+          <button className="persistentParameterToggle" type="button" aria-expanded={parametersExpanded} disabled={!identifiedAssayType} onClick={() => setParametersExpanded((current) => !current)}>
             <span><SlidersHorizontal size={16} /><strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong></span>
-            <span>{completedCount}/{totalRequired}<ChevronDown size={15} /></span>
+            <span>{identifiedAssayType ? `${completedCount}/${totalRequired}` : null}<ChevronDown size={15} /></span>
           </button>
+          <button className="parameterConversationEdit" type="button" aria-pressed={conversationEditing} aria-label="通过对话修改" title="通过对话修改" onClick={startConversationEdit}>
+            <WandSparkles size={15} /><span>对话编辑</span>
+          </button>
+          </div>
           {parametersExpanded ? <div className="persistentParameterBody">{parameterPanel?.content}</div> : null}
         </section>
         <div className="secondaryInspectorSlot">

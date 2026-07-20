@@ -9,6 +9,7 @@ import "./admin-sidebar-alignment.css";
 import "./dmpk-strategy.css";
 import "./dmpk-adjustment-drawer.css";
 import "./quotation-dialogs.css";
+import "./dmpk-rule-assistant.css";
 
 export const metadata: Metadata = {
   title: "BioAZ Agent Workbench",

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DMPK 前台对话编辑低保真</title>
+  <link rel="stylesheet" href="./frontend-agent-edit.css" />
+</head>
+<body>
+  <main class="shell">
+    <aside class="sidebar">
+      <header><span class="logo">A</span><strong>BioAZ</strong><button>◫</button></header>
+      <div class="new-task">＋ 新建任务</div>
+      <div class="hub">◉ <strong>数据中枢</strong></div>
+      <small>项目</small>
+      <section><strong>▱ XX药业-PD1临床前评价</strong><p>▧ 样本 9 双批次报告</p><p>▧ Balb/c nude 报价</p></section>
+      <section><strong>▱ YY药业-Balb/c nude评价</strong><p class="active">▧ DMPK报价任务</p></section>
+      <footer><span>A</span><div><strong>Admin</strong><small>admin@example.com</small></div><b>⌃</b></footer>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar"><span>YY药业-Balb/c nude评价</span><b>›</b><strong>DMPK报价任务</strong></header>
+      <div class="chat">
+        <header class="coworker"><span>◇</span><div><strong>DMPK报价同事</strong><small>根据当前项目参数生成报价</small></div></header>
+        <div class="message"><span class="agent">A</span><p>请描述报价需求。我会识别检测类型并补充剩余参数。</p></div>
+        <div id="response" class="response hidden"></div>
+        <div class="composer-wrap">
+          <div class="demo-actions">
+            <button data-text="动物改成犬，每组3只，做2组，周期14天">演示：修改参数</button>
+            <button data-text="这次报告费改成2500元">演示：调整本次报价</button>
+            <button data-text="以后PK样品少于40个都按40个收费">演示：提出全局规则</button>
+          </div>
+          <label class="composer"><span>＋</span><textarea id="composer" rows="2" placeholder="描述你的DMPK报价需求…"></textarea><button id="send" aria-label="发送">➤</button></label>
+        </div>
+      </div>
+    </section>
+
+    <aside id="inspector" class="inspector">
+      <header><div><span>☷</span><strong>参数收集</strong></div><div><small>5/14</small><button id="editMode" title="通过对话修改" aria-label="通过对话修改">✦</button><button>⌃</button></div></header>
+      <div id="editStatus" class="edit-status hidden"><span>编辑中</span><button id="finishEdit">完成</button></div>
+      <section class="strategy"><strong>PK检测</strong><small>当前参数方案</small></section>
+      <section class="group open"><header><span class="dot done"></span><strong>检测类型</strong><em>已完成</em><b>⌃</b></header><button><span>检测类型</span><strong>PK检测</strong><i>✎</i></button><button><span>分子类型</span><strong>小分子</strong><i>✎</i></button></section>
+      <section class="group open"><header><span class="dot done"></span><strong>动物实验</strong><em>已完成</em><b>⌃</b></header><button><span>动物种属</span><strong id="species">SD大鼠</strong><i>✎</i></button><button><span>每组动物数</span><strong id="animals">2</strong><i>✎</i></button><button><span>组数</span><strong id="groups">2</strong><i>✎</i></button><button><span>实验周期</span><strong id="duration">7天</strong><i>✎</i></button></section>
+      <section class="group"><header><span class="dot"></span><strong>生物分析</strong><em>未开始</em><b>⌄</b></header></section>
+      <section class="group"><header><span class="dot"></span><strong>报告与报价</strong><em>未开始</em><b>⌄</b></header></section>
+    </aside>
+  </main>
+  <script src="./frontend-agent-edit.js"></script>
+</body>
+</html>

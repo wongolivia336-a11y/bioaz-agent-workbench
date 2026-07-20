@@ -69,7 +69,9 @@ export function getDmpkGroupTitle(id: DmpkGroupId) {
 
 export function parseDmpkRequest(text: string): Record<string, string> {
   const patch: Record<string, string> = {};
-  if (/dmpk|pk/i.test(text)) patch.assayType = "PK";
+  if (/ba\s*only|ba-only|体外.*生物分析/i.test(text)) patch.assayType = "BA Only";
+  else if (/tox|毒理/i.test(text)) patch.assayType = "TOX";
+  else if (/dmpk|pk/i.test(text)) patch.assayType = "PK";
   if (/小分子/.test(text)) patch.molecule = "小分子";
   if (/sd\s*大鼠|大鼠/i.test(text)) patch.species = "SD 大鼠";
   const animalMatch = text.match(/每组\s*(\d+)\s*只/);

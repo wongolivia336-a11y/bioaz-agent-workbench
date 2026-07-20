@@ -1,0 +1,101 @@
+.quotationRuleAssistant {
+  position: fixed;
+  left: calc(248px + (100vw - 248px) / 2);
+  bottom: clamp(24px, 4vh, 48px);
+  z-index: 20;
+  width: min(720px, calc(100vw - 248px - 64px));
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.quotationRuleAssistant::before {
+  position: absolute;
+  z-index: -1;
+  inset: 16px 60px -18px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgba(47, 34, 211, 0.16), transparent 70%);
+  filter: blur(22px);
+  content: "";
+  pointer-events: none;
+}
+
+.quotationRuleAssistant > button,
+.quotationRuleAssistant section {
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: 0 16px 44px rgba(17, 19, 24, 0.12);
+}
+
+.quotationRuleAssistant > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--ink);
+  font-weight: 650;
+  box-shadow: 0 8px 24px rgba(17, 19, 24, 0.08);
+}
+
+.quotationRuleAssistant > button:hover {
+  border-color: rgba(41, 0, 255, 0.28);
+  color: var(--brand);
+}
+
+.quotationRuleAssistant section {
+  display: grid;
+  width: 100%;
+  gap: 14px;
+  border-radius: 16px;
+  padding: 16px;
+  text-align: left;
+}
+
+.quotationRuleAssistant section > header,
+.quotationRuleAssistant section > header > div,
+.quotationChangeProposal footer {
+  display: flex;
+  align-items: center;
+}
+
+.quotationRuleAssistant section > header {
+  justify-content: space-between;
+}
+
+.quotationRuleAssistant section > header > div { gap: 8px; }
+.quotationRuleAssistant section > header > div > span { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; background: var(--brand-soft); color: var(--brand); }
+.quotationRuleAssistant section > header > button { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 8px; background: transparent; }
+.quotationRuleAssistant section > p { margin: 0; color: var(--body); font-size: 12px; }
+
+.quotationAssistantComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  align-items: end;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.quotationAssistantComposer textarea { resize: none; border: 0; outline: 0; }
+.quotationAssistantComposer button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 10px; background: var(--ink); color: #fff; }
+.quotationAssistantComposer button:disabled { background: #d5dae3; }
+
+.quotationChangeProposal { display: grid; gap: 12px; }
+.quotationChangeProposal h3 { margin: 0; font-size: 17px; }
+.quotationChangeProposal dl { display: grid; gap: 0; margin: 0; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.quotationChangeProposal dl > div { display: grid; grid-template-columns: 88px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.quotationChangeProposal dl > div:first-child { border-top: 0; }
+.quotationChangeProposal dt { color: var(--body); font-size: 12px; }
+.quotationChangeProposal dd { margin: 0; font-weight: 650; }
+.quotationChangeProposal footer { justify-content: flex-end; gap: 8px; }
+.quotationChangeProposal footer button { border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 8px 10px; font-weight: 650; }
+.quotationChangeProposal footer button.primary { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+.quotationIncomingPrompt > div { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.quotationIncomingPrompt > div > small { color: var(--body); }
+.quotationIncomingPrompt textarea { min-height: 54px; color: var(--ink); }
+
+@media (max-width: 760px) {
+  .quotationRuleAssistant { left: 50%; bottom: 16px; width: calc(100vw - 32px); }
+}
