@@ -62,7 +62,7 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext }: { c
         <section className={`workspaceAssistantPanel ${library ? "libraryAssistantWorkspace" : ""}`} aria-label={library ? "BioAZ 文件助手" : "BioAZ Helper"}>
           <header>
             <div>
-              {library ? <button className="assistantBackButton" type="button" aria-label="返回智能项目中枢" onClick={() => setOpen(false)}><ArrowLeft size={17} /></button> : <span className="assistantMark"><Sparkles size={15} /></span>}
+              {library ? <button className="assistantBackButton" type="button" aria-label="返回数据中枢" onClick={() => setOpen(false)}><ArrowLeft size={17} /></button> : <span className="assistantMark"><Sparkles size={15} /></span>}
               <strong>{library ? "BioAZ 文件助手" : "BioAZ Helper"}</strong>
             </div>
             <button type="button" aria-label="关闭" onClick={() => setOpen(false)}><X size={16} /></button>
