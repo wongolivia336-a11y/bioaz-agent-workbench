@@ -102,7 +102,7 @@ export function FileManager({ projects, selectedProject, onSelectedProjectChange
   return (
     <section className="workbenchView knowledgeBaseView">
       <header>
-        <div><h1>{showRoot ? "智能项目中枢" : project}</h1></div>
+        <div><h1>{showRoot ? "数据中枢" : project}</h1></div>
         <input className="visuallyHidden" id="file-upload" type="file" multiple onChange={upload} />
       </header>
 
