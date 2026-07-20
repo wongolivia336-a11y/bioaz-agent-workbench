@@ -1,101 +1,253 @@
 .quotationRuleAssistant {
-  position: fixed;
-  left: calc(248px + (100vw - 248px) / 2);
+  --sidebar-width: 248px;
+  left: calc(var(--sidebar-width) + (100vw - var(--sidebar-width)) / 2);
   bottom: clamp(24px, 4vh, 48px);
-  z-index: 20;
-  width: min(720px, calc(100vw - 248px - 64px));
-  transform: translateX(-50%);
-  text-align: center;
+  width: min(720px, calc(100vw - var(--sidebar-width) - 64px));
+  z-index: 140;
 }
 
-.quotationRuleAssistant::before {
+.quotationRuleAssistant .ambientAssistantEntry {
+  width: 224px;
+  inset-inline: calc((100% - 224px) / 2);
+  color: #111318;
+  font-weight: 750;
+}
+
+.quotationRuleAssistant .ambientComposerFrame {
+  clip-path: inset(27px calc((100% - 224px) / 2) 27px round 22px);
+}
+
+.quotationRuleAssistant[data-expanded="true"] .ambientComposerFrame {
+  clip-path: inset(0 round 14px);
+}
+
+.quotationRuleAssistant .ambientAssistantSuggestions button svg {
+  color: #4338ca;
+}
+
+.quotationAssistantPanel {
   position: absolute;
-  z-index: -1;
-  inset: 16px 60px -18px;
-  border-radius: 999px;
-  background: radial-gradient(ellipse at center, rgba(47, 34, 211, 0.16), transparent 70%);
-  filter: blur(22px);
-  content: "";
-  pointer-events: none;
-}
-
-.quotationRuleAssistant > button,
-.quotationRuleAssistant section {
-  border: 1px solid var(--line);
-  background: #fff;
-  box-shadow: 0 16px 44px rgba(17, 19, 24, 0.12);
-}
-
-.quotationRuleAssistant > button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border-radius: 999px;
-  padding: 10px 14px;
-  color: var(--ink);
-  font-weight: 650;
-  box-shadow: 0 8px 24px rgba(17, 19, 24, 0.08);
-}
-
-.quotationRuleAssistant > button:hover {
-  border-color: rgba(41, 0, 255, 0.28);
-  color: var(--brand);
-}
-
-.quotationRuleAssistant section {
+  inset: 0;
   display: grid;
-  width: 100%;
-  gap: 14px;
-  border-radius: 16px;
-  padding: 16px;
-  text-align: left;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.quotationRuleAssistant section > header,
-.quotationRuleAssistant section > header > div,
+.quotationAssistantPanel > header,
+.quotationAssistantPanel > header > div,
 .quotationChangeProposal footer {
   display: flex;
   align-items: center;
 }
 
-.quotationRuleAssistant section > header {
+.quotationAssistantPanel > header {
+  justify-content: space-between;
+  padding: 0 2px 0 4px;
+}
+
+.quotationAssistantPanel > header > div {
+  gap: 8px;
+}
+
+.quotationAssistantPanel > header > div > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.quotationAssistantPanel > header button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.quotationAssistantPanel > header button:hover {
+  background: rgba(15, 23, 42, .06);
+  color: #111318;
+}
+
+.quotationAssistantComposer {
+  position: static;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: end;
+  gap: 8px;
+  padding: 0;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.quotationChangeProposal {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 2px;
+}
+
+.quotationChangeProposal h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.quotationChangeProposal dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.quotationChangeProposal dl > div {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.quotationChangeProposal dl > div:first-child {
+  border-top: 0;
+}
+
+.quotationChangeProposal dt {
+  color: var(--body);
+  font-size: 12px;
+}
+
+.quotationChangeProposal dd {
+  margin: 0;
+  font-weight: 650;
+}
+
+.quotationChangeProposal footer {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.quotationChangeProposal footer button {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  padding: 8px 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.quotationChangeProposal footer button.primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+
+.quotationIncomingPrompt > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.quotationIncomingPrompt > div > small {
+  color: var(--body);
+}
+
+.quotationIncomingPrompt textarea {
+  min-height: 54px;
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .quotationRuleAssistant {
+    --sidebar-width: 0px;
+    left: 50%;
+    bottom: 16px;
+    width: calc(100vw - 32px);
+  }
+}
+
+.quotationWorkflowPreview {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  padding: 16px;
+}
+
+.quotationWorkflowPreview > header,
+.quotationWorkflowPreview > header > div {
+  display: flex;
+  align-items: center;
+}
+
+.quotationWorkflowPreview > header {
   justify-content: space-between;
 }
 
-.quotationRuleAssistant section > header > div { gap: 8px; }
-.quotationRuleAssistant section > header > div > span { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; background: var(--brand-soft); color: var(--brand); }
-.quotationRuleAssistant section > header > button { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 8px; background: transparent; }
-.quotationRuleAssistant section > p { margin: 0; color: var(--body); font-size: 12px; }
-
-.quotationAssistantComposer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 36px;
-  align-items: end;
+.quotationWorkflowPreview > header > div {
   gap: 8px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 10px;
 }
 
-.quotationAssistantComposer textarea { resize: none; border: 0; outline: 0; }
-.quotationAssistantComposer button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 10px; background: var(--ink); color: #fff; }
-.quotationAssistantComposer button:disabled { background: #d5dae3; }
+.quotationWorkflowPreview > header span {
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 650;
+}
 
-.quotationChangeProposal { display: grid; gap: 12px; }
-.quotationChangeProposal h3 { margin: 0; font-size: 17px; }
-.quotationChangeProposal dl { display: grid; gap: 0; margin: 0; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
-.quotationChangeProposal dl > div { display: grid; grid-template-columns: 88px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); }
-.quotationChangeProposal dl > div:first-child { border-top: 0; }
-.quotationChangeProposal dt { color: var(--body); font-size: 12px; }
-.quotationChangeProposal dd { margin: 0; font-weight: 650; }
-.quotationChangeProposal footer { justify-content: flex-end; gap: 8px; }
-.quotationChangeProposal footer button { border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 8px 10px; font-weight: 650; }
-.quotationChangeProposal footer button.primary { border-color: var(--ink); background: var(--ink); color: #fff; }
+.quotationWorkflowPreview > div {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 34px 18px;
+  min-height: 220px;
+  overflow: hidden;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background-image: radial-gradient(#d9dee7 1px, transparent 1px);
+  background-size: 18px 18px;
+  padding: 28px;
+}
 
-.quotationIncomingPrompt > div { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.quotationIncomingPrompt > div > small { color: var(--body); }
-.quotationIncomingPrompt textarea { min-height: 54px; color: var(--ink); }
+.quotationWorkflowPreview > div::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(255,255,255,.86));
+  content: "";
+  pointer-events: none;
+}
 
-@media (max-width: 760px) {
-  .quotationRuleAssistant { left: 50%; bottom: 16px; width: calc(100vw - 32px); }
+.quotationWorkflowPreview article {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: 48px;
+  place-items: center;
+  border: 1px solid #dfe5ee;
+  border-radius: 9px;
+  background: #fff;
+  color: #334155;
+  padding: 8px 10px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(15,23,42,.06);
 }
