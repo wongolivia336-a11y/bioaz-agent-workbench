@@ -2,7 +2,8 @@
   --sidebar-width: 248px;
   left: calc(var(--sidebar-width) + (100vw - var(--sidebar-width)) / 2);
   bottom: clamp(24px, 4vh, 48px);
-  width: min(720px, calc(100vw - var(--sidebar-width) - 64px));
+  width: min(720px, calc(100vw - var(--sidebar-width)));
+  min-height: 250px;
   z-index: 140;
 }
 
@@ -14,15 +15,17 @@
 }
 
 .quotationRuleAssistant .ambientComposerFrame {
-  clip-path: inset(27px calc((100% - 224px) / 2) 27px round 22px);
+  position: relative;
+  min-height: 200px;
+  overflow: visible;
 }
 
 .quotationRuleAssistant[data-expanded="true"] .ambientComposerFrame {
   clip-path: inset(0 round 14px);
 }
 
-.quotationRuleAssistant .ambientAssistantSuggestions button svg {
-  color: #4338ca;
+.quotationRuleAssistant .ambientAssistantSuggestions {
+  z-index: 1;
 }
 
 .quotationAssistantPanel {
