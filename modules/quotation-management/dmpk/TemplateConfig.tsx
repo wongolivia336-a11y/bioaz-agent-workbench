@@ -2,6 +2,7 @@
 
 import { Check, ChevronRight, FileSpreadsheet } from "lucide-react";
 import { useState } from "react";
+import type { DetectionScenario } from "../components/ScenarioSelector";
 
 const templates = [
   { id: "pk", title: "PK 标准报价单", version: "v8", date: "2026-07-15", count: 8 },
@@ -9,7 +10,7 @@ const templates = [
   { id: "tox", title: "TOX 标准报价单", version: "v2", date: "2026-07-10", count: 2 },
 ];
 
-export default function TemplateConfig({ onView }: { onView: () => void }) {
+export default function TemplateConfig({ scenario, onView }: { scenario: DetectionScenario; onView: () => void }) {
   const [activeTemplate, setActiveTemplate] = useState("pk");
   const selected = templates.find((item) => item.id === activeTemplate) ?? templates[0];
 

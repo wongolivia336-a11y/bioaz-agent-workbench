@@ -1,6 +1,7 @@
 "use client";
 
 import { GripVertical, Plus, X } from "lucide-react";
+import type { DetectionScenario } from "../components/ScenarioSelector";
 
 const parameterGroups = [
   { id: "assay", label: "检测类型", count: 2 },
@@ -37,12 +38,14 @@ const parameterFields: Record<string, Array<{ label: string; meta: string }>> = 
 };
 
 export default function FieldConfig({
+  scenario,
   activeGroup,
   onActiveGroupChange,
   activeField,
   onActiveFieldChange,
   onAdd,
 }: {
+  scenario: DetectionScenario;
   activeGroup: string;
   onActiveGroupChange: (group: string) => void;
   activeField: number;

@@ -2,8 +2,9 @@
 
 import { Bot, Check, GitBranch, Plus, Sparkles, X } from "lucide-react";
 import { useState } from "react";
+import type { DetectionScenario } from "../components/ScenarioSelector";
 
-export default function RuleConfig({ draftRequest }: { draftRequest?: string | null }) {
+export default function RuleConfig({ scenario, draftRequest }: { scenario: DetectionScenario; draftRequest?: string | null }) {
   const incomingDraft = draftRequest || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("draft") : null);
   const [prompt, setPrompt] = useState(() => incomingDraft || "SD 大鼠超过 30 只时，动物使用费按 85 折计算");
   const [generated, setGenerated] = useState(false);

@@ -2,10 +2,12 @@
 
 import { Bot, GitBranch, ListChecks, FileText, Plus, Send, Sparkles, X } from "lucide-react";
 import { useRef, useState } from "react";
+import type { DetectionScenario } from "./ScenarioSelector";
 
 type Tab = "prices" | "rules" | "parameters" | "templates";
 
 interface Props {
+  scenario: DetectionScenario;
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
   onRuleDraft: (draft: string) => void;

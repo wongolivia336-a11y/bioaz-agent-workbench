@@ -2,6 +2,8 @@
 
 import { Search } from "lucide-react";
 
+import type { DetectionScenario } from "../components/ScenarioSelector";
+
 const priceRows = [
   ["SD 大鼠", "PK 检测", "¥120", "只"],
   ["Beagle 犬", "PK 检测", "¥850", "只"],
@@ -10,7 +12,7 @@ const priceRows = [
   ["中文报告", "报告交付", "¥3,000", "份"],
 ];
 
-export default function PriceConfig({ onEdit }: { onEdit: () => void }) {
+export default function PriceConfig({ scenario, onEdit }: { scenario: DetectionScenario; onEdit: () => void }) {
   return (
     <>
       <div className="quotationToolbar">
