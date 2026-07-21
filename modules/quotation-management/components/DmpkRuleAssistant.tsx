@@ -53,13 +53,13 @@ export default function DmpkRuleAssistant({ activeTab, onTabChange, onRuleDraft 
       {!open ? (
         <div className="ambientAssistantSuggestions" aria-hidden={!expanded}>
           <button type="button" tabIndex={expanded ? 0 : -1} onClick={() => { setText("以后 PK 样品少于 40 个都按 40 个收费"); setOpen(true); }}>
-            <GitBranch /><span>改规则</span>
+            <GitBranch size={14} strokeWidth={1.6} /><span>改规则</span>
           </button>
           <button type="button" tabIndex={expanded ? 0 : -1} onClick={() => { setText("给 PK 检测增加一个自定义采血时间点字段"); setOpen(true); }}>
-            <ListChecks /><span>改字段</span>
+            <ListChecks size={14} strokeWidth={1.6} /><span>改字段</span>
           </button>
           <button type="button" tabIndex={expanded ? 0 : -1} onClick={() => { setText("调整 PK 报价单模板里的费用明细顺序"); setOpen(true); }}>
-            <FileText /><span>改模板</span>
+            <FileText size={14} strokeWidth={1.6} /><span>改模板</span>
           </button>
         </div>
       ) : null}
