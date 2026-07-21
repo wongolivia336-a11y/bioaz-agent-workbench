@@ -70,7 +70,27 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
       </aside>
       <section className="quotationManagementMain">
         <header className="quotationManagementTopbar">
-          <strong>{breadcrumb}</strong>
+          <div className="quotationBreadcrumb">
+            {business === "root" ? (
+              <strong>报价规则</strong>
+            ) : (
+              <>
+                <button type="button" onClick={() => { setBusiness("root"); setScenario(null); }}>报价规则</button>
+                <span>/</span>
+                {scenario ? (
+                  <>
+                    <button type="button" onClick={() => setScenario(null)}>DMPK 报价</button>
+                    <span>/</span>
+                    <button type="button" onClick={() => setScenario(null)}>{scenarioLabels[scenario]}</button>
+                    <span>/</span>
+                    <strong>{tabs.find((item) => item.id === tab)?.label}</strong>
+                  </>
+                ) : (
+                  <strong>DMPK 报价</strong>
+                )}
+              </>
+            )}
+          </div>
           <span>{business === "root" ? "管理员模式" : "草稿 2"}</span>
         </header>
         {business === "root" ? (
