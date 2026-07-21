@@ -10,7 +10,7 @@ import { TaskList } from "./TaskList";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { WorkbenchProject } from "../../modules/types";
-import { QuotationManagement } from "../quotation-management/QuotationManagement";
+import { QuotationManagement } from "../../modules/quotation-management";
 
 export default function WorkbenchShell() {
   const [collapsed, setCollapsed] = useState(false);
