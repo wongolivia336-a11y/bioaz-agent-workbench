@@ -13,31 +13,59 @@ interface WorkflowNode {
 }
 
 const pkWorkflowNodes: WorkflowNode[] = [
-  { id: "start", type: "start", label: "读取 PK 入参", description: "样品数量、动物种属、试验周期" },
-  { id: "condition", type: "condition", label: "判断是否 PK", description: "检测类型 = PK" },
+  { id: "start", type: "start", label: "读取 PK 入参", description: "接收对话字段和上下文" },
+  { id: "condition", type: "condition", label: "判断是否 PK", description: "按条件拆分满足，否则路径" },
   { id: "prepare", type: "formula", label: "准备 PK 计价数量", formula: "max(实际样品数, 40)" },
-  { id: "animal", type: "fee_item", label: "动物费和体内费", formula: "动物单价 × 数量 × 折扣" },
+  { id: "fixed_prices", type: "formula", label: "PK 固定价格表", formula: "执行规则运算或表达式" },
+  { id: "animal_in_vivo", type: "fee_item", label: "动物费和体内费", formula: "动物单价 × 数量 × 折扣" },
   { id: "bioanalysis", type: "fee_item", label: "生物分析费", formula: "样品检测单价 × 计价数量" },
   { id: "report", type: "fee_item", label: "报告费", formula: "固定费用 ¥3,000" },
-  { id: "summary", type: "summary", label: "标准汇总", formula: "动物费 + 生物分析费 + 报告费" },
+  { id: "other", type: "fee_item", label: "其他费用", formula: "执行规则运算或表达式" },
+  { id: "standard", type: "summary", label: "标准价格汇总", formula: "动物费 + 生物分析费 + 报告费 + 其他费" },
+  { id: "currency", type: "formula", label: "货币折扣处理", formula: "处理币种和汇率" },
+  { id: "animal_use_fee", type: "fee_item", label: "动物使用费", formula: "生成单个报价费用项" },
+  { id: "in_life_fee", type: "fee_item", label: "体内费", formula: "生成单个报价费用项" },
+  { id: "method_dev_fee", type: "fee_item", label: "方法开发费", formula: "生成单个报价费用项" },
+  { id: "sample_detect_fee", type: "fee_item", label: "样品检测费", formula: "生成单个报价费用项" },
+  { id: "report_fee", type: "fee_item", label: "报告费项", formula: "生成单个报价费用项" },
+  { id: "other_fee", type: "fee_item", label: "其他费项", formula: "生成单个报价费用项" },
+  { id: "summary", type: "summary", label: "费用汇总", formula: "所有费用项求和" },
 ];
 
 const baWorkflowNodes: WorkflowNode[] = [
-  { id: "start", type: "start", label: "读取 BA Only 入参", description: "样品数量、分析方法、检测周期" },
+  { id: "start", type: "start", label: "读取 BA Only 入参", description: "接收对话字段和上下文" },
   { id: "condition", type: "condition", label: "判断是否 BA Only", description: "检测类型 = BA Only" },
   { id: "prepare", type: "formula", label: "准备 BA 计价数量", formula: "实际样品数" },
+  { id: "fixed_prices", type: "formula", label: "BA 固定价格表", formula: "执行规则运算或表达式" },
   { id: "bioanalysis", type: "fee_item", label: "生物分析费", formula: "样品检测单价 × 计价数量" },
   { id: "report", type: "fee_item", label: "报告费", formula: "固定费用 ¥3,000" },
-  { id: "summary", type: "summary", label: "标准汇总", formula: "生物分析费 + 报告费" },
+  { id: "other", type: "fee_item", label: "其他费用", formula: "执行规则运算或表达式" },
+  { id: "standard", type: "summary", label: "标准价格汇总", formula: "生物分析费 + 报告费 + 其他费" },
+  { id: "currency", type: "formula", label: "货币折扣处理", formula: "处理币种和汇率" },
+  { id: "bioanalysis_fee", type: "fee_item", label: "生物分析费项", formula: "生成单个报价费用项" },
+  { id: "report_fee", type: "fee_item", label: "报告费项", formula: "生成单个报价费用项" },
+  { id: "other_fee", type: "fee_item", label: "其他费项", formula: "生成单个报价费用项" },
+  { id: "summary", type: "summary", label: "费用汇总", formula: "所有费用项求和" },
 ];
 
 const toxWorkflowNodes: WorkflowNode[] = [
-  { id: "start", type: "start", label: "读取 TOX 入参", description: "动物数量、试验周期、检测项目" },
+  { id: "start", type: "start", label: "读取 TOX 入参", description: "接收对话字段和上下文" },
   { id: "condition", type: "condition", label: "判断是否 TOX", description: "检测类型 = TOX" },
-  { id: "animal", type: "fee_item", label: "动物费和体内费", formula: "动物单价 × 数量" },
+  { id: "prepare", type: "formula", label: "准备 TOX 计价数量", formula: "动物数量 × 试验周期" },
+  { id: "fixed_prices", type: "formula", label: "TOX 固定价格表", formula: "执行规则运算或表达式" },
+  { id: "animal_in_vivo", type: "fee_item", label: "动物费和体内费", formula: "动物单价 × 数量" },
   { id: "bioanalysis", type: "fee_item", label: "生物分析费", formula: "样品检测单价 × 计价数量" },
   { id: "report", type: "fee_item", label: "报告费", formula: "固定费用 ¥3,000" },
-  { id: "summary", type: "summary", label: "标准汇总", formula: "动物费 + 生物分析费 + 报告费" },
+  { id: "other", type: "fee_item", label: "其他费用", formula: "执行规则运算或表达式" },
+  { id: "standard", type: "summary", label: "标准价格汇总", formula: "动物费 + 生物分析费 + 报告费 + 其他费" },
+  { id: "currency", type: "formula", label: "货币折扣处理", formula: "处理币种和汇率" },
+  { id: "animal_use_fee", type: "fee_item", label: "动物使用费", formula: "生成单个报价费用项" },
+  { id: "in_life_fee", type: "fee_item", label: "体内费", formula: "生成单个报价费用项" },
+  { id: "method_dev_fee", type: "fee_item", label: "方法开发费", formula: "生成单个报价费用项" },
+  { id: "sample_detect_fee", type: "fee_item", label: "样品检测费", formula: "生成单个报价费用项" },
+  { id: "report_fee", type: "fee_item", label: "报告费项", formula: "生成单个报价费用项" },
+  { id: "other_fee", type: "fee_item", label: "其他费项", formula: "生成单个报价费用项" },
+  { id: "summary", type: "summary", label: "费用汇总", formula: "所有费用项求和" },
 ];
 
 const workflowMap: Record<DetectionScenario, WorkflowNode[]> = {
