@@ -24,8 +24,8 @@
   clip-path: inset(0 round 14px);
 }
 
-.quotationRuleAssistant .ambientAssistantSuggestions button svg {
-  color: #4338ca;
+.quotationRuleAssistant .ambientAssistantSuggestions {
+  z-index: 1;
 }
 
 .quotationAssistantPanel {
