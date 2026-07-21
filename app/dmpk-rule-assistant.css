@@ -14,6 +14,8 @@
 }
 
 .quotationRuleAssistant .ambientComposerFrame {
+  position: relative;
+  min-height: 200px;
   clip-path: inset(27px calc((100% - 224px) / 2) 27px round 22px);
 }
 
