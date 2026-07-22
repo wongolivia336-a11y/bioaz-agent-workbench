@@ -308,6 +308,25 @@ textarea {
   justify-self: end;
 }
 
+.newTaskProjectNotice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+  padding: 0 4px;
+  color: #b54708;
+  font-size: 12px;
+}
+
+.newTaskProjectNotice svg {
+  flex: 0 0 auto;
+}
+
+.projectSelector.hasError > button {
+  border-color: rgba(181, 71, 8, .42);
+  box-shadow: 0 0 0 3px rgba(181, 71, 8, .06);
+}
+
 .projectSelectorMenu {
   position: absolute;
   right: 0;
