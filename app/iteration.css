@@ -6,6 +6,17 @@ textarea {
   width: calc(100% + 46px);
   max-width: calc(100vw - 28px);
   overflow: hidden;
+  top: calc(100% + 6px);
+}
+
+.newChatHoverBridge {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 19;
+  display: block;
+  width: calc(100% + 46px);
+  height: 10px;
 }
 
 .newChatMenu button {
@@ -18,6 +29,35 @@ textarea {
 
 .newChatMenu button svg {
   color: #667085;
+}
+
+.dmpkShell.sidebarCollapsed .newChatWrap {
+  display: grid;
+  width: 40px;
+  justify-items: center;
+}
+
+.dmpkShell.sidebarCollapsed .newChat {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  justify-content: center;
+  align-content: center;
+  gap: 0;
+  padding: 0;
+  font-size: 0;
+  line-height: 1;
+}
+
+.dmpkShell.sidebarCollapsed .newChat span {
+  display: block;
+  margin: 0;
+  color: #101828;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .newTaskHome {
