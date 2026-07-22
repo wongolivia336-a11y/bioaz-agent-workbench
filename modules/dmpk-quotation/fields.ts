@@ -40,9 +40,16 @@ export const initialDmpkFields: DmpkField[] = [
 ];
 
 export const dmpkFieldOptions: Record<string, string[]> = {
+  assayType: ["PK", "BA Only", "TOX"],
+  molecule: ["小分子", "多肽", "抗体", "寡核苷酸"],
+  species: ["SD 大鼠", "小鼠", "Beagle 犬", "食蟹猴"],
+  animalsPerGroup: ["3", "6", "10", "自定义"],
+  groupCount: ["3", "4", "6", "自定义"],
+  cycle: ["1 周", "2 周", "4 周", "自定义"],
   compoundType: ["普通小分子", "寡核苷酸", "多肽", "抗体"],
   method: ["LC-MS/MS", "ELISA", "qPCR", "LBA"],
   sampleType: ["血浆", "血清", "组织匀浆", "尿液"],
+  bloodPoints: ["3", "6", "9", "自定义"],
   analyteCount: ["1", "2", "3", "自定义"],
   format: ["Word + Excel", "Word", "Excel"],
   language: ["中文", "英文", "中英双语"],
@@ -62,7 +69,9 @@ export function getDmpkGroupTitle(id: DmpkGroupId) {
 
 export function parseDmpkRequest(text: string): Record<string, string> {
   const patch: Record<string, string> = {};
-  if (/dmpk|pk/i.test(text)) patch.assayType = "PK";
+  if (/ba\s*only|ba-only|体外.*生物分析/i.test(text)) patch.assayType = "BA Only";
+  else if (/tox|毒理/i.test(text)) patch.assayType = "TOX";
+  else if (/dmpk|pk/i.test(text)) patch.assayType = "PK";
   if (/小分子/.test(text)) patch.molecule = "小分子";
   if (/sd\s*大鼠|大鼠/i.test(text)) patch.species = "SD 大鼠";
   const animalMatch = text.match(/每组\s*(\d+)\s*只/);

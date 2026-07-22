@@ -8,6 +8,10 @@ import { FileManager } from "./FileManager";
 import { NewTaskHome } from "./NewTaskHome";
 import { TaskList } from "./TaskList";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
+import { DigitalTeamPage } from "./DigitalTeamPage";
+import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
+import type { WorkbenchProject } from "../../modules/types";
+import { QuotationManagement } from "../../modules/quotation-management";
 
 export default function WorkbenchShell() {
   const [collapsed, setCollapsed] = useState(false);
@@ -23,17 +27,23 @@ export default function WorkbenchShell() {
   const [pendingRequest, setPendingRequest] = useState<string | null>(null);
   const [pendingModule, setPendingModule] = useState<AgentModuleDefinition | null>(null);
   const [handoffNotice, setHandoffNotice] = useState<string | undefined>();
-  const [pinnedItemIds, setPinnedItemIds] = useState<string[]>(["task-new-quote"]);
+  const [pinnedItemIds, setPinnedItemIds] = useState<string[]>([]);
   const [runtimeTasks, setRuntimeTasks] = useState<WorkbenchTask[]>([]);
+  const [projects, setProjects] = useState<WorkbenchProject[]>(workspaceProjects);
+  const [deletedProjectIds, setDeletedProjectIds] = useState<string[]>([]);
+  const [deletedTaskIds, setDeletedTaskIds] = useState<string[]>([]);
+  const [renamedTaskTitles, setRenamedTaskTitles] = useState<Record<string, string>>({});
+  const [libraryProject, setLibraryProject] = useState<string | null>(null);
   const [helperConversationStarted, setHelperConversationStarted] = useState(false);
   const [, setModuleRunStatus] = useState<ModuleRunStatus>("active");
   const [sessionSnapshots, setSessionSnapshots] = useState<Record<string, AgentSessionSnapshot[]>>({});
+  const [quotationManagementOpen, setQuotationManagementOpen] = useState(false);
 
   const quickStarts = useMemo(() => quickStartRegistry.map((item) => { const Icon = item.icon; return { id: item.id, label: item.label, prompt: item.prompt, availability: item.availability, icon: <Icon size={17} /> }; }), []);
   const suggestedCoworker = pendingModule?.suggestedCoworker ?? null;
 
-  const createRuntimeTask = (title: string, module: AgentModuleDefinition | null) => {
-    const taskProject = project ?? "临时任务";
+  const createRuntimeTask = (title: string, module: AgentModuleDefinition | null, projectOverride?: string | null) => {
+    const taskProject = projectOverride === undefined ? project ?? "未归属项目" : projectOverride ?? "未归属项目";
     const taskId = `task-runtime-${Date.now()}`;
     const coworker = module?.suggestedCoworker ?? coworkerRegistry[0];
     const task: WorkbenchTask = {
@@ -63,8 +73,46 @@ export default function WorkbenchShell() {
     } : task));
   };
 
-  const resetNewTask = (nextProject: string | null = null) => {
-    setProject(nextProject); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(false); setModuleRunStatus("active"); setRoute("newTask");
+  const openNewTaskHome = () => {
+    setProject(null); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(false); setModuleRunStatus("active"); setRoute("newTask");
+  };
+
+  const startTaskInProject = (projectName: string) => {
+    const taskId = createRuntimeTask("新建任务", null, projectName);
+    setProject(projectName); setTaskTitle("新建任务"); setActiveTaskId(taskId); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(true); setModuleRunStatus("active"); setRoute("newTask");
+  };
+
+  const resetNewTask = (nextProject?: string | null) => {
+    if (typeof nextProject === "string" && nextProject) {
+      startTaskInProject(nextProject);
+      return;
+    }
+    if (activeTaskId && project) {
+      startTaskInProject(project);
+      return;
+    }
+    openNewTaskHome();
+  };
+
+  const navigateShellRoute = (nextRoute: Exclude<WorkbenchRoute, "module">) => {
+    if (nextRoute === "newTask") {
+      resetNewTask();
+      return;
+    }
+    setProject(null);
+    setTaskTitle("新建任务");
+    setActiveTaskId(null);
+    setActiveModule(null);
+    setActiveCoworkerId("bioaz-helper");
+    setInitialRequest(undefined);
+    setHandoffNotice(undefined);
+    setText("");
+    setClarification(null);
+    setPendingRequest(null);
+    setPendingModule(null);
+    setHelperConversationStarted(false);
+    setModuleRunStatus("active");
+    setRoute(nextRoute);
   };
 
   const submitIntent = () => {
@@ -120,10 +168,12 @@ export default function WorkbenchShell() {
     const moduleId = params.get("module");
     if (moduleId) startModuleDirect(moduleId);
     if (params.get("view") === "library") setRoute("library");
+    if (params.get("view") === "digital-team") setRoute("digitalTeam");
+    if (params.get("view") === "quotation-management") setQuotationManagementOpen(true);
   }, []);
 
   useEffect(() => {
-    const compactViewport = window.matchMedia("(max-width: 899px)");
+    const compactViewport = window.matchMedia("(max-width: 1199px)");
     const syncSidebar = (event: MediaQueryList | MediaQueryListEvent) => {
       if (event.matches) setCollapsed(true);
     };
@@ -159,11 +209,55 @@ export default function WorkbenchShell() {
     });
   }, [activeTaskId]);
   const togglePin = (id: string) => setPinnedItemIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [id, ...items]);
+  const createProject = (name: string) => {
+    const normalized = name.trim();
+    if (!normalized || projects.some((item) => item.name === normalized)) return null;
+    const nextProject = { id: `project-runtime-${Date.now()}`, name: normalized };
+    setProjects((items) => [...items, nextProject]);
+    return nextProject;
+  };
+  const renameProject = (projectId: string, name: string) => {
+    const previous = projects.find((item) => item.id === projectId)?.name;
+    setProjects((items) => items.map((item) => item.id === projectId ? { ...item, name } : item));
+    if (previous) setRuntimeTasks((tasks) => tasks.map((task) => task.project === previous ? { ...task, project: name } : task));
+    if (project === previous) setProject(name);
+  };
+  const deleteProject = (projectId: string) => {
+    const currentName = projects.find((item) => item.id === projectId)?.name;
+    const originalName = workspaceProjects.find((item) => item.id === projectId)?.name;
+    setDeletedProjectIds((items) => items.includes(projectId) ? items : [...items, projectId]);
+    setPinnedItemIds((items) => items.filter((id) => {
+      const staticItem = workspacePinCatalog.find((item) => item.id === id);
+      const runtimeItem = runtimeTasks.find((item) => item.id === id);
+      const itemProject = runtimeItem?.project ?? staticItem?.project;
+      return itemProject !== currentName && itemProject !== originalName;
+    }));
+    if (project === currentName || project === originalName) {
+      openNewTaskHome();
+    }
+  };
+  const renameTask = (taskId: string, title: string) => {
+    setRenamedTaskTitles((items) => ({ ...items, [taskId]: title }));
+    setRuntimeTasks((tasks) => tasks.map((task) => task.id === taskId ? { ...task, title } : task));
+    if (activeTaskId === taskId) setTaskTitle(title);
+  };
+  const deleteTask = (taskId: string) => {
+    setDeletedTaskIds((items) => items.includes(taskId) ? items : [...items, taskId]);
+    setPinnedItemIds((items) => items.filter((id) => id !== taskId));
+    if (activeTaskId === taskId) {
+      setActiveTaskId(null);
+      setActiveModule(null);
+      setHelperConversationStarted(false);
+      setRoute("newTask");
+    }
+  };
 
   const shellView = route !== "module";
   const Session = activeModule?.Session;
+  const visibleProjectOptions = projects.filter((item) => !deletedProjectIds.includes(item.id)).map((item) => item.name);
+  if (quotationManagementOpen) return <QuotationManagement onBack={() => setQuotationManagementOpen(false)} />;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
-    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onRouteChange={setRoute} onStartTask={resetNewTask} onOpenTask={openTask} onToggleCollapsed={() => setCollapsed((value) => !value)} />
-    {route === "module" && Session && activeModule ? <Session projectName={project ?? "临时任务"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={18} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "临时任务"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : <strong>{route === "library" ? "文件管理系统" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} quickStarts={quickStarts} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
+    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} deletedProjectIds={deletedProjectIds} deletedTaskIds={deletedTaskIds} renamedTaskTitles={renamedTaskTitles} onCreateProject={createProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onRenameTask={renameTask} onDeleteTask={deleteTask} onTogglePinnedItem={togglePin} onRouteChange={navigateShellRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationManagementOpen(true)} onToggleCollapsed={() => setCollapsed((value) => !value)} />
+    {route === "module" && Session && activeModule ? <Session projectName={project ?? "未归属项目"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={18} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "未归属项目"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : route === "library" && libraryProject ? <><button type="button" onClick={() => setLibraryProject(null)}>数据中枢</button><ChevronRight size={15} /><strong>{libraryProject}</strong></> : <strong>{route === "library" ? "数据中枢" : route === "digitalTeam" ? "数字团队" : "新建任务"}</strong>}</div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager projects={projects.filter((item) => !deletedProjectIds.includes(item.id))} selectedProject={libraryProject} onSelectedProjectChange={setLibraryProject} /> : route === "digitalTeam" ? <DigitalTeamPage projects={projects.filter((item) => !deletedProjectIds.includes(item.id))} tasks={runtimeTasks.filter((task) => !deletedTaskIds.includes(task.id))} onStartModule={startModuleDirect} onOpenLibrary={() => navigateShellRoute("library")} /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={quickStarts} projectOptions={visibleProjectOptions} onProjectChange={setProject} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }

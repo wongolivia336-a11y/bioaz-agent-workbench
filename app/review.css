@@ -1,0 +1,566 @@
+/* UI/UX review layer: a small, explicit system that gradually replaces legacy overrides. */
+:root {
+  --review-brand: #2f22d3;
+  --review-brand-hover: #2418b8;
+  --review-brand-soft: #f3f2ff;
+  --review-canvas: #f7f8fa;
+  --review-surface: #ffffff;
+  --review-surface-subtle: #f9fafb;
+  --review-ink: #16181d;
+  --review-body: #505866;
+  --review-muted: #7c8593;
+  --review-line: #e5e8ed;
+  --review-line-strong: #d7dce3;
+  --review-success: #49705d;
+  --review-warning: #806b45;
+  --review-danger: #8b5552;
+  --review-radius-sm: 8px;
+  --review-radius-md: 12px;
+  --review-radius-lg: 18px;
+  --review-focus: 0 0 0 3px rgba(47, 34, 211, .14);
+  --review-shadow-float: 0 18px 48px rgba(18, 24, 38, .10);
+  --review-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+html { color-scheme: light; }
+body { background: var(--review-canvas); color: var(--review-ink); font-feature-settings: "tnum" 1, "cv02" 1; }
+button, input, textarea, select { color: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+:where(button, a, [role="button"]):focus-visible { outline: none; box-shadow: var(--review-focus); }
+:where(input, textarea, select):focus-visible { outline: 2px solid rgba(47, 34, 211, .34); outline-offset: 1px; }
+::selection { background: rgba(47, 34, 211, .14); }
+
+/* Stable product frame */
+.dmpkShell { background: var(--review-canvas); }
+.sidebar {
+  border-right-color: var(--review-line);
+  background: #fbfbfc;
+  padding: 16px 12px 12px;
+}
+.brand { margin: 0 8px 16px; font-size: 20px; letter-spacing: -.01em; }
+.brand img { width: 31px; height: 27px; }
+.sidebarActions { margin-bottom: 18px; }
+.newChat { height: 40px; border-color: var(--review-line-strong); border-radius: 10px; box-shadow: none; }
+.newChat:hover { border-color: #b9b4ed; box-shadow: none; transform: none; }
+.workspaceViewRow, .pinnedProjectRow, .sidebarTaskRow { border-radius: 8px; }
+.workspaceViewRow.active, .chatRow.active, .sidebarTaskRow.active { background: #eeeff2; color: var(--review-ink); }
+.dmpkShell .sidebar .workspaceViewRow.active::before,
+.dmpkShell .sidebar .chatRow.active::before { background: #2a2d33; }
+.account { border-top-color: var(--review-line); }
+.topbar { height: 54px; border-bottom-color: var(--review-line); background: rgba(255, 255, 255, .92); backdrop-filter: blur(10px); }
+.breadcrumb { color: var(--review-muted); }
+.breadcrumb strong { color: var(--review-ink); }
+.breadcrumb button { border: 0; background: transparent; padding: 3px 0; color: var(--review-muted); cursor: pointer; }
+.breadcrumb button:hover { color: var(--review-ink); }
+.navSectionHeader { display: flex; min-height: 28px; align-items: center; justify-content: space-between; padding: 0 6px; color: var(--review-muted); font-size: 11px; font-weight: 600; }
+.navSectionHeader button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--review-muted); }
+.navSectionHeader button:hover { background: #eef0f3; color: var(--review-ink); }
+.projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: 9px; background: #fff; padding: 4px 5px 4px 8px; }
+.projectCreateRow > svg { color: var(--review-muted); }
+.projectCreateRow input { min-width: 0; border: 0; outline: 0; background: transparent; font-size: 12px; }
+.projectCreateRow input:focus-visible { outline: 0; }
+.projectCreateRow button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--review-muted); }
+.projectCreateRow button:hover:not(:disabled) { background: #eef0f3; color: var(--review-ink); }
+.projectCreateRow button:disabled { opacity: .36; cursor: default; }
+
+/* Home: hierarchy first, decoration last */
+.newTaskHome {
+  --home-ink: var(--review-ink);
+  --home-body: var(--review-body);
+  --home-line: var(--review-line);
+  --home-brand: var(--review-brand);
+  background: var(--review-canvas);
+  padding: clamp(24px, 4vw, 56px) clamp(24px, 5vw, 72px) clamp(24px, 4vh, 40px);
+}
+.newTaskHome::before { display: none; }
+.newTaskIntro { width: min(1040px, 100%); padding: 16px 0 40px; transform: none; }
+.logoAwakening { width: 68px; height: 68px; }
+.logoAwakening svg { width: 60px; height: 60px; filter: none; }
+.newTaskHeading { display: grid; justify-items: center; max-width: 650px; margin: 13px 0 30px; text-align: center; }
+.newTaskHeading > span { color: var(--review-brand); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.newTaskIntro .newTaskHeading h1 { margin: 8px 0 10px; color: var(--review-ink); font-size: clamp(30px, 3vw, 42px); font-weight: 620; letter-spacing: -.035em; line-height: 1.16; }
+.newTaskHeading p { max-width: 590px; margin: 0; color: var(--review-body); font-size: 14px; line-height: 1.65; }
+.taskExampleGrid { width: min(1040px, 100%); gap: 10px; }
+.taskExampleGrid button {
+  min-height: 118px;
+  gap: 22px;
+  border-color: var(--review-line);
+  border-radius: var(--review-radius-md);
+  background: rgba(255, 255, 255, .92);
+  padding: 15px;
+  box-shadow: none;
+}
+.taskExampleGrid button::before { display: none; }
+.taskExampleGrid button > * { position: relative; z-index: 1; }
+.taskExampleGrid button:not(:disabled)::after {
+  position: absolute;
+  z-index: 0;
+  inset: -1px;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(112deg, transparent 12%, rgba(47,34,211,.12) 36%, rgba(47,34,211,.82) 50%, rgba(47,34,211,.14) 64%, transparent 88%) border-box;
+  opacity: 0;
+  pointer-events: none;
+  content: "";
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transform: translateX(-72%);
+}
+.taskExampleGrid button:not(:disabled):hover::after { animation: reviewCardEdgePass 720ms var(--review-ease) both; }
+.taskExampleGrid button:hover, .taskExampleGrid button:focus-visible { border-color: #c6c2ed; box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
+.taskExampleGrid button:disabled { background: rgba(247, 248, 250, .8); opacity: .64; }
+.taskExampleTop { display: flex; align-items: center; justify-content: space-between; color: var(--review-muted); }
+.taskExampleIcon { position: relative; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border: 1px solid rgba(47,34,211,.08); border-radius: 9px; background: #f4f3ff; color: var(--review-brand); }
+.taskExampleIcon::after { position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border: 1px solid rgba(47,34,211,.35); border-radius: 2px; content: ""; }
+.taskExampleGrid button[data-ability="tumor-report"] .taskExampleIcon::after { width: 9px; height: 3px; border-width: 1px 0; border-radius: 0; }
+.taskExampleGrid button[data-ability="tumor-quotation"] .taskExampleIcon::after { width: 7px; height: 7px; border-radius: 50%; }
+.taskExampleGrid button[data-ability="qa-review"] .taskExampleIcon::after { width: 7px; height: 4px; border-width: 0 0 1px 1px; border-radius: 0; transform: rotate(-45deg); }
+.taskExampleGrid button:disabled .taskExampleIcon { border-color: #e5e8ed; background: #f0f2f5; color: #8f98a5; }
+.taskExampleGrid button:disabled .taskExampleIcon::after { border-color: #b9c0ca; }
+.taskExampleCopy { gap: 4px; }
+.taskExampleGrid strong { color: #272b33; font-size: 13.5px; font-weight: 620; }
+.taskExampleGrid small { color: var(--review-muted); font-size: 11.5px; }
+.newTaskComposerDock { width: min(860px, 100%); gap: 7px; }
+.newTaskWelcomePrompt { min-height: 18px; color: var(--review-muted); font-size: 12px; }
+.projectSelector > button { height: 44px; border-color: var(--review-line); border-radius: 10px; background: rgba(255,255,255,.82); box-shadow: none; }
+.projectSelector > button:hover { border-color: var(--review-line-strong); background: #f7f8fa; box-shadow: none; }
+.projectSelector.isOpen > button { border-color: #aaa3e5; box-shadow: var(--review-focus); }
+.newTaskComposer { min-height: 88px; border-color: var(--review-line-strong); border-radius: 14px; background: #fff; box-shadow: 0 5px 18px rgba(18, 24, 38, .045); }
+.newTaskComposer:focus-within { border-color: #aaa3e5; box-shadow: var(--review-focus), 0 8px 22px rgba(18, 24, 38, .055); }
+.workbenchComposer:focus-within,
+.sidebarSearch:focus-within,
+.knowledgeSearch:focus-within,
+.workspaceAssistantComposer:focus-within {
+  border-color: #aaa3e5;
+  box-shadow: var(--review-focus);
+}
+:where(.workbenchComposer, .newTaskComposer, .sidebarSearch, .knowledgeSearch, .workspaceAssistantComposer) :is(input, textarea):focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.newTaskComposer textarea { color: var(--review-ink); line-height: 1.55; }
+.newTaskComposer textarea::placeholder { color: #9299a5; }
+.sendIconButton { background: #17191e; color: #fff; }
+.sendIconButton:hover:not(:disabled) { background: #050608; }
+.sendIconButton:disabled { background: #c9ced5; color: #fff; }
+
+/* Repeated work surfaces share one density and state grammar */
+:where(.rightPanelCard, .warningDecision, .artifactCard, .thinkingCard, .dispatchConfirmCard) {
+  border-color: var(--review-line);
+  border-radius: var(--review-radius-lg);
+  box-shadow: none;
+}
+:where(.primaryButton, .compactPrimaryButton) { background: #17191e; border-color: #17191e; color: #fff; }
+:where(.primaryButton, .compactPrimaryButton):hover:not(:disabled) { background: #050608; border-color: #050608; }
+:where(.primaryButton, .compactPrimaryButton):disabled { background: #c9ced5; border-color: #c9ced5; color: #fff; }
+:where(.secondaryButton, .iconButton, .artifactActionButton, .previewIconOnlyButton) { border-color: var(--review-line-strong); box-shadow: none; }
+:where(.secondaryButton, .iconButton, .artifactActionButton, .previewIconOnlyButton):hover { border-color: var(--review-line-strong); background: #f2f3f5; color: var(--review-ink); }
+.warningDecisionHeader > small, .requiredTag { border-color: var(--review-line); background: var(--review-surface-subtle); color: var(--review-muted); }
+.decisionRow:hover { border-color: #c8c4ec; background: #fcfcff; }
+.decisionRow.done { background: #f6f8f7; }
+.artifactCard:hover { border-color: var(--review-line-strong); box-shadow: 0 7px 18px rgba(18, 24, 38, .05); transform: translateY(-1px); }
+.artifactStack .artifactActions { display: grid; grid-auto-flow: column; grid-auto-columns: 34px; align-content: center; gap: 6px; }
+.artifactStack .artifactActions button { display: grid; width: 34px; height: 34px; place-items: center; padding: 0; }
+.paramGroup { border-color: var(--review-line); }
+.paramGroupHeader i.active { background: var(--review-brand); }
+
+/* Coworker identity and confirmed handoff */
+.roleSelector { display: flex; align-items: center; gap: 4px; }
+.roleSelectorCurrent { border-color: var(--review-line); border-radius: 10px; background: #fff; color: var(--review-ink); box-shadow: none; }
+.roleSelectorCurrent:hover { border-color: var(--review-line-strong); background: #f7f8fa; }
+.roleSelectorHelp { position: relative; display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--review-muted); }
+.roleSelectorHelp:hover { background: #eef0f3; color: var(--review-ink); }
+.roleSelectorHelp > span { position: absolute; z-index: 80; bottom: calc(100% + 8px); left: 0; display: none; width: 240px; gap: 4px; border: 1px solid var(--review-line); border-radius: 10px; background: #fff; padding: 10px 11px; color: var(--review-body); box-shadow: var(--review-shadow-float); font-size: 12px; line-height: 1.45; text-align: left; }
+.roleSelectorHelp:hover > span, .roleSelectorHelp:focus-visible > span { display: grid; }
+.roleSelectorHelp > span strong { color: var(--review-ink); font-size: 12px; }
+.roleSelectorMenu { border-color: var(--review-line); border-radius: 12px; box-shadow: var(--review-shadow-float); }
+.roleSelectorMenu > button { align-items: start; border-radius: 8px; }
+.roleSelectorMenu > button:hover { background: #f2f3f5; }
+.roleSelectorMenu > button.active { background: #eef0f3; color: var(--review-ink); }
+.roleSelectorOptionCopy { display: grid; min-width: 0; gap: 2px; text-align: left; }
+.roleSelectorOptionCopy strong { color: var(--review-ink); font-size: 12px; }
+.roleSelectorOptionCopy small { overflow: hidden; color: var(--review-muted); font-size: 10.5px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.coworkerSwitchCard { grid-template-columns: minmax(0, 1fr) auto auto; border-color: var(--review-line); border-radius: 14px; background: #fff; padding: 12px; box-shadow: 0 10px 28px rgba(18, 24, 38, .065); }
+.coworkerSwitchCard > div { gap: 4px; }
+.coworkerSwitchCard > div > span { color: var(--review-muted); font-size: 10.5px; font-weight: 650; text-transform: uppercase; }
+.coworkerSwitchCard > div > strong { display: flex; align-items: center; gap: 7px; color: var(--review-ink); font-size: 13px; }
+.coworkerSwitchCard > div > strong i { color: var(--review-muted); font-style: normal; font-weight: 400; }
+.coworkerSwitchCard > div > p { max-width: 520px; color: var(--review-body); font-size: 11.5px; line-height: 1.45; }
+.persistentParameterCard.isConfirmed { border-color: var(--review-line); background: #fbfcfb; }
+.persistentParameterCard.isConfirmed .persistentParameterHeader { min-height: 46px; background: #fbfcfb; }
+.persistentParameterCard.isConfirmed .persistentParameterToggle { min-height: 46px; background: #fbfcfb; }
+.persistentParameterCard.isConfirmed .persistentParameterToggle:hover { background: #f4f6f4; }
+.persistentParameterCard.isConfirmed .persistentParameterToggle > span:first-child svg { color: var(--review-success); }
+.legacyComposerStack .requirementChip.ok { border-color: #dce6e0; background: #f3f7f4; color: var(--review-success); }
+.legacyComposerStack .validationStartButton { display: inline-flex; width: auto; min-width: 112px; gap: 6px; padding: 0 14px; border-radius: 12px; }
+.legacyComposerStack .validationStartButton span { font-size: 12px; font-weight: 650; white-space: nowrap; }
+.legacyComposerStack .composer.workbenchComposer:has(.validationStartButton) {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+}
+
+/* Preserve conversational hierarchy when a completed coworker session is handed off. */
+.dmpkConversation { gap: 24px; }
+.dmpkConversation > .userBubble { margin-block: 6px 2px; }
+.dmpkConversation > .agentReply + .userBubble,
+.dmpkConversation > .activityChain + .userBubble { margin-top: 14px; }
+.dmpkConversation > .contextDivider { margin-block: 12px 4px; }
+.dmpkConversation .priorSessionHistory { gap: 28px; margin: 0 0 6px; }
+.dmpkConversation .priorSessionSegment { gap: 24px; }
+.dmpkConversation .priorSessionEntries { gap: 16px; }
+.dmpkConversation .priorSessionEntries p {
+  width: fit-content;
+  max-width: min(720px, 82%);
+  color: var(--review-muted);
+  font-size: 14px;
+  line-height: 1.72;
+}
+.dmpkConversation .priorSessionEntries p.agent {
+  padding-left: 40px;
+}
+.dmpkConversation .priorSessionEntries p.user {
+  max-width: min(620px, 72%);
+  border: 1px solid var(--review-line);
+  border-radius: 14px 14px 4px 14px;
+  background: var(--review-surface-subtle);
+  padding: 10px 14px;
+  color: var(--review-ink);
+  font-weight: 600;
+}
+.dmpkConversation .priorSessionSegment > .contextDivider {
+  margin-top: 8px;
+  color: #8a93a2;
+}
+.contextDivider {
+  grid-template-columns: minmax(24px, 1fr) auto 24px minmax(24px, 1fr);
+  gap: 14px;
+  margin-block: 24px;
+}
+.contextDivider > span:first-child { white-space: nowrap; }
+.contextSummaryHelp { position: relative; display: inline-grid; place-items: center; }
+.contextSummaryHelp > button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #7f8998;
+}
+.contextSummaryHelp > button:hover,
+.contextSummaryHelp > button:focus-visible { background: #eef2f8; color: var(--review-ink); outline: none; }
+.contextSummaryCard {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  left: 50%;
+  display: grid;
+  width: 300px;
+  gap: 7px;
+  visibility: hidden;
+  transform: translate(-50%, -4px);
+  border: 1px solid var(--review-line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  color: var(--review-ink);
+  text-align: left;
+  opacity: 0;
+  box-shadow: var(--review-shadow-float);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms;
+}
+.contextSummaryCard p { margin: 0; color: var(--review-muted); font-size: 12px; line-height: 1.6; }
+.contextSummaryCard small { color: #8b94a2; font-size: 11px; }
+.contextSummaryHelp:hover .contextSummaryCard,
+.contextSummaryHelp:focus-within .contextSummaryCard { visibility: visible; transform: translate(-50%, 0); opacity: 1; }
+
+/* A pinned inspector becomes a real workspace rail, not a floating card. */
+.dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) { grid-template-columns: 280px minmax(0, 1fr) 400px; }
+.dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 400px; }
+.tumor-reportModuleShell .inspector.pinned {
+  position: sticky;
+  top: 58px;
+  right: auto;
+  width: 100%;
+  height: calc(100dvh - 58px);
+  max-height: none;
+  align-self: start;
+  margin: 0;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.tumor-reportModuleShell .inspector.pinned > header { border-radius: 0; }
+
+/* Dialogs and inspectors should feel like tools, not floating decoration. */
+.modalBackdrop { background: rgba(22, 24, 29, .35); backdrop-filter: blur(2px); }
+.previewModal, .workbenchInspector { border-color: var(--review-line); box-shadow: var(--review-shadow-float); }
+.previewModal { border-radius: 18px; }
+.previewModal > header { border-bottom-color: var(--review-line); }
+.previewModal {
+  width: min(1080px, calc(100vw - 40px));
+  height: min(760px, calc(100dvh - 40px));
+  max-height: none;
+}
+.previewModal > header { min-height: 82px; padding: 18px 24px; }
+.previewBody {
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.previewBody:has(> .previewNav) {
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+.previewNav {
+  min-width: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--review-line);
+  padding: 16px 12px;
+}
+.previewNav button { min-width: 0; padding: 11px 12px; }
+.previewNav strong,
+.previewNav span { overflow-wrap: anywhere; }
+.previewContent {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px;
+}
+.artifactPreviewModal > .previewContent { overflow: auto; }
+.artifactPreviewReader { align-items: start; }
+.previewTable th { color: var(--review-muted); background: var(--review-surface-subtle); }
+.previewTable th, .previewTable td { border-color: var(--review-line); }
+
+/* File assistant scope selectors: quiet controls, one clear selected state. */
+.assistantContextBar { gap: 4px; padding-block: 8px; }
+.assistantContextBar .compactSelect > button {
+  min-height: 32px;
+  border-color: transparent;
+  border-radius: 8px;
+  background: transparent;
+  padding-inline: 10px 8px;
+  color: #4f5968;
+  font-weight: 600;
+}
+.assistantContextBar .compactSelect > button:hover,
+.assistantContextBar .compactSelect.isOpen > button { border-color: var(--review-line); background: #fff; color: var(--review-ink); }
+.assistantContextBar .compactSelect > button svg { margin-left: 3px; color: #8a93a1; transition: transform 140ms ease; }
+.assistantContextBar .compactSelect.isOpen > button svg { transform: rotate(180deg); }
+.assistantContextBar .compactSelectMenu {
+  width: max(220px, 100%);
+  gap: 1px;
+  border-color: var(--review-line);
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
+}
+.assistantContextBar .compactSelectMenu button {
+  min-height: 36px;
+  justify-content: flex-start;
+  border-radius: 7px;
+  padding-inline: 11px;
+  color: #566071;
+  font-size: 12px;
+}
+.assistantContextBar .compactSelectMenu button:hover { background: #f5f7fa; color: var(--review-ink); }
+.assistantContextBar .compactSelectMenu button.active { background: #eef1f5; color: var(--review-ink); font-weight: 680; }
+.assistantContextBar .compactSelectMenu button span {
+  display: block;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.assistantThinking { align-items: center; min-height: 36px; }
+.assistantThinkingLogo { position: relative; display: grid; width: 28px; height: 26px; place-items: center; flex: 0 0 auto; }
+.assistantThinkingLogo::after {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: rgba(41, 0, 255, .09);
+  filter: blur(8px);
+  content: "";
+  animation: assistantLogoHalo 1200ms ease-in-out infinite;
+}
+.assistantThinkingLogo img { position: relative; z-index: 1; width: 24px; height: 21px; object-fit: contain; animation: assistantLogoThink 1200ms cubic-bezier(.4,0,.2,1) infinite; }
+@keyframes assistantLogoThink { 0%,100% { transform: translateY(0) scale(.97); opacity: .76; } 50% { transform: translateY(-1px) scale(1.035); opacity: 1; } }
+@keyframes assistantLogoHalo { 0%,100% { transform: scale(.78); opacity: .25; } 50% { transform: scale(1.12); opacity: .65; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .assistantThinkingLogo img,
+  .assistantThinkingLogo::after { animation: none; }
+}
+
+/* Collapsed sidebar is an icon rail: every target shares one optical center. */
+.dmpkShell.sidebarCollapsed .sidebar { align-items: center; padding-inline: 10px; }
+.dmpkShell.sidebarCollapsed .brand,
+.dmpkShell.sidebarCollapsed .sidebarActions,
+.dmpkShell.sidebarCollapsed .workspaceViews,
+.dmpkShell.sidebarCollapsed .projectTree,
+.dmpkShell.sidebarCollapsed .account { width: 100%; }
+.dmpkShell.sidebarCollapsed .navSectionHeader,
+.dmpkShell.sidebarCollapsed .temporaryTasks > p,
+.dmpkShell.sidebarCollapsed .chatMoreButton { display: none; }
+.dmpkShell.sidebarCollapsed .projectTree { align-items: center; overflow-x: hidden; scrollbar-width: none; }
+.dmpkShell.sidebarCollapsed .projectTree::-webkit-scrollbar { display: none; }
+.dmpkShell.sidebarCollapsed .projectGroup,
+.dmpkShell.sidebarCollapsed .projectRowWrap,
+.dmpkShell.sidebarCollapsed .chatTree,
+.dmpkShell.sidebarCollapsed .temporaryTasks { width: 100%; justify-items: center; }
+.dmpkShell.sidebarCollapsed .projectRowWrap { display: grid; }
+.dmpkShell.sidebarCollapsed .projectRow,
+.dmpkShell.sidebarCollapsed .chatRow,
+.dmpkShell.sidebarCollapsed .workspaceViewRow {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  margin-inline: auto;
+  padding: 0;
+  place-items: center;
+}
+.dmpkShell.sidebarCollapsed .chatRowMain {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  grid-template-columns: 1fr;
+  place-items: center;
+  padding: 0;
+}
+.dmpkShell.sidebarCollapsed :is(.projectRow, .chatRowMain, .workspaceViewRow) > svg { display: block; margin: 0; transform: none; }
+.dmpkShell.sidebarCollapsed .account { justify-content: center; padding-inline: 0; }
+
+@media (max-width: 720px) {
+  .previewModal { width: calc(100vw - 20px); height: calc(100dvh - 20px); }
+  .previewBody:has(> .previewNav) { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .previewNav { grid-auto-flow: column; grid-auto-columns: minmax(138px, 1fr); overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: 1px solid var(--review-line); }
+  .artifactPreviewReader { grid-template-columns: minmax(0, 1fr); }
+  .docOutline { position: static; }
+}
+
+/* Motion: the interface assembles in spatial groups, once. */
+.introSequenceStarted .logoAwakening svg { animation: reviewMarkSettle 520ms var(--review-ease) both; }
+.introSequenceStarted .newTaskHeading { animation: reviewHeadingSettle 420ms var(--review-ease) 70ms both; }
+.introSequenceStarted .taskExampleGrid { animation: reviewGroupSettle 440ms var(--review-ease) 140ms both; }
+.introSequenceStarted .newTaskComposerDock { animation: reviewComposerSettle 460ms var(--review-ease) 190ms both; }
+.introSequenceStarted .taskExampleGrid button { animation: none; opacity: 1; filter: none; transform: none; }
+
+@keyframes reviewMarkSettle {
+  from { opacity: 0; transform: translateY(5px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes reviewHeadingSettle {
+  from { opacity: 0; clip-path: inset(0 0 18% 0); transform: translateY(7px); }
+  to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
+}
+@keyframes reviewGroupSettle {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes reviewComposerSettle {
+  from { opacity: 0; transform: translateY(10px) scale(.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes reviewCardEdgePass {
+  0% { opacity: 0; transform: translateX(-72%); }
+  18% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(72%); }
+}
+
+/* File assistant is the only persistent surface allowed to use diffuse brand motion. */
+.ambientFileAssistant::before {
+  inset: 34px -54px -34px;
+  background: radial-gradient(ellipse at center, rgba(47,34,211,.19), rgba(47,34,211,.07) 44%, transparent 72%);
+  filter: blur(22px);
+}
+.ambientFileAssistant[data-expanded="true"]::before { opacity: .58; }
+.ambientComposerFrame { isolation: isolate; }
+.ambientComposerFrame::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(105deg, rgba(47,34,211,.08), rgba(47,34,211,.52), rgba(47,34,211,.1)) border-box;
+  opacity: 0;
+  pointer-events: none;
+  content: "";
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transform: translateX(-55%);
+}
+.ambientFileAssistant[data-expanded="true"] .ambientComposerFrame {
+  box-shadow: 0 14px 36px rgba(18,24,38,.08), 0 0 0 1px rgba(47,34,211,.16), 0 0 24px rgba(47,34,211,.09);
+}
+.ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before { animation: reviewAssistantEdgePass 1400ms var(--review-ease) 180ms both; }
+.ambientComposerFrame > * { z-index: 1; }
+.ambientComposerSend { background: #17191e; color: #fff; opacity: 1; }
+.ambientComposerSend:not(:disabled):hover { background: #050608; }
+.ambientComposerSend:disabled { background: #eef0f3; color: #7b8491; opacity: 1; }
+@keyframes reviewAssistantEdgePass {
+  0% { opacity: 0; transform: translateX(-55%); }
+  18% { opacity: .88; }
+  72% { opacity: .88; }
+  100% { opacity: .28; transform: translateX(0); }
+}
+
+@media (max-width: 1179px) {
+  .newTaskIntro { padding-bottom: 28px; }
+  .newTaskHeading { margin-bottom: 24px; }
+  .taskExampleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .taskExampleGrid button { min-height: 98px; }
+}
+
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .dmpkShell.dmpk-quotationModuleShell { grid-template-columns: 240px minmax(0, 1fr) 320px; }
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr) 320px; }
+  .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) { grid-template-columns: 240px minmax(0, 1fr) 340px; }
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 340px; }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr) minmax(300px, 32vw); }
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) minmax(300px, 32vw); }
+}
+
+@media (max-width: 760px) {
+  .newTaskHome { padding: 20px 16px 16px; }
+  .newTaskIntro { align-content: start; padding-top: 18px; }
+  .logoAwakening { width: 54px; height: 54px; }
+  .logoAwakening svg { width: 48px; height: 48px; }
+  .newTaskHeading { margin: 8px 0 22px; }
+  .newTaskIntro .newTaskHeading h1 { font-size: 28px; }
+  .newTaskHeading p { font-size: 13px; }
+  .taskExampleGrid { grid-template-columns: 1fr; gap: 8px; }
+  .taskExampleGrid button { min-height: 76px; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 10px; }
+  .taskExampleTop { display: contents; }
+  .taskExampleTop > svg { display: none; }
+  .newTaskComposer { min-height: 78px; }
+}
+
+@media (max-height: 720px) and (min-width: 761px) {
+  .newTaskHeading p { display: none; }
+  .newTaskIntro { padding-block: 4px 18px; }
+  .newTaskHeading { margin-block: 6px 18px; }
+  .taskExampleGrid button { min-height: 86px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .introSequenceStarted :where(.logoAwakening svg, .newTaskHeading, .taskExampleGrid, .newTaskComposerDock) {
+    animation: none !important;
+    clip-path: none;
+    opacity: 1;
+    transform: none;
+  }
+  .taskExampleGrid button:not(:disabled):hover::after,
+  .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before { animation: none; opacity: .45; transform: none; }
+  .ambientFileAssistant::before { transition: none; }
+}

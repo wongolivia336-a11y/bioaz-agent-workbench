@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
-export type WorkbenchRoute = "newTask" | "tasks" | "library" | "module";
+export type WorkbenchRoute = "newTask" | "tasks" | "library" | "module" | "projectDashboard" | "digitalTeam";
 
 export type WorkbenchProject = {
   id: string;
@@ -26,7 +26,6 @@ export type CoworkerDefinition = {
   name: string;
   icon: LucideIcon;
   description: string;
-  owner: string;
 };
 
 export type SessionHistoryEntry = {
