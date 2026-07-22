@@ -7,7 +7,7 @@ export const workspaceProjects: WorkbenchProject[] = [
   { id: "project-zz", name: "ZZ药业-CT26模型评价" },
 ];
 
-export const projectOptions = [...workspaceProjects.map((project) => project.name), "临时任务"];
+export const projectOptions = workspaceProjects.map((project) => project.name);
 
 export const workspacePinCatalog: PinItem[] = [
   ...workspaceProjects.map((project) => ({ id: project.id, type: "project" as const, title: project.name })),

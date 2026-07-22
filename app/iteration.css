@@ -2098,6 +2098,29 @@ body > main.dmpkShell::after { content: none; }
 .newTaskComposer > .sendIconButton { width: 44px; height: 44px; border-radius: 13px; background: #17113f; }
 .newTaskComposer > .sendIconButton:disabled { background: #cbd5e1; }
 
+.newTaskComposerDock > .roleSelector {
+  justify-self: start;
+  margin-bottom: 4px;
+}
+
+.newTaskComposerDock > .roleSelector .roleSelectorMenu {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+.newTaskComposer.workbenchComposer {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+}
+
+.newTaskComposer.workbenchComposer .composerAddButton {
+  align-self: center;
+}
+
+.newTaskComposer.workbenchComposer textarea {
+  align-self: center;
+}
+
 .introSequenceSettled .newTaskIntro h1,
 .introSequenceSettled .taskExampleGrid button,
 .introSequenceSettled .newTaskComposerDock {

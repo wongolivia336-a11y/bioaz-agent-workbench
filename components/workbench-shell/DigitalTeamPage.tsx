@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, Bot, ChevronRight, Folder, Network, Search, Sparkles, Users, Zap } from "lucide-react";
+import { ArrowLeft, Bot, Check, ChevronDown, ChevronRight, Folder, Network, Search, Sparkles, Users, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 import { digitalTeamData, type DigitalCoworker, type DigitalSkill, type DigitalSubAgent } from "../../lib/workbench/digitalTeamData";
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
+import { useDismissableLayer } from "./useDismissableLayer";
 
 type Props = {
   projects: WorkbenchProject[];
@@ -149,9 +150,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
           <Search size={16} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索数字同事、技能或业务领域" />
         </label>
-        <select value={domain} onChange={(event) => setDomain(event.target.value)} aria-label="筛选领域">
-          {domains.map((item) => <option key={item}>{item}</option>)}
-        </select>
+        <DomainFilter value={domain} options={domains} onChange={setDomain} />
       </div>
 
       <div className="digitalTeamLayout">
@@ -180,6 +179,29 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
         </div>
       </div>
     </section>
+  );
+}
+
+function DomainFilter({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
+  return (
+    <div ref={ref} className={`digitalTeamDomainSelect ${open ? "isOpen" : ""}`}>
+      <button type="button" aria-expanded={open} aria-label="筛选领域" onClick={() => setOpen((current) => !current)}>
+        <span>{value}</span>
+        <ChevronDown size={14} />
+      </button>
+      {open ? (
+        <div className="digitalTeamDomainMenu" role="menu" aria-label="筛选领域">
+          {options.map((option) => (
+            <button type="button" className={option === value ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}>
+              <span>{option}</span>
+              {option === value ? <Check size={14} /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
