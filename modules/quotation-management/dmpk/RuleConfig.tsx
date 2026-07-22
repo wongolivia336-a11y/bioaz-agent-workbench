@@ -103,10 +103,10 @@ export default function RuleConfig({ scenario, draftRequest }: { scenario: Detec
         </header>
         <div className="workflowCanvas">
           {nodes.map((node, index) => (
-            <div key={node.id} className="workflowNodeWrapper">
+            <div key={node.id} className="quotationWorkflowNodeWrapper">
               <button
                 type="button"
-                className={`workflowNode ${activeNode === node.id ? "active" : ""}`}
+                className={`quotationWorkflowNode ${activeNode === node.id ? "active" : ""}`}
                 style={{
                   "--node-bg": nodeTypeLabels[node.type].bg,
                   "--node-color": nodeTypeLabels[node.type].color,
@@ -114,11 +114,11 @@ export default function RuleConfig({ scenario, draftRequest }: { scenario: Detec
                 } as React.CSSProperties}
                 onClick={() => setActiveNode(activeNode === node.id ? null : node.id)}
               >
-                <span className="workflowNodeType">{node.type}</span>
+                <span className="quotationWorkflowNodeType">{node.type}</span>
                 <strong>{node.label}</strong>
                 {node.description ? <small>{node.description}</small> : null}
               </button>
-              {index < nodes.length - 1 ? <div className="workflowConnector" /> : null}
+              {index < nodes.length - 1 ? <div className="quotationWorkflowConnector" /> : null}
             </div>
           ))}
         </div>

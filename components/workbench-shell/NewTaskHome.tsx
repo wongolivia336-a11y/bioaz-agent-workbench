@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Check, ChevronDown, Folder, Plus, Send } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, CircleAlert, Folder, Plus, Send } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import type { CoworkerDefinition } from "../../modules/types";
 import { LogoAwakening } from "../hero/LogoAwakening";
@@ -22,6 +22,7 @@ type Props = {
   activeCoworkerId: string;
   quickStarts: QuickStartItem[];
   projectOptions: string[];
+  projectNotice: string | null;
   onProjectChange: (project: string) => void;
   onTextChange: (value: string) => void;
   onSubmit: () => void;
@@ -58,8 +59,9 @@ export function NewTaskHome(props: Props) {
     </div>}
     <div className="newTaskComposerDock">
       {!props.conversationStarted ? <div className="newTaskWelcomePrompt"><span>{props.project ? `你想在“${props.project}”中完成什么任务？` : "描述任务，或先选择所属项目。"}</span></div> : null}
+      {!props.conversationStarted && props.projectNotice ? <div className="newTaskProjectNotice" role="status"><CircleAlert size={14} /><span>{props.projectNotice}</span></div> : null}
       {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard taskType={props.pendingTaskType ?? "待确认任务"} coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
-      {!props.conversationStarted ? <ProjectSelector project={props.project} options={props.projectOptions} onChange={props.onProjectChange} /> : null}
+      {!props.conversationStarted ? <ProjectSelector project={props.project} options={props.projectOptions} invalid={Boolean(props.projectNotice)} onChange={props.onProjectChange} /> : null}
       {props.conversationStarted ? <CoworkerSelector coworkers={props.coworkers} activeCoworkerId={props.activeCoworkerId} onChange={props.onCoworkerChange} /> : null}
       <div className="newTaskComposer workbenchComposer">
         <label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple /></label>
@@ -70,8 +72,8 @@ export function NewTaskHome(props: Props) {
   </section>;
 }
 
-function ProjectSelector({ project, options, onChange }: { project: string | null; options: string[]; onChange: (project: string) => void }) {
+function ProjectSelector({ project, options, invalid, onChange }: { project: string | null; options: string[]; invalid: boolean; onChange: (project: string) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}><Folder size={15} /><span>{project ?? "选择项目"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{options.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span><Folder size={15} />{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
+  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""} ${invalid ? "hasError" : ""}`}><button type="button" aria-expanded={open} aria-invalid={invalid} onClick={() => setOpen((value) => !value)}><Folder size={15} /><span>{project ?? "选择项目"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{options.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span><Folder size={15} />{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
 }
