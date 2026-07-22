@@ -2314,12 +2314,564 @@ body > main.dmpkShell::after { content: none; }
 .ambientAssistantSuggestions button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ambientAssistantSuggestions button:hover { background: rgba(255, 255, 255, .94); color: #0f172a; }
 
+.accountButton {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accountButton > svg {
+  margin-left: auto;
+  color: #94a3b8;
+  transform: rotate(90deg);
+}
+
+.accountButton:hover {
+  background: #f8fafc;
+}
+
+.dmpkShell.ruleManagementMode {
+  display: block;
+  min-height: 100dvh;
+  background: #f5f7fb;
+}
+
+.ruleManagementShell {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-columns: 248px minmax(0, 1fr);
+  color: #111318;
+}
+
+.ruleManagementSidebar {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  gap: 18px;
+  border-right: 1px solid #e8ecf2;
+  background: #fff;
+  padding: 22px 16px 16px;
+}
+
+.ruleManagementSidebar .brand {
+  margin: 0 2px 10px;
+}
+
+.adminBackButton {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #111318;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.adminBackButton:hover { color: #2900ff; }
+
+.ruleAdminNav {
+  display: grid;
+  gap: 8px;
+}
+
+.ruleAdminNav p {
+  margin: 0 0 2px;
+  color: #8b95a3;
+  font-size: 12px;
+}
+
+.ruleAdminNav button {
+  display: flex;
+  height: 38px;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #111318;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ruleAdminNav button.active {
+  background: #f1f0f6;
+}
+
+.ruleManagementSidebar .account {
+  margin-top: auto;
+}
+
+.ruleManagementMain {
+  min-width: 0;
+  padding: 0 0 120px;
+}
+
+.ruleTopbar {
+  display: flex;
+  height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e8ecf2;
+  background: rgba(255,255,255,.78);
+  padding: 0 clamp(28px, 4vw, 64px);
+}
+
+.ruleTopbar span {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  border: 1px solid #dfe5ee;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.ruleHero {
+  width: min(1160px, calc(100vw - 328px));
+  margin: 54px auto 0;
+}
+
+.ruleHero > span {
+  color: #2900ff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.ruleHero h1 {
+  margin: 8px 0 22px;
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.ruleTabs {
+  display: flex;
+  gap: 22px;
+  border-bottom: 1px solid #dfe5ee;
+}
+
+.ruleTabs button {
+  height: 42px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ruleTabs button.active {
+  border-color: #2900ff;
+  color: #111318;
+}
+
+.ruleWorkbenchGrid {
+  display: grid;
+  width: min(1160px, calc(100vw - 328px));
+  grid-template-columns: 220px minmax(360px, 1fr) 290px;
+  gap: 16px;
+  margin: 22px auto 0;
+}
+
+.ruleListCard,
+.ruleCanvasCard,
+.ruleDetailCard,
+.ruleDraftConfirmCard,
+.templateCard {
+  border: 1px solid #e3e8ef;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15,23,42,.035);
+}
+
+.ruleListCard {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+}
+
+.ruleListCard header,
+.ruleCanvasCard header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ruleListCard small,
+.ruleCanvasCard small,
+.templateCard small,
+.workflowPreserveCard span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.ruleListCard button {
+  display: flex;
+  height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #111318;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ruleListCard button.active {
+  background: #f3f0ff;
+  color: #2900ff;
+}
+
+.ruleCanvasCard {
+  padding: 18px;
+}
+
+.ruleCanvasCard header button,
+.ruleDetailCard button,
+.ruleActions button,
+.workflowPreserveCard button,
+.templateCard button {
+  display: inline-flex;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #dfe5ee;
+  border-radius: 8px;
+  background: #fff;
+  color: #111318;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ruleActions button.primary {
+  border-color: #111318;
+  background: #111318;
+  color: #fff;
+}
+
+.fieldTree,
+.ruleConfigStack {
+  display: grid;
+  gap: 12px;
+}
+
+.fieldTree {
+  margin-top: 16px;
+}
+
+.fieldTree article {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.fieldTree article div {
+  display: grid;
+  gap: 3px;
+}
+
+.fieldTree article span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.fieldTree article button {
+  border: 0;
+  background: transparent;
+  color: #2900ff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ruleDetailCard {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 18px;
+}
+
+.ruleDetailCard label {
+  display: grid;
+  gap: 7px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.ruleDetailCard input,
+.ruleDetailCard select {
+  height: 38px;
+  border: 1px solid #dfe5ee;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 10px;
+  color: #111318;
+  font: inherit;
+}
+
+.tokenStack {
+  display: grid;
+  gap: 8px;
+}
+
+.tokenStack span {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e3e8ef;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.ruleConfigStack {
+  width: min(1160px, calc(100vw - 328px));
+  margin: 22px auto 0;
+}
+
+.ruleSplitView {
+  display: grid;
+  grid-template-columns: minmax(480px, 1fr) 320px;
+  gap: 16px;
+}
+
+.businessRuleCard,
+.workflowPreserveCard,
+.ruleDraftConfirmCard {
+  padding: 18px;
+}
+
+.businessRuleCard {
+  margin-top: 16px;
+  border: 1px solid #edf1f5;
+  border-radius: 10px;
+}
+
+.businessRuleCard > span,
+.ruleDraftConfirmCard > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: #eef8f2;
+  color: #4f7f68;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.businessRuleCard h2,
+.ruleDraftConfirmCard h2 {
+  margin: 12px 0 14px;
+  font-size: 19px;
+}
+
+.businessRuleSentence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.businessRuleSentence span,
+.businessRuleSentence strong {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.businessRuleSentence span {
+  color: #64748b;
+}
+
+.businessRuleSentence strong {
+  border: 1px solid #dfe5ee;
+  background: #fff;
+}
+
+.workflowPreserveCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 16px;
+  border-top: 1px solid #edf1f5;
+}
+
+.workflowPreserveCard div {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.workflowPreserveCard span {
+  grid-column: 2;
+}
+
+.workflowMiniMap {
+  position: relative;
+  min-height: 370px;
+  overflow: hidden;
+  border: 1px solid #e3e8ef;
+  border-radius: 12px;
+  background-image: radial-gradient(#d9dee7 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.workflowMiniMap::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, rgba(245,247,251,.84));
+  content: "";
+}
+
+.workflowNode {
+  position: absolute;
+  z-index: 1;
+  left: calc(22px + (var(--node-step) % 2) * 128px);
+  top: calc(24px + var(--node-step) * 38px);
+  width: 136px;
+  border: 1px solid #dfe5ee;
+  border-radius: 8px;
+  background: #fff;
+  padding: 9px 10px;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(15,23,42,.06);
+}
+
+.ruleDraftConfirmCard p {
+  margin: -4px 0 14px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.ruleActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  border-top: 1px solid #edf1f5;
+  padding-top: 14px;
+}
+
+.templateGrid {
+  display: grid;
+  width: min(1160px, calc(100vw - 328px));
+  gap: 14px;
+  margin: 22px auto 0;
+}
+
+.templateCard {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+}
+
+.templateCard > span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 10px;
+  background: #eef7f2;
+  color: #4f7f68;
+}
+
+.templateCard div {
+  display: grid;
+  gap: 4px;
+}
+
+.templateCard em {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #4f7f68;
+  font-size: 13px;
+  font-style: normal;
+}
+
+.dmpkQuotationAssistant {
+  left: calc(248px + (100vw - 248px) / 2);
+  bottom: clamp(24px, 5vh, 54px);
+  width: min(720px, calc(100vw - 248px - 64px));
+}
+
+.dmpkQuotationAssistant .ambientAssistantEntry {
+  width: 228px;
+  inset-inline: calc((100% - 228px) / 2);
+  color: #111318;
+  font-weight: 750;
+}
+
+.dmpkQuotationAssistant .ambientComposerFrame {
+  clip-path: inset(27px calc((100% - 228px) / 2) 27px round 22px);
+}
+
+.dmpkQuotationAssistant[data-expanded="true"] .ambientComposerFrame {
+  clip-path: inset(0 round 14px);
+}
+
+.dmpkQuotationAssistant .assistantCloseButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255,255,255,.7);
+  color: #64748b;
+  cursor: pointer;
+}
+
+.dmpkQuotationAssistant[data-expanded="true"] .assistantCloseButton {
+  display: grid;
+}
+
 @media (max-width: 900px) {
   .dmpkShell.workbenchShell,
   .dmpkShell.workbenchShell.sidebarCollapsed { --sidebar-width: 0px; }
   .ambientFileAssistant { width: min(720px, calc(100vw - 32px)); }
   .ambientAssistantSuggestions { grid-template-columns: 1fr; bottom: 106px; }
   .ambientAssistantSuggestions button { justify-content: flex-start; padding: 0 12px; }
+  .ruleManagementShell { grid-template-columns: 1fr; }
+  .ruleManagementSidebar { min-height: auto; }
+  .ruleManagementMain { padding-bottom: 180px; }
+  .ruleHero,
+  .ruleWorkbenchGrid,
+  .ruleConfigStack,
+  .templateGrid { width: calc(100vw - 32px); }
+  .ruleWorkbenchGrid,
+  .ruleSplitView { grid-template-columns: 1fr; }
+  .dmpkQuotationAssistant { left: 50%; width: min(720px, calc(100vw - 32px)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2490,6 +3042,114 @@ body > main.dmpkShell::after { content: none; }
 .ambientFileAssistant[data-expanded="true"]::before { opacity: .42; }
 .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame {
   box-shadow: 0 12px 30px rgba(15, 23, 42, .075);
+}
+
+.sidebarMenu.projectMenu,
+.sidebarMenu.chatMenu {
+  gap: 3px;
+  padding: 6px;
+}
+
+.sidebarMenu.projectMenu .sidebarDangerAction,
+.sidebarMenu.chatMenu .sidebarDangerAction {
+  color: #b42318;
+}
+
+.sidebarMenu.projectMenu .sidebarDangerAction:hover,
+.sidebarMenu.chatMenu .sidebarDangerAction:hover {
+  background: #fff5f5;
+  color: #b42318;
+}
+
+.sidebarDeleteConfirm {
+  display: grid;
+  gap: 8px;
+  margin: 4px 2px 2px;
+  border-top: 1px solid var(--border);
+  padding: 9px 6px 4px;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.sidebarDeleteConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.sidebarDeleteConfirmActions button {
+  min-height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 10px;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.sidebarDeleteConfirmActions button:hover {
+  background: #f8fafc;
+}
+
+.sidebarDeleteConfirmActions button.danger {
+  border-color: #ffd5d5;
+  background: #fff5f5;
+  color: #b42318;
+}
+
+.newTaskComposer.workbenchComposer {
+  min-height: 72px;
+  height: 72px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.newTaskComposer.workbenchComposer .composerAddButton {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  align-self: center;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #667085;
+  box-shadow: none;
+}
+
+.newTaskComposer.workbenchComposer .composerAddButton:hover {
+  background: #f8fafc;
+  color: #344054;
+}
+
+.newTaskComposer.workbenchComposer textarea {
+  min-height: 28px;
+  height: 28px;
+  max-height: 72px;
+  align-self: center;
+  padding: 0;
+  color: var(--home-ink);
+  font-size: 15px;
+  line-height: 28px;
+  overflow: hidden;
+}
+
+.newTaskComposer.workbenchComposer textarea::placeholder {
+  color: var(--home-muted);
+  line-height: 28px;
+}
+
+.newTaskComposer.workbenchComposer > .sendIconButton {
+  width: 44px;
+  height: 44px;
+  align-self: center;
+  justify-self: end;
+  border-radius: 14px;
 }
 
 @media (max-width: 1180px) {

@@ -1,37 +1,425 @@
 "use client";
 
-import { ChevronRight, Eye, FileText, Folder, MessageSquare, MoreHorizontal, PanelRight, Pin, PinOff, Search, X } from "lucide-react";
+import {
+  ChevronRight,
+  Eye,
+  FileText,
+  Folder,
+  MessageSquare,
+  MoreHorizontal,
+  PanelRight,
+  Pin,
+  PinOff,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { workspacePinCatalog, workspaceProjects, workspaceTasks } from "../../lib/workbench/mockWorkspace";
 import type { PinItem } from "../../lib/workbench/shellTypes";
 import type { WorkbenchRoute, WorkbenchTask } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-type Props = { collapsed: boolean; activeRoute: WorkbenchRoute; activeTaskId: string | null; runtimeTasks: WorkbenchTask[]; pinnedItemIds: string[]; onTogglePinnedItem: (id: string) => void; onRouteChange: (route: Exclude<WorkbenchRoute, "module">) => void; onStartTask: (project?: string | null) => void; onOpenTask: (task: WorkbenchTask) => void; onToggleCollapsed: () => void };
+type Props = {
+  collapsed: boolean;
+  activeRoute: WorkbenchRoute;
+  activeTaskId: string | null;
+  runtimeTasks: WorkbenchTask[];
+  pinnedItemIds: string[];
+  onTogglePinnedItem: (id: string) => void;
+  onRouteChange: (route: Exclude<WorkbenchRoute, "module">) => void;
+  onOpenNewTaskHome: () => void;
+  onStartTask: (project: string) => void;
+  onOpenTask: (task: WorkbenchTask) => void;
+  onToggleCollapsed: () => void;
+};
 
 export function WorkspaceSidebar(props: Props) {
-  const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({ "project-xx": true, "project-yy": true, "project-zz": false });
+  const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({
+    "project-xx": true,
+    "project-yy": true,
+    "project-zz": false,
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
+  const [hiddenTaskIds, setHiddenTaskIds] = useState<string[]>([]);
+  const [hiddenProjectNames, setHiddenProjectNames] = useState<string[]>([]);
+
+  const visibleProjects = workspaceProjects.filter((project) => !hiddenProjectNames.includes(project.name));
   const runtimePinItems: PinItem[] = props.runtimeTasks.map((task) => ({ ...task, type: "task" }));
-  const catalog: PinItem[] = [...runtimePinItems, ...workspacePinCatalog];
-  const pinnedItems = props.pinnedItemIds.map((id) => catalog.find((item) => item.id === id)).filter((item): item is PinItem => Boolean(item));
-  const startTask = (project: string | null = null) => { setNewTaskOpen(false); props.onStartTask(project); };
-  const openItem = (item: PinItem) => item.type === "project" ? startTask(item.title) : props.onOpenTask(toTask(item));
-  return <aside className="sidebar">
-    <div className="brand"><img src="/logo/bioaz-logo.svg" alt="" /><span>BioAZ</span><button className="sidebarCollapseButton" type="button" onClick={props.onToggleCollapsed} aria-label={props.collapsed ? "展开侧边栏" : "折叠侧边栏"}><PanelRight size={17} /></button></div>
-    <div className="sidebarActions">{searchOpen ? <div className="sidebarSearch"><Search size={15} /><input autoFocus placeholder="搜索任务、项目" /><button type="button" onClick={() => setSearchOpen(false)} aria-label="关闭搜索"><X size={14} /></button></div> : <><div className="newChatWrap" onMouseEnter={() => setNewTaskOpen(true)} onMouseLeave={() => setNewTaskOpen(false)}><button className={`newChat ${props.activeRoute === "newTask" ? "active" : ""}`} type="button" aria-expanded={newTaskOpen} onFocus={() => setNewTaskOpen(true)} onClick={() => startTask()}><span>+</span>新建任务</button>{newTaskOpen ? <div className="newChatMenu isOpen"><span className="newChatMenuLabel">挂靠到</span>{workspaceProjects.map((project) => <button type="button" key={project.id} onClick={() => startTask(project.name)}><Folder size={16} />{project.name}</button>)}<button type="button" onClick={() => startTask("临时任务")}><MessageSquare size={16} />临时任务</button></div> : null}</div><button className="sidebarSearchButton" type="button" onClick={() => setSearchOpen(true)} aria-label="搜索"><Search size={17} /></button></>}</div>
-    <nav className="navBlock workspaceViews" aria-label="工作区"><button className={`workspaceViewRow ${props.activeRoute === "tasks" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("tasks")}><FileText size={15} strokeWidth={1.8} /><span>我的待办</span><small>{workspaceTasks.actionRequired.length}</small></button><button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Folder size={15} strokeWidth={1.8} /><span>文件管理系统</span></button></nav>
-    {pinnedItems.length ? <section className="navBlock pinnedBlock" aria-label="置顶"><p>置顶</p>{pinnedItems.map((item) => item.type === "project" ? <PinnedProject key={item.id} title={item.title} onClick={() => openItem(item)} onUnpin={() => props.onTogglePinnedItem(item.id)} /> : <SidebarTask key={item.id} item={item} active={props.activeTaskId === item.id} pinned onClick={() => openItem(item)} onPinToggle={() => props.onTogglePinnedItem(item.id)} />)}</section> : null}
-    <nav className="navBlock projectTree" aria-label="项目"><p>项目</p>{workspaceProjects.map((project) => <SidebarProject key={project.id} title={project.name} open={Boolean(openProjects[project.id])} pinned={props.pinnedItemIds.includes(project.id)} onTogglePin={() => props.onTogglePinnedItem(project.id)} onNewTask={() => startTask(project.name)} onToggle={() => setOpenProjects((current) => ({ ...current, [project.id]: !current[project.id] }))}>{catalog.filter((item) => item.type === "task" && item.project === project.name).map((item) => <SidebarTask key={item.id} item={item} active={props.activeTaskId === item.id} pinned={props.pinnedItemIds.includes(item.id)} onPinToggle={() => props.onTogglePinnedItem(item.id)} onClick={() => props.onOpenTask(toTask(item))} />)}</SidebarProject>)}<div className="temporaryTasks"><p>临时任务</p>{catalog.filter((item) => item.type === "task" && item.project === "临时任务").map((item) => <SidebarTask key={item.id} item={item} active={props.activeTaskId === item.id} archiveable pinned={props.pinnedItemIds.includes(item.id)} onPinToggle={() => props.onTogglePinnedItem(item.id)} onClick={() => props.onOpenTask(toTask(item))} />)}</div></nav>
-    <div className="account"><div className="avatar">A</div><div><strong>Admin</strong><span>admin@example.com</span></div></div>
-  </aside>;
+  const catalog: PinItem[] = [...runtimePinItems, ...workspacePinCatalog].filter((item) => {
+    if (item.type === "task") return !hiddenTaskIds.includes(item.id) && !hiddenProjectNames.includes(item.project ?? "");
+    return !hiddenProjectNames.includes(item.title);
+  });
+  const pinnedItems = props.pinnedItemIds
+    .map((id) => catalog.find((item) => item.id === id))
+    .filter((item): item is PinItem => Boolean(item));
+
+  const openNewTaskHome = () => {
+    setNewTaskOpen(false);
+    props.onOpenNewTaskHome();
+  };
+
+  const startTask = (project: string) => {
+    setNewTaskOpen(false);
+    props.onStartTask(project);
+  };
+
+  const openItem = (item: PinItem) => (item.type === "project" ? startTask(item.title) : props.onOpenTask(toTask(item)));
+
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <img src="/logo/bioaz-logo.svg" alt="" />
+        <span>BioAZ</span>
+        <button
+          className="sidebarCollapseButton"
+          type="button"
+          onClick={props.onToggleCollapsed}
+          aria-label={props.collapsed ? "展开侧边栏" : "折叠侧边栏"}
+        >
+          <PanelRight size={17} />
+        </button>
+      </div>
+
+      <div className="sidebarActions">
+        {searchOpen ? (
+          <div className="sidebarSearch">
+            <Search size={15} />
+            <input autoFocus placeholder="搜索任务、项目" />
+            <button type="button" onClick={() => setSearchOpen(false)} aria-label="关闭搜索">
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="newChatWrap" onMouseEnter={() => setNewTaskOpen(true)} onMouseLeave={() => setNewTaskOpen(false)}>
+              <button
+                className={`newChat ${props.activeRoute === "newTask" ? "active" : ""}`}
+                type="button"
+                aria-expanded={newTaskOpen}
+                onFocus={() => setNewTaskOpen(true)}
+                onClick={openNewTaskHome}
+              >
+                <span>+</span>新建任务
+              </button>
+              {newTaskOpen ? (
+                <div className="newChatMenu isOpen">
+                  <span className="newChatMenuLabel">挂靠到</span>
+                  {visibleProjects.map((project) => (
+                    <button type="button" key={project.id} onClick={() => startTask(project.name)}>
+                      <Folder size={16} />
+                      {project.name}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <button className="sidebarSearchButton" type="button" onClick={() => setSearchOpen(true)} aria-label="搜索">
+              <Search size={17} />
+            </button>
+          </>
+        )}
+      </div>
+
+      <nav className="navBlock workspaceViews" aria-label="工作区">
+        <button className={`workspaceViewRow ${props.activeRoute === "tasks" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("tasks")}>
+          <FileText size={15} strokeWidth={1.8} />
+          <span>我的待办</span>
+          <small>{workspaceTasks.actionRequired.length}</small>
+        </button>
+        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}>
+          <Folder size={15} strokeWidth={1.8} />
+          <span>文件管理系统</span>
+        </button>
+      </nav>
+
+      {pinnedItems.length ? (
+        <section className="navBlock pinnedBlock" aria-label="置顶">
+          <p>置顶</p>
+          {pinnedItems.map((item) =>
+            item.type === "project" ? (
+              <PinnedProject key={item.id} title={item.title} onClick={() => openItem(item)} onUnpin={() => props.onTogglePinnedItem(item.id)} />
+            ) : (
+              <SidebarTask
+                key={item.id}
+                item={item}
+                active={props.activeTaskId === item.id}
+                pinned
+                onClick={() => openItem(item)}
+                onPinToggle={() => props.onTogglePinnedItem(item.id)}
+                onDelete={() => setHiddenTaskIds((ids) => [...ids, item.id])}
+              />
+            )
+          )}
+        </section>
+      ) : null}
+
+      <nav className="navBlock projectTree" aria-label="项目">
+        <p>项目</p>
+        {visibleProjects.map((project) => (
+          <SidebarProject
+            key={project.id}
+            title={project.name}
+            open={Boolean(openProjects[project.id])}
+            pinned={props.pinnedItemIds.includes(project.id)}
+            onTogglePin={() => props.onTogglePinnedItem(project.id)}
+            onNewTask={() => startTask(project.name)}
+            onDelete={() => setHiddenProjectNames((names) => [...names, project.name])}
+            onToggle={() => setOpenProjects((current) => ({ ...current, [project.id]: !current[project.id] }))}
+          >
+            {catalog
+              .filter((item) => item.type === "task" && item.project === project.name)
+              .map((item) => (
+                <SidebarTask
+                  key={item.id}
+                  item={item}
+                  active={props.activeTaskId === item.id}
+                  pinned={props.pinnedItemIds.includes(item.id)}
+                  onPinToggle={() => props.onTogglePinnedItem(item.id)}
+                  onClick={() => props.onOpenTask(toTask(item))}
+                  onDelete={() => setHiddenTaskIds((ids) => [...ids, item.id])}
+                />
+              ))}
+          </SidebarProject>
+        ))}
+      </nav>
+
+      <button className="account accountButton" type="button" onClick={() => props.onRouteChange("management")}>
+        <div className="avatar">A</div>
+        <div>
+          <strong>Admin</strong>
+          <span>admin@example.com</span>
+        </div>
+        <ChevronRight size={14} />
+      </button>
+    </aside>
+  );
 }
 
-function toTask(item: PinItem): WorkbenchTask { return { id: item.id, title: item.title, project: item.project ?? "临时任务", moduleId: item.moduleId ?? "dmpk-quotation", coworkerId: item.coworkerId ?? "dmpk-quotation-coworker", coworkerName: item.coworkerName ?? "DMPK报价同事", time: item.time ?? "", status: item.status ?? "" }; }
+function toTask(item: PinItem): WorkbenchTask {
+  return {
+    id: item.id,
+    title: item.title,
+    project: item.project ?? "",
+    moduleId: item.moduleId ?? "dmpk-quotation",
+    coworkerId: item.coworkerId ?? "dmpk-quotation-coworker",
+    coworkerName: item.coworkerName ?? "DMPK报价同事",
+    time: item.time ?? "",
+    status: item.status ?? "",
+  };
+}
 
-function PinnedProject({ title, onClick, onUnpin }: { title: string; onClick: () => void; onUnpin: () => void }) { const [open, setOpen] = useState(false); const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false)); return <div ref={ref} className="pinnedProjectRow"><button type="button" onClick={onClick}><Folder size={15} /><strong>{title}</strong></button><button type="button" aria-label="置顶项目操作" onClick={() => setOpen((value) => !value)}><MoreHorizontal size={14} /></button>{open ? <div className="sidebarMenu"><button type="button" onClick={() => { onUnpin(); setOpen(false); }}><PinOff size={14} />取消置顶</button></div> : null}</div>; }
+function PinnedProject({ title, onClick, onUnpin }: { title: string; onClick: () => void; onUnpin: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
 
-function SidebarProject({ title, open, pinned, onTogglePin, onNewTask, onToggle, children }: { title: string; open: boolean; pinned: boolean; onTogglePin: () => void; onNewTask: () => void; onToggle: () => void; children: ReactNode }) { const [menuOpen, setMenuOpen] = useState(false); const ref = useDismissableLayer<HTMLDivElement>(menuOpen, () => setMenuOpen(false)); return <div className="projectGroup"><div ref={ref} className={`projectRowWrap ${menuOpen ? "menuOpen" : ""}`} onContextMenu={(event) => { event.preventDefault(); setMenuOpen(true); }}><button className="projectRow" type="button" onClick={onToggle}><Folder size={15} strokeWidth={1.8} /><strong>{title}</strong><ChevronRight className={open ? "isOpen" : ""} size={14} strokeWidth={1.8} /></button><div className="projectHoverActions isActionOnly"><button type="button" aria-label="项目操作" onClick={(event) => { event.stopPropagation(); setMenuOpen((value) => !value); }}><MoreHorizontal size={14} /></button>{menuOpen ? <div className="sidebarMenu projectMenu"><button type="button" onClick={() => { onTogglePin(); setMenuOpen(false); }}>{pinned ? <PinOff size={14} /> : <Pin size={14} />}{pinned ? "取消置顶" : "置顶项目"}</button><button type="button" onClick={() => { onNewTask(); setMenuOpen(false); }}><MessageSquare size={14} />新建任务</button></div> : null}</div></div>{open ? <div className="chatTree">{children}</div> : null}</div>; }
+  return (
+    <div ref={ref} className="pinnedProjectRow">
+      <button type="button" onClick={onClick}>
+        <Folder size={15} />
+        <strong>{title}</strong>
+      </button>
+      <button type="button" aria-label="置顶项目操作" onClick={() => setOpen((value) => !value)}>
+        <MoreHorizontal size={14} />
+      </button>
+      {open ? (
+        <div className="sidebarMenu">
+          <button type="button" onClick={() => { onUnpin(); setOpen(false); }}>
+            <PinOff size={14} />
+            取消置顶
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
-function SidebarTask({ item, active = false, pinned = false, archiveable = false, onClick, onPinToggle }: { item: (typeof workspacePinCatalog)[number]; active?: boolean; pinned?: boolean; archiveable?: boolean; onClick: () => void; onPinToggle: () => void }) { const [menuOpen, setMenuOpen] = useState(false); const [archiveOpen, setArchiveOpen] = useState(false); const ref = useDismissableLayer<HTMLDivElement>(menuOpen, () => { setMenuOpen(false); setArchiveOpen(false); }); return <div ref={ref} className={`chatRow status-${item.status ?? "done"} ${active ? "active" : ""} ${pinned ? "isPinnedShortcut" : ""} ${menuOpen ? "menuOpen" : ""}`} onContextMenu={(event) => { event.preventDefault(); setMenuOpen(true); }}><button className="chatRowMain" type="button" onClick={onClick}><FileText className="sidebarIcon" size={15} strokeWidth={1.8} /><strong>{item.title}</strong><small>{item.time}</small></button><button className="chatMoreButton" type="button" aria-label={`${item.title}更多操作`} onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal size={14} /></button>{menuOpen ? <div className="sidebarMenu chatMenu"><button type="button" onClick={() => { onPinToggle(); setMenuOpen(false); }}>{pinned ? <PinOff size={14} /> : <Pin size={14} />}{pinned ? "取消置顶" : "置顶任务"}</button><button type="button" onClick={() => { onClick(); setMenuOpen(false); }}><Eye size={14} />打开任务</button>{archiveable ? <button type="button" onClick={() => setArchiveOpen((value) => !value)}><Folder size={14} />归档到项目<ChevronRight size={13} /></button> : null}{archiveable && archiveOpen ? <div className="archiveSubmenu">{workspaceProjects.map((project) => <button type="button" key={project.id} onClick={() => { setArchiveOpen(false); setMenuOpen(false); }}>{project.name}</button>)}</div> : null}</div> : null}</div>; }
+function SidebarProject({
+  title,
+  open,
+  pinned,
+  onTogglePin,
+  onNewTask,
+  onDelete,
+  onToggle,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  pinned: boolean;
+  onTogglePin: () => void;
+  onNewTask: () => void;
+  onDelete: () => void;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(menuOpen, () => {
+    setMenuOpen(false);
+    setConfirmingDelete(false);
+  });
+
+  return (
+    <div className="projectGroup">
+      <div
+        ref={ref}
+        className={`projectRowWrap ${menuOpen ? "menuOpen" : ""}`}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          setMenuOpen(true);
+        }}
+      >
+        <button className="projectRow" type="button" onClick={onToggle}>
+          <Folder size={15} strokeWidth={1.8} />
+          <strong>{title}</strong>
+          <ChevronRight className={open ? "isOpen" : ""} size={14} strokeWidth={1.8} />
+        </button>
+        <div className="projectHoverActions isActionOnly">
+          <button
+            type="button"
+            aria-label="项目操作"
+            onClick={(event) => {
+              event.stopPropagation();
+              setMenuOpen((value) => !value);
+              setConfirmingDelete(false);
+            }}
+          >
+            <MoreHorizontal size={14} />
+          </button>
+          {menuOpen ? (
+            <div className="sidebarMenu projectMenu">
+              <button type="button" onClick={() => { onTogglePin(); setMenuOpen(false); }}>
+                {pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                {pinned ? "取消置顶" : "置顶项目"}
+              </button>
+              <button type="button" onClick={() => { onNewTask(); setMenuOpen(false); }}>
+                <MessageSquare size={14} />
+                新建任务
+              </button>
+              <button className="sidebarDangerAction" type="button" onClick={() => setConfirmingDelete(true)}>
+                <Trash2 size={14} />
+                删除项目
+              </button>
+              {confirmingDelete ? (
+                <DeleteConfirmHint
+                  text="项目及其任务将从当前列表隐藏。"
+                  onCancel={() => setConfirmingDelete(false)}
+                  onConfirm={() => {
+                    onDelete();
+                    setMenuOpen(false);
+                    setConfirmingDelete(false);
+                  }}
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+      {open ? <div className="chatTree">{children}</div> : null}
+    </div>
+  );
+}
+
+function SidebarTask({
+  item,
+  active = false,
+  pinned = false,
+  archiveable = false,
+  onClick,
+  onPinToggle,
+  onDelete,
+}: {
+  item: PinItem;
+  active?: boolean;
+  pinned?: boolean;
+  archiveable?: boolean;
+  onClick: () => void;
+  onPinToggle: () => void;
+  onDelete: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(menuOpen, () => {
+    setMenuOpen(false);
+    setArchiveOpen(false);
+    setConfirmingDelete(false);
+  });
+
+  return (
+    <div
+      ref={ref}
+      className={`chatRow status-${item.status ?? "done"} ${active ? "active" : ""} ${pinned ? "isPinnedShortcut" : ""} ${menuOpen ? "menuOpen" : ""}`}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        setMenuOpen(true);
+      }}
+    >
+      <button className="chatRowMain" type="button" onClick={onClick}>
+        <FileText className="sidebarIcon" size={15} strokeWidth={1.8} />
+        <strong>{item.title}</strong>
+        <small>{item.time}</small>
+      </button>
+      <button className="chatMoreButton" type="button" aria-label={`${item.title}更多操作`} onClick={() => { setMenuOpen((value) => !value); setConfirmingDelete(false); }}>
+        <MoreHorizontal size={14} />
+      </button>
+      {menuOpen ? (
+        <div className="sidebarMenu chatMenu">
+          <button type="button" onClick={() => { onPinToggle(); setMenuOpen(false); }}>
+            {pinned ? <PinOff size={14} /> : <Pin size={14} />}
+            {pinned ? "取消置顶" : "置顶任务"}
+          </button>
+          <button type="button" onClick={() => { onClick(); setMenuOpen(false); }}>
+            <Eye size={14} />
+            打开任务
+          </button>
+          {archiveable ? (
+            <button type="button" onClick={() => setArchiveOpen((value) => !value)}>
+              <Folder size={14} />
+              归档到项目
+              <ChevronRight size={13} />
+            </button>
+          ) : null}
+          {archiveable && archiveOpen ? (
+            <div className="archiveSubmenu">
+              {workspaceProjects.map((project) => (
+                <button type="button" key={project.id} onClick={() => { setArchiveOpen(false); setMenuOpen(false); }}>
+                  {project.name}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <button className="sidebarDangerAction" type="button" onClick={() => setConfirmingDelete(true)}>
+            <Trash2 size={14} />
+            删除任务
+          </button>
+          {confirmingDelete ? (
+            <DeleteConfirmHint
+              text="任务将从当前列表隐藏。"
+              onCancel={() => setConfirmingDelete(false)}
+              onConfirm={() => {
+                onDelete();
+                setMenuOpen(false);
+                setConfirmingDelete(false);
+              }}
+            />
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DeleteConfirmHint({ text, onCancel, onConfirm }: { text: string; onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div className="sidebarDeleteConfirm" role="group" aria-label="确认删除">
+      <span>{text}</span>
+      <div className="sidebarDeleteConfirmActions">
+        <button type="button" onClick={onCancel}>取消</button>
+        <button className="danger" type="button" onClick={onConfirm}>删除</button>
+      </div>
+    </div>
+  );
+}

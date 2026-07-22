@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Folder, MessageSquare, Send } from "lucide-react";
+import { Check, ChevronDown, Folder, Plus, Send } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { projectOptions } from "../../lib/workbench/mockWorkspace";
 import type { CoworkerDefinition } from "../../modules/types";
@@ -54,7 +54,7 @@ export function NewTaskHome(props: Props) {
       {!props.conversationStarted ? <div className="newTaskWelcomePrompt"><span>{props.project ? `你想在“${props.project}”中完成什么任务？` : "描述任务，或先选择所属项目。"}</span></div> : null}
       {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard taskType={props.pendingTaskType ?? "待确认任务"} coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
       {!props.conversationStarted ? <ProjectSelector project={props.project} onChange={props.onProjectChange} /> : null}
-      <div className="newTaskComposer workbenchComposer"><textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.onSubmit(); } }} placeholder="描述你要完成的任务..." rows={2} /><button className="sendIconButton" type="button" onClick={props.onSubmit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button></div>
+      <div className="newTaskComposer workbenchComposer"><label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple /></label><textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.onSubmit(); } }} placeholder="描述你要完成的任务..." rows={1} /><button className="sendIconButton" type="button" onClick={props.onSubmit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button></div>
     </div>
   </section>;
 }
@@ -62,5 +62,5 @@ export function NewTaskHome(props: Props) {
 function ProjectSelector({ project, onChange }: { project: string | null; onChange: (project: string) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}><Folder size={15} /><span>{project ?? "选择项目"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{projectOptions.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span>{option === "临时任务" ? <MessageSquare size={15} /> : <Folder size={15} />}{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
+  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}><Folder size={15} /><span>{project ?? "选择项目"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{projectOptions.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span><Folder size={15} />{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
 }
