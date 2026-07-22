@@ -90,14 +90,17 @@ export function WorkspaceSidebar(props: Props) {
                 <span>+</span>新建任务
               </button>
               {newTaskOpen ? (
-                <div className="newChatMenu isOpen">
-                  <span className="newChatMenuLabel">挂靠到</span>
-                  {visibleProjects.map((project) => (
-                    <button type="button" key={project.id} onClick={() => startTask(project.name)}>
-                      <Folder size={16} />{project.name}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <span className="newChatHoverBridge" aria-hidden="true" />
+                  <div className="newChatMenu isOpen">
+                    <span className="newChatMenuLabel">挂靠到</span>
+                    {visibleProjects.map((project) => (
+                      <button type="button" key={project.id} onClick={() => startTask(project.name)}>
+                        <Folder size={16} />{project.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
               ) : null}
             </div>
             <button className="sidebarSearchButton" type="button" onClick={() => setSearchOpen(true)} aria-label="搜索"><Search size={17} /></button>
