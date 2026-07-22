@@ -100,13 +100,79 @@
   color: var(--ink);
 }
 
-.digitalTeamToolbar select {
+.digitalTeamDomainSelect {
+  position: relative;
+  flex: 0 0 156px;
+  z-index: 8;
+}
+
+.digitalTeamDomainSelect > button {
+  display: grid;
+  width: 100%;
   height: 44px;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #fff;
   padding: 0 12px;
   color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.digitalTeamDomainSelect > button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.digitalTeamDomainSelect.isOpen > button,
+.digitalTeamDomainSelect > button:hover {
+  border-color: rgba(41, 0, 255, 0.22);
+  box-shadow: 0 0 0 3px rgba(41, 0, 255, 0.045);
+}
+
+.digitalTeamDomainMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  width: 190px;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.09);
+}
+
+.digitalTeamDomainMenu button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  padding: 9px 10px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.digitalTeamDomainMenu button:hover,
+.digitalTeamDomainMenu button.active {
+  background: var(--surface-muted);
+}
+
+.digitalTeamDomainMenu button.active {
+  color: var(--brand);
+  font-weight: 700;
 }
 
 .digitalTeamLayout {
