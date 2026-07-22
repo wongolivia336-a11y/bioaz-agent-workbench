@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronUp, LogOut, Settings, Settings2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, ChevronUp, LogOut, Settings, Settings2 } from "lucide-react";
 import { useState } from "react";
 import BusinessPicker from "./components/BusinessPicker";
 import DmpkRuleAssistant from "./components/DmpkRuleAssistant";
@@ -40,12 +40,6 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [ruleDraft, setRuleDraft] = useState<string | null>(null);
 
-  const breadcrumb = business === "root"
-    ? "报价规则"
-    : scenario
-      ? `报价规则 / DMPK 报价 / ${scenarioLabels[scenario]} / ${tabs.find((item) => item.id === tab)?.label ?? ""}`
-      : "报价规则 / DMPK 报价";
-
   return (
     <main className="quotationManagementShell">
       <aside className="quotationManagementSidebar">
@@ -69,20 +63,20 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
         </div>
       </aside>
       <section className="quotationManagementMain">
-        <header className="quotationManagementTopbar">
-          <div className="quotationBreadcrumb">
+        <header className="quotationManagementTopbar topbar">
+          <div className="breadcrumb quotationBreadcrumb">
             {business === "root" ? (
               <strong>报价规则</strong>
             ) : (
               <>
                 <button type="button" onClick={() => { setBusiness("root"); setScenario(null); }}>报价规则</button>
-                <span>/</span>
+                <ChevronRight size={15} />
                 {scenario ? (
                   <>
                     <button type="button" onClick={() => setScenario(null)}>DMPK 报价</button>
-                    <span>/</span>
+                    <ChevronRight size={15} />
                     <button type="button" onClick={() => setScenario(null)}>{scenarioLabels[scenario]}</button>
-                    <span>/</span>
+                    <ChevronRight size={15} />
                     <strong>{tabs.find((item) => item.id === tab)?.label}</strong>
                   </>
                 ) : (
@@ -91,7 +85,7 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
               </>
             )}
           </div>
-          <span>{business === "root" ? "管理员模式" : "草稿 2"}</span>
+          <span className="quotationTopbarStatus">{business === "root" ? "管理员模式" : "草稿 2"}</span>
         </header>
         {business === "root" ? (
           <BusinessPicker onOpenDmpk={() => setBusiness("dmpk")} />
