@@ -63,7 +63,7 @@ export function NewTaskHome(props: Props) {
       {props.conversationStarted ? <CoworkerSelector coworkers={props.coworkers} activeCoworkerId={props.activeCoworkerId} onChange={props.onCoworkerChange} /> : null}
       <div className="newTaskComposer workbenchComposer">
         <label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple /></label>
-        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.onSubmit(); } }} placeholder="描述你要完成的任务..." rows={2} />
+        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.onSubmit(); } }} placeholder="描述你要完成的任务..." rows={1} />
         <button className="sendIconButton" type="button" onClick={props.onSubmit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button>
       </div>
     </div>
