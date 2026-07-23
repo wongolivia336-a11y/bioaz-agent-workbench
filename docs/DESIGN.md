@@ -258,3 +258,9 @@ Motion should feel 70% Apple smooth and 30% atypica light. It should help the us
 - Do not put every process artifact in the main conversation.
 - Do not let warning confirmation sound like scientific sign-off.
 - Do not let generated outputs appear final before review and release gates are clear.
+
+## Executable Design System
+
+The confirmed foundations are implemented in `styles/tokens.css`. Shared primitives live in `components/ui/`, and the local visual catalog is available at `/design-system`.
+
+New shared components must use semantic `--bioaz-*` tokens. Business fields and workflow stages remain owned by `modules/<module-id>/`. Migrate existing surfaces incrementally and preserve current interaction behavior during each migration.

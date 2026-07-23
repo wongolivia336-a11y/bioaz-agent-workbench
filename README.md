@@ -45,6 +45,9 @@ If a previous failed deployment configured `dist`, `out`, or another output dire
 - [docs/DESIGN.md](docs/DESIGN.md)
   Current design system and interaction rules.
 
+- [docs/design-system/README.md](docs/design-system/README.md)
+  Executable design-system foundations, component boundaries, and migration rules. Preview locally at `/design-system`.
+
 - [docs/DMPK_QUOTATION_CANONICAL_SPEC.md](docs/DMPK_QUOTATION_CANONICAL_SPEC.md)
   Canonical DMPK interaction, panel, composer, preview, and artifact specification.
 
@@ -70,6 +73,12 @@ If a previous failed deployment configured `dist`, `out`, or another output dire
 
 - `components/workbench-inspector/`
   Reusable Inspector container and public types.
+
+- `components/ui/`
+  Shared BioAZ UI primitives such as buttons and cards.
+
+- `styles/`
+  Semantic design tokens and shared component styles.
 
 - `modules/`
   Agent module registry and business-owned flows. DMPK quotation is connected and tumor report is the current integration branch.

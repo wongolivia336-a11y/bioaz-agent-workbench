@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-07-23 — BioAZ Design System Foundation
+
+- Added executable semantic tokens for brand, Agent accent, typography, spacing, radius, feedback, elevation, and motion.
+- Added shared Button, IconButton, Surface Card, and Action Card primitives.
+- Added a local `/design-system` visual catalog for product and engineering review.
+- Migrated the home Quick Start entries to the shared Action Card while preserving routing behavior.
+- Added design-system ownership and incremental migration guidance.
+
 ## 2026-07-19 — DMPK Quotation Management Prototype
 
 - Simplified the Workbench sidebar and removed default todo and temporary-task demo entries.

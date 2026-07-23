@@ -1,0 +1,75 @@
+:root {
+  --bioaz-brand-primary: #2900ff;
+  --bioaz-brand-primary-hover: #2100cc;
+  --bioaz-agent-accent: #5c60b8;
+  --bioaz-agent-accent-soft: #f3f3fb;
+  --bioaz-agent-accent-border: #dcddf2;
+  --bioaz-agent-focus-ring: rgba(92, 96, 184, 0.16);
+
+  --bioaz-text-primary: #111318;
+  --bioaz-text-secondary: #5f6875;
+  --bioaz-text-tertiary: #7c8593;
+  --bioaz-text-disabled: #9aa3af;
+
+  --bioaz-canvas: #f7f8fa;
+  --bioaz-surface: #ffffff;
+  --bioaz-surface-subtle: #fafbfc;
+  --bioaz-surface-hover: #f5f7fa;
+  --bioaz-surface-active: #eef0f3;
+  --bioaz-border: #e7eaf0;
+  --bioaz-border-strong: #d7dce5;
+
+  --bioaz-success: #60756a;
+  --bioaz-success-soft: #f4f7f5;
+  --bioaz-warning: #7b705a;
+  --bioaz-warning-soft: #f8f6f1;
+  --bioaz-danger: #876b68;
+  --bioaz-danger-soft: #f8f4f3;
+  --bioaz-info: var(--bioaz-agent-accent);
+  --bioaz-info-soft: var(--bioaz-agent-accent-soft);
+
+  --bioaz-radius-tool: 8px;
+  --bioaz-radius-control: 12px;
+  --bioaz-radius-container: 16px;
+  --bioaz-radius-full: 999px;
+
+  --bioaz-space-1: 4px;
+  --bioaz-space-2: 8px;
+  --bioaz-space-3: 12px;
+  --bioaz-space-4: 16px;
+  --bioaz-space-5: 20px;
+  --bioaz-space-6: 24px;
+  --bioaz-space-8: 32px;
+  --bioaz-space-10: 40px;
+  --bioaz-space-12: 48px;
+  --bioaz-space-16: 64px;
+
+  --bioaz-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  --bioaz-type-display-size: 32px;
+  --bioaz-type-display-line: 40px;
+  --bioaz-type-page-size: 24px;
+  --bioaz-type-page-line: 32px;
+  --bioaz-type-section-size: 18px;
+  --bioaz-type-section-line: 26px;
+  --bioaz-type-body-size: 14px;
+  --bioaz-type-body-line: 22px;
+  --bioaz-type-small-size: 13px;
+  --bioaz-type-small-line: 20px;
+  --bioaz-type-label-size: 12px;
+  --bioaz-type-label-line: 16px;
+
+  --bioaz-shadow-subtle: 0 1px 2px rgba(17, 19, 24, 0.04);
+  --bioaz-shadow-floating: 0 12px 32px rgba(17, 19, 24, 0.08);
+  --bioaz-shadow-overlay: 0 24px 80px rgba(17, 19, 24, 0.12);
+  --bioaz-shadow-action-glow:
+    0 8px 24px rgba(17, 19, 24, 0.06),
+    0 0 0 3px rgba(92, 96, 184, 0.08),
+    0 0 24px rgba(92, 96, 184, 0.1);
+
+  --bioaz-motion-fast: 120ms;
+  --bioaz-motion-standard: 160ms;
+  --bioaz-motion-spatial: 220ms;
+  --bioaz-motion-entrance: 360ms;
+  --bioaz-ease-standard: ease;
+  --bioaz-ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
+}
