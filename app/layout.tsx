@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "../styles/tokens.css";
 import "./globals.css";
 import "./iteration.css";
 import "./review.css";
@@ -11,6 +12,7 @@ import "./dmpk-adjustment-drawer.css";
 import "./quotation-dialogs.css";
 import "./dmpk-rule-assistant.css";
 import "./digital-team.css";
+import "../styles/design-system.css";
 
 export const metadata: Metadata = {
   title: "BioAZ Agent Workbench",

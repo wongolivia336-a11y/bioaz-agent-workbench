@@ -1,0 +1,358 @@
+.bioazUiButton {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--bioaz-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-control);
+  padding: 0 var(--bioaz-space-4);
+  font-family: var(--bioaz-font-sans);
+  font-size: var(--bioaz-type-body-size);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color var(--bioaz-motion-fast) var(--bioaz-ease-standard),
+    border-color var(--bioaz-motion-fast) var(--bioaz-ease-standard),
+    box-shadow var(--bioaz-motion-fast) var(--bioaz-ease-standard),
+    color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+
+.bioazUiButton:focus-visible,
+.bioazUiIconButton:focus-visible,
+.bioazUiActionCard:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
+}
+
+.bioazUiButton:disabled,
+.bioazUiIconButton:disabled,
+.bioazUiActionCard:disabled {
+  cursor: not-allowed;
+}
+
+.bioazUiButton--small {
+  height: 32px;
+  padding-inline: var(--bioaz-space-3);
+  font-size: var(--bioaz-type-small-size);
+}
+
+.bioazUiButton--default {
+  height: 40px;
+}
+
+.bioazUiButton--large {
+  height: 44px;
+  padding-inline: var(--bioaz-space-5);
+}
+
+.bioazUiButton--primary {
+  background: var(--bioaz-brand-primary);
+  color: #fff;
+}
+
+.bioazUiButton--primary:hover:not(:disabled) {
+  background: var(--bioaz-brand-primary-hover);
+}
+
+.bioazUiButton--secondary {
+  border-color: var(--bioaz-border-strong);
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-primary);
+}
+
+.bioazUiButton--secondary:hover:not(:disabled),
+.bioazUiButton--ghost:hover:not(:disabled),
+.bioazUiIconButton:hover:not(:disabled) {
+  background: var(--bioaz-surface-hover);
+}
+
+.bioazUiButton--ghost {
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+}
+
+.bioazUiButton--danger {
+  border-color: color-mix(in srgb, var(--bioaz-danger) 28%, transparent);
+  background: var(--bioaz-danger-soft);
+  color: var(--bioaz-danger);
+}
+
+.bioazUiButton:active:not(:disabled),
+.bioazUiIconButton:active:not(:disabled) {
+  background: var(--bioaz-surface-active);
+}
+
+.bioazUiButton:disabled {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-disabled);
+}
+
+.bioazUiButtonSpinner {
+  animation: bioazUiSpin 900ms linear infinite;
+}
+
+.bioazUiIconButton {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  transition:
+    background-color var(--bioaz-motion-fast) var(--bioaz-ease-standard),
+    box-shadow var(--bioaz-motion-fast) var(--bioaz-ease-standard),
+    color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+
+.bioazUiIconButton--compact {
+  width: 32px;
+  height: 32px;
+}
+
+.bioazUiIconButton--default {
+  width: 40px;
+  height: 40px;
+}
+
+.bioazUiIconButton--selected {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+.bioazUiIconButton:disabled {
+  color: var(--bioaz-text-disabled);
+}
+
+.bioazUiSurfaceCard,
+.bioazUiActionCard {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-primary);
+}
+
+.bioazUiSurfaceCard--compact,
+.bioazUiActionCard--compact {
+  padding: var(--bioaz-space-3);
+}
+
+.bioazUiSurfaceCard--default,
+.bioazUiActionCard--default {
+  padding: var(--bioaz-space-4);
+}
+
+.bioazUiSurfaceCard--spacious,
+.bioazUiActionCard--spacious {
+  padding: var(--bioaz-space-6);
+}
+
+.bioazUiActionCard {
+  display: block;
+  width: 100%;
+  text-align: left;
+  transition:
+    border-color var(--bioaz-motion-standard) var(--bioaz-ease-standard),
+    box-shadow var(--bioaz-motion-standard) var(--bioaz-ease-standard),
+    transform var(--bioaz-motion-standard) var(--bioaz-ease-standard);
+}
+
+.bioazUiActionCard:hover:not(:disabled) {
+  border-color: var(--bioaz-agent-accent-border);
+  box-shadow: var(--bioaz-shadow-action-glow);
+  transform: translateY(-1px);
+}
+
+.bioazUiActionCard:focus-visible {
+  border-color: var(--bioaz-agent-accent-border);
+  transform: none;
+}
+
+.bioazUiActionCard:active:not(:disabled) {
+  box-shadow: var(--bioaz-shadow-subtle);
+  transform: translateY(0);
+}
+
+.bioazUiActionCard:disabled {
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-disabled);
+}
+
+.taskExampleGrid .bioazUiActionCard {
+  border-radius: var(--bioaz-radius-container);
+}
+
+.taskExampleGrid .bioazUiActionCard:hover:not(:disabled) {
+  border-color: var(--bioaz-agent-accent-border);
+  box-shadow: var(--bioaz-shadow-action-glow);
+  transform: translateY(-1px);
+}
+
+.taskExampleGrid .bioazUiActionCard:focus-visible {
+  border-color: var(--bioaz-agent-accent-border);
+  box-shadow:
+    0 0 0 3px var(--bioaz-agent-focus-ring),
+    var(--bioaz-shadow-action-glow);
+  transform: none;
+}
+
+.bioazDesignSystemPage {
+  min-height: 100vh;
+  background: var(--bioaz-canvas);
+  color: var(--bioaz-text-primary);
+  font-family: var(--bioaz-font-sans);
+}
+
+.bioazDesignSystemHeader {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-4);
+  border-bottom: 1px solid var(--bioaz-border);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0 clamp(24px, 5vw, 64px);
+  backdrop-filter: blur(12px);
+}
+
+.bioazDesignSystemHeader strong {
+  font-size: var(--bioaz-type-section-size);
+  font-weight: 600;
+}
+
+.bioazDesignSystemHeader a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bioaz-space-1);
+  color: var(--bioaz-agent-accent);
+  font-size: var(--bioaz-type-small-size);
+  text-decoration: none;
+}
+
+.bioazDesignSystemMain {
+  display: grid;
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  gap: var(--bioaz-space-8);
+  padding: var(--bioaz-space-12) 0 var(--bioaz-space-16);
+}
+
+.bioazDesignSystemIntro {
+  display: grid;
+  max-width: 720px;
+  gap: var(--bioaz-space-3);
+}
+
+.bioazDesignSystemIntro h1,
+.bioazDesignSystemSection h2,
+.bioazDesignSystemSection p {
+  margin: 0;
+}
+
+.bioazDesignSystemIntro h1 {
+  font-size: var(--bioaz-type-display-size);
+  font-weight: 600;
+  line-height: var(--bioaz-type-display-line);
+}
+
+.bioazDesignSystemIntro p,
+.bioazDesignSystemSection p {
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-body-size);
+  line-height: var(--bioaz-type-body-line);
+}
+
+.bioazDesignSystemSection {
+  display: grid;
+  gap: var(--bioaz-space-4);
+}
+
+.bioazDesignSystemSection h2 {
+  font-size: var(--bioaz-type-section-size);
+  font-weight: 600;
+  line-height: var(--bioaz-type-section-line);
+}
+
+.bioazDesignSystemGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--bioaz-space-4);
+}
+
+.bioazDesignSystemRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+}
+
+.bioazTokenSwatch {
+  display: grid;
+  min-height: 112px;
+  align-content: end;
+  gap: var(--bioaz-space-1);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  padding: var(--bioaz-space-4);
+  box-shadow: var(--bioaz-shadow-subtle);
+}
+
+.bioazTokenSwatch strong,
+.bioazTokenSwatch small {
+  width: fit-content;
+  border-radius: var(--bioaz-radius-tool);
+  background: rgba(255, 255, 255, 0.88);
+  padding: 2px 6px;
+}
+
+.bioazTokenSwatch small {
+  color: var(--bioaz-text-secondary);
+}
+
+.bioazCardDemo {
+  display: grid;
+  gap: var(--bioaz-space-3);
+}
+
+.bioazCardDemo h3,
+.bioazCardDemo p {
+  margin: 0;
+}
+
+.bioazCardDemo h3 {
+  font-size: var(--bioaz-type-body-size);
+  font-weight: 600;
+}
+
+.bioazCardDemo p {
+  font-size: var(--bioaz-type-small-size);
+  line-height: var(--bioaz-type-small-line);
+}
+
+@keyframes bioazUiSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bioazUiButton,
+  .bioazUiIconButton,
+  .bioazUiActionCard {
+    transition-duration: 0.01ms;
+  }
+
+  .bioazUiActionCard:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .bioazUiButtonSpinner {
+    animation-duration: 1.8s;
+  }
+}

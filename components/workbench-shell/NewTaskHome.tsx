@@ -4,6 +4,7 @@ import { ArrowUpRight, Check, ChevronDown, CircleAlert, Folder, Plus, Send } fro
 import { type ReactNode, useState } from "react";
 import type { CoworkerDefinition } from "../../modules/types";
 import { LogoAwakening } from "../hero/LogoAwakening";
+import { ActionCard } from "../ui";
 import { DispatchConfirmCard } from "./BioAZHelper";
 import { CoworkerSelector } from "./CoworkerSelector";
 import { useDismissableLayer } from "./useDismissableLayer";
@@ -47,10 +48,10 @@ export function NewTaskHome(props: Props) {
         <h1>今天要推进哪项工作？</h1>
         <p>描述目标或从常用流程开始。任务会保留在所属项目中，过程与产物均可追溯。</p>
       </div>
-      <div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => <button type="button" data-ability={item.id} disabled={item.availability === "placeholder"} key={item.id} onClick={() => props.onQuickStart(item.id)}>
+      <div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => <ActionCard density="default" data-ability={item.id} disabled={item.availability === "placeholder"} key={item.id} onClick={() => props.onQuickStart(item.id)}>
         <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{item.availability !== "placeholder" ? <ArrowUpRight size={15} /> : null}</span>
         <span className="taskExampleCopy"><strong>{item.label}</strong><small>{item.availability === "placeholder" ? "即将接入" : "启动标准流程"}</small></span>
-      </button>)}</div>
+      </ActionCard>)}</div>
     </div> : <div className="helperConversationCanvas" aria-live="polite">
       <div className="helperConversationInner">
         {request ? <div className="helperUserMessage"><span>{request}</span></div> : null}
