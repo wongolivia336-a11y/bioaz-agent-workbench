@@ -279,19 +279,24 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) { grid-template-columns: 280px minmax(0, 1fr) 400px; }
 .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 400px; }
 .tumor-reportModuleShell .inspector.pinned {
-  position: sticky;
-  top: 58px;
+  position: relative;
+  top: 0;
   right: auto;
-  width: 100%;
-  height: calc(100dvh - 58px);
+  width: 400px;
+  height: 100dvh;
   max-height: none;
-  align-self: start;
+  align-self: stretch;
   margin: 0;
   border-width: 0 0 0 1px;
   border-radius: 0;
   box-shadow: none;
+  backdrop-filter: none;
 }
 .tumor-reportModuleShell .inspector.pinned > header { border-radius: 0; }
+.tumor-reportModuleShell .inspectorSection {
+  grid-auto-rows: max-content;
+  align-content: start;
+}
 
 /* Dialogs and inspectors should feel like tools, not floating decoration. */
 .modalBackdrop { background: rgba(22, 24, 29, .35); backdrop-filter: blur(2px); }
@@ -522,13 +527,13 @@ button { -webkit-tap-highlight-color: transparent; }
 @media (min-width: 1200px) and (max-width: 1439px) {
   .dmpkShell.dmpk-quotationModuleShell { grid-template-columns: 240px minmax(0, 1fr) 320px; }
   .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr) 320px; }
-  .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) { grid-template-columns: 240px minmax(0, 1fr) 340px; }
-  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 340px; }
+  .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) { grid-template-columns: 240px minmax(0, 1fr) 400px; }
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 400px; }
 }
 
 @media (min-width: 900px) and (max-width: 1199px) {
   .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr) minmax(300px, 32vw); }
-  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) minmax(300px, 32vw); }
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 400px; }
 }
 
 @media (max-width: 760px) {

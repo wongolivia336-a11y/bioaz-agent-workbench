@@ -1284,6 +1284,9 @@ function AgentReply({
 }) {
   return (
     <article className={`agentReply ${tone}`}>
+      <span className="agentReplyAvatar" aria-hidden="true">
+        <img src="/logo/bioaz-logo.svg" alt="" />
+      </span>
       <div className="agentReplyBubble">
         <p>
           <strong>{title}</strong> {children}{" "}

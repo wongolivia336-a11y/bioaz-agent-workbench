@@ -1355,23 +1355,28 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 .tumor-reportModuleShell .conversation .agentReply {
-  grid-template-columns: minmax(0, 740px);
+  grid-template-columns: 28px minmax(0, 740px);
   width: 100%;
   max-width: 780px;
 }
 
 .tumor-reportModuleShell .inspector.pinned {
-  position: sticky;
+  position: relative;
   z-index: 1;
-  top: 86px;
+  grid-column: 3;
+  grid-row: 1;
+  top: auto;
   right: auto;
-  width: calc(100% - 20px);
-  height: min(620px, calc(100vh - 110px));
-  max-height: min(620px, calc(100vh - 110px));
-  align-self: start;
-  margin: 0 12px 0 8px;
-  border-radius: 14px;
-  box-shadow: 0 14px 38px rgba(17, 19, 24, 0.08);
+  width: 400px;
+  height: 100vh;
+  max-height: none;
+  align-self: stretch;
+  margin: 0;
+  border-block: 0;
+  border-right: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .legacyTumorOpening {
