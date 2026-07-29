@@ -1884,10 +1884,12 @@ button { -webkit-tap-highlight-color: transparent; }
   cursor: pointer;
 }
 .topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) {
+  display: inline-flex;
   box-sizing: border-box;
-  width: 96px;
+  width: auto;
   min-height: 34px;
   height: 34px;
+  align-items: center;
   justify-content: center;
   gap: 7px;
   border-radius: var(--bioaz-radius-tool);
@@ -1895,7 +1897,17 @@ button { -webkit-tap-highlight-color: transparent; }
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  line-height: 1;
+  line-height: 34px;
+  white-space: nowrap;
+  appearance: none;
+}
+.topbarActions .topbarFileAction {
+  width: 96px;
+  min-width: 96px;
+}
+.topbarActions .topbarCreateFolderButton {
+  width: 120px;
+  min-width: 120px;
 }
 .topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) > svg {
   width: 15px;

@@ -145,7 +145,7 @@ export function FileManager({
     }));
     return (
       <section className="workbenchView knowledgeBaseView knowledgeRootView">
-        {topbarActionHost ? createPortal(<div className="projectLibraryActions"><button className="primaryButton compact" type="button" onClick={() => { setFolderProject(projects[0]?.name ?? ""); setFolderDialogOpen(true); }}><Plus size={15} />新建文件夹</button></div>, topbarActionHost) : null}
+        {topbarActionHost ? createPortal(<div className="projectLibraryActions"><button className="primaryButton compact topbarCreateFolderButton" type="button" onClick={() => { setFolderProject(projects[0]?.name ?? ""); setFolderDialogOpen(true); }}><Plus size={15} />新建文件夹</button></div>, topbarActionHost) : null}
         <div className="projectFolderStrip">
           {projectFolders.map((folder) => (
             <button type="button" key={folder.name} onClick={() => openProject(folder.name)}>
@@ -172,8 +172,8 @@ export function FileManager({
       <input className="visuallyHidden" id="project-file-upload" type="file" multiple onChange={upload} />
       {topbarActionHost ? createPortal(
         <div className="projectLibraryActions">
-          <label className="primaryButton compact" htmlFor="project-file-upload"><Upload size={15} />上传文件</label>
-          <button className={`libraryTrashButton ${trashFiles.length ? "hasItems" : ""}`} type="button" onClick={() => onViewChange("trash")}><Trash2 size={15} />回收站{trashFiles.length ? ` · ${trashFiles.length}` : ""}</button>
+          <label className="primaryButton compact topbarFileAction" htmlFor="project-file-upload"><Upload size={15} />上传文件</label>
+          <button className={`libraryTrashButton topbarFileAction ${trashFiles.length ? "hasItems" : ""}`} type="button" onClick={() => onViewChange("trash")}><Trash2 size={15} />回收站{trashFiles.length ? ` · ${trashFiles.length}` : ""}</button>
         </div>,
         topbarActionHost,
       ) : null}
