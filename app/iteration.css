@@ -1311,14 +1311,6 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .secondaryInspectorSlot { position: relative; min-height: 0; }
 .secondaryInspectorSlot .workbenchInspector.isPinned { height: 100%; }
 
-.dmpkInspectorRail .secondaryInspectorSlot .workbenchInspector:not(.isPinned) {
-  top: var(--dmpk-secondary-top, 142px);
-  right: 14px;
-  width: 372px;
-  max-height: calc(100vh - var(--dmpk-secondary-top, 142px) - 24px);
-  border-radius: 14px;
-}
-
 .dmpkInspectorRail:not(.hasPinnedInspector) .secondaryInspectorSlot {
   min-height: 0;
 }

@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { ChevronDown, ChevronRight, FileSpreadsheet, SlidersHorizontal, WandSparkles } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { ChevronDown, ChevronRight, PanelRight, SlidersHorizontal, WandSparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { AgentModuleSessionProps } from "../types";
@@ -40,7 +40,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [previewOpen, setPreviewOpen] = useState(false);
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [inspectorPinned, setInspectorPinned] = useState(false);
+  const [suppressInspectorHover, setSuppressInspectorHover] = useState(false);
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
   const [parametersExpanded, setParametersExpanded] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
@@ -48,8 +48,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [editProposal, setEditProposal] = useState<DmpkEditProposal | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
-  const [secondaryInspectorTop, setSecondaryInspectorTop] = useState(142);
-  const parameterCardRef = useRef<HTMLElement>(null);
 
   const missingFields = useMemo(() => fields.filter((field) => field.required && !field.value), [fields]);
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
@@ -60,7 +58,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const identifiedAssayType = fields.find((field) => field.id === "assayType")?.value ?? "";
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
   const activeCoworker = businessCoworkers.find((coworker) => coworker.id === activeCoworkerId) ?? businessCoworkers[0];
-  const ActiveCoworkerIcon = activeCoworker?.icon ?? FileSpreadsheet;
 
   useEffect(() => {
     onSessionSnapshotChange?.({
@@ -105,24 +102,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   useEffect(() => {
     if (stage === "generating" || stage === "generated") setParametersExpanded(false);
   }, [stage]);
-
-  useEffect(() => {
-    const parameterCard = parameterCardRef.current;
-    if (!parameterCard) return;
-
-    const updateInspectorTop = () => {
-      setSecondaryInspectorTop(Math.ceil(parameterCard.getBoundingClientRect().bottom + 12));
-    };
-    updateInspectorTop();
-
-    const observer = new ResizeObserver(updateInspectorTop);
-    observer.observe(parameterCard);
-    window.addEventListener("resize", updateInspectorTop);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateInspectorTop);
-    };
-  }, []);
 
   const addDraft = (field: DmpkField, value: string) => {
     setDraftTabs((items) => [...items.filter((item) => item.fieldId !== field.id), { fieldId: field.id, label: field.label, value }]);
@@ -256,16 +235,29 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   return (
     <>
       <section className="dmpkWorkspace">
-        <header className="topbar"><div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div></header>
-        <header className="agentHeader"><div className="agentTitle"><span className="agentIcon pending"><ActiveCoworkerIcon size={18} /></span><span>{activeCoworker?.name ?? "DMPK报价同事"}</span></div></header>
+        <header className="topbar">
+          <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
+          <button
+            className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
+            type="button"
+            aria-label={inspectorOpen ? "关闭详情面板" : "打开详情面板"}
+            aria-pressed={inspectorOpen}
+            onClick={() => {
+              if (inspectorOpen) setSuppressInspectorHover(true);
+              setInspectorOpen((current) => !current);
+            }}
+            onMouseLeave={() => setSuppressInspectorHover(false)}
+          >
+            <PanelRight size={17} />
+          </button>
+        </header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
       <aside
-        className={`dmpkPanel dmpkInspectorRail ${inspectorPinned ? "hasPinnedInspector" : ""}`}
-        style={{ "--dmpk-secondary-top": `${secondaryInspectorTop}px` } as CSSProperties}
+        className={`dmpkPanel dmpkInspectorRail ${inspectorOpen ? "isOpen" : ""}`}
       >
-        <section ref={parameterCardRef} className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
+        <section className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
           <div className="persistentParameterHeader">
           <button className="persistentParameterToggle" type="button" aria-expanded={parametersExpanded} disabled={!identifiedAssayType} onClick={() => setParametersExpanded((current) => !current)}>
             <span><SlidersHorizontal size={16} /><strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong></span>
@@ -278,7 +270,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           {parametersExpanded ? <div className="persistentParameterBody">{parameterPanel?.content}</div> : null}
         </section>
         <div className="secondaryInspectorSlot">
-          <WorkbenchInspector panels={secondaryInspectorPanels} activePanelId={inspectorPanelId} open={inspectorOpen} pinned={inspectorPinned} onOpenChange={setInspectorOpen} onPinnedChange={setInspectorPinned} onPanelChange={(panelId) => setInspectorPanelId(panelId as DmpkInspectorPanelId)} />
+          <WorkbenchInspector
+            panels={secondaryInspectorPanels}
+            activePanelId={inspectorPanelId}
+            open={inspectorOpen}
+            pinned={false}
+            showPinControl={false}
+            hoverActivation={false}
+            inline
+            onOpenChange={(open) => {
+              if (!open) setSuppressInspectorHover(true);
+              setInspectorOpen(open);
+            }}
+            onPinnedChange={() => undefined}
+            onPanelChange={(panelId) => setInspectorPanelId(panelId as DmpkInspectorPanelId)}
+          />
         </div>
       </aside>
       {previewOpen ? <DmpkQuotationPreviewModal fields={fields} onClose={() => setPreviewOpen(false)} /> : null}

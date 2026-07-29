@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-07-29 — Tumor Report UI Polish, Batch 1
+
+- Replaced the tumor-report Inspector hover hot zone with an explicit header toggle.
+- Mirrored the shared Sidebar collapse icon so its direction matches the resulting layout.
+- Added a restrained validation Logo treatment with stable geometry, subtle breathing, and an internal stage glint.
+- Moved tumor-report process emphasis from saturated brand blue to the Design System Agent accent.
+- Removed persistent Logo avatars from completed Agent replies.
+- Reworked user-originated messages as neutral rounded rectangles without chat tails.
+- Added the shared grey application base and inset white workspace surface.
+- Removed the tumor-report Inspector Pin mode; the header toggle now opens a
+  real right column on wide screens and a right Drawer on narrow screens.
+- Changed tumor-report workflow CTAs to neutral black and reserved the
+  low-saturation Agent accent for Chatflow process emphasis.
+- Replaced hover-driven confirmation-card stacking with a scroll-aware Gate,
+  dual bottom thresholds, manual header control, and an internally scrolling
+  fixed-height warning list.
+- Increased the validation Logo light-sweep visibility while preserving the
+  original Logo geometry.
+- Added explicit brand-blue hover and active states to the Inspector toggle.
+- Replaced the obsolete Clinical Canvas v0.2 design brief with the current Workbench UI/UX source of truth.
+
 ## 2026-07-23 — BioAZ Design System Foundation
 
 - Added executable semantic tokens for brand, Agent accent, typography, spacing, radius, feedback, elevation, and motion.
