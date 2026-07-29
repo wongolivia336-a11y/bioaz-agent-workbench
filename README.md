@@ -43,10 +43,9 @@ If a previous failed deployment configured `dist`, `out`, or another output dire
   Project-specific rules for Codex/agent handoff.
 
 - [docs/DESIGN.md](docs/DESIGN.md)
-  Current design system and interaction rules.
-
-- [docs/design-system/README.md](docs/design-system/README.md)
-  Executable design-system foundations, component boundaries, and migration rules. Preview locally at `/design-system`.
+  The single design source of truth: foundations, Shell, components,
+  interactions, ownership boundaries, and migration rules. Preview executable
+  foundations locally at `/design-system`.
 
 - [docs/DMPK_QUOTATION_CANONICAL_SPEC.md](docs/DMPK_QUOTATION_CANONICAL_SPEC.md)
   Canonical DMPK interaction, panel, composer, preview, and artifact specification.

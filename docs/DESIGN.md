@@ -20,7 +20,11 @@ The implementation is the primary reference:
 - `styles/design-system.css`: shared component behavior
 - `components/ui/`: reusable UI primitives
 - `/design-system`: local component catalog
-- `docs/design-system/README.md`: component boundaries and migration rules
+
+This is the only design specification document. Do not create separate token,
+component-guideline, module-design, or design-system README files. When a
+shared rule changes, update the executable foundations first and then update
+this document.
 
 Confirmed visual foundations:
 
@@ -92,20 +96,21 @@ There is no large upload card or drag-and-drop altar.
 
 - Warning and review confirmation remain a distinct pending-operation Gate
   above the Composer, not part of message history.
-- The Gate first appears expanded.
-- Limit its expanded height; keep its header and actions stable while the item
-  list scrolls internally.
-- When the user scrolls away from the conversation bottom, collapse it smoothly
-  into a compact summary bar.
-- Expand it at 48px or less from the bottom and collapse it at 120px or more;
-  keep the current state between those thresholds to prevent flicker.
-- Manual collapse takes precedence until the user expands it or a new Gate
-  appears.
-- Pause automatic collapse while the Gate has focus, is hovered, or is actively
-  processing confirmation.
+- The Gate first appears collapsed and exposes its title, completion count, and
+  manual expand control.
+- Expanding the Gate should show all three standard confirmation items at
+  desktop height without an internal scrollbar. Use internal scrolling only
+  when the viewport cannot fit the content.
+- Use approximately 112px per confirmation item so role, title, evidence, and
+  impact do not overlap or compete for the same line.
+- Do not animate the container by squeezing, stretching, or sliding its
+  children. Geometry may switch directly; use only a restrained content
+  opacity transition of approximately 160ms.
+- Returning to the conversation bottom does not override the default collapsed
+  state. The user expands the Gate deliberately when ready to process it.
+- Pause state changes while the Gate has keyboard focus or is actively
+  processing confirmation. Hover alone must not lock the Gate.
 - Keep a manual expand/collapse icon in the Gate header.
-- At 1440x900, cap the expanded Gate at approximately 420px; keep Header and
-  actions stable while the warning list scrolls internally.
 - Use an approximately 56px summary bar when collapsed.
 - Container hover must not scale, lift, or shift surrounding layout.
 
@@ -136,14 +141,32 @@ There is no large upload card or drag-and-drop altar.
 
 - The entire product uses `#F7F8FA` as a shared grey base.
 - Sidebar remains directly on the grey base rather than becoming a card.
-- Home, Digital Team, Data Hub, DMPK, and tumor-report content use one large
-  white workspace surface.
+- Home, BioAZ Helper, Digital Team, Data Hub, DMPK, and tumor-report content
+  use one shared `WorkbenchShell` and one large white workspace surface.
 - The white workspace keeps 12px from the top, right, and bottom viewport edges,
   with an 8px grey gutter beside Sidebar.
 - The workspace uses the 16px container radius, a light border, and only subtle
   elevation.
+- The workspace Header and content area are both pure white. Do not add tinted
+  header strips, gradients, decorative blocks, or duplicate inner columns.
+- `WorkspaceHeader` owns breadcrumbs and a right-aligned action slot. Modules
+  provide controls through the slot without creating another header row.
+- Agent identity belongs in the opening message or Composer selector. Do not
+  create a full-width `某某数字同事` row beneath the workspace Header.
 - When Inspector opens, it divides the same white workspace instead of adding a
   separate floating card.
+
+### Shared Panel Trigger
+
+- Tumor report and DMPK use the same `PanelRight` trigger in the
+  `WorkspaceHeader` action slot.
+- Closed state is neutral. Hover uses a light brand background and brand icon.
+  Open state uses a brand background and white icon.
+- Closing from inside the Panel returns the trigger directly to neutral. If the
+  pointer lands over the revealed trigger, Hover remains suppressed until the
+  pointer exits and re-enters.
+- The trigger opens a real right workspace column at desktop width and a Drawer
+  at narrower widths. There is no Pin mode.
 
 ### Surface and Motion
 
@@ -173,8 +196,13 @@ There is no large upload card or drag-and-drop altar.
 ## Ownership Boundaries
 
 - `components/workbench-shell/WorkbenchShell.tsx` owns product composition.
+- Shared Shell components know workspace structure, not business fields.
 - `components/workbench-inspector/` owns shared Inspector mechanics.
-- `modules/tumor-report/` owns tumor-report business flow and rendering.
+- Modules own their workflow, messages, validation, artifacts, and Inspector
+  content.
 - `lib/workbench/` owns shared workspace mock data and types.
+- Registry files contain discovery metadata, not UI state.
 - Do not move business fields or stage checks into Shell components.
 - Migrate one real surface at a time and avoid generic global CSS class names.
+- Primary navigation uses click. Hover may reveal a shortcut, but it must never
+  be the only way to reach an operation.

@@ -89,8 +89,6 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const composerInputRef = useRef<HTMLInputElement>(null);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
   const chatBottomDistanceRef = useRef(0);
-  const [chatBottomDistance, setChatBottomDistance] = useState(0);
-  const [chatScrollIntent, setChatScrollIntent] = useState({ direction: "down" as "up" | "down", sequence: 0 });
 
   const protocolCount = files.filter((file) => file.kind === "protocol").length;
   const dataCount = files.filter((file) => file.kind === "data").length;
@@ -245,7 +243,6 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     const updateBottomDistance = () => {
       const distance = Math.max(0, scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop);
       chatBottomDistanceRef.current = distance;
-      setChatBottomDistance(distance);
     };
 
     updateBottomDistance();
@@ -407,16 +404,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
 
   return (
     <>
-      <section
-        className="workspace legacyTumorWorkspace"
-        onWheelCapture={(event) => {
-          if (Math.abs(event.deltaY) < 2) return;
-          setChatScrollIntent((current) => ({
-            direction: event.deltaY < 0 ? "up" : "down",
-            sequence: current.sequence + 1,
-          }));
-        }}
-      >
+      <section className="workspace legacyTumorWorkspace">
         <header className="topbar">
           <div className="breadcrumb">
             <span>{projectName}</span>
@@ -497,8 +485,6 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
               setInspectorOpen(true);
             }}
             onPreviewReview={() => openWorkflowPreview("review", "issues")}
-            chatBottomDistance={chatBottomDistance}
-            chatScrollIntent={chatScrollIntent}
           />
         </div>
 
@@ -1515,8 +1501,6 @@ function Composer({
   inputRef,
   onOpenInspector,
   onPreviewReview,
-  chatBottomDistance,
-  chatScrollIntent,
 }: {
   stage: Stage;
   files: UploadedFile[];
@@ -1542,45 +1526,17 @@ function Composer({
   inputRef: RefObject<HTMLInputElement>;
   onOpenInspector: (topic: InspectorTopic) => void;
   onPreviewReview: () => void;
-  chatBottomDistance: number;
-  chatScrollIntent: { direction: "up" | "down"; sequence: number };
 }) {
   const pendingReviews = reviews.filter((item) => item.status === "pending").slice(0, 3);
   const [expandedDecision, setExpandedDecision] = useState<"warning" | "review" | null>(null);
-  const [manualDecisionState, setManualDecisionState] = useState<"expanded" | "collapsed" | null>(null);
-  const [decisionInteractionActive, setDecisionInteractionActive] = useState(false);
   const activeDecision = stage === "warning" ? "warning" : stage === "review" && pendingReviews.length > 0 ? "review" : null;
 
   useEffect(() => {
-    setExpandedDecision(activeDecision);
-    setManualDecisionState(null);
+    setExpandedDecision(null);
   }, [activeDecision]);
 
-  useEffect(() => {
-    if (!activeDecision || decisionInteractionActive || manualDecisionState) return;
-    if (chatBottomDistance <= 48) {
-      setExpandedDecision(activeDecision);
-    } else if (chatBottomDistance >= 120) {
-      setExpandedDecision(null);
-    }
-  }, [activeDecision, chatBottomDistance, decisionInteractionActive, manualDecisionState]);
-
-  useEffect(() => {
-    if (!activeDecision || decisionInteractionActive || chatScrollIntent.sequence === 0) return;
-    setManualDecisionState(null);
-    if (chatScrollIntent.direction === "up") {
-      setExpandedDecision(null);
-    } else if (chatBottomDistance <= 48) {
-      setExpandedDecision(activeDecision);
-    }
-  }, [activeDecision, chatBottomDistance, chatScrollIntent, decisionInteractionActive]);
-
   const toggleDecision = (decision: "warning" | "review") => {
-    setExpandedDecision((current) => {
-      const nextExpanded = current !== decision;
-      setManualDecisionState(nextExpanded ? "expanded" : "collapsed");
-      return nextExpanded ? decision : null;
-    });
+    setExpandedDecision((current) => current === decision ? null : decision);
   };
 
   return (
@@ -1594,7 +1550,6 @@ function Composer({
           onPreview={onPreview}
           expanded={expandedDecision === "warning"}
           onToggleExpanded={() => toggleDecision("warning")}
-          onInteractionChange={setDecisionInteractionActive}
         />
       ) : null}
 
@@ -1614,7 +1569,6 @@ function Composer({
           onPreviewEvidence={onPreviewReview}
           expanded={expandedDecision === "review"}
           onToggleExpanded={() => toggleDecision("review")}
-          onInteractionChange={setDecisionInteractionActive}
         />
       ) : null}
 
@@ -1835,7 +1789,6 @@ function WarningDecisionPanel({
   onPreview,
   expanded,
   onToggleExpanded,
-  onInteractionChange,
 }: {
   warnings: WarningItem[];
   onAcceptAll: () => void;
@@ -1844,19 +1797,12 @@ function WarningDecisionPanel({
   onPreview: () => void;
   expanded: boolean;
   onToggleExpanded: () => void;
-  onInteractionChange: (active: boolean) => void;
 }) {
   const acceptedCount = warnings.filter((item) => item.accepted).length;
   const pendingWarnings = warnings.filter((item) => !item.accepted);
 
   return (
-    <article
-      className={`warningDecision stackDecision gateDecision ${expanded ? "isExpanded" : "isCollapsed"}`}
-      onFocus={() => onInteractionChange(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) onInteractionChange(false);
-      }}
-    >
+    <article className={`warningDecision stackDecision gateDecision ${expanded ? "isExpanded" : "isCollapsed"}`}>
       <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>需要确认的 warning</span>
@@ -1935,7 +1881,6 @@ function ReviewDecisionPanel({
   onPreviewEvidence,
   expanded,
   onToggleExpanded,
-  onInteractionChange,
 }: {
   reviews: ReviewItem[];
   onConfirmOne: (id: string) => void;
@@ -1944,19 +1889,12 @@ function ReviewDecisionPanel({
   onPreviewEvidence: () => void;
   expanded: boolean;
   onToggleExpanded: () => void;
-  onInteractionChange: (active: boolean) => void;
 }) {
   const confirmedCount = reviews.filter((item) => item.status === "confirmed").length;
   const pendingReviews = reviews.filter((item) => item.status === "pending").slice(0, 3);
 
   return (
-    <article
-      className={`warningDecision reviewDecision stackDecision gateDecision ${expanded ? "isExpanded" : "isCollapsed"}`}
-      onFocus={() => onInteractionChange(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) onInteractionChange(false);
-      }}
-    >
+    <article className={`warningDecision reviewDecision stackDecision gateDecision ${expanded ? "isExpanded" : "isCollapsed"}`}>
       <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>专家建议确认</span>

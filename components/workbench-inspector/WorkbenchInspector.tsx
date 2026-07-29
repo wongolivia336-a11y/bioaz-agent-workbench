@@ -16,6 +16,7 @@ import {
   Pin,
   PinOff,
   TriangleAlert,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -72,6 +73,9 @@ type WorkbenchInspectorProps = {
   onOpenChange: (open: boolean) => void;
   onPinnedChange: (pinned: boolean) => void;
   onPanelChange: (panelId: string) => void;
+  showPinControl?: boolean;
+  hoverActivation?: boolean;
+  inline?: boolean;
 };
 
 export function WorkbenchInspector({
@@ -82,6 +86,9 @@ export function WorkbenchInspector({
   onOpenChange,
   onPinnedChange,
   onPanelChange,
+  showPinControl = true,
+  hoverActivation = true,
+  inline = false,
 }: WorkbenchInspectorProps) {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
@@ -172,7 +179,7 @@ export function WorkbenchInspector({
 
   return (
     <>
-      {!pinned ? (
+      {!pinned && hoverActivation ? (
         <div
           className="workbenchInspectorHotZone"
           aria-hidden="true"
@@ -182,11 +189,11 @@ export function WorkbenchInspector({
       ) : null}
       <aside
         ref={panelRef}
-        className={`workbenchInspector ${visible ? "isOpen" : ""} ${pinned ? "isPinned" : ""}`}
+        className={`workbenchInspector ${visible ? "isOpen" : ""} ${pinned ? "isPinned" : ""} ${inline ? "isInline" : ""}`}
         aria-hidden={!visible}
         aria-label="工作台详情面板"
-        onMouseEnter={openInspector}
-        onMouseLeave={scheduleClose}
+        onMouseEnter={hoverActivation ? openInspector : undefined}
+        onMouseLeave={hoverActivation ? scheduleClose : undefined}
       >
         <header className="workbenchInspectorHeader">
           <div className="workbenchPanelSelector" ref={selectorRef}>
@@ -229,16 +236,22 @@ export function WorkbenchInspector({
             ) : null}
           </div>
           <div className="workbenchInspectorControls">
-            <button
-              type="button"
-              aria-label={pinned ? "取消固定详情面板" : "固定详情面板"}
-              onClick={() => {
-                onPinnedChange(!pinned);
-                onOpenChange(true);
-              }}
-            >
-              {pinned ? <PinOff size={16} /> : <Pin size={16} />}
-            </button>
+            {showPinControl ? (
+              <button
+                type="button"
+                aria-label={pinned ? "取消固定详情面板" : "固定详情面板"}
+                onClick={() => {
+                  onPinnedChange(!pinned);
+                  onOpenChange(true);
+                }}
+              >
+                {pinned ? <PinOff size={16} /> : <Pin size={16} />}
+              </button>
+            ) : (
+              <button type="button" aria-label="关闭详情面板" onClick={() => onOpenChange(false)}>
+                <X size={16} />
+              </button>
+            )}
           </div>
         </header>
         <div className="workbenchInspectorBody">
