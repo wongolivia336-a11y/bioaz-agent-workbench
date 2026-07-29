@@ -1901,6 +1901,16 @@ button { -webkit-tap-highlight-color: transparent; }
   flex: none;
   stroke-width: 1.8;
 }
+.topbarActions .primaryButton.compact,
+.topbarActions .primaryButton.compact:hover {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.topbarActions .primaryButton.compact:hover {
+  border-color: #050608;
+  background: #050608;
+}
 .topbarActions .secondaryButton.compact,
 .topbarActions .libraryTrashButton {
   border: 1px solid var(--bioaz-border);
@@ -2433,9 +2443,10 @@ button { -webkit-tap-highlight-color: transparent; }
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
+  animation: libraryComposerSheen 2400ms var(--bioaz-ease-standard) 1;
 }
 .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame:hover::after {
-  animation: libraryComposerSheen 2200ms var(--bioaz-ease-standard) 1;
+  animation: libraryComposerHoverSheen 2400ms var(--bioaz-ease-standard) 1;
 }
 .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before {
   animation: none;
@@ -2478,6 +2489,33 @@ button { -webkit-tap-highlight-color: transparent; }
     background-position: -100% 0;
     opacity: 0;
   }
+}
+@keyframes libraryComposerHoverSheen {
+  0% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.82;
+  }
+  82% {
+    background-position: -100% 0;
+    opacity: 0.72;
+  }
+  100% {
+    background-position: -100% 0;
+    opacity: 0;
+  }
+}
+.knowledgePreviewDialog .primaryButton,
+.knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
 }
 
 @keyframes libraryPanelIn {

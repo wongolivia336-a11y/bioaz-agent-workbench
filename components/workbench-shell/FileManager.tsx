@@ -145,7 +145,7 @@ export function FileManager({
     }));
     return (
       <section className="workbenchView knowledgeBaseView knowledgeRootView">
-        {topbarActionHost ? createPortal(<div className="projectLibraryActions"><button className="secondaryButton compact" type="button" onClick={() => { setFolderProject(projects[0]?.name ?? ""); setFolderDialogOpen(true); }}><Plus size={15} />新建文件夹</button></div>, topbarActionHost) : null}
+        {topbarActionHost ? createPortal(<div className="projectLibraryActions"><button className="primaryButton compact" type="button" onClick={() => { setFolderProject(projects[0]?.name ?? ""); setFolderDialogOpen(true); }}><Plus size={15} />新建文件夹</button></div>, topbarActionHost) : null}
         <div className="projectFolderStrip">
           {projectFolders.map((folder) => (
             <button type="button" key={folder.name} onClick={() => openProject(folder.name)}>
