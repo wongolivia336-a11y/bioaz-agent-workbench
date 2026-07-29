@@ -3,7 +3,9 @@
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
+  ChevronDown,
   ChevronRight,
+  ChevronUp,
   Circle,
   Edit3,
   Download,
@@ -70,8 +72,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   });
   const [warnings, setWarnings] = useState<WarningItem[]>(initialWarnings);
   const [reviews, setReviews] = useState<ReviewItem[]>(initialReviews);
-  const [inspectorPinned, setInspectorPinned] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [suppressInspectorHover, setSuppressInspectorHover] = useState(false);
   const [inspectorTopic, setInspectorTopic] = useState<InspectorTopic>("process");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewKind, setPreviewKind] = useState<PreviewKind>("validation");
@@ -86,6 +88,9 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const fileInputRef = useRef<HTMLInputElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
+  const chatBottomDistanceRef = useRef(0);
+  const [chatBottomDistance, setChatBottomDistance] = useState(0);
+  const [chatScrollIntent, setChatScrollIntent] = useState({ direction: "down" as "up" | "down", sequence: 0 });
 
   const protocolCount = files.filter((file) => file.kind === "protocol").length;
   const dataCount = files.filter((file) => file.kind === "data").length;
@@ -234,6 +239,28 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   }, [files.length, initialRequest, onSessionSnapshotChange, reviews, stage, userEvents, warnings]);
 
   useEffect(() => {
+    const scroller = chatScrollerRef.current;
+    if (!scroller) return;
+
+    const updateBottomDistance = () => {
+      const distance = Math.max(0, scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop);
+      chatBottomDistanceRef.current = distance;
+      setChatBottomDistance(distance);
+    };
+
+    updateBottomDistance();
+    scroller.addEventListener("scroll", updateBottomDistance, { passive: true });
+    const resizeObserver = new ResizeObserver(updateBottomDistance);
+    resizeObserver.observe(scroller);
+
+    return () => {
+      scroller.removeEventListener("scroll", updateBottomDistance);
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (chatBottomDistanceRef.current >= 120) return;
     const timer = window.setTimeout(() => {
       chatScrollerRef.current?.scrollTo({
         top: chatScrollerRef.current.scrollHeight,
@@ -380,22 +407,35 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
 
   return (
     <>
-      <section className="workspace legacyTumorWorkspace">
+      <section
+        className="workspace legacyTumorWorkspace"
+        onWheelCapture={(event) => {
+          if (Math.abs(event.deltaY) < 2) return;
+          setChatScrollIntent((current) => ({
+            direction: event.deltaY < 0 ? "up" : "down",
+            sequence: current.sequence + 1,
+          }));
+        }}
+      >
         <header className="topbar">
           <div className="breadcrumb">
             <span>{projectName}</span>
             <ChevronRight size={15} />
             <strong>{taskTitle}</strong>
           </div>
-        </header>
-
-        <header className="agentHeader">
-          <div className="agentTitle">
-            <span className="agentIcon pending">
-              <FileCheck size={18} />
-            </span>
-            <span>肿瘤报告数字同事</span>
-          </div>
+          <button
+            className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
+            type="button"
+            aria-label={inspectorOpen ? "关闭详情面板" : "打开详情面板"}
+            aria-pressed={inspectorOpen}
+            onClick={() => {
+              if (inspectorOpen) setSuppressInspectorHover(true);
+              setInspectorOpen((current) => !current);
+            }}
+            onMouseLeave={() => setSuppressInspectorHover(false)}
+          >
+            <PanelRight size={17} />
+          </button>
         </header>
 
         <div className="chatScroller" ref={chatScrollerRef}>
@@ -457,6 +497,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
               setInspectorOpen(true);
             }}
             onPreviewReview={() => openWorkflowPreview("review", "issues")}
+            chatBottomDistance={chatBottomDistance}
+            chatScrollIntent={chatScrollIntent}
           />
         </div>
 
@@ -470,26 +512,19 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
         />
       </section>
 
-      <div
-        className="inspectorHotZone"
-        onMouseEnter={() => setInspectorOpen(true)}
-        aria-hidden="true"
-      />
       <HoverInspector
-        open={inspectorOpen || inspectorPinned}
-        pinned={inspectorPinned}
+        open={inspectorOpen}
         topic={inspectorTopic}
         stage={stage}
         validationSteps={validationSteps}
         generationSteps={generationSteps}
         warnings={warnings}
         reviews={reviews}
-        onMouseEnter={() => setInspectorOpen(true)}
-        onMouseLeave={() => {
-          if (!inspectorPinned) setInspectorOpen(false);
-        }}
         onSelectTopic={setInspectorTopic}
-        onPin={() => setInspectorPinned((current) => !current)}
+        onClose={() => {
+          setSuppressInspectorHover(true);
+          setInspectorOpen(false);
+        }}
         onPreviewArtifact={openArtifactPreview}
         onPreviewWorkflow={openWorkflowPreview}
       />
@@ -1284,9 +1319,6 @@ function AgentReply({
 }) {
   return (
     <article className={`agentReply ${tone}`}>
-      <span className="agentReplyAvatar" aria-hidden="true">
-        <img src="/logo/bioaz-logo.svg" alt="" />
-      </span>
       <div className="agentReplyBubble">
         <p>
           <strong>{title}</strong> {children}{" "}
@@ -1384,6 +1416,7 @@ function ThinkingCard({
 }) {
   const visibleSteps = running ? steps.filter((step) => step.status !== "pending") : steps;
   const headerTitle = running || expanded ? title : collapsedLabel;
+  const activeStepIndex = Math.max(0, steps.findIndex((step) => step.status === "active"));
 
   return (
     <article className={`agentRun ${running ? "running" : "settled"} ${!expanded ? "collapsed" : ""}`}>
@@ -1392,9 +1425,12 @@ function ThinkingCard({
         type="button"
         onClick={running ? onInspector : onToggle}
       >
-        <span className={`motionLogo ${running ? "running" : ""}`}>
+        <span
+          className={`motionLogo ${running ? "running" : ""}`}
+          data-step={running ? activeStepIndex : undefined}
+        >
           <img src="/logo/bioaz-logo.svg" alt="" />
-          <span />
+          <span key={running ? activeStepIndex : "settled"} />
         </span>
         <strong>{headerTitle}</strong>
         <small>{elapsed}</small>
@@ -1479,6 +1515,8 @@ function Composer({
   inputRef,
   onOpenInspector,
   onPreviewReview,
+  chatBottomDistance,
+  chatScrollIntent,
 }: {
   stage: Stage;
   files: UploadedFile[];
@@ -1504,9 +1542,46 @@ function Composer({
   inputRef: RefObject<HTMLInputElement>;
   onOpenInspector: (topic: InspectorTopic) => void;
   onPreviewReview: () => void;
+  chatBottomDistance: number;
+  chatScrollIntent: { direction: "up" | "down"; sequence: number };
 }) {
   const pendingReviews = reviews.filter((item) => item.status === "pending").slice(0, 3);
   const [expandedDecision, setExpandedDecision] = useState<"warning" | "review" | null>(null);
+  const [manualDecisionState, setManualDecisionState] = useState<"expanded" | "collapsed" | null>(null);
+  const [decisionInteractionActive, setDecisionInteractionActive] = useState(false);
+  const activeDecision = stage === "warning" ? "warning" : stage === "review" && pendingReviews.length > 0 ? "review" : null;
+
+  useEffect(() => {
+    setExpandedDecision(activeDecision);
+    setManualDecisionState(null);
+  }, [activeDecision]);
+
+  useEffect(() => {
+    if (!activeDecision || decisionInteractionActive || manualDecisionState) return;
+    if (chatBottomDistance <= 48) {
+      setExpandedDecision(activeDecision);
+    } else if (chatBottomDistance >= 120) {
+      setExpandedDecision(null);
+    }
+  }, [activeDecision, chatBottomDistance, decisionInteractionActive, manualDecisionState]);
+
+  useEffect(() => {
+    if (!activeDecision || decisionInteractionActive || chatScrollIntent.sequence === 0) return;
+    setManualDecisionState(null);
+    if (chatScrollIntent.direction === "up") {
+      setExpandedDecision(null);
+    } else if (chatBottomDistance <= 48) {
+      setExpandedDecision(activeDecision);
+    }
+  }, [activeDecision, chatBottomDistance, chatScrollIntent, decisionInteractionActive]);
+
+  const toggleDecision = (decision: "warning" | "review") => {
+    setExpandedDecision((current) => {
+      const nextExpanded = current !== decision;
+      setManualDecisionState(nextExpanded ? "expanded" : "collapsed");
+      return nextExpanded ? decision : null;
+    });
+  };
 
   return (
     <footer className="composerShell">
@@ -1518,9 +1593,8 @@ function Composer({
           onReject={onRejectWarnings}
           onPreview={onPreview}
           expanded={expandedDecision === "warning"}
-          onToggleExpanded={() =>
-            setExpandedDecision((current) => (current === "warning" ? null : "warning"))
-          }
+          onToggleExpanded={() => toggleDecision("warning")}
+          onInteractionChange={setDecisionInteractionActive}
         />
       ) : null}
 
@@ -1539,9 +1613,8 @@ function Composer({
           onAskFollowup={onAskFollowup}
           onPreviewEvidence={onPreviewReview}
           expanded={expandedDecision === "review"}
-          onToggleExpanded={() =>
-            setExpandedDecision((current) => (current === "review" ? null : "review"))
-          }
+          onToggleExpanded={() => toggleDecision("review")}
+          onInteractionChange={setDecisionInteractionActive}
         />
       ) : null}
 
@@ -1762,6 +1835,7 @@ function WarningDecisionPanel({
   onPreview,
   expanded,
   onToggleExpanded,
+  onInteractionChange,
 }: {
   warnings: WarningItem[];
   onAcceptAll: () => void;
@@ -1770,18 +1844,28 @@ function WarningDecisionPanel({
   onPreview: () => void;
   expanded: boolean;
   onToggleExpanded: () => void;
+  onInteractionChange: (active: boolean) => void;
 }) {
   const acceptedCount = warnings.filter((item) => item.accepted).length;
   const pendingWarnings = warnings.filter((item) => !item.accepted);
 
   return (
-    <article className={`warningDecision stackDecision ${expanded ? "isPinned" : ""}`}>
+    <article
+      className={`warningDecision stackDecision gateDecision ${expanded ? "isExpanded" : "isCollapsed"}`}
+      onFocus={() => onInteractionChange(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onInteractionChange(false);
+      }}
+    >
       <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>需要确认的 warning</span>
           <strong>校验可继续，但需要授权用户接受风险</strong>
         </div>
-        <small>{acceptedCount}/{warnings.length}<ChevronRight size={14} /></small>
+        <small>
+          {acceptedCount}/{warnings.length}
+          {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        </small>
       </button>
       <div className="warningDecisionList">
         {pendingWarnings.slice(0, 3).map((item, index) => {
@@ -1851,6 +1935,7 @@ function ReviewDecisionPanel({
   onPreviewEvidence,
   expanded,
   onToggleExpanded,
+  onInteractionChange,
 }: {
   reviews: ReviewItem[];
   onConfirmOne: (id: string) => void;
@@ -1859,18 +1944,28 @@ function ReviewDecisionPanel({
   onPreviewEvidence: () => void;
   expanded: boolean;
   onToggleExpanded: () => void;
+  onInteractionChange: (active: boolean) => void;
 }) {
   const confirmedCount = reviews.filter((item) => item.status === "confirmed").length;
   const pendingReviews = reviews.filter((item) => item.status === "pending").slice(0, 3);
 
   return (
-    <article className={`warningDecision reviewDecision stackDecision ${expanded ? "isPinned" : ""}`}>
+    <article
+      className={`warningDecision reviewDecision stackDecision gateDecision ${expanded ? "isExpanded" : "isCollapsed"}`}
+      onFocus={() => onInteractionChange(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onInteractionChange(false);
+      }}
+    >
       <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
           <span>专家建议确认</span>
           <strong>专家小队已完成检查，需要你处理关键建议</strong>
         </div>
-        <small>{confirmedCount}/{reviews.length}<ChevronRight size={14} /></small>
+        <small>
+          {confirmedCount}/{reviews.length}
+          {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        </small>
       </button>
       <div className="warningDecisionList">
         {pendingReviews.map((item, index) => {
@@ -2081,32 +2176,26 @@ function ArtifactCard({
 
 function HoverInspector({
   open,
-  pinned,
   topic,
   stage,
   validationSteps,
   generationSteps,
   warnings,
   reviews,
-  onMouseEnter,
-  onMouseLeave,
   onSelectTopic,
-  onPin,
+  onClose,
   onPreviewArtifact,
   onPreviewWorkflow,
 }: {
   open: boolean;
-  pinned: boolean;
   topic: InspectorTopic;
   stage: Stage;
   validationSteps: ActionStep[];
   generationSteps: ActionStep[];
   warnings: WarningItem[];
   reviews: ReviewItem[];
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
   onSelectTopic: (topic: InspectorTopic) => void;
-  onPin: () => void;
+  onClose: () => void;
   onPreviewArtifact: (kind: ArtifactPreviewKind) => void;
   onPreviewWorkflow: (kind: PreviewKind, section?: PreviewSection) => void;
 }) {
@@ -2120,9 +2209,7 @@ function HoverInspector({
 
   return (
     <aside
-      className={`inspector ${open ? "open" : ""} ${pinned ? "pinned" : ""}`}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      className={`inspector ${open ? "open" : ""}`}
       aria-hidden={!open}
     >
       <header>
@@ -2157,8 +2244,8 @@ function HoverInspector({
           ) : null}
         </div>
         <div className="inspectorControls">
-          <button type="button" onClick={onPin} aria-label={pinned ? "取消固定" : "固定"}>
-            {pinned ? <PinOff size={16} /> : <Pin size={16} />}
+          <button type="button" onClick={onClose} aria-label="关闭详情面板">
+            <X size={16} />
           </button>
         </div>
       </header>
