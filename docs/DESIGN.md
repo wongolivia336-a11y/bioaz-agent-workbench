@@ -187,6 +187,36 @@ There is no large upload card or drag-and-drop altar.
 - Business-specific forms, quotation tables, and parameter structures keep
   their domain hierarchy rather than copying another module's content layout.
 
+### Data Hub
+
+- The Data Hub remains project-first. Borrow file-manager interaction details,
+  but do not replace the project, task, Agent, and deliverable relationship with
+  a generic workspace/folder hierarchy.
+- A project page uses two bounded overview lanes: project materials and task
+  outputs. Each shows at most five recent items, has no nested scrollbar, and
+  uses a white-to-`#5C60B8` 4–6% fade plus an explicit `View all` action.
+- Clicking a file previews it. Clicking the lane title or `View all` opens the
+  full-width list for that category.
+- Full lists share one table grammar but keep category-specific meaning. The
+  default row actions are Preview, View details, and Delete.
+- Delete is soft by default. A project-level recycle bin supports Restore and
+  Permanent delete.
+- Preview follows the existing Modal pattern. Details follow the existing right
+  Panel pattern; do not create a second drawer system.
+- Project files are reached from the project's three-dot menu rather than a
+  permanent task-like Sidebar row. A clickable topbar breadcrumb carries the
+  hierarchy from Data Hub to project, category, folder, or recycle bin.
+- File-management primary actions such as Upload use the shared black primary
+  button. Low-saturation purple-blue remains a focus, status, and weak-link
+  color rather than a default action fill.
+- The file assistant remains a bottom Chatbot affordance. It is a compact pill
+  until clicked, then expands into the Composer and states its current scope.
+  Clicking outside collapses it without an intermediate hover state.
+- New folders are created from the Data Hub overview, where the user explicitly
+  chooses the owning project. Creation may optionally pin a first-level folder
+  shortcut under that project in Sidebar; nested folders do not automatically
+  enter Sidebar. Project views keep Upload and Recycle bin actions only.
+
 ### Surface and Motion
 
 - Do not wrap ordinary text or simple information in cards.

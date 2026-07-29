@@ -3,7 +3,7 @@
 import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
-import type { PinItem } from "../../lib/workbench/shellTypes";
+import type { LibraryFolder, PinItem } from "../../lib/workbench/shellTypes";
 import type { WorkbenchProject, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
 
@@ -18,6 +18,9 @@ type Props = {
   deletedProjectIds: string[];
   deletedTaskIds: string[];
   renamedTaskTitles: Record<string, string>;
+  libraryFolders: LibraryFolder[];
+  activeLibraryFolderId: string | null;
+  onOpenLibraryFolder: (project: string, folderId: string | null) => void;
   onCreateProject: (name: string) => WorkbenchProject | null;
   onRenameProject: (projectId: string, name: string) => void;
   onDeleteProject: (projectId: string) => void;
@@ -151,9 +154,15 @@ export function WorkspaceSidebar(props: Props) {
             open={Boolean(openProjects[project.id])}
             onToggle={() => setOpenProjects((current) => ({ ...current, [project.id]: !current[project.id] }))}
             onRename={(name) => props.onRenameProject(project.id, name)}
+            onOpenFiles={() => props.onOpenLibraryFolder(project.name, null)}
             onStartTask={() => startTask(projectNameById.get(project.id) ?? project.name)}
             onDelete={() => props.onDeleteProject(project.id)}
           >
+            {props.libraryFolders.filter((folder) => folder.project === project.name && folder.pinned).map((folder) => (
+              <button className={`sidebarFolderShortcut ${props.activeLibraryFolderId === folder.id ? "active" : ""}`} type="button" key={folder.id} onClick={() => props.onOpenLibraryFolder(project.name, folder.id)}>
+                <Folder size={14} /><span>{folder.name}</span>
+              </button>
+            ))}
             {catalog.filter((item) => item.project === project.name).map((item) => (
               <SidebarTask
                 key={item.id}
@@ -202,7 +211,7 @@ function toTask(item: PinItem): WorkbenchTask {
   };
 }
 
-function SidebarProject({ title, open, onToggle, onRename, onStartTask, onDelete, children }: { title: string; open: boolean; onToggle: () => void; onRename: (name: string) => void; onStartTask: () => void; onDelete: () => void; children: ReactNode }) {
+function SidebarProject({ title, open, onToggle, onRename, onOpenFiles, onStartTask, onDelete, children }: { title: string; open: boolean; onToggle: () => void; onRename: (name: string) => void; onOpenFiles: () => void; onStartTask: () => void; onDelete: () => void; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -232,6 +241,7 @@ function SidebarProject({ title, open, onToggle, onRename, onStartTask, onDelete
               {menuOpen ? (
                 <div className="sidebarMenu projectMenu">
                   <button type="button" onClick={() => { setDraft(title); setEditing(true); setMenuOpen(false); }}><FileText size={14} />重命名项目</button>
+                  <button type="button" onClick={() => { onOpenFiles(); setMenuOpen(false); }}><Folder size={14} />查看项目文件</button>
                   <button type="button" onClick={() => { onStartTask(); setMenuOpen(false); }}><Plus size={14} />新建任务</button>
                   <button type="button" onClick={() => { if (window.confirm(`删除项目“${title}”？项目下任务会从当前列表隐藏。`)) onDelete(); setMenuOpen(false); }}><Trash2 size={14} />删除项目</button>
                 </div>

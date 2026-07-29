@@ -23,7 +23,17 @@ export type KnowledgeFile = {
   updated: string;
   status: string;
   agentReady: boolean;
+  folderId?: string;
 };
+
+export type LibraryFolder = {
+  id: string;
+  name: string;
+  project: string;
+  pinned: boolean;
+};
+
+export type LibraryView = "overview" | "inputs" | "outputs" | "folder" | "trash";
 
 export type TaskCollection = {
   actionRequired: WorkbenchTask[];

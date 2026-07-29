@@ -1821,3 +1821,758 @@ button { -webkit-tap-highlight-color: transparent; }
     animation: none;
   }
 }
+
+/* Data Hub: project overview first, file management details on demand. */
+.knowledgeBaseView {
+  --library-accent: #5c60b8;
+  --library-accent-soft: rgba(92, 96, 184, 0.06);
+  --library-accent-line: rgba(92, 96, 184, 0.18);
+  position: relative;
+  padding-bottom: 108px !important;
+}
+.knowledgeRootActions {
+  display: flex;
+  width: min(var(--content-max), 100%);
+  justify-content: flex-end;
+  margin: 0 auto var(--bioaz-space-4);
+}
+.knowledgeBaseView :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) {
+  box-sizing: border-box;
+  min-height: 36px;
+  height: 36px;
+  gap: 7px;
+  border-radius: var(--bioaz-radius-tool);
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.knowledgeBaseView :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) > svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  stroke-width: 1.8;
+}
+.knowledgeBaseView .secondaryButton.compact {
+  border-color: var(--bioaz-border);
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.knowledgeBaseView .secondaryButton.compact:hover {
+  border-color: var(--bioaz-border-strong);
+  background: #f5f6f8;
+}
+.topbarActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+.topbarActions:empty {
+  display: none;
+}
+.projectLibraryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+}
+.projectLibraryActions > :is(button, label) {
+  cursor: pointer;
+}
+.topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: auto;
+  min-height: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: var(--bioaz-radius-tool);
+  padding: 0 11px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 34px;
+  white-space: nowrap;
+  appearance: none;
+}
+.topbarActions .topbarFileAction {
+  width: 96px;
+  min-width: 96px;
+}
+.topbarActions .topbarCreateFolderButton {
+  width: 120px;
+  min-width: 120px;
+}
+.topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) > svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  stroke-width: 1.8;
+}
+.topbarActions .primaryButton.compact,
+.topbarActions .primaryButton.compact:hover {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.topbarActions .primaryButton.compact:hover {
+  border-color: #050608;
+  background: #050608;
+}
+.topbarActions .secondaryButton.compact,
+.topbarActions .libraryTrashButton {
+  border: 1px solid var(--bioaz-border);
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.topbarActions :is(.secondaryButton.compact, .libraryTrashButton):hover {
+  border-color: var(--bioaz-border-strong);
+  background: #f5f6f8;
+}
+.knowledgeBaseView .projectLibraryActions .primaryButton {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.knowledgeBaseView .projectLibraryActions .primaryButton:hover {
+  border-color: #050608;
+  background: #050608;
+}
+.libraryTrashButton,
+.libraryBackButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  font: inherit;
+  font-size: 12px;
+}
+.libraryTrashButton {
+  border: 1px solid var(--bioaz-border);
+  background: #fff;
+}
+.libraryTrashButton.hasItems {
+  color: var(--bioaz-text-primary);
+}
+.libraryBackButton {
+  width: max-content;
+  padding: 0;
+}
+.libraryBackButton:hover,
+.libraryTrashButton:hover {
+  border-color: var(--bioaz-border-strong);
+  background: #f5f6f8;
+  color: var(--bioaz-text-primary);
+}
+.libraryFolderChips {
+  display: flex;
+  width: min(var(--content-max), 100%);
+  flex-wrap: wrap;
+  gap: var(--bioaz-space-2);
+  margin: 0 auto var(--bioaz-space-4);
+}
+.projectKnowledgeToolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+.projectKnowledgeToolbar > :last-child {
+  justify-self: end;
+}
+.libraryFolderChips button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-pill);
+  background: #fff;
+  color: var(--bioaz-text-secondary);
+  padding: 0 11px;
+  font: inherit;
+  font-size: 12px;
+}
+.libraryFolderChips button:hover {
+  border-color: var(--library-accent-line);
+  background: var(--library-accent-soft);
+  color: var(--library-accent);
+}
+.libraryFolderChips button span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 10px;
+}
+.projectOverviewLanes {
+  align-items: stretch;
+}
+.projectOverviewLanes > .overviewFileLane {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 410px;
+  max-height: 520px;
+  border-radius: var(--bioaz-radius-control);
+  box-shadow: none;
+}
+.overviewLaneTitle {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  padding: 0;
+  text-align: left;
+}
+.overviewLaneTitle > span {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+.overviewLaneTitle small {
+  color: var(--bioaz-text-tertiary);
+  font-weight: 400;
+}
+.overviewFileViewport {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+.overviewFileViewport .knowledgeTable {
+  height: 100%;
+}
+.overviewFade {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 40px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.92) 58%,
+    rgba(92, 96, 184, 0.06)
+  );
+  pointer-events: none;
+}
+.overviewViewAll {
+  display: inline-flex;
+  width: max-content;
+  min-height: 30px;
+  align-items: center;
+  gap: 4px;
+  justify-self: end;
+  border: 0;
+  background: transparent;
+  color: var(--library-accent);
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+.libraryListSurface {
+  display: grid;
+  width: min(var(--content-max), 100%);
+  gap: var(--bioaz-space-4);
+  margin-inline: auto;
+}
+.libraryListSurface .knowledgeToolbar {
+  width: 100%;
+  margin: 0;
+}
+.libraryListSurface .knowledgeTable {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: #fff;
+}
+.libraryListSurface .knowledgeTableHeader,
+.libraryListSurface .knowledgeFileRow {
+  grid-template-columns: minmax(260px, 1.7fr) minmax(110px, 0.7fr) minmax(110px, 0.8fr) 92px 34px;
+}
+.libraryListIntro {
+  display: grid;
+  gap: 4px;
+}
+.libraryListIntro span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.trashTable .knowledgeTableHeader,
+.trashTable .knowledgeFileRow {
+  grid-template-columns: minmax(260px, 1fr) 120px 100px auto;
+}
+.trashRowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.trashRowActions button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  color: var(--bioaz-text-secondary);
+  padding: 0 9px;
+  font: inherit;
+  font-size: 11px;
+}
+.knowledgeDetailPanel {
+  position: absolute;
+  z-index: 25;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  width: min(360px, 42vw);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-left: 1px solid var(--bioaz-border);
+  background: #fff;
+  box-shadow: -18px 0 44px rgba(18, 24, 38, 0.08);
+  animation: libraryPanelIn var(--bioaz-motion-spatial) var(--bioaz-ease-emphasized);
+}
+.knowledgeDetailPanel > header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-5);
+}
+.knowledgeDetailPanel > header > div {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+.knowledgeDetailPanel > header span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+}
+.knowledgeDetailPanel > header strong {
+  overflow-wrap: anywhere;
+}
+.knowledgeDetailPanel > header button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+}
+.knowledgeDetailPanel dl {
+  display: grid;
+  align-content: start;
+  gap: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--bioaz-space-5);
+}
+.knowledgeDetailPanel dl > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--bioaz-space-3);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 12px 0;
+}
+.knowledgeDetailPanel dt {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.knowledgeDetailPanel dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--bioaz-text-primary);
+  font-size: 12px;
+}
+.folderCreateDialog {
+  display: grid;
+  width: min(560px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-modal);
+  background: #fff;
+  box-shadow: var(--bioaz-shadow-overlay);
+}
+.folderCreateDialog > header,
+.folderCreateDialog > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+  padding: var(--bioaz-space-5);
+}
+.folderCreateDialog > header {
+  border-bottom: 1px solid var(--bioaz-border);
+}
+.folderCreateDialog > header span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+}
+.folderCreateDialog > header h2 {
+  margin: 4px 0 0;
+  font-size: 17px;
+  line-height: 1.35;
+}
+.folderCreateDialog > header p {
+  margin: 5px 0 0;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.folderCreateDialog > footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--bioaz-border);
+}
+.folderDialogBody {
+  display: grid;
+  gap: var(--bioaz-space-4);
+  padding: var(--bioaz-space-5);
+}
+.folderDialogFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--bioaz-space-3);
+}
+.folderDialogFields > label {
+  display: grid;
+  gap: 7px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  font-weight: 550;
+}
+.folderDialogBody :is(input, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  color: var(--bioaz-text-primary);
+  padding: 0 11px;
+  font: inherit;
+  font-size: 12px;
+}
+.folderDialogBody :is(input, select):focus {
+  border-color: rgba(92, 96, 184, 0.46);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(92, 96, 184, 0.1);
+}
+.folderPinChoice {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: #fff;
+  padding: 11px 12px;
+  text-align: left;
+}
+.folderPinChoice > span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: 5px;
+}
+.folderPinChoice[aria-pressed="true"] > span {
+  border-color: var(--library-accent);
+  background: var(--library-accent);
+  color: #fff;
+}
+.folderPinChoice > div {
+  display: grid;
+  gap: 3px;
+}
+.folderPinChoice strong {
+  color: var(--bioaz-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.folderPinChoice small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-weight: 400;
+}
+.deliveryPackageAction[aria-disabled="true"] {
+  cursor: default;
+}
+.deliveryPackageAction[aria-disabled="true"]:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
+}
+.deliveryPackageAction > span {
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 10px;
+}
+.previewContextChip {
+  max-width: 44%;
+  overflow: hidden;
+  border-radius: var(--bioaz-radius-pill);
+  background: var(--library-accent-soft);
+  color: var(--library-accent);
+  padding: 6px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.sidebarFolderShortcut {
+  display: grid;
+  width: 100%;
+  min-height: 32px;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  padding: 0 9px 0 21px;
+  font: inherit;
+  font-size: 11.5px;
+  text-align: left;
+}
+.sidebarFolderShortcut:hover,
+.sidebarFolderShortcut.active {
+  background: rgba(92, 96, 184, 0.07);
+  color: var(--library-accent);
+}
+.sidebarFolderShortcut span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workbenchMode > .topbar .breadcrumb button {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.workbenchMode > .topbar .breadcrumb button:hover {
+  color: var(--library-accent, #5c60b8);
+}
+
+.knowledgeBaseView .ambientFileAssistant {
+  height: 132px;
+}
+.knowledgeBaseView .ambientFileAssistant::before {
+  display: none;
+}
+.knowledgeBaseView .ambientComposerFrame {
+  height: 92px;
+  border-radius: 18px;
+  clip-path: inset(24px calc((100% - 210px) / 2) 24px round 999px);
+  transition:
+    clip-path 260ms var(--ambient-ease),
+    background-color 220ms var(--ambient-ease),
+    box-shadow 220ms var(--ambient-ease);
+}
+.knowledgeBaseView .ambientAssistantEntry {
+  inset: 24px calc((100% - 210px) / 2);
+  height: 44px;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--bioaz-text-primary);
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(18, 24, 38, 0.05);
+  overflow: hidden;
+  transition:
+    opacity 120ms ease,
+    transform 220ms var(--ambient-ease),
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+.knowledgeBaseView .ambientAssistantEntry::after {
+  position: absolute;
+  top: -80%;
+  bottom: -80%;
+  left: -42%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(112, 116, 214, 0.24), rgba(255, 255, 255, 0.88), transparent);
+  content: "";
+  pointer-events: none;
+  transform: skewX(-18deg);
+  opacity: 0;
+}
+.knowledgeBaseView .ambientAssistantEntry:hover::after {
+  animation: libraryPillSheen 2100ms var(--bioaz-ease-standard) 1;
+}
+.knowledgeBaseView .ambientAssistantEntry > * {
+  position: relative;
+  z-index: 1;
+}
+.knowledgeBaseView .ambientAssistantEntry:hover {
+  border-color: rgba(92, 96, 184, 0.34);
+  background: rgba(92, 96, 184, 0.04);
+}
+.knowledgeBaseView .ambientAssistantEntry svg {
+  width: 16px;
+  height: 16px;
+  color: var(--library-accent);
+}
+.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame {
+  clip-path: inset(0 round 18px);
+  border: 1px solid var(--bioaz-border);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 30px rgba(18, 24, 38, 0.08);
+  backdrop-filter: blur(16px);
+}
+.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(110deg, rgba(92, 96, 184, 0.08), rgba(126, 130, 224, 0.52), rgba(255, 255, 255, 0.9), rgba(92, 96, 184, 0.08)) border-box;
+  background-size: 220% 100%;
+  content: "";
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  animation: libraryComposerSheen 2400ms var(--bioaz-ease-standard) 1;
+}
+.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame:hover::after {
+  animation: libraryComposerHoverSheen 2400ms var(--bioaz-ease-standard) 1;
+}
+.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before {
+  animation: none;
+  opacity: 0;
+}
+.knowledgeBaseView .ambientAssistantComposer {
+  padding: 36px 12px 10px;
+  transition: opacity 160ms ease 30ms, transform 240ms var(--ambient-ease);
+}
+@keyframes libraryPillSheen {
+  0% {
+    left: -42%;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.9;
+  }
+  76% {
+    left: 116%;
+    opacity: 0.45;
+  }
+  100% {
+    left: 116%;
+    opacity: 0;
+  }
+}
+@keyframes libraryComposerSheen {
+  0% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.75;
+  }
+  82% {
+    background-position: -100% 0;
+    opacity: 0.65;
+  }
+  100% {
+    background-position: -100% 0;
+    opacity: 0;
+  }
+}
+@keyframes libraryComposerHoverSheen {
+  0% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.82;
+  }
+  82% {
+    background-position: -100% 0;
+    opacity: 0.72;
+  }
+  100% {
+    background-position: -100% 0;
+    opacity: 0;
+  }
+}
+.knowledgePreviewDialog .primaryButton,
+.knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+
+@keyframes libraryPanelIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .projectLibraryActions {
+    justify-content: flex-start;
+  }
+  .libraryListSurface .knowledgeTableHeader,
+  .libraryListSurface .knowledgeFileRow {
+    grid-template-columns: minmax(220px, 1fr) 92px 34px;
+  }
+  .libraryListSurface :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(2),
+  .libraryListSurface :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .knowledgeDetailPanel {
+    width: min(360px, calc(100vw - 24px));
+  }
+  .previewContextChip {
+    display: none;
+  }
+  .folderDialogFields {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knowledgeDetailPanel,
+  .knowledgeBaseView .ambientAssistantEntry::after,
+  .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::after {
+    animation: none;
+  }
+}
