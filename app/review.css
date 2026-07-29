@@ -1885,8 +1885,10 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) {
   box-sizing: border-box;
+  width: 96px;
   min-height: 34px;
   height: 34px;
+  justify-content: center;
   gap: 7px;
   border-radius: var(--bioaz-radius-tool);
   padding: 0 11px;
