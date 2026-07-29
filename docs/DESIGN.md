@@ -167,6 +167,25 @@ There is no large upload card or drag-and-drop altar.
   pointer exits and re-enters.
 - The trigger opens a real right workspace column at desktop width and a Drawer
   at narrower widths. There is no Pin mode.
+- Panel opening is event-driven, not stage-driven. It opens automatically once
+  only when artifacts are generated during the current live session. Closing
+  it is respected; refreshes, historical tasks, validation, review, Home,
+  Digital Team, and Data Hub do not force it open again.
+- In DMPK, the parameter summary permanently owns the top of the right column.
+  It stays compact by default, expands to at most 36–40% of the viewport, and
+  scrolls internally when its content grows. The remaining Inspector content
+  fills the space below without coordinate-based positioning.
+
+### Shared Chatflow Grammar
+
+- Tumor report and DMPK share the same Chatflow grid, user-message geometry,
+  Composer focus treatment, process-card width, artifact-row height, and
+  restrained motion.
+- Process nodes, weak links, and auxiliary status use low-saturation purple-blue
+  `#5C60B8`; Logo and primary brand identity keep the primary brand blue.
+- User messages are right-aligned rounded rectangles without chat tails.
+- Business-specific forms, quotation tables, and parameter structures keep
+  their domain hierarchy rather than copying another module's content layout.
 
 ### Surface and Motion
 

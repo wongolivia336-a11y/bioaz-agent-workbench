@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { ChevronDown, ChevronRight, PanelRight, SlidersHorizontal, WandSparkles } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { AgentModuleSessionProps } from "../types";
@@ -48,8 +48,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [editProposal, setEditProposal] = useState<DmpkEditProposal | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
-  const [secondaryInspectorTop, setSecondaryInspectorTop] = useState(142);
-  const parameterCardRef = useRef<HTMLElement>(null);
 
   const missingFields = useMemo(() => fields.filter((field) => field.required && !field.value), [fields]);
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
@@ -104,24 +102,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   useEffect(() => {
     if (stage === "generating" || stage === "generated") setParametersExpanded(false);
   }, [stage]);
-
-  useEffect(() => {
-    const parameterCard = parameterCardRef.current;
-    if (!parameterCard) return;
-
-    const updateInspectorTop = () => {
-      setSecondaryInspectorTop(Math.ceil(parameterCard.getBoundingClientRect().bottom + 12));
-    };
-    updateInspectorTop();
-
-    const observer = new ResizeObserver(updateInspectorTop);
-    observer.observe(parameterCard);
-    window.addEventListener("resize", updateInspectorTop);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateInspectorTop);
-    };
-  }, []);
 
   const addDraft = (field: DmpkField, value: string) => {
     setDraftTabs((items) => [...items.filter((item) => item.fieldId !== field.id), { fieldId: field.id, label: field.label, value }]);
@@ -276,9 +256,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       </section>
       <aside
         className={`dmpkPanel dmpkInspectorRail ${inspectorOpen ? "isOpen" : ""}`}
-        style={{ "--dmpk-secondary-top": `${secondaryInspectorTop}px` } as CSSProperties}
       >
-        <section ref={parameterCardRef} className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
+        <section className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
           <div className="persistentParameterHeader">
           <button className="persistentParameterToggle" type="button" aria-expanded={parametersExpanded} disabled={!identifiedAssayType} onClick={() => setParametersExpanded((current) => !current)}>
             <span><SlidersHorizontal size={16} /><strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong></span>

@@ -1545,3 +1545,279 @@ button { -webkit-tap-highlight-color: transparent; }
   :is(.warningDecisionList, .warningActions, .responsibilityNote) {
   transition: opacity var(--bioaz-motion-standard) var(--bioaz-ease-standard);
 }
+
+/* Batch 6: stable shell frame, event-driven Panels, and shared DMPK Chatflow grammar. */
+.dmpkShell {
+  align-items: stretch;
+}
+.dmpkShell > .sidebar,
+.dmpkShell > :is(.dmpkWorkspace, .workspace, .dmpkPanel) {
+  height: auto !important;
+  min-height: 0;
+  align-self: stretch;
+}
+.dmpkShell > .sidebar {
+  max-height: 100%;
+}
+.dmpkShell.workbenchShell > .dmpkWorkspace.workbenchMode {
+  height: auto !important;
+  min-height: 0;
+  margin: 0;
+}
+.dmpkShell.workbenchShell
+  :is(.newTaskHome, .workbenchView, .digitalTeamView, .knowledgeBaseView) {
+  min-height: 0;
+  background: #fff !important;
+  background-image: none !important;
+}
+
+/* DMPK Inspector is a stable two-region column. Parameter summary always owns the top. */
+.dmpk-quotationModuleShell > .dmpkPanel.isOpen {
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+  gap: var(--bioaz-space-3);
+  overflow: hidden;
+  padding: var(--bioaz-space-3);
+}
+.dmpk-quotationModuleShell .persistentParameterCard {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  max-height: min(40dvh, 440px);
+  align-self: start;
+  border-radius: var(--bioaz-radius-control);
+  box-shadow: none;
+}
+.dmpk-quotationModuleShell .persistentParameterHeader {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  min-width: 0;
+}
+.dmpk-quotationModuleShell .persistentParameterToggle {
+  min-width: 0;
+  overflow: hidden;
+}
+.dmpk-quotationModuleShell .persistentParameterToggle > span:first-child {
+  min-width: 0;
+}
+.dmpk-quotationModuleShell .persistentParameterToggle strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dmpk-quotationModuleShell .parameterConversationEdit {
+  flex: 0 0 auto;
+}
+.dmpk-quotationModuleShell .persistentParameterBody {
+  max-height: min(calc(40dvh - 52px), 388px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.dmpk-quotationModuleShell .persistentParameterBody .rightPanelCard {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.dmpk-quotationModuleShell .persistentParameterBody .paramRows,
+.dmpk-quotationModuleShell .persistentParameterBody .paramRow {
+  min-width: 0;
+}
+.dmpk-quotationModuleShell .persistentParameterBody .paramRow {
+  grid-template-columns: minmax(72px, 0.8fr) minmax(0, 1.2fr) 28px;
+}
+.dmpk-quotationModuleShell .persistentParameterBody .paramRow strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dmpk-quotationModuleShell .secondaryInspectorSlot {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.dmpk-quotationModuleShell
+  .secondaryInspectorSlot
+  .workbenchInspector.isInline {
+  inset: auto;
+  min-width: 0;
+  height: 100%;
+  max-height: none;
+  border-radius: var(--bioaz-radius-control);
+}
+
+/* DMPK uses the same restrained content axis as tumor-report. */
+.dmpk-quotationModuleShell {
+  --dmpk-process: #5c60b8;
+  --dmpk-process-soft: rgba(92, 96, 184, 0.09);
+  --dmpk-process-line: rgba(92, 96, 184, 0.19);
+}
+.dmpk-quotationModuleShell .dmpkConversation {
+  width: min(900px, 100%);
+  gap: var(--bioaz-space-6);
+}
+.dmpk-quotationModuleShell
+  :is(.agentReply, .activityChain, .activityChain summary, .activityChainPanel, .artifactCards) {
+  width: 100%;
+  max-width: none;
+}
+.dmpk-quotationModuleShell .agentReply {
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+.dmpk-quotationModuleShell .userBubble {
+  max-width: 66%;
+  border-color: var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface-subtle);
+  padding: 11px 15px;
+  font-weight: 560;
+  box-shadow: none;
+}
+.dmpk-quotationModuleShell .userBubble::after,
+.dmpk-quotationModuleShell .userBubble::before {
+  display: none !important;
+  content: none !important;
+}
+.dmpk-quotationModuleShell .bluePanelLink {
+  color: var(--dmpk-process);
+  font-weight: 700;
+}
+.dmpk-quotationModuleShell .activityChain summary {
+  min-height: 44px;
+  border: 1px solid var(--dmpk-process-line);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--dmpk-process-soft);
+  padding: 8px 12px;
+  color: var(--bioaz-text-secondary);
+}
+.dmpk-quotationModuleShell .activityChainPanel {
+  margin-top: var(--bioaz-space-3);
+  border-color: var(--dmpk-process-line);
+  border-radius: var(--bioaz-radius-control);
+  animation: none;
+}
+.dmpk-quotationModuleShell .activityChainPanel header {
+  border-bottom-color: var(--dmpk-process-line);
+  padding: 12px 16px;
+}
+.dmpk-quotationModuleShell .activitySteps {
+  padding: 16px;
+}
+.dmpk-quotationModuleShell .activityChain p {
+  animation: none;
+}
+.dmpk-quotationModuleShell .activityChain i {
+  border: 2px solid var(--dmpk-process);
+  background: #fff;
+}
+.dmpk-quotationModuleShell .activityChain i::after {
+  background: var(--dmpk-process-line);
+}
+.dmpk-quotationModuleShell .agentLogoMark.isThinking {
+  position: relative;
+  overflow: hidden;
+  animation: dmpkLogoBreath 1800ms var(--bioaz-ease-standard) infinite;
+}
+.dmpk-quotationModuleShell .agentLogoMark.isThinking::after {
+  position: absolute;
+  inset: -25% auto -25% -65%;
+  width: 42%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.92),
+    transparent
+  );
+  content: "";
+  transform: skewX(-18deg);
+  animation: dmpkLogoSheen 1900ms var(--bioaz-ease-standard) infinite;
+}
+.dmpk-quotationModuleShell .artifactCards {
+  display: grid;
+  gap: var(--bioaz-space-3);
+}
+.dmpk-quotationModuleShell .artifactCard {
+  box-sizing: border-box;
+  min-height: 116px;
+  border-radius: var(--bioaz-radius-control);
+}
+.dmpk-quotationModuleShell .dmpkComposerWrap,
+.dmpk-quotationModuleShell .dmpkComposer {
+  width: min(900px, 100%);
+}
+.dmpk-quotationModuleShell .dmpkComposer {
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+}
+.dmpk-quotationModuleShell .dmpkComposer:focus-within {
+  border-color: rgba(92, 96, 184, 0.46);
+  box-shadow: 0 0 0 3px rgba(92, 96, 184, 0.1);
+}
+.dmpk-quotationModuleShell
+  :is(.warningDecision, .parameterTaskCard, .dmpkEditProposalCard) {
+  width: min(900px, 100%);
+  max-width: 100%;
+  border-radius: var(--bioaz-radius-control);
+  box-shadow: none;
+}
+
+@keyframes dmpkLogoBreath {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scale(1.035);
+    opacity: 1;
+  }
+}
+@keyframes dmpkLogoSheen {
+  0%,
+  24% {
+    left: -65%;
+    opacity: 0;
+  }
+  38% {
+    opacity: 0.9;
+  }
+  62% {
+    left: 122%;
+    opacity: 0;
+  }
+  100% {
+    left: 122%;
+    opacity: 0;
+  }
+}
+
+@media (max-width: 1199px) {
+  .dmpk-quotationModuleShell > .dmpkPanel.isOpen {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .dmpk-quotationModuleShell .persistentParameterCard {
+    max-height: min(36dvh, 380px);
+  }
+  .dmpk-quotationModuleShell .persistentParameterBody {
+    max-height: min(calc(36dvh - 52px), 328px);
+  }
+}
+
+@media (max-width: 760px) {
+  .dmpk-quotationModuleShell .parameterConversationEdit span {
+    display: none;
+  }
+  .dmpk-quotationModuleShell .userBubble {
+    max-width: 82%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dmpk-quotationModuleShell .agentLogoMark.isThinking,
+  .dmpk-quotationModuleShell .agentLogoMark.isThinking::after {
+    animation: none;
+  }
+}

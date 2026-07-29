@@ -184,7 +184,6 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
             setStage("review");
             setExpandedThinking((value) => ({ ...value, review: false }));
             setInspectorTopic("review");
-            setInspectorOpen(true);
           }, 450);
         }
         return Math.min(next, reviewActionsBase.length);
@@ -359,7 +358,6 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     addUserEvent("review", "发起专家小队审核");
     setStage("reviewing");
     setInspectorTopic("review");
-    setInspectorOpen(true);
   };
 
   const confirmReview = (id: string) => {
