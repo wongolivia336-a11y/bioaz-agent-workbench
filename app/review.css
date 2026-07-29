@@ -1863,15 +1863,15 @@ button { -webkit-tap-highlight-color: transparent; }
   border-color: var(--bioaz-border-strong);
   background: #f5f6f8;
 }
-.knowledgeBaseView > .projectLibraryHeader {
+.topbarActions {
   display: flex;
-  width: min(var(--content-max), 100%);
-  min-height: 48px;
+  min-width: 0;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--bioaz-space-6);
-  margin-inline: auto;
-  padding-bottom: var(--bioaz-space-4);
+  margin-left: auto;
+}
+.topbarActions:empty {
+  display: none;
 }
 .projectLibraryActions {
   display: flex;
@@ -1882,6 +1882,34 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .projectLibraryActions > :is(button, label) {
   cursor: pointer;
+}
+.topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) {
+  box-sizing: border-box;
+  min-height: 34px;
+  height: 34px;
+  gap: 7px;
+  border-radius: var(--bioaz-radius-tool);
+  padding: 0 11px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) > svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  stroke-width: 1.8;
+}
+.topbarActions .secondaryButton.compact,
+.topbarActions .libraryTrashButton {
+  border: 1px solid var(--bioaz-border);
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.topbarActions :is(.secondaryButton.compact, .libraryTrashButton):hover {
+  border-color: var(--bioaz-border-strong);
+  background: #f5f6f8;
 }
 .knowledgeBaseView .projectLibraryActions .primaryButton {
   border-color: #17191e;
@@ -1926,6 +1954,15 @@ button { -webkit-tap-highlight-color: transparent; }
   flex-wrap: wrap;
   gap: var(--bioaz-space-2);
   margin: 0 auto var(--bioaz-space-4);
+}
+.projectKnowledgeToolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+.projectKnowledgeToolbar > :last-child {
+  justify-self: end;
 }
 .libraryFolderChips button {
   display: inline-flex;
@@ -2250,19 +2287,12 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 11px;
   font-weight: 400;
 }
-.deliveryPackageHint {
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  gap: 7px;
-  color: var(--bioaz-text-tertiary);
-  padding: 0 4px;
-  font-size: 12px;
-  white-space: nowrap;
+.deliveryPackageAction[aria-disabled="true"] {
+  cursor: default;
 }
-.deliveryPackageHint svg {
-  width: 15px;
-  height: 15px;
+.deliveryPackageAction[aria-disabled="true"]:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
 }
 .deliveryPackageAction > span {
   display: grid;
@@ -2347,11 +2377,31 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-primary);
   gap: 8px;
   box-shadow: 0 6px 18px rgba(18, 24, 38, 0.05);
+  overflow: hidden;
   transition:
     opacity 120ms ease,
     transform 220ms var(--ambient-ease),
     border-color 140ms ease,
     background-color 140ms ease;
+}
+.knowledgeBaseView .ambientAssistantEntry::after {
+  position: absolute;
+  top: -80%;
+  bottom: -80%;
+  left: -42%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(112, 116, 214, 0.24), rgba(255, 255, 255, 0.88), transparent);
+  content: "";
+  pointer-events: none;
+  transform: skewX(-18deg);
+  opacity: 0;
+}
+.knowledgeBaseView .ambientAssistantEntry:hover::after {
+  animation: libraryPillSheen 2100ms var(--bioaz-ease-standard) 1;
+}
+.knowledgeBaseView .ambientAssistantEntry > * {
+  position: relative;
+  z-index: 1;
 }
 .knowledgeBaseView .ambientAssistantEntry:hover {
   border-color: rgba(92, 96, 184, 0.34);
@@ -2369,6 +2419,24 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 12px 30px rgba(18, 24, 38, 0.08);
   backdrop-filter: blur(16px);
 }
+.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(110deg, rgba(92, 96, 184, 0.08), rgba(126, 130, 224, 0.52), rgba(255, 255, 255, 0.9), rgba(92, 96, 184, 0.08)) border-box;
+  background-size: 220% 100%;
+  content: "";
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+}
+.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame:hover::after {
+  animation: libraryComposerSheen 2200ms var(--bioaz-ease-standard) 1;
+}
 .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before {
   animation: none;
   opacity: 0;
@@ -2376,6 +2444,40 @@ button { -webkit-tap-highlight-color: transparent; }
 .knowledgeBaseView .ambientAssistantComposer {
   padding: 36px 12px 10px;
   transition: opacity 160ms ease 30ms, transform 240ms var(--ambient-ease);
+}
+@keyframes libraryPillSheen {
+  0% {
+    left: -42%;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.9;
+  }
+  76% {
+    left: 116%;
+    opacity: 0.45;
+  }
+  100% {
+    left: 116%;
+    opacity: 0;
+  }
+}
+@keyframes libraryComposerSheen {
+  0% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.75;
+  }
+  82% {
+    background-position: -100% 0;
+    opacity: 0.65;
+  }
+  100% {
+    background-position: -100% 0;
+    opacity: 0;
+  }
 }
 
 @keyframes libraryPanelIn {
@@ -2390,9 +2492,6 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (max-width: 980px) {
-  .knowledgeBaseView > .projectLibraryHeader {
-    display: grid;
-  }
   .projectLibraryActions {
     justify-content: flex-start;
   }
@@ -2419,7 +2518,9 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .knowledgeDetailPanel {
+  .knowledgeDetailPanel,
+  .knowledgeBaseView .ambientAssistantEntry::after,
+  .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::after {
     animation: none;
   }
 }

@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { createPortal } from "react-dom";
 import { initialKnowledgeFiles } from "../../lib/workbench/mockWorkspace";
 import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
 import type { WorkbenchProject } from "../../modules/types";
@@ -57,7 +58,12 @@ export function FileManager({
   const [folderDraft, setFolderDraft] = useState("");
   const [folderProject, setFolderProject] = useState(projects[0]?.name ?? "");
   const [pinFolder, setPinFolder] = useState(true);
+  const [topbarActionHost, setTopbarActionHost] = useState<HTMLElement | null>(null);
   const project = selectedProject ?? "全部项目";
+
+  useEffect(() => {
+    setTopbarActionHost(document.getElementById("workbench-topbar-actions"));
+  }, []);
 
   useEffect(() => {
     setQuery("");
@@ -139,9 +145,7 @@ export function FileManager({
     }));
     return (
       <section className="workbenchView knowledgeBaseView knowledgeRootView">
-        <div className="knowledgeRootActions">
-          <button className="secondaryButton compact" type="button" onClick={() => { setFolderProject(projects[0]?.name ?? ""); setFolderDialogOpen(true); }}><Plus size={15} />新建文件夹</button>
-        </div>
+        {topbarActionHost ? createPortal(<div className="projectLibraryActions"><button className="secondaryButton compact" type="button" onClick={() => { setFolderProject(projects[0]?.name ?? ""); setFolderDialogOpen(true); }}><Plus size={15} />新建文件夹</button></div>, topbarActionHost) : null}
         <div className="projectFolderStrip">
           {projectFolders.map((folder) => (
             <button type="button" key={folder.name} onClick={() => openProject(folder.name)}>
@@ -166,12 +170,13 @@ export function FileManager({
   return (
     <section className="workbenchView knowledgeBaseView projectLibraryView">
       <input className="visuallyHidden" id="project-file-upload" type="file" multiple onChange={upload} />
-      <header className="projectLibraryHeader">
+      {topbarActionHost ? createPortal(
         <div className="projectLibraryActions">
           <label className="primaryButton compact" htmlFor="project-file-upload"><Upload size={15} />上传文件</label>
           <button className={`libraryTrashButton ${trashFiles.length ? "hasItems" : ""}`} type="button" onClick={() => onViewChange("trash")}><Trash2 size={15} />回收站{trashFiles.length ? ` · ${trashFiles.length}` : ""}</button>
-        </div>
-      </header>
+        </div>,
+        topbarActionHost,
+      ) : null}
 
       {view === "overview" ? (
         <>
@@ -198,9 +203,8 @@ export function FileManager({
           <div className="knowledgeToolbar projectKnowledgeToolbar">
             <div className="knowledgeSearch"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`搜索${listTitle}`} /></div>
             <CompactSelect value={business} options={["全部业务", "DMPK报价", "药效报告", "未分类"]} onChange={setBusiness} />
-            {view === "outputs" ? deliverySelection.length
-              ? <button className="primaryButton compact deliveryPackageAction" type="button"><PackageCheck size={15} />创建交付包<span>{deliverySelection.length}</span></button>
-              : <span className="deliveryPackageHint"><PackageCheck size={15} />勾选产物后创建交付包</span>
+            {view === "outputs"
+              ? <button className={`${deliverySelection.length ? "primaryButton" : "secondaryButton"} compact deliveryPackageAction`} type="button" aria-disabled={!deliverySelection.length}><PackageCheck size={15} />创建交付包{deliverySelection.length ? <span>{deliverySelection.length}</span> : null}</button>
               : null}
           </div>
           <FileTable
