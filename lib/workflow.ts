@@ -4,7 +4,7 @@ export const WORKFLOW_STATUS_LABEL: Record<WorkflowStatus, string> = {
   idle: "空状态",
   uploaded: "文件已上传",
   validating: "校验中",
-  warning_required: "需要确认 warning",
+  warning_required: "需要确认风险项",
   generating: "生成中",
   reviewing: "审核中",
   ready_to_export: "可导出",

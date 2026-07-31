@@ -23,7 +23,7 @@ export const validationActionsBase: Array<Omit<ActionStep, "status">> = [
   },
   {
     label: "生成校验摘要",
-    detail: "汇总 warning、表格快照、QA checklist 和下一步动作。",
+    detail: "汇总风险项、表格快照、质检清单和下一步动作。",
     tech: "create_validation_report(job_id=job_99aa8e49...)",
   },
 ];
@@ -188,7 +188,7 @@ export const traceReferences = [
   },
   {
     label: "validation-report.json",
-    detail: "业务证据：校验报告记录 warning 影响范围、是否阻断、建议责任人和下一步动作。",
+    detail: "业务证据：校验报告记录风险项影响范围、是否阻断、建议责任人和下一步动作。",
   },
   {
     label: "qc-report.md",
