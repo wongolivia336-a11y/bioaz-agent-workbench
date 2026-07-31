@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -75,6 +75,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [suppressInspectorHover, setSuppressInspectorHover] = useState(false);
   const [inspectorTopic, setInspectorTopic] = useState<InspectorTopic>("process");
+  const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewKind, setPreviewKind] = useState<PreviewKind>("validation");
   const [previewSection, setPreviewSection] = useState<PreviewSection>("recognized");
@@ -346,7 +347,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   };
 
   const rejectWarnings = () => {
-    addUserEvent("warning", "不接受当前 warning，返回替换文件");
+    addUserEvent("warning", "不接受当前风险项，返回替换文件");
     setStage("uploaded");
     setWarnings(initialWarnings);
     setValidationProgress(0);
@@ -354,7 +355,11 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     setReviewProgress(0);
   };
 
-  const startReview = () => {
+  // 发起审核是不可撤回的派发动作，先过一道二次确认（附录 C.5）
+  const startReview = () => setReviewConfirmOpen(true);
+
+  const confirmStartReview = () => {
+    setReviewConfirmOpen(false);
     addUserEvent("review", "发起专家小队审核");
     setStage("reviewing");
     setInspectorTopic("review");
@@ -528,7 +533,71 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           onClose={() => setArtifactPreviewOpen(false)}
         />
       ) : null}
+      {reviewConfirmOpen ? (
+        <ReviewConfirmDialog
+          warningCount={warnings.length}
+          onCancel={() => setReviewConfirmOpen(false)}
+          onConfirm={confirmStartReview}
+        />
+      ) : null}
     </>
+  );
+}
+
+/** 发起专家审核前的二次确认。底部两按钮（附录 C.5 已确认） */
+function ReviewConfirmDialog({
+  warningCount,
+  onCancel,
+  onConfirm,
+}: {
+  warningCount: number;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [onCancel]);
+
+  return (
+    <div
+      className="modalBackdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onCancel();
+      }}
+    >
+      <section className="confirmDialog" role="dialog" aria-modal="true" aria-labelledby="review-confirm-title">
+        <header>
+          <h2 id="review-confirm-title">确认发起专家审核</h2>
+        </header>
+        <div className="confirmDialogBody">
+          <div className="confirmDialogSection">
+            <strong>本次将提交以下内容</strong>
+            <ul>
+              <li>肿瘤报告 v3（样本 9 双批次）</li>
+              <li>校验事实（{warningCount} 项风险已确认）</li>
+              <li>业务证据（Day28 数据、历史对照）</li>
+            </ul>
+          </div>
+          <div className="confirmDialogSection">
+            <strong>审核小队：肿瘤报告专家小组</strong>
+            <ul>
+              <li>数据核对专家</li>
+              <li>统计复核专家</li>
+              <li>安全性专家</li>
+            </ul>
+          </div>
+        </div>
+        <footer>
+          <button className="secondaryButton compact" type="button" onClick={onCancel}>取消</button>
+          <button className="primaryButton compact" type="button" onClick={onConfirm}>确认发起审核</button>
+        </footer>
+      </section>
+    </div>
   );
 }
 
@@ -815,7 +884,7 @@ function ChatRow({
             </button>
             <button type="button">
               <SearchCheck size={14} />
-              查看 warning / 证据
+              查看风险项 / 依据
             </button>
             <button type="button">
               <FileText size={14} />
@@ -965,7 +1034,7 @@ function UploadEmptyState({
         </span>
         <span className="altarEyebrow">报告任务</span>
         <strong>拖入方案和数据，开始一份报告任务</strong>
-        <small>先得到可生成性判断，再进入 warning 确认、生成和专家检查。</small>
+        <small>先得到可生成性判断，再进入风险确认、生成和专家检查。</small>
         <span className="altarSlots">
           <span className={`altarSlot ${protocolCount ? "filled" : ""}`}>
             <FileText size={20} />
@@ -1164,10 +1233,10 @@ function Conversation({
             <AgentReply
               title="校验完成。"
               tone="warning"
-              actionLabel="查看 warning 证据"
+              actionLabel="查看风险依据"
               onAction={() => onInspector("warnings")}
             >
-              可以继续，但需要先确认 warning。我已完成文件识别、统计上下文检查和 QA 初筛；当前没有 blocking 问题，但有 3 条 warning 需要授权用户确认。确认风险只表示允许进入生成流程，不等于最终科学结论放行。
+              可以继续，但需要先确认风险项。我已完成文件识别、统计上下文检查和 QA 初筛；当前没有阻断项，但有 3 条风险需要授权用户确认。确认风险只表示允许进入生成流程，不等于最终科学结论放行。
             </AgentReply>
           ) : null}
           <UserEventBubbles events={userEvents} after="warning" />
@@ -1552,10 +1621,13 @@ function Composer({
       ) : null}
 
       {stage === "generated" ? (
-        <ReviewLaunchPanel
-          onStartReview={onStartReview}
-          onOpenArtifacts={() => onOpenInspector("artifacts")}
-        />
+        <>
+          <AnalysisContextCard onOpenDetail={onPreview} />
+          <ReviewLaunchPanel
+            onStartReview={onStartReview}
+            onOpenArtifacts={() => onOpenInspector("artifacts")}
+          />
+        </>
       ) : null}
 
       {stage === "review" && pendingReviews.length > 0 ? (
@@ -1725,7 +1797,7 @@ function reviewEvidence(id: string) {
       evidence: [
         "来源：validation-report.json / Safety review / AE closure",
         "位置：AE log / Mouse C-07 / Day 24，closed / resolved 字段仍需人工补充",
-        "对照：方案文件 Safety Observation 章节与 W-02 的异常事件闭环 warning",
+        "对照：方案文件 Safety Observation 章节与 W-02 的异常事件闭环风险项",
       ],
       impact:
         "报告产物已生成，不影响当前交付物预览；建议 QA 或 SD 补充异常事件处置依据，再决定是否修订体重/安全性模块描述和审核备注。",
@@ -1746,6 +1818,35 @@ function reviewEvidence(id: string) {
   };
 
   return details[id] ?? details["R-01"];
+}
+
+/** 分析上下文与产物卡片分开展示（附录 C.3），详情复用风险确认那套弹窗 */
+function AnalysisContextCard({ onOpenDetail }: { onOpenDetail: () => void }) {
+  return (
+    <article className="warningDecision analysisContextCard">
+      <div className="warningDecisionHeader">
+        <div>
+          <span>分析上下文</span>
+          <strong>关键结论与风险提示</strong>
+        </div>
+        <small>3 项风险</small>
+      </div>
+      <ul className="analysisConclusionList">
+        <li>肿瘤体积增长显著，Day28 抑瘤率达到评价阈值</li>
+        <li>统计显著性 p &lt; 0.05，样本量满足统计要求</li>
+        <li>终点日存在缺失值，已按历史对照口径补齐</li>
+      </ul>
+      <div className="analysisRiskSummary">
+        <span className="analysisRiskDot is-high" aria-hidden="true" />高风险 1 项
+        <span className="analysisRiskDot is-medium" aria-hidden="true" />中风险 2 项
+      </div>
+      <div className="warningActions">
+        <button className="secondaryButton compact" type="button" onClick={onOpenDetail}>
+          查看风险详情
+        </button>
+      </div>
+    </article>
+  );
 }
 
 function ReviewLaunchPanel({
@@ -1803,7 +1904,7 @@ function WarningDecisionPanel({
     <article className={`warningDecision stackDecision gateDecision ${expanded ? "isExpanded" : "isCollapsed"}`}>
       <button className="warningDecisionHeader decisionExpandHeader" type="button" aria-expanded={expanded} onClick={onToggleExpanded}>
         <div>
-          <span>需要确认的 warning</span>
+          <span>需要确认的风险项</span>
           <strong>校验可继续，但需要授权用户接受风险</strong>
         </div>
         <small>
@@ -1865,7 +1966,7 @@ function WarningDecisionPanel({
         </button>
       </div>
       <p className="responsibilityNote">
-        确认 warning 只表示接受这些风险进入生成流程，不等于确认最终科学结论放行。
+        确认风险项只表示接受这些风险进入生成流程，不等于确认最终科学结论放行。
       </p>
     </article>
   );
@@ -2370,7 +2471,7 @@ function ValidationPreviewModal({
       ]
     : [
         { id: "recognized", label: "识别结果", desc: "方案、分组、时间点、指标" },
-        { id: "issues", label: "校验问题", desc: "warning 影响和处理建议" },
+        { id: "issues", label: "校验问题", desc: "风险项影响和处理建议" },
         { id: "qa", label: "QA 检查", desc: "Pre-QA 和证据状态" },
         { id: "context", label: "分析上下文", desc: "允许 Agent 解释的事实" },
       ];
@@ -2487,10 +2588,10 @@ function QaTable() {
     <PreviewTable
       title="QA 检查结果"
       rows={[
-        ["source hash", "通过", "方案与数据文件 digest 已绑定"],
-        ["lineage completeness", "warning", "终点日缺失值需要 SD 确认"],
-        ["date / deviation", "warning", "异常事件闭环证据不完整"],
-        ["Word unauthorized number", "待 generation", "生成后进入 QC"],
+        ["来源校验", "通过", "方案与数据文件指纹已绑定"],
+        ["数据完整性", "风险", "终点日缺失值需要研究总监确认"],
+        ["日期与偏差", "风险", "异常事件闭环依据不完整"],
+        ["文档未授权数值", "待生成", "生成后进入质检"],
       ]}
     />
   );
@@ -2502,8 +2603,8 @@ function ContextTable() {
       title="分析上下文"
       rows={[
         ["allowed facts", "已计算事实", "Agent 可解释，不可重算数字"],
-        ["next action", "接受 warning 或替换文件", "用户决定是否进入 generation"],
-        ["责任边界", "人类确认", "warning 确认不等于科学结论签字"],
+        ["next action", "接受风险项或替换文件", "用户决定是否进入生成流程"],
+        ["责任边界", "人类确认", "风险确认不等于科学结论签字"],
       ]}
     />
   );
@@ -2776,7 +2877,7 @@ function EvidenceArtifactPreview() {
     <PreviewTable
       title="业务证据摘要"
       rows={[
-        ["校验依据", "recognized-context / validation-report", "用于解释 warning 的来源和影响范围"],
+        ["校验依据", "recognized-context / validation-report", "用于解释风险项的来源和影响范围"],
         ["表格快照", "report-table-snapshot", "保留关键统计表、模块数据和确认边界"],
         ["用户确认", "warning accepted + review confirmed", "只表示接受风险或处理建议，不等同最终科学结论签字"],
         ["隐藏信息", "job id / sha / trace / full manifest", "默认折叠，仅技术详情中查看"],
