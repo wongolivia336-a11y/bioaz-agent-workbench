@@ -11,6 +11,8 @@ import {
   FileText,
   Filter,
   Folder,
+  FolderInput,
+  FolderOutput,
   MoreHorizontal,
   PackageCheck,
   Plus,
@@ -27,19 +29,17 @@ import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbe
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { ProjectActivityTab } from "./ProjectActivityTab";
 import { ProjectPlanTab } from "./ProjectPlanTab";
-import { ProjectTasksTab } from "./ProjectTasksTab";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-type ProjectTab = "activity" | "plan" | "tasks" | "data";
+type ProjectTab = "activity" | "plan" | "data";
 type SortKey = "updated" | "kind" | "name" | "source";
 type TimeBucket = "all" | "today" | "week" | "month" | "earlier";
 
 const projectTabs: Array<{ id: ProjectTab; label: string }> = [
   { id: "activity", label: "动态" },
   { id: "plan", label: "计划" },
-  { id: "tasks", label: "任务" },
-  { id: "data", label: "数据与产物" },
+  { id: "data", label: "资料与产物" },
 ];
 
 const sortOptions: Array<{ id: SortKey; label: string }> = [
@@ -81,12 +81,10 @@ export function FileManager({
   selectedFolderId,
   folders,
   view,
-  tasks,
   onSelectedProjectChange,
   onSelectedFolderChange,
   onViewChange,
   onCreateProject,
-  onOpenTask,
 }: Props) {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
   const [query, setQuery] = useState("");
@@ -103,10 +101,12 @@ export function FileManager({
   const [projectDraft, setProjectDraft] = useState("");
   const [activeProjectTab, setActiveProjectTab] = useState<ProjectTab>("data");
   const [topbarActionHost, setTopbarActionHost] = useState<HTMLElement | null>(null);
+  const [topbarTabHost, setTopbarTabHost] = useState<HTMLElement | null>(null);
   const project = selectedProject ?? "全部项目";
 
   useEffect(() => {
     setTopbarActionHost(document.getElementById("workbench-topbar-actions"));
+    setTopbarTabHost(document.getElementById("workbench-topbar-tabs"));
   }, []);
 
   useEffect(() => {
@@ -290,7 +290,6 @@ export function FileManager({
   }
 
   const listTitle = view === "inputs" ? "项目资料" : view === "outputs" ? "任务产物" : view === "trash" ? "回收站" : activeFolder?.name ?? "项目文件";
-  const projectTasks = tasks.filter((task) => task.project === project);
   const inTrash = view === "trash";
   const selectionScope = inTrash ? visibleTrashFiles : filteredFiles;
   const activeSelection = selectedIds.filter((id) => selectionScope.some((file) => file.id === id));
@@ -338,24 +337,26 @@ export function FileManager({
         topbarActionHost,
       ) : null}
 
-      <div className="projectSpaceTabs" role="tablist" aria-label="项目空间">
-        {projectTabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`projectSpaceTab ${activeProjectTab === tab.id ? "active" : ""}`}
-            type="button"
-            role="tab"
-            aria-selected={activeProjectTab === tab.id}
-            onClick={() => setActiveProjectTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {topbarTabHost ? createPortal(
+        <div className="projectSpaceTabs" role="tablist" aria-label="项目空间">
+          {projectTabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`projectSpaceTab ${activeProjectTab === tab.id ? "active" : ""}`}
+              type="button"
+              role="tab"
+              aria-selected={activeProjectTab === tab.id}
+              onClick={() => setActiveProjectTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>,
+        topbarTabHost,
+      ) : null}
 
       {activeProjectTab === "activity" ? <ProjectActivityTab project={project} /> : null}
       {activeProjectTab === "plan" ? <ProjectPlanTab project={project} /> : null}
-      {activeProjectTab === "tasks" ? <ProjectTasksTab project={project} tasks={projectTasks} onOpenTask={onOpenTask} /> : null}
 
       {activeProjectTab === "data" ? (
         <>
@@ -384,8 +385,8 @@ export function FileManager({
               ) : null}
               {projectFiles.length ? (
                 <div className="projectFileLanes projectOverviewLanes">
-                  <OverviewLane title="项目资料" description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} files={projectInputs.slice(0, 5)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
-                  <OverviewLane title="任务产物" description={`由项目任务生成 · ${projectOutputs.length} 项`} files={projectOutputs.slice(0, 5)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="项目资料" icon={<FolderInput size={18} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} files={projectInputs.slice(0, 5)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="任务产物" icon={<FolderOutput size={18} />} description={`由项目任务生成 · ${projectOutputs.length} 项`} files={projectOutputs.slice(0, 5)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
                 </div>
               ) : (
                 <EmptyState
@@ -474,12 +475,10 @@ type Props = {
   selectedFolderId: string | null;
   folders: LibraryFolder[];
   view: LibraryView;
-  tasks: WorkbenchTask[];
   onSelectedProjectChange: (project: string | null) => void;
   onSelectedFolderChange: (folderId: string | null) => void;
   onViewChange: (view: LibraryView) => void;
   onCreateProject: (name: string) => WorkbenchProject | null;
-  onOpenTask: (task: WorkbenchTask) => void;
 };
 
 function LibrarySearch({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
@@ -554,12 +553,12 @@ function SelectToggle({ checked, label, onToggle }: { checked: boolean; label: s
   );
 }
 
-function OverviewLane({ title, description, files, onOpenAll, onPreview, onDetail, onDelete }: { title: string; description: string; files: KnowledgeFile[]; onOpenAll: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
+function OverviewLane({ title, icon, description, files, onOpenAll, onPreview, onDetail, onDelete }: { title: string; icon: ReactNode; description: string; files: KnowledgeFile[]; onOpenAll: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
   return (
     <section className="projectFileLane overviewFileLane">
       <div className="projectLaneHeader">
         <button className="overviewLaneTitle" type="button" onClick={onOpenAll}>
-          <span><strong>{title}</strong><small>{description}</small></span>
+          <span className="overviewLaneTitleText">{icon}<strong>{title}</strong><small>{description}</small></span>
           <ChevronRight size={16} />
         </button>
       </div>

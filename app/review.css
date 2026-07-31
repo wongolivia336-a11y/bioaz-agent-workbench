@@ -2038,6 +2038,22 @@ button { -webkit-tap-highlight-color: transparent; }
   min-width: 0;
   gap: 3px;
 }
+
+.overviewLaneTitleText {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.overviewLaneTitleText svg {
+  color: var(--bioaz-brand);
+  flex-shrink: 0;
+}
+
+.overviewLaneTitleText strong {
+  font-size: 15px;
+  font-weight: 600;
+}
 .overviewLaneTitle small {
   color: var(--bioaz-text-tertiary);
   font-weight: 400;
@@ -3303,3 +3319,1319 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-disabled);
   font-style: normal;
 }
+
+/* ========== Knowledge Base Hub (new placeholder UI) ========== */
+
+.kbStatRow {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.kbStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  padding: 12px 18px;
+  min-width: 110px;
+}
+
+.kbStat strong {
+  font-size: 22px;
+  font-weight: 650;
+  color: #101828;
+  line-height: 1;
+}
+
+.kbStat span {
+  font-size: 12px;
+  color: #667085;
+}
+
+.kbStat.isAlert strong {
+  color: #b42318;
+}
+
+.kbBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #667085;
+}
+
+.kbBreadcrumb button {
+  background: transparent;
+  border: 0;
+  padding: 2px 4px;
+  color: #667085;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.kbBreadcrumb button:hover {
+  background: #f2f4f7;
+  color: #101828;
+}
+
+.kbFolderStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kbFolderStrip button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 14px;
+  color: #475467;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.kbFolderStrip button:hover {
+  border-color: #d0d5dd;
+  background: #f9fafb;
+}
+
+.kbFolderStrip button small {
+  color: #98a2b3;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.kbStatusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.kbStatusChip.is-parsed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.kbStatusChip.is-parsing {
+  background: rgba(92, 96, 184, 0.08);
+  color: #5c60b8;
+}
+
+.kbStatusChip.is-failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.kbPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 8px;
+}
+
+.kbPagination span {
+  font-size: 12px;
+  color: #667085;
+  margin-right: 8px;
+}
+
+.kbPagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border: 1px solid #e4e7ec;
+  border-radius: 6px;
+  background: #fff;
+  color: #475467;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.kbPagination button:hover:not(:disabled) {
+  border-color: #d0d5dd;
+  background: #f9fafb;
+}
+
+.kbPagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kbPagination button.active {
+  background: #101828;
+  border-color: #101828;
+  color: #fff;
+}
+
+/* Detail panel */
+.knowledgeDetailPanel.kbDetailPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100vh;
+  background: #fff;
+  border-left: 1px solid #e4e7ec;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.knowledgeDetailPanel.kbDetailPanel header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.knowledgeDetailPanel.kbDetailPanel header div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.knowledgeDetailPanel.kbDetailPanel header span {
+  font-size: 12px;
+  color: #667085;
+}
+
+.knowledgeDetailPanel.kbDetailPanel header strong {
+  font-size: 14px;
+  color: #101828;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.knowledgeDetailPanel.kbDetailPanel header button {
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  color: #667085;
+  cursor: pointer;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+}
+
+.knowledgeDetailPanel.kbDetailPanel header button:hover {
+  background: #f2f4f7;
+}
+
+.knowledgeDetailPanel.kbDetailPanel dl {
+  display: grid;
+  gap: 10px;
+  padding: 16px 20px;
+  margin: 0;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.knowledgeDetailPanel.kbDetailPanel dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.knowledgeDetailPanel.kbDetailPanel dt {
+  font-size: 12px;
+  color: #667085;
+}
+
+.knowledgeDetailPanel.kbDetailPanel dd {
+  margin: 0;
+  font-size: 12.5px;
+  color: #475467;
+  font-weight: 500;
+}
+
+.kbDetailSection {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.kbDetailSectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.kbDetailSectionHead strong {
+  font-size: 13px;
+  color: #101828;
+  font-weight: 600;
+}
+
+.kbDetailSectionHead button {
+  background: transparent;
+  border: 0;
+  padding: 2px 6px;
+  color: #5c60b8;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.kbDetailSectionHead button:hover {
+  background: rgba(92, 96, 184, 0.06);
+}
+
+.kbScopeOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: #475467;
+  margin-bottom: 6px;
+}
+
+.kbScopeOption.active {
+  background: #f2f4f7;
+  color: #101828;
+  font-weight: 500;
+}
+
+.kbScopeOption svg {
+  color: #5c60b8;
+}
+
+.kbAssignedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 8px;
+}
+
+.kbAssignedList span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  background: rgba(92, 96, 184, 0.06);
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #5c60b8;
+}
+
+.kbTagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kbTagList span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  background: #f2f4f7;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  color: #475467;
+}
+
+.kbTagList small {
+  color: #98a2b3;
+  font-size: 12px;
+}
+
+/* Dialog */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.kbDialog {
+  width: min(480px, 100%);
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e4e7ec;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.kbDialog header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 0;
+}
+
+.kbDialog header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #101828;
+  margin: 0;
+}
+
+.kbDialog header p {
+  font-size: 12.5px;
+  color: #667085;
+  margin: 4px 0 0;
+}
+
+.kbDialogBody {
+  padding: 16px 20px;
+  overflow: auto;
+}
+
+.kbDialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px 18px;
+  border-top: 1px solid #f0f1f3;
+}
+
+.kbAssignOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kbAssignOptions button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.kbAssignOptions button:hover {
+  border-color: #d0d5dd;
+  background: #f9fafb;
+}
+
+.kbAssignOptions button.active {
+  border-color: #5c60b8;
+  background: rgba(92, 96, 184, 0.04);
+}
+
+.kbAssignOptions button svg:last-child {
+  margin-left: auto;
+  color: #5c60b8;
+}
+
+.kbAssignMark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f2f4f7;
+  color: #475467;
+  flex-shrink: 0;
+}
+
+.kbAssignOptions button.active .kbAssignMark {
+  background: rgba(92, 96, 184, 0.1);
+  color: #5c60b8;
+}
+
+.kbAssignOptions button strong {
+  font-size: 13px;
+  color: #101828;
+  font-weight: 500;
+}
+
+.kbAssignOptions button small {
+  display: block;
+  font-size: 11.5px;
+  color: #667085;
+  margin-top: 2px;
+}
+
+/* Fix knowledge table column mismatch */
+.knowledgeTableHeader,
+.knowledgeFileRow {
+  grid-template-columns: minmax(200px, 2fr) 100px 100px minmax(140px, 1.2fr) 100px 44px !important;
+}
+
+.knowledgeHeadName {
+  padding-left: 4px;
+}
+
+.knowledgeFileCell {
+  min-width: 0;
+}
+
+/* row actions compatibility */
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rowActionButton,
+.rowMoreButton {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #667085;
+  cursor: pointer;
+}
+
+.rowActionButton:hover,
+.rowMoreButton:hover {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+.rowActionMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 4px;
+  min-width: 160px;
+  z-index: 20;
+}
+
+.rowActionMenu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #475467;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.rowActionMenu button:hover {
+  background: #f9fafb;
+}
+
+.knowledgeRowMenu {
+  right: 8px;
+}
+
+/* Responsive: hide detail panel on narrow screens */
+@media (max-width: 768px) {
+  .knowledgeDetailPanel.kbDetailPanel {
+    width: 100%;
+  }
+}
+
+
+/* ===== 项目任务 Tab · 表格 / 看板双视图 ===== */
+
+.projectTaskToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  margin-bottom: var(--bioaz-space-4);
+}
+.taskViewSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.taskViewSwitch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 11px;
+}
+.taskViewSwitch button:hover {
+  color: var(--bioaz-text-primary);
+}
+.taskViewSwitch button.active {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+.projectTaskCount {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* 状态与优先级 chip：与肿瘤报告的状态色系保持一致 */
+.taskStatusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+  font-style: normal;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.taskStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--bioaz-radius-full);
+  background: currentColor;
+}
+.taskStatusChip.status-running {
+  background: rgba(92, 96, 184, 0.08);
+  color: #5c60b8;
+}
+.taskStatusChip.status-awaitingReview {
+  background: #fef3c7;
+  color: #92400e;
+}
+.taskStatusChip.status-done {
+  background: #d1fae5;
+  color: #065f46;
+}
+.taskStatusChip.status-blocked {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.taskPriorityChip {
+  display: inline-flex;
+  border-radius: var(--bioaz-radius-full);
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+  font-style: normal;
+  padding: 1px 9px;
+}
+.taskPriorityChip.priority-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.taskPriorityChip.priority-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+.taskFieldEmpty {
+  color: var(--bioaz-text-disabled);
+}
+
+/* 表格视图 */
+.taskTable {
+  display: grid;
+  border-top: 1px solid var(--bioaz-border);
+}
+.taskTableHeader,
+.taskTableRow {
+  display: grid;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: minmax(200px, 1fr) 108px 150px 76px 110px 40px;
+  padding-inline: var(--bioaz-space-3);
+}
+.taskTableHeader {
+  border-bottom: 1px solid var(--bioaz-border);
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  min-height: 34px;
+}
+.taskTableRow {
+  position: relative;
+  border-bottom: 1px solid var(--bioaz-border);
+  min-height: 48px;
+}
+.taskTableRow:hover {
+  background: rgba(17, 19, 24, 0.02);
+}
+.taskTableTitle {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.taskTableTitle:hover {
+  color: var(--bioaz-agent-accent);
+}
+.taskAssignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.taskAssigneeMark {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+.taskTime {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.taskRowActions {
+  display: flex;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.taskTableRow:hover .taskRowActions,
+.taskTableRow:focus-within .taskRowActions,
+.taskTableRow.menuOpen .taskRowActions {
+  opacity: 1;
+}
+
+/* 看板视图 */
+.taskBoard {
+  display: grid;
+  align-items: start;
+  gap: var(--bioaz-space-3);
+  grid-auto-columns: minmax(232px, 1fr);
+  grid-auto-flow: column;
+  overflow-x: auto;
+  padding-bottom: var(--bioaz-space-2);
+}
+.taskBoardColumn {
+  display: grid;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: var(--bioaz-space-3);
+}
+.taskBoardColumn > header {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+.taskBoardColumn > header > b {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.taskBoardColumn > header > button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  margin-left: auto;
+  padding: 0;
+  place-items: center;
+}
+.taskBoardColumn > header > button:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.taskBoardCards {
+  display: grid;
+  gap: var(--bioaz-space-2);
+}
+.taskBoardCard {
+  display: grid;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  padding: var(--bioaz-space-3);
+  text-align: left;
+}
+.taskBoardCard:hover {
+  border-color: rgba(92, 96, 184, 0.28);
+  box-shadow: 0 4px 12px rgba(18, 24, 38, 0.06);
+}
+.taskBoardCard > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 19px;
+}
+.taskBoardCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.taskBoardCardMeta > small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  margin-left: auto;
+}
+.taskBoardEmpty {
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-disabled);
+  font-size: 12px;
+  padding: var(--bioaz-space-5) var(--bioaz-space-3);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .taskTableHeader,
+  .taskTableRow {
+    grid-template-columns: minmax(0, 1fr) 100px 76px 40px;
+  }
+  .taskTableHeader > span:nth-child(3),
+  .taskTableRow > .taskAssignee,
+  .taskTableHeader > span:nth-child(5),
+  .taskTableRow > .taskTime {
+    display: none;
+  }
+  .taskRowActions {
+    opacity: 1;
+  }
+}
+
+/* ===== 项目计划 · 列表 / 看板 + 内联属性编辑（Linear 式） ===== */
+
+/* Tab 顶部统一：视图切换器与其他工具同处顶栏工具层 */
+.tabViewSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.tabViewSwitch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 11px;
+}
+.tabViewSwitch button:hover { color: var(--bioaz-text-primary); }
+.tabViewSwitch button.active {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+
+/* 状态点：一套色，列表与看板共用 */
+.planStatusDot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border: 1.5px solid #9ca3af;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+}
+.planStatusDot.is-running { border-color: #5c60b8; background: #5c60b8; }
+.planStatusDot.is-review { border-color: #d97706; background: #fbbf24; }
+.planStatusDot.is-done { border-color: #059669; background: #059669; }
+.planStatusDot.is-blocked { border-color: #dc2626; background: #dc2626; }
+
+/* 内联属性编辑 */
+.inlineSelect { position: relative; display: inline-flex; min-width: 0; }
+.inlineSelectTrigger {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 8px;
+}
+.inlineSelectTrigger:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.inlineSelectTrigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inlineSelectCaret {
+  flex: none;
+  color: var(--bioaz-text-disabled);
+  opacity: 0;
+  transition: opacity var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.inlineSelectTrigger:hover .inlineSelectCaret,
+.inlineSelectTrigger[aria-expanded="true"] .inlineSelectCaret { opacity: 1; }
+.inlineSelectTrigger[aria-expanded="true"] {
+  border-color: rgba(92, 96, 184, 0.28);
+  background: #fff;
+}
+.inlineSelectMenu { left: 0; right: auto; min-width: 168px; }
+.toolMenuItem > span { display: inline-flex; align-items: center; gap: 7px; }
+
+.planPriorityTrigger.is-urgent { color: #991b1b; }
+.planPriorityTrigger.is-high { color: #92400e; }
+
+.planAvatar {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: #e5e7eb;
+  color: #4b5563;
+  font-size: 10px;
+  font-weight: 600;
+  place-items: center;
+}
+.planAvatar.isAgent {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+/* 列表视图：阶段分组 + 扁平行，不做框中框 */
+.planList { display: grid; gap: var(--bioaz-space-6); }
+.planStageHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: var(--bioaz-space-2);
+  margin-bottom: 2px;
+}
+.planStageHeader strong { color: var(--bioaz-text-primary); font-size: 14px; font-weight: 600; }
+.planStageHeader span { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.planRow {
+  display: grid;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: 116px minmax(0, 1fr) 76px 128px 56px;
+  border-bottom: 1px solid var(--bioaz-border);
+  min-height: 44px;
+  padding-inline: var(--bioaz-space-2);
+}
+.planRow:last-child { border-bottom: 0; }
+.planRow:hover { background: rgba(17, 19, 24, 0.02); }
+.planRowTitle {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.planRowDue { color: var(--bioaz-text-tertiary); font-size: 12px; text-align: right; }
+
+/* 看板视图 */
+.planBoard {
+  display: grid;
+  align-items: start;
+  gap: var(--bioaz-space-3);
+  grid-auto-columns: minmax(224px, 1fr);
+  grid-auto-flow: column;
+  overflow-x: auto;
+  padding-bottom: var(--bioaz-space-2);
+}
+.planBoardColumn {
+  display: grid;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: var(--bioaz-space-3);
+}
+.planBoardColumn > header { display: flex; align-items: center; gap: 7px; }
+.planBoardColumn > header strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 600; }
+.planBoardColumn > header b { color: var(--bioaz-text-tertiary); font-size: 12px; font-weight: 500; margin-left: auto; }
+.planBoardCards { display: grid; gap: var(--bioaz-space-2); }
+.planBoardCard {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  padding: var(--bioaz-space-3);
+}
+.planBoardCard > strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 500; line-height: 19px; }
+.planCardStage { color: var(--bioaz-text-tertiary); font-size: 11px; }
+.planCardMeta { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+.planCardMeta .planRowDue { margin-left: auto; }
+.planBoardEmpty {
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-disabled);
+  font-size: 12px;
+  padding: var(--bioaz-space-5) var(--bioaz-space-3);
+  text-align: center;
+}
+
+/* ===== 统一卡片与列表形式：同一套圆角 / 边框 / 内距 ===== */
+.projectFolderStrip > button,
+.kbFolderStrip > button,
+.digitalScenarioCard,
+.digitalCapabilityCard,
+.digitalCoworkerCard,
+.planBoardCard,
+.planBoardColumn,
+.kbStat {
+  border-radius: var(--bioaz-radius-tool);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--bioaz-border);
+}
+.digitalScenarioCard,
+.digitalCapabilityCard,
+.digitalCoworkerCard {
+  padding: var(--bioaz-space-4);
+}
+.kbStat,
+.projectFolderStrip > button,
+.kbFolderStrip > button {
+  padding: var(--bioaz-space-3) var(--bioaz-space-4);
+}
+
+@media (max-width: 900px) {
+  .planRow {
+    grid-template-columns: 104px minmax(0, 1fr) 40px;
+  }
+  .planRow > .planAssigneeTrigger,
+  .planRow > .inlineSelect:nth-child(4),
+  .planRow > .planRowDue {
+    display: none;
+  }
+}
+
+/* ===== 卡片列表：折叠只由展开态决定，hover 不再驱动布局 =====
+   历史实现用 .stackDecision:not(:hover) 把第 2、3 行叠成卡牌堆，
+   hover 才摊开，鼠标移开又塌回去。确认类操作不该依赖悬停，
+   这里把布局职责交还给 .isCollapsed / .isExpanded。 */
+
+.stackDecision:not(:hover):not(.isPinned) .warningDecisionList {
+  position: static;
+  min-height: 0;
+  gap: var(--bioaz-space-3);
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3) {
+  position: static;
+  inset: auto;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(n + 2) > * {
+  visibility: visible;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionCopy p,
+.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
+.stackDecision:not(:hover):not(.isPinned) .warningActions,
+.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
+  display: revert;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionCopy strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionRow {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  min-height: 0;
+}
+/* hover 不再放大卡片，也不再加投影 */
+.stackDecision:hover {
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+  padding: 18px 20px;
+}
+
+/* 折叠态：只显示头部一行，内容整体收起 */
+.tumor-reportModuleShell .gateDecision.isCollapsed .warningDecisionList,
+.tumor-reportModuleShell .gateDecision.isCollapsed .warningActions,
+.tumor-reportModuleShell .gateDecision.isCollapsed .responsibilityNote {
+  display: none;
+}
+.tumor-reportModuleShell .gateDecision.isExpanded .warningDecisionList {
+  display: grid;
+  gap: var(--bioaz-space-3);
+}
+
+/* 展开头部：唯一的可点区域，给出明确的可点反馈但不改变布局 */
+.decisionExpandHeader {
+  width: 100%;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.decisionExpandHeader:hover {
+  background: rgba(17, 19, 24, 0.02);
+}
+
+/* 行本身不再是 hover 变色的目标，避免扫视时整列闪动 */
+.decisionRow,
+.decisionRow:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
+  box-shadow: none;
+  transform: none;
+}
+.tumor-reportModuleShell .gateDecision .decisionRow:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
+}
+
+/* ===== 思考链完成折叠态：去掉蓝紫底，回到中性（附录 A.1 / C.8） ===== */
+.tumor-reportModuleShell .agentRun.settled,
+.tumor-reportModuleShell .agentRun.settled.collapsed,
+.agentRun.settled.collapsed {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+}
+.tumor-reportModuleShell .agentRun.settled .agentRunHeader strong,
+.agentRun.settled.collapsed strong {
+  color: var(--bioaz-text-secondary);
+}
+
+/* ===== 计划：阶段为主线，阶段头部挂交付物 ===== */
+.planStageHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-3);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: var(--bioaz-space-2);
+}
+.planStageHeading { display: grid; gap: 2px; min-width: 0; }
+.planStageHeading strong { color: var(--bioaz-text-primary); font-size: 14px; font-weight: 600; }
+.planStageHeading small { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.planStageWindow { color: var(--bioaz-text-tertiary); font-size: 12px; margin-left: auto; white-space: nowrap; }
+.planStageCount { color: var(--bioaz-text-secondary); font-size: 12px; white-space: nowrap; }
+
+.planDeliverables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bioaz-space-2);
+  margin: var(--bioaz-space-3) 0 var(--bioaz-space-2);
+}
+.planDeliverable {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  padding: 4px 12px 4px 10px;
+}
+.planDeliverable > strong { color: var(--bioaz-text-primary); font-size: 12px; font-weight: 500; }
+.planDeliverable > small { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+/* ===== Header 三层：路径 / Tab / 工具 ===== */
+.topbarTabLayer:empty { display: none; }
+.topbarTabLayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  border-top: 1px solid var(--bioaz-border);
+  padding: 0 var(--bioaz-space-5);
+}
+.topbarTabLayer .projectSpaceTabs {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-1);
+  margin: 0;
+  overflow-x: auto;
+}
+.topbarTabLayer .projectSpaceTab {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 12px;
+  white-space: nowrap;
+}
+.topbarTabLayer .projectSpaceTab:hover { color: var(--bioaz-text-primary); }
+.topbarTabLayer .projectSpaceTab.active { color: var(--bioaz-text-primary); font-weight: 600; }
+.topbarTabLayer .projectSpaceTab.active::after {
+  position: absolute;
+  right: 12px;
+  bottom: -1px;
+  left: 12px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--bioaz-agent-accent);
+  content: "";
+}
+/* Tab 层存在时，工具层不再重复画上边框 */
+.topbarTabLayer + .topbarToolLayer { border-top: 1px solid var(--bioaz-border); }
+
+/* ===== 动态：按时间分组 + 事件类型标签 ===== */
+.projectActivityGroup + .projectActivityGroup { margin-top: var(--bioaz-space-6); }
+.projectActivityGroupHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  border-bottom: 1px solid var(--bioaz-border);
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding-bottom: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-3);
+}
+.projectActivityGroupHead span { color: var(--bioaz-text-tertiary); font-size: 12px; font-weight: 400; }
+.projectActivityKind {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  padding: 1px 8px;
+}
+.projectActivityHead { display: flex; align-items: center; gap: var(--bioaz-space-2); }
+.projectActivityHead time { color: var(--bioaz-text-tertiary); font-size: 12px; margin-left: auto; white-space: nowrap; }
+
+/* ===== 确认弹窗（附录 C.5：白底 / 浅灰边框 / 无阴影渐变 / 圆角 8px） ===== */
+.confirmDialog {
+  display: grid;
+  width: min(480px, calc(100vw - 32px));
+  gap: var(--bioaz-space-4);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  padding: var(--bioaz-space-5);
+}
+.confirmDialog > header h2 {
+  color: var(--bioaz-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.confirmDialogBody { display: grid; gap: var(--bioaz-space-4); }
+.confirmDialogSection > strong {
+  display: block;
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.confirmDialogSection ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+.confirmDialogSection li { color: var(--bioaz-text-secondary); font-size: 13px; line-height: 20px; }
+.confirmDialog > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: var(--bioaz-space-4);
+}
+
+/* ===== 分析上下文卡片（附录 C.3：与产物卡片分开展示） ===== */
+.analysisContextCard { border: 1px solid var(--bioaz-border); box-shadow: none; }
+.analysisConclusionList {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+.analysisConclusionList li { color: var(--bioaz-text-secondary); font-size: 13px; line-height: 20px; }
+.analysisRiskSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+}
+.analysisRiskDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--bioaz-radius-full);
+}
+.analysisRiskDot.is-high { background: #dc2626; }
+.analysisRiskDot.is-medium { background: #f59e0b; margin-left: var(--bioaz-space-3); }
