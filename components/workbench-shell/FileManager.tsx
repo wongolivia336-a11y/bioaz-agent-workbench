@@ -39,7 +39,7 @@ const projectTabs: Array<{ id: ProjectTab; label: string }> = [
   { id: "activity", label: "动态" },
   { id: "plan", label: "计划" },
   { id: "tasks", label: "任务" },
-  { id: "data", label: "数据与产物" },
+  { id: "data", label: "资料与产物" },
 ];
 
 const sortOptions: Array<{ id: SortKey; label: string }> = [

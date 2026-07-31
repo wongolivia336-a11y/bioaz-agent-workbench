@@ -38,7 +38,7 @@ const assistantCopy = {
     suggestions: ["查找项目相关文件", "总结当前项目关键结论", "基于项目资料生成客户汇报"],
   },
   knowledgeBase: {
-    name: "知识库助手",
+    name: "知识库",
     welcome: "想从知识库里了解什么？",
     intro: "我可以基于已解析的知识库文件回答问题，并标注引用来源。",
     placeholder: "问问知识库里的规程、报告或结论…",
