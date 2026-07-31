@@ -2038,6 +2038,22 @@ button { -webkit-tap-highlight-color: transparent; }
   min-width: 0;
   gap: 3px;
 }
+
+.overviewLaneTitleText {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.overviewLaneTitleText svg {
+  color: var(--bioaz-brand);
+  flex-shrink: 0;
+}
+
+.overviewLaneTitleText strong {
+  font-size: 15px;
+  font-weight: 600;
+}
 .overviewLaneTitle small {
   color: var(--bioaz-text-tertiary);
   font-weight: 400;

@@ -11,6 +11,8 @@ import {
   FileText,
   Filter,
   Folder,
+  FolderInput,
+  FolderOutput,
   MoreHorizontal,
   PackageCheck,
   Plus,
@@ -384,8 +386,8 @@ export function FileManager({
               ) : null}
               {projectFiles.length ? (
                 <div className="projectFileLanes projectOverviewLanes">
-                  <OverviewLane title="项目资料" description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} files={projectInputs.slice(0, 5)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
-                  <OverviewLane title="任务产物" description={`由项目任务生成 · ${projectOutputs.length} 项`} files={projectOutputs.slice(0, 5)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="项目资料" icon={<FolderInput size={18} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} files={projectInputs.slice(0, 5)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="任务产物" icon={<FolderOutput size={18} />} description={`由项目任务生成 · ${projectOutputs.length} 项`} files={projectOutputs.slice(0, 5)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
                 </div>
               ) : (
                 <EmptyState
@@ -554,12 +556,12 @@ function SelectToggle({ checked, label, onToggle }: { checked: boolean; label: s
   );
 }
 
-function OverviewLane({ title, description, files, onOpenAll, onPreview, onDetail, onDelete }: { title: string; description: string; files: KnowledgeFile[]; onOpenAll: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
+function OverviewLane({ title, icon, description, files, onOpenAll, onPreview, onDetail, onDelete }: { title: string; icon: ReactNode; description: string; files: KnowledgeFile[]; onOpenAll: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
   return (
     <section className="projectFileLane overviewFileLane">
       <div className="projectLaneHeader">
         <button className="overviewLaneTitle" type="button" onClick={onOpenAll}>
-          <span><strong>{title}</strong><small>{description}</small></span>
+          <span className="overviewLaneTitleText">{icon}<strong>{title}</strong><small>{description}</small></span>
           <ChevronRight size={16} />
         </button>
       </div>
