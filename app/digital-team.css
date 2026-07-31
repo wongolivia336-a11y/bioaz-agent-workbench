@@ -770,3 +770,312 @@
     border-left: 0;
   }
 }
+
+/* ===== Phase 6 · 数字团队三 Tab（数字同事 / Skills / MCP） ===== */
+
+.digitalTeamTabs {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-1);
+  border-bottom: 1px solid var(--bioaz-border);
+  margin-bottom: var(--bioaz-space-5);
+}
+.digitalTeamTab {
+  border: 0;
+  border-radius: 0;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+}
+.digitalTeamTab:hover {
+  color: var(--bioaz-text-primary);
+}
+.digitalTeamTab.active {
+  border-bottom: 2px solid var(--bioaz-agent-accent);
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+}
+.digitalTeamTabs .digitalTeamSearch {
+  width: clamp(200px, 24vw, 300px);
+  height: 32px;
+  margin-bottom: 6px;
+  margin-left: auto;
+}
+
+/* 精选场景：一行横向卡片，只用边框和文字，不做配图 */
+.digitalScenarioStrip {
+  margin-bottom: var(--bioaz-space-6);
+}
+.digitalScenarioHeading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-3);
+  margin-bottom: var(--bioaz-space-3);
+}
+.digitalScenarioHeading strong {
+  color: var(--bioaz-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+.digitalScenarioHeading span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.digitalScenarioRow {
+  display: grid;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.digitalScenarioCard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: var(--bioaz-space-3) var(--bioaz-space-4) var(--bioaz-space-2);
+}
+.digitalScenarioCard > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.digitalScenarioCard > small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.digitalScenarioCard > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  margin-top: var(--bioaz-space-2);
+}
+.digitalScenarioCard > div button {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 6px;
+  text-align: left;
+}
+.digitalScenarioCard > div button:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.digitalScenarioCard > div button > span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+
+/* 领域 / 分类 / 状态 chip 行 */
+.digitalFilterChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-4);
+}
+.digitalFilterChip {
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 13px;
+}
+.digitalFilterChip:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.digitalFilterChip.active {
+  background: var(--bioaz-text-primary);
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Skills / MCP 卡片网格 */
+.digitalCapabilityGrid {
+  display: grid;
+  align-items: start;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.digitalCapabilityCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: var(--bioaz-space-4);
+}
+.digitalCapabilityCard > header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bioaz-space-2);
+}
+.digitalCapabilityCard > header > div {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.digitalCapabilityCard > header strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.digitalCapabilityCard > header small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.digitalCapabilityIcon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+.digitalCapabilityCard > p {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+  margin: 0;
+}
+.digitalCapabilityCard > footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: var(--bioaz-space-2);
+}
+.digitalCapabilityCard > footer > span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.digitalCapabilityCard > footer > b {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  padding: 2px 9px;
+}
+.digitalCapabilityCard > footer > small {
+  color: var(--bioaz-text-disabled);
+  font-size: 12px;
+}
+
+.digitalStatusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+  font-style: normal;
+  margin-left: auto;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.digitalStatusChip.is-active,
+.digitalStatusChip.is-connected {
+  background: #d1fae5;
+  color: #065f46;
+}
+.digitalStatusChip.is-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+.digitalStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--bioaz-radius-full);
+  background: currentColor;
+}
+
+.digitalConnectorMeta {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.digitalConnectorMeta > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+}
+.digitalConnectorMeta dt {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.digitalConnectorMeta dd {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  margin: 0;
+  text-align: right;
+}
+
+.digitalEmptyState {
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-tertiary);
+  font-size: 13px;
+  grid-column: 1 / -1;
+  padding: var(--bioaz-space-10) var(--bioaz-space-4);
+  text-align: center;
+}
+
+/* detail 页 SubAgent 说明 */
+.subagentNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--bioaz-agent-accent-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  line-height: 18px;
+  padding: var(--bioaz-space-2) var(--bioaz-space-3);
+}
+.subagentNotice svg {
+  flex: none;
+  color: var(--bioaz-agent-accent);
+  margin-top: 1px;
+}
+
+@media (max-width: 900px) {
+  .digitalTeamTabs {
+    flex-wrap: wrap;
+  }
+  .digitalTeamTabs .digitalTeamSearch {
+    width: 100%;
+    margin-left: 0;
+  }
+}
