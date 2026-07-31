@@ -2985,3 +2985,373 @@ button { -webkit-tap-highlight-color: transparent; }
     display: none;
   }
 }
+
+/* ===== Phase 2/3/4 · 工具栏 icon 化 / 列表精致化 / 回收站与空状态 ===== */
+
+/* --- 工具层：搜索 + icon 按钮 + 主操作 --- */
+.libraryToolLayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+}
+.libraryToolSearch {
+  width: clamp(200px, 26vw, 320px);
+  height: 34px;
+  margin-right: var(--bioaz-space-1);
+}
+.libraryToolSearch input {
+  font-size: 13px;
+}
+.libraryToolSearch > button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.libraryToolSearch > button:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+.toolIconButton {
+  position: relative;
+  display: inline-grid;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+  transition: background var(--bioaz-motion-fast) var(--bioaz-ease-standard),
+    color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.toolIconButton:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.toolIconButton.active,
+.toolIconButton[aria-pressed="true"],
+.toolIconButton[aria-expanded="true"] {
+  border-color: rgba(92, 96, 184, 0.2);
+  background: rgba(92, 96, 184, 0.12);
+  color: var(--bioaz-agent-accent);
+}
+.toolBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  padding: 0 3px;
+  text-align: center;
+}
+
+.toolMenuWrap {
+  position: relative;
+  display: inline-flex;
+}
+.toolMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  min-width: 176px;
+  max-height: 60vh;
+  gap: 2px;
+  overflow-y: auto;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  box-shadow: var(--bioaz-shadow-floating);
+  padding: var(--bioaz-space-1);
+}
+.toolMenuGroup {
+  display: grid;
+  gap: 1px;
+}
+.toolMenuGroup + .toolMenuGroup {
+  border-top: 1px solid var(--bioaz-border);
+  margin-top: var(--bioaz-space-1);
+  padding-top: var(--bioaz-space-1);
+}
+.toolMenuGroup > span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  padding: 4px 8px 2px;
+}
+.toolMenuItem {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-2);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  text-align: left;
+}
+.toolMenuItem:hover {
+  background: rgba(92, 96, 184, 0.06);
+}
+.toolMenuItem.active {
+  background: rgba(92, 96, 184, 0.1);
+  color: var(--bioaz-agent-accent);
+  font-weight: 500;
+}
+.toolMenuItem > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- 筛选 chip 回显 --- */
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-4);
+}
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 3px 5px 3px 10px;
+}
+.filterChip > button {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.filterChip > button:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+.clearAllChips {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 4px;
+}
+.clearAllChips:hover {
+  color: var(--bioaz-agent-accent);
+  text-decoration: underline;
+}
+
+/* --- 列表精致化：压平边框、统一行高、弱化表头 --- */
+.libraryListSurface .knowledgeTable,
+.projectFileLane {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.projectOverviewLanes > .overviewFileLane {
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+.projectFileLane .projectLaneHeader {
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: var(--bioaz-space-2);
+}
+.overviewFileViewport {
+  overflow: visible;
+}
+.overviewFileViewport .knowledgeTable {
+  height: auto;
+}
+
+.knowledgeTable .knowledgeTableHeader {
+  align-items: center;
+  border-bottom: 1px solid var(--bioaz-border);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  min-height: 34px;
+  padding-inline: var(--bioaz-space-3);
+}
+.knowledgeTable .knowledgeHeadName {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.knowledgeTable .knowledgeFileRow {
+  position: relative;
+  align-items: center;
+  border-bottom: 1px solid var(--bioaz-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  min-height: 48px;
+  padding-inline: var(--bioaz-space-3);
+}
+.knowledgeTable .knowledgeFileRow:last-child {
+  border-bottom: 0;
+}
+.knowledgeTable .knowledgeFileRow:hover {
+  background: rgba(17, 19, 24, 0.02);
+  box-shadow: none;
+}
+.knowledgeTable .knowledgeFileRow.selected {
+  background: rgba(92, 96, 184, 0.05);
+  box-shadow: inset 2px 0 0 var(--bioaz-agent-accent);
+}
+.knowledgeTable .knowledgeFileRow > span {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.knowledgeFileMain strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 行级操作默认收起，hover / 聚焦 / 菜单展开时才出现 */
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.knowledgeFileRow:hover .rowActions,
+.knowledgeFileRow:focus-within .rowActions,
+.knowledgeFileRow.menuOpen .rowActions {
+  opacity: 1;
+}
+.rowActionButton {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.rowActionButton:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.libraryListSurface .knowledgeTableHeader,
+.libraryListSurface .knowledgeFileRow {
+  grid-template-columns: minmax(240px, 1fr) 120px 140px 100px 62px;
+}
+.trashTable .knowledgeTableHeader,
+.trashTable .knowledgeFileRow {
+  grid-template-columns: minmax(240px, 1fr) 140px 120px auto;
+}
+
+/* --- 批量操作浮动 bar --- */
+.batchActionBar {
+  position: sticky;
+  bottom: var(--bioaz-space-4);
+  z-index: 30;
+  display: flex;
+  width: min(var(--content-max), 100%);
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  margin-inline: auto;
+  margin-top: var(--bioaz-space-4);
+  background: #fff;
+  box-shadow: var(--bioaz-shadow-floating);
+  padding: var(--bioaz-space-2) var(--bioaz-space-3);
+}
+.batchCount {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.batchActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  margin-left: auto;
+}
+.batchActionBar .iconButton {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  place-items: center;
+}
+.batchActionBar .iconButton:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+@media (max-width: 900px) {
+  .libraryToolSearch {
+    width: clamp(140px, 30vw, 220px);
+  }
+  .libraryListSurface .knowledgeTableHeader,
+  .libraryListSurface .knowledgeFileRow {
+    grid-template-columns: minmax(0, 1fr) 100px 62px;
+  }
+  .libraryListSurface :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(2),
+  .libraryListSurface :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(3) {
+    display: none;
+  }
+  .rowActions {
+    opacity: 1;
+  }
+}
