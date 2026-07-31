@@ -97,6 +97,7 @@ export function FileManager({
   const [detailFile, setDetailFile] = useState<KnowledgeFile | null>(null);
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [rootKind, setRootKind] = useState<string | null>(null);
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
   const [projectDraft, setProjectDraft] = useState("");
   const [activeProjectTab, setActiveProjectTab] = useState<ProjectTab>("data");
@@ -166,9 +167,13 @@ export function FileManager({
         : [];
   const filteredFiles = sortFiles(listSource.filter(matchesFilters));
   const visibleTrashFiles = trashFiles.filter((file) => file.title.toLowerCase().includes(query.toLowerCase()));
-  const recentFiles = activeFiles
-    .filter((file) => file.space === "projects" && file.title.toLowerCase().includes(query.toLowerCase()))
-    .slice(0, 5);
+  const rootFiles = activeFiles.filter((file) => file.space === "projects");
+  const rootKindOptions = rootFiles.map((file) => file.kind).filter((kind, index, list) => list.indexOf(kind) === index);
+  const recentFiles = sortFiles(rootFiles.filter((file) => (
+    file.title.toLowerCase().includes(query.toLowerCase())
+    && (!rootKind || file.kind === rootKind)
+    && (business === "全部业务" || file.business === business)
+  ))).slice(0, 6);
 
   const upload = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []);
@@ -278,7 +283,22 @@ export function FileManager({
         )}
 
         <section className="rootRecentOutputs">
-          <div className="fileListHeading"><strong>最近更新</strong><span>{recentFiles.length} 项</span></div>
+          <div className="sectionBar">
+            <strong>最近更新</strong>
+            <span>{recentFiles.length} 项</span>
+            <div className="sectionBarActions">
+              <ToolMenu icon={<Filter size={16} />} label="筛选" active={Boolean(rootKind)}>
+                <MenuItem active={!rootKind} onSelect={() => setRootKind(null)}>全部类型</MenuItem>
+                {rootKindOptions.map((kind) => <MenuItem key={kind} active={rootKind === kind} onSelect={() => setRootKind(kind)}>{kind}</MenuItem>)}
+              </ToolMenu>
+              <ToolMenu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
+                {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
+              </ToolMenu>
+              <ToolMenu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
+                {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
+              </ToolMenu>
+            </div>
+          </div>
           <FileTable files={recentFiles} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
         </section>
 

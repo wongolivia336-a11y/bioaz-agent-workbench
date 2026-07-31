@@ -119,6 +119,29 @@ export function KnowledgeBasePage() {
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索知识库文件..." aria-label="搜索知识库文件" />
             {query ? <button type="button" onClick={() => setQuery("")} aria-label="清除搜索"><X size={13} /></button> : null}
           </div>
+        </div>,
+        topbarHost,
+      ) : null}
+
+      <div className="kbStatRow">
+        <KbStat label="文件总数" value={stats.total} />
+        <KbStat label="解析成功" value={stats.parsed} />
+        <KbStat label="解析失败" value={stats.failed} tone={stats.failed ? "alert" : undefined} />
+        <KbStat label="已指派同事" value={stats.assigned} />
+      </div>
+
+      {/* 面包屑与全部操作同处一行，避免上下堆多条分隔线 */}
+      <div className="sectionBar kbActionBar">
+        <div className="kbBreadcrumb">
+          <button type="button" onClick={() => setFolderId(null)}>知识库</button>
+          {trail.map((folder) => (
+            <span key={folder.id}>
+              <ChevronRight size={14} />
+              <button type="button" onClick={() => setFolderId(folder.id)}>{folder.name}</button>
+            </span>
+          ))}
+        </div>
+        <div className="sectionBarActions">
           <ToolMenu icon={<Filter size={16} />} label="筛选" active={business !== "全部业务" || tagFilter.length > 0}>
             <MenuGroup label="业务">
               {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
@@ -135,25 +158,7 @@ export function KnowledgeBasePage() {
           <button className="secondaryButton compact" type="button"><Plus size={15} />新建文件夹</button>
           <label className="primaryButton compact" htmlFor="kb-upload"><Upload size={15} />上传文件</label>
           <input className="visuallyHidden" id="kb-upload" type="file" multiple />
-        </div>,
-        topbarHost,
-      ) : null}
-
-      <div className="kbStatRow">
-        <KbStat label="文件总数" value={stats.total} />
-        <KbStat label="解析成功" value={stats.parsed} />
-        <KbStat label="解析失败" value={stats.failed} tone={stats.failed ? "alert" : undefined} />
-        <KbStat label="已指派同事" value={stats.assigned} />
-      </div>
-
-      <div className="kbBreadcrumb">
-        <button type="button" onClick={() => setFolderId(null)}>知识库</button>
-        {trail.map((folder) => (
-          <span key={folder.id}>
-            <ChevronRight size={14} />
-            <button type="button" onClick={() => setFolderId(folder.id)}>{folder.name}</button>
-          </span>
-        ))}
+        </div>
       </div>
 
       {(business !== "全部业务" || tagFilter.length > 0) ? (
@@ -224,7 +229,7 @@ export function KnowledgeBasePage() {
       {assignFor ? <AssignDialog file={assignFor} onClose={() => setAssignFor(null)} onConfirm={(ids) => assign(assignFor.id, ids)} /> : null}
       {moveFor ? <MoveDialog file={moveFor} onClose={() => setMoveFor(null)} onConfirm={(target) => move(moveFor.id, target)} /> : null}
 
-      <WorkspaceAssistant context="knowledgeBase" />
+      <WorkspaceAssistant context="knowledgeBase" scopeLabel={trail.length ? trail[trail.length - 1].name : "全部知识库"} />
     </section>
   );
 }

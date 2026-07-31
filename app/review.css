@@ -4635,3 +4635,364 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .analysisRiskDot.is-high { background: #dc2626; }
 .analysisRiskDot.is-medium { background: #f59e0b; margin-left: var(--bioaz-space-3); }
+
+/* ===== 确认类卡片：hover 一律不改变任何影响布局的属性 =====
+   历史实现在 hover 时把 padding 从 14/16 变成 18/20 并做 transition，
+   整卡重排、按钮错位。这里把尺寸锁死，hover 只保留极轻的边框反馈。 */
+.stackDecision,
+.stackDecision:hover,
+.stackDecision.isPinned,
+.stackDecision:focus-within {
+  gap: 10px;
+  padding: 14px 16px;
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+  transform: none;
+  transition: border-color 150ms ease;
+}
+.tumor-reportModuleShell .gateDecision,
+.tumor-reportModuleShell .gateDecision:hover,
+.tumor-reportModuleShell .gateDecision.isPinned {
+  gap: var(--bioaz-space-3);
+  padding: var(--bioaz-space-4);
+}
+.tumor-reportModuleShell .gateDecision.isCollapsed,
+.tumor-reportModuleShell .gateDecision.isCollapsed:hover {
+  gap: 0;
+  padding: 9px var(--bioaz-space-4);
+}
+/* 行：尺寸恒定，hover 不再变色、不再位移 */
+.decisionRow,
+.decisionRow:hover,
+.decisionRow:focus-within,
+.stackDecision:hover .decisionRow,
+.stackDecision:not(:hover) .decisionRow,
+.tumor-reportModuleShell .gateDecision .decisionRow,
+.tumor-reportModuleShell .gateDecision:hover .decisionRow {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  min-height: 0;
+  gap: var(--bioaz-space-4);
+  padding: var(--bioaz-space-4);
+  border-color: var(--bioaz-border);
+  background: #fff;
+  box-shadow: none;
+  transform: none;
+  transition: none;
+}
+/* 行内操作恒定可见，不靠 hover 出现 */
+.stackDecision .decisionInlineActions,
+.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
+.stackDecision .warningActions,
+.stackDecision:not(:hover):not(.isPinned) .warningActions,
+.stackDecision .responsibilityNote,
+.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
+  display: flex;
+}
+.stackDecision .decisionCopy p,
+.stackDecision:not(:hover):not(.isPinned) .decisionCopy p {
+  display: block;
+}
+.stackDecision .warningDecisionList,
+.stackDecision:not(:hover):not(.isPinned) .warningDecisionList,
+.stackDecision:hover .warningDecisionList {
+  position: static;
+  min-height: 0;
+  gap: var(--bioaz-space-3);
+}
+/* 折叠态整体收起，与 hover 无关 */
+.gateDecision.isCollapsed .warningDecisionList,
+.gateDecision.isCollapsed .warningActions,
+.gateDecision.isCollapsed .responsibilityNote {
+  display: none;
+}
+
+/* ===== 确认弹窗：只留标题与操作，按钮统一黑白 ===== */
+.confirmDialog {
+  gap: var(--bioaz-space-5);
+  padding: var(--bioaz-space-5) var(--bioaz-space-5) var(--bioaz-space-4);
+}
+.confirmDialog > header p {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+  margin: 8px 0 0;
+}
+.confirmDialog > footer {
+  border-top: 0;
+  padding-top: 0;
+}
+.confirmDialog > footer button {
+  min-width: 88px;
+  height: 34px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.confirmDialog > footer .secondaryButton {
+  border: 1px solid #d4d7dd;
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.confirmDialog > footer .secondaryButton:hover {
+  background: #f8f9fa;
+}
+.confirmDialog > footer .primaryButton,
+.confirmDialog > footer .primaryButton:hover:not(:disabled) {
+  border: 1px solid #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.confirmDialog > footer .primaryButton:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+
+/* ===== 分析上下文卡片：与其他 Chatflow 卡片同宽，整卡可点 ===== */
+.analysisContextCard {
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  box-shadow: none;
+}
+.analysisContextCard .warningDecisionHeader { align-items: flex-start; }
+.analysisContextTrigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+}
+.analysisContextTrigger:hover .analysisContextPeek {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-agent-accent);
+}
+.analysisContextPeek {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  margin-left: auto;
+  place-items: center;
+}
+
+/* ===== Header 第二行：Tab 在左、工具在右，同一排只留一条分界线 ===== */
+.topbarSecondRow {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--bioaz-space-4);
+  border-top: 1px solid var(--bioaz-border);
+  padding: 0 var(--bioaz-space-5);
+}
+.topbarSecondRow > .topbarTabLayer {
+  flex: none;
+  border-top: 0;
+  padding: 0;
+}
+.topbarSecondRow > .topbarToolLayer {
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-end;
+  border-top: 0;
+  padding: 0;
+}
+.topbarSecondRow:has(.topbarTabLayer:empty) { gap: 0; }
+.topbarSecondRow .projectSpaceTab { padding: 11px 12px; }
+
+/* ===== 修复 overview 双栏表格把整页撑出横向滚动 =====
+   列宽规则来自全宽列表视图，套到 500px 的 lane 上会溢出。 */
+.projectFileLane .knowledgeTableHeader,
+.projectFileLane .knowledgeFileRow,
+.overviewFileLane .knowledgeTableHeader,
+.overviewFileLane .knowledgeFileRow {
+  grid-template-columns: minmax(0, 1fr) 84px 62px;
+}
+.projectFileLane :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(2),
+.projectFileLane :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(3) {
+  display: none;
+}
+.projectFileLanes,
+.projectOverviewLanes {
+  min-width: 0;
+}
+.projectFileLane,
+.overviewFileLane {
+  min-width: 0;
+}
+
+/* ===== 区块标题行：标题在左、icon 工具在右，一行搞定不加多余线 ===== */
+.sectionBar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-2);
+}
+.sectionBar > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.sectionBar > span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.sectionBarActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.sectionBarActions .toolIconButton { width: 30px; height: 30px; }
+
+/* ===== 知识库：统计卡在上，面包屑与操作同处一行 ===== */
+.kbStatRow {
+  display: grid;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: var(--bioaz-space-4);
+}
+.kbStat {
+  display: grid;
+  gap: 2px;
+  background: var(--bioaz-surface-subtle);
+}
+.kbStat > strong { color: var(--bioaz-text-primary); font-size: 22px; font-weight: 600; line-height: 1.2; }
+.kbStat > span { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.kbStat.isAlert > strong { color: #991b1b; }
+
+.kbActionBar { gap: var(--bioaz-space-3); margin-bottom: var(--bioaz-space-3); }
+.kbActionBar .kbBreadcrumb { margin: 0; }
+.kbBreadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.kbBreadcrumb button {
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 3px 6px;
+}
+.kbBreadcrumb button:hover { background: var(--bioaz-surface-active); color: var(--bioaz-text-primary); }
+.kbBreadcrumb span:last-child button { color: var(--bioaz-text-primary); font-weight: 600; }
+.kbBreadcrumb span { display: inline-flex; align-items: center; gap: 4px; color: var(--bioaz-text-disabled); }
+
+.kbFolderStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-4);
+}
+.kbFolderStrip > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #fff;
+  color: var(--bioaz-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+}
+.kbFolderStrip > button:hover { border-color: rgba(92, 96, 184, 0.28); }
+.kbFolderStrip > button small { color: var(--bioaz-text-tertiary); font-size: 12px; }
+
+.kbTable .knowledgeTableHeader,
+.kbTable .knowledgeFileRow {
+  grid-template-columns: minmax(220px, 1fr) 96px 96px 150px 132px 62px;
+}
+.kbStatusChip {
+  display: inline-flex;
+  border-radius: var(--bioaz-radius-full);
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 11px;
+  font-style: normal;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.kbStatusChip.is-parsing { background: #fef3c7; color: #92400e; }
+.kbStatusChip.is-failed { background: #fee2e2; color: #991b1b; }
+
+.kbPagination {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  margin-top: var(--bioaz-space-4);
+}
+.kbPagination > span { color: var(--bioaz-text-tertiary); font-size: 12px; margin-right: auto; }
+.kbPagination button {
+  border: 1px solid var(--bioaz-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  min-width: 30px;
+  padding: 5px 9px;
+}
+.kbPagination button:hover:not(:disabled) { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+.kbPagination button.active { border-color: #17191e; background: #17191e; color: #fff; }
+.kbPagination button:disabled { color: var(--bioaz-text-disabled); cursor: not-allowed; }
+
+@media (max-width: 1100px) {
+  .kbTable .knowledgeTableHeader,
+  .kbTable .knowledgeFileRow { grid-template-columns: minmax(0, 1fr) 96px 132px 62px; }
+  .kbTable :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(3),
+  .kbTable :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(4) { display: none; }
+}
+
+/* 切断循环：workspace 列宽显式化，header 宽度不再由内容反推
+   （topbarSecondRow 里的 flex:1 会让 auto 宽度的父容器塌成 0） */
+.dmpkWorkspace.workbenchMode {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dmpkWorkspace.workbenchMode > .topbar {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.topbarSecondRow {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* lane 内表格列宽钉死：本文件与 globals 中同名选择器被重复定义多次，
+   打包后层叠顺序不可靠，这里显式提高优先级避免撑破双栏。 */
+.projectOverviewLanes .projectFileLane .knowledgeTableHeader,
+.projectOverviewLanes .projectFileLane .knowledgeFileRow,
+.projectFileLanes .overviewFileLane .knowledgeTableHeader,
+.projectFileLanes .overviewFileLane .knowledgeFileRow {
+  grid-template-columns: minmax(0, 1fr) 88px 56px !important;
+}
+.projectOverviewLanes .knowledgeFileRow > span:nth-of-type(1),
+.projectOverviewLanes .knowledgeFileRow > span:nth-of-type(2),
+.projectOverviewLanes .knowledgeTableHeader > span:nth-of-type(1),
+.projectOverviewLanes .knowledgeTableHeader > span:nth-of-type(2) {
+  display: none !important;
+}
+
+/* Tab 栏不再出现滚动条槽（窄屏才允许横向滚动，且隐藏滚动条） */
+.topbarTabLayer .projectSpaceTabs {
+  overflow: visible;
+  scrollbar-width: none;
+}
+.topbarTabLayer .projectSpaceTabs::-webkit-scrollbar { display: none; }
+@media (max-width: 900px) {
+  .topbarTabLayer .projectSpaceTabs { overflow-x: auto; }
+}

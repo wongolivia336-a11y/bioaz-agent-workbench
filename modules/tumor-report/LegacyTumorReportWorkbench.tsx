@@ -573,25 +573,8 @@ function ReviewConfirmDialog({
       <section className="confirmDialog" role="dialog" aria-modal="true" aria-labelledby="review-confirm-title">
         <header>
           <h2 id="review-confirm-title">确认发起专家审核</h2>
+          <p>本次报告、{warningCount} 项已确认风险与业务证据将一并派发给肿瘤报告专家小组。</p>
         </header>
-        <div className="confirmDialogBody">
-          <div className="confirmDialogSection">
-            <strong>本次将提交以下内容</strong>
-            <ul>
-              <li>肿瘤报告 v3（样本 9 双批次）</li>
-              <li>校验事实（{warningCount} 项风险已确认）</li>
-              <li>业务证据（Day28 数据、历史对照）</li>
-            </ul>
-          </div>
-          <div className="confirmDialogSection">
-            <strong>审核小队：肿瘤报告专家小组</strong>
-            <ul>
-              <li>数据核对专家</li>
-              <li>统计复核专家</li>
-              <li>安全性专家</li>
-            </ul>
-          </div>
-        </div>
         <footer>
           <button className="secondaryButton compact" type="button" onClick={onCancel}>取消</button>
           <button className="primaryButton compact" type="button" onClick={onConfirm}>确认发起审核</button>
@@ -1239,6 +1222,9 @@ function Conversation({
               可以继续，但需要先确认风险项。我已完成文件识别、统计上下文检查和 QA 初筛；当前没有阻断项，但有 3 条风险需要授权用户确认。确认风险只表示允许进入生成流程，不等于最终科学结论放行。
             </AgentReply>
           ) : null}
+          {["warning", "generating", "generated", "reviewing", "review", "exported"].includes(stage) ? (
+            <AnalysisContextCard onOpenDetail={() => onInspector("warnings")} />
+          ) : null}
           <UserEventBubbles events={userEvents} after="warning" />
         </section>
       ) : null}
@@ -1621,13 +1607,10 @@ function Composer({
       ) : null}
 
       {stage === "generated" ? (
-        <>
-          <AnalysisContextCard onOpenDetail={onPreview} />
-          <ReviewLaunchPanel
-            onStartReview={onStartReview}
-            onOpenArtifacts={() => onOpenInspector("artifacts")}
-          />
-        </>
+        <ReviewLaunchPanel
+          onStartReview={onStartReview}
+          onOpenArtifacts={() => onOpenInspector("artifacts")}
+        />
       ) : null}
 
       {stage === "review" && pendingReviews.length > 0 ? (
@@ -1824,13 +1807,15 @@ function reviewEvidence(id: string) {
 function AnalysisContextCard({ onOpenDetail }: { onOpenDetail: () => void }) {
   return (
     <article className="warningDecision analysisContextCard">
-      <div className="warningDecisionHeader">
-        <div>
-          <span>分析上下文</span>
-          <strong>关键结论与风险提示</strong>
+      <button className="analysisContextTrigger" type="button" onClick={onOpenDetail} aria-label="查看分析上下文与风险详情">
+        <div className="warningDecisionHeader">
+          <div>
+            <span>分析上下文</span>
+            <strong>关键结论与风险提示</strong>
+          </div>
         </div>
-        <small>3 项风险</small>
-      </div>
+        <span className="analysisContextPeek" aria-hidden="true"><Eye size={16} /></span>
+      </button>
       <ul className="analysisConclusionList">
         <li>肿瘤体积增长显著，Day28 抑瘤率达到评价阈值</li>
         <li>统计显著性 p &lt; 0.05，样本量满足统计要求</li>
@@ -1839,11 +1824,6 @@ function AnalysisContextCard({ onOpenDetail }: { onOpenDetail: () => void }) {
       <div className="analysisRiskSummary">
         <span className="analysisRiskDot is-high" aria-hidden="true" />高风险 1 项
         <span className="analysisRiskDot is-medium" aria-hidden="true" />中风险 2 项
-      </div>
-      <div className="warningActions">
-        <button className="secondaryButton compact" type="button" onClick={onOpenDetail}>
-          查看风险详情
-        </button>
       </div>
     </article>
   );
