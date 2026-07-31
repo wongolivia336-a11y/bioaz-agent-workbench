@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
-export type WorkbenchRoute = "newTask" | "tasks" | "library" | "module" | "digitalTeam";
+export type WorkbenchRoute = "newTask" | "tasks" | "library" | "knowledgeBase" | "module" | "digitalTeam";
 
 export type WorkbenchProject = {
   id: string;
@@ -19,7 +19,10 @@ export type WorkbenchTask = {
   coworkerName: string;
   time: string;
   status: string;
+  priority?: TaskPriority;
 };
+
+export type TaskPriority = "high" | "medium" | "low";
 
 export type CoworkerDefinition = {
   id: string;

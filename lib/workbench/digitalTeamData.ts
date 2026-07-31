@@ -87,7 +87,7 @@ export const digitalTeamData: DigitalCoworker[] = [
   },
   {
     id: "file-assistant",
-    displayName: "文件助手",
+    displayName: "项目助手",
     domain: "项目资料",
     description: "基于项目文件和历史任务进行搜索、总结和思路拓展。",
     status: "active",

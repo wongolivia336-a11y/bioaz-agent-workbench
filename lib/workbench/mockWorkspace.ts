@@ -11,11 +11,11 @@ export const projectOptions = workspaceProjects.map((project) => project.name);
 
 export const workspacePinCatalog: PinItem[] = [
   ...workspaceProjects.map((project) => ({ id: project.id, type: "project" as const, title: project.name })),
-  { id: "task-sample9", type: "task", title: "样本 9 双批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "36 分钟前", status: "pending" },
-  { id: "task-balbc", type: "task", title: "Balb/c nude 报价", project: workspaceProjects[0].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done" },
-  { id: "task-report-7", type: "task", title: "样本 7 单批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "1 小时前", status: "done" },
-  { id: "task-new-quote", type: "task", title: "新建报价任务", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "刚刚", status: "running" },
-  { id: "task-ba", type: "task", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done" },
+  { id: "task-sample9", type: "task", title: "样本 9 双批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "36 分钟前", status: "pending", priority: "high" },
+  { id: "task-balbc", type: "task", title: "Balb/c nude 报价", project: workspaceProjects[0].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done", priority: "medium" },
+  { id: "task-report-7", type: "task", title: "样本 7 单批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "1 小时前", status: "done", priority: "low" },
+  { id: "task-new-quote", type: "task", title: "新建报价任务", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "刚刚", status: "running", priority: "high" },
+  { id: "task-ba", type: "task", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done", priority: "low" },
 ];
 
 export const workspaceTasks: TaskCollection = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
+import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileSearch, FileText, Folder, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, PinItem } from "../../lib/workbench/shellTypes";
@@ -113,7 +113,8 @@ export function WorkspaceSidebar(props: Props) {
       </div>
 
       <nav className="navBlock workspaceViews" aria-label="工作区">
-        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={15} strokeWidth={1.8} /><span>数据中枢</span></button>
+        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={15} strokeWidth={1.8} /><span>项目中枢</span></button>
+        <button className={`workspaceViewRow ${props.activeRoute === "knowledgeBase" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("knowledgeBase")}><FileSearch size={15} strokeWidth={1.8} /><span>知识库</span></button>
         <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={15} strokeWidth={1.8} /><span>数字团队</span></button>
       </nav>
 
