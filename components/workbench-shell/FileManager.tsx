@@ -29,18 +29,16 @@ import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbe
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { ProjectActivityTab } from "./ProjectActivityTab";
 import { ProjectPlanTab } from "./ProjectPlanTab";
-import { ProjectTasksTab } from "./ProjectTasksTab";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-type ProjectTab = "activity" | "plan" | "tasks" | "data";
+type ProjectTab = "activity" | "plan" | "data";
 type SortKey = "updated" | "kind" | "name" | "source";
 type TimeBucket = "all" | "today" | "week" | "month" | "earlier";
 
 const projectTabs: Array<{ id: ProjectTab; label: string }> = [
   { id: "activity", label: "动态" },
   { id: "plan", label: "计划" },
-  { id: "tasks", label: "任务" },
   { id: "data", label: "资料与产物" },
 ];
 
@@ -83,12 +81,10 @@ export function FileManager({
   selectedFolderId,
   folders,
   view,
-  tasks,
   onSelectedProjectChange,
   onSelectedFolderChange,
   onViewChange,
   onCreateProject,
-  onOpenTask,
 }: Props) {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
   const [query, setQuery] = useState("");
@@ -292,7 +288,6 @@ export function FileManager({
   }
 
   const listTitle = view === "inputs" ? "项目资料" : view === "outputs" ? "任务产物" : view === "trash" ? "回收站" : activeFolder?.name ?? "项目文件";
-  const projectTasks = tasks.filter((task) => task.project === project);
   const inTrash = view === "trash";
   const selectionScope = inTrash ? visibleTrashFiles : filteredFiles;
   const activeSelection = selectedIds.filter((id) => selectionScope.some((file) => file.id === id));
@@ -357,7 +352,6 @@ export function FileManager({
 
       {activeProjectTab === "activity" ? <ProjectActivityTab project={project} /> : null}
       {activeProjectTab === "plan" ? <ProjectPlanTab project={project} /> : null}
-      {activeProjectTab === "tasks" ? <ProjectTasksTab project={project} tasks={projectTasks} onOpenTask={onOpenTask} /> : null}
 
       {activeProjectTab === "data" ? (
         <>
@@ -476,12 +470,10 @@ type Props = {
   selectedFolderId: string | null;
   folders: LibraryFolder[];
   view: LibraryView;
-  tasks: WorkbenchTask[];
   onSelectedProjectChange: (project: string | null) => void;
   onSelectedFolderChange: (folderId: string | null) => void;
   onViewChange: (view: LibraryView) => void;
   onCreateProject: (name: string) => WorkbenchProject | null;
-  onOpenTask: (task: WorkbenchTask) => void;
 };
 
 function LibrarySearch({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {

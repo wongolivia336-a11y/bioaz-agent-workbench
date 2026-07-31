@@ -1,7 +1,9 @@
 "use client";
 
-import { Check, FileText, MessageSquare, Upload, Users } from "lucide-react";
-import type { ReactNode } from "react";
+import { Check, Filter, FileText, MessageSquare, Upload, Users } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useDismissableLayer } from "./useDismissableLayer";
 
 type ActivityEntry = {
   id: string;
@@ -20,15 +22,29 @@ const activityFeed: ActivityEntry[] = [
   { id: "act-5", time: "3 天前", actor: "Admin", title: "创建项目并邀请数字同事", detail: "药效报告同事、DMPK报价同事已加入", icon: <Users size={15} /> },
 ];
 
+const actors = ["全部参与者", ...activityFeed.map((entry) => entry.actor).filter((actor, index, list) => list.indexOf(actor) === index)];
+
 export function ProjectActivityTab({ project }: { project: string }) {
+  const [actor, setActor] = useState("全部参与者");
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useEffect(() => { setHost(document.getElementById("workbench-topbar-actions")); }, []);
+  const visible = activityFeed.filter((entry) => actor === "全部参与者" || entry.actor === actor);
+
   return (
     <section className="projectTabPanel projectActivityPanel">
-      <div className="projectTabIntro">
-        <strong>项目动态</strong>
-        <span>{project} 下的关键事件与数字同事协作记录。</span>
-      </div>
+      {host ? createPortal(
+        <div className="libraryToolLayer">
+          <ActorFilter value={actor} options={actors} onChange={setActor} />
+        </div>,
+        host,
+      ) : null}
+      {actor !== "全部参与者" ? (
+        <div className="filterChips">
+          <span className="filterChip">参与者：{actor}<button type="button" onClick={() => setActor("全部参与者")} aria-label="清除参与者筛选">×</button></span>
+        </div>
+      ) : null}
       <ol className="projectActivityTimeline">
-        {activityFeed.map((entry) => (
+        {visible.map((entry) => (
           <li key={entry.id}>
             <span className="projectActivityMark" aria-hidden="true">{entry.icon}</span>
             <div className="projectActivityBody">
@@ -42,7 +58,33 @@ export function ProjectActivityTab({ project }: { project: string }) {
           </li>
         ))}
       </ol>
-      <p className="projectTabPlaceholderNote">当前为示意数据，后续将接入真实项目事件流。</p>
+      {!visible.length ? (
+        <div className="projectTabEmptyState">
+          <strong>没有匹配的动态</strong>
+          <span>换一个参与者，或清除筛选条件。</span>
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function ActorFilter({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
+  return (
+    <div ref={ref} className="toolMenuWrap">
+      <button className={`toolIconButton ${value !== options[0] ? "active" : ""}`} type="button" title="筛选参与者" aria-label="筛选参与者" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+        <Filter size={16} />
+      </button>
+      {open ? (
+        <div className="toolMenu">
+          {options.map((option) => (
+            <button className={`toolMenuItem ${option === value ? "active" : ""}`} type="button" key={option} onClick={() => { onChange(option); setOpen(false); }}>
+              <span>{option}</span>{option === value ? <Check size={13} /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }

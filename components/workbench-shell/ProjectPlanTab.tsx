@@ -1,96 +1,251 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Bot, Check, ChevronDown, Columns3, Filter, LayoutList, Plus, Users } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import {
+  initialPlanItems,
+  planPriorityLabel,
+  planPriorityOrder,
+  planStages,
+  planStatusLabel,
+  planStatusOrder,
+  projectMembers,
+  type PlanItem,
+  type PlanPriority,
+  type PlanStatus,
+} from "../../lib/workbench/projectPlanData";
+import { useDismissableLayer } from "./useDismissableLayer";
 
-type PlanStep = {
-  id: string;
-  label: string;
-  state: "done" | "running" | "todo";
-  owner: string;
-};
+type ViewMode = "list" | "board";
 
-type PlanStage = {
-  id: string;
-  name: string;
-  summary: string;
-  steps: PlanStep[];
-};
-
-const planStages: PlanStage[] = [
-  {
-    id: "stage-intake",
-    name: "阶段一 · 数据准备",
-    summary: "原始实验数据归集与口径确认",
-    steps: [
-      { id: "s1", label: "收集双批次原始数据", state: "done", owner: "Admin" },
-      { id: "s2", label: "确认 Day28 测量口径", state: "done", owner: "王 SD" },
-      { id: "s3", label: "补充历史对照组数据", state: "done", owner: "Admin" },
-    ],
-  },
-  {
-    id: "stage-analysis",
-    name: "阶段二 · 分析与生成",
-    summary: "由药效报告同事执行分析并产出报告",
-    steps: [
-      { id: "s4", label: "肿瘤体积趋势分析", state: "done", owner: "药效报告同事" },
-      { id: "s5", label: "统计显著性校验", state: "running", owner: "药效报告同事" },
-      { id: "s6", label: "生成报告初稿 v3", state: "running", owner: "药效报告同事" },
-    ],
-  },
-  {
-    id: "stage-review",
-    name: "阶段三 · 审核与交付",
-    summary: "专家小队审核后由负责人签核放行",
-    steps: [
-      { id: "s7", label: "发起专家小队审核", state: "todo", owner: "王 SD" },
-      { id: "s8", label: "逐项确认专家建议", state: "todo", owner: "王 SD" },
-      { id: "s9", label: "签核并生成交付包", state: "todo", owner: "王 SD" },
-    ],
-  },
-];
-
-const stepStateLabel: Record<PlanStep["state"], string> = {
-  done: "已完成",
-  running: "进行中",
-  todo: "未开始",
-};
+const memberById = new Map(projectMembers.map((member) => [member.id, member]));
 
 export function ProjectPlanTab({ project }: { project: string }) {
+  const [items, setItems] = useState<PlanItem[]>(initialPlanItems);
+  const [view, setView] = useState<ViewMode>("list");
+  const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
+  const [priorityFilter, setPriorityFilter] = useState<PlanPriority | null>(null);
+  const [host, setHost] = useState<HTMLElement | null>(null);
+
+  useEffect(() => { setHost(document.getElementById("workbench-topbar-actions")); }, []);
+
+  const update = (id: string, patch: Partial<PlanItem>) => {
+    setItems((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
+  };
+
+  const visible = items.filter((item) => (
+    (!assigneeFilter || item.assigneeId === assigneeFilter)
+    && (!priorityFilter || item.priority === priorityFilter)
+  ));
+
   return (
     <section className="projectTabPanel projectPlanPanel">
-      <div className="projectTabIntro">
-        <strong>项目计划</strong>
-        <span>{project} 的阶段式工作结构与当前进度。</span>
-      </div>
-      <div className="projectPlanStages">
-        {planStages.map((stage) => {
-          const done = stage.steps.filter((step) => step.state === "done").length;
-          return (
-            <article className="projectPlanStage" key={stage.id}>
-              <header>
-                <div>
-                  <strong>{stage.name}</strong>
-                  <small>{stage.summary}</small>
-                </div>
-                <span className="projectPlanProgress">{done}/{stage.steps.length}</span>
-              </header>
-              <ul>
-                {stage.steps.map((step) => (
-                  <li key={step.id} className={`projectPlanStep is-${step.state}`}>
-                    <span className="projectPlanStepMark" aria-hidden="true">
-                      {step.state === "done" ? <Check size={13} /> : null}
-                    </span>
-                    <span className="projectPlanStepLabel">{step.label}</span>
-                    <small>{step.owner}</small>
-                    <em>{stepStateLabel[step.state]}</em>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          );
-        })}
-      </div>
-      <p className="projectTabPlaceholderNote">当前为示意数据，后续将接入真实项目计划。</p>
+      {host ? createPortal(
+        <div className="libraryToolLayer">
+          <div className="tabViewSwitch" role="tablist" aria-label="计划视图">
+            <button className={view === "list" ? "active" : ""} type="button" role="tab" aria-selected={view === "list"} onClick={() => setView("list")}>
+              <LayoutList size={14} />列表
+            </button>
+            <button className={view === "board" ? "active" : ""} type="button" role="tab" aria-selected={view === "board"} onClick={() => setView("board")}>
+              <Columns3 size={14} />看板
+            </button>
+          </div>
+          <ToolMenu icon={<Users size={16} />} label="负责人" active={Boolean(assigneeFilter)}>
+            <MenuItem active={!assigneeFilter} onSelect={() => setAssigneeFilter(null)}>全部负责人</MenuItem>
+            {projectMembers.map((member) => (
+              <MenuItem key={member.id} active={assigneeFilter === member.id} onSelect={() => setAssigneeFilter(member.id)}>{member.name}</MenuItem>
+            ))}
+          </ToolMenu>
+          <ToolMenu icon={<Filter size={16} />} label="优先级" active={Boolean(priorityFilter)}>
+            <MenuItem active={!priorityFilter} onSelect={() => setPriorityFilter(null)}>全部优先级</MenuItem>
+            {planPriorityOrder.map((priority) => (
+              <MenuItem key={priority} active={priorityFilter === priority} onSelect={() => setPriorityFilter(priority)}>{planPriorityLabel[priority]}</MenuItem>
+            ))}
+          </ToolMenu>
+          <button className="primaryButton compact" type="button"><Plus size={15} />新建工作项</button>
+        </div>,
+        host,
+      ) : null}
+
+      {(assigneeFilter || priorityFilter) ? (
+        <div className="filterChips">
+          {assigneeFilter ? <span className="filterChip">负责人：{memberById.get(assigneeFilter)?.name}<button type="button" onClick={() => setAssigneeFilter(null)} aria-label="清除负责人筛选">×</button></span> : null}
+          {priorityFilter ? <span className="filterChip">优先级：{planPriorityLabel[priorityFilter]}<button type="button" onClick={() => setPriorityFilter(null)} aria-label="清除优先级筛选">×</button></span> : null}
+          <button className="clearAllChips" type="button" onClick={() => { setAssigneeFilter(null); setPriorityFilter(null); }}>清除全部</button>
+        </div>
+      ) : null}
+
+      {view === "list"
+        ? <PlanList items={visible} onUpdate={update} />
+        : <PlanBoard items={visible} onUpdate={update} />}
+
+      {!visible.length ? (
+        <div className="projectTabEmptyState">
+          <strong>没有匹配的工作项</strong>
+          <span>试试清除筛选条件，或新建一个工作项。</span>
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function PlanList({ items, onUpdate }: { items: PlanItem[]; onUpdate: (id: string, patch: Partial<PlanItem>) => void }) {
+  if (!items.length) return null;
+  return (
+    <div className="planList">
+      {planStages.map((stage) => {
+        const rows = items.filter((item) => item.stage === stage);
+        if (!rows.length) return null;
+        const done = rows.filter((item) => item.status === "done").length;
+        return (
+          <section className="planStageGroup" key={stage}>
+            <header className="planStageHeader">
+              <strong>{stage}</strong>
+              <span>{done}/{rows.length}</span>
+            </header>
+            <div className="planTable">
+              {rows.map((item) => (
+                <article className="planRow" key={item.id}>
+                  <StatusSelect value={item.status} onChange={(status) => onUpdate(item.id, { status })} />
+                  <span className="planRowTitle">{item.title}</span>
+                  <PrioritySelect value={item.priority} onChange={(priority) => onUpdate(item.id, { priority })} />
+                  <AssigneeSelect value={item.assigneeId} onChange={(assigneeId) => onUpdate(item.id, { assigneeId })} />
+                  <span className="planRowDue">{item.due}</span>
+                </article>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function PlanBoard({ items, onUpdate }: { items: PlanItem[]; onUpdate: (id: string, patch: Partial<PlanItem>) => void }) {
+  return (
+    <div className="planBoard">
+      {planStatusOrder.map((status) => {
+        const column = items.filter((item) => item.status === status);
+        return (
+          <section className="planBoardColumn" key={status}>
+            <header>
+              <StatusDot status={status} />
+              <strong>{planStatusLabel[status]}</strong>
+              <b>{column.length}</b>
+            </header>
+            <div className="planBoardCards">
+              {column.map((item) => (
+                <article className="planBoardCard" key={item.id}>
+                  <strong>{item.title}</strong>
+                  <small className="planCardStage">{item.stage}</small>
+                  <div className="planCardMeta">
+                    <PrioritySelect value={item.priority} onChange={(priority) => onUpdate(item.id, { priority })} />
+                    <AssigneeSelect value={item.assigneeId} onChange={(assigneeId) => onUpdate(item.id, { assigneeId })} compact />
+                    <span className="planRowDue">{item.due}</span>
+                  </div>
+                </article>
+              ))}
+              {!column.length ? <div className="planBoardEmpty">暂无事项</div> : null}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function StatusDot({ status }: { status: PlanStatus }) {
+  return <i className={`planStatusDot is-${status}`} aria-hidden="true" />;
+}
+
+function StatusSelect({ value, onChange }: { value: PlanStatus; onChange: (value: PlanStatus) => void }) {
+  return (
+    <InlineSelect
+      label="状态"
+      trigger={<><StatusDot status={value} /><span>{planStatusLabel[value]}</span></>}
+      triggerClassName={`planStatusTrigger is-${value}`}
+    >
+      {(close) => planStatusOrder.map((status) => (
+        <button className={`toolMenuItem ${status === value ? "active" : ""}`} type="button" key={status} onClick={() => { onChange(status); close(); }}>
+          <span><StatusDot status={status} />{planStatusLabel[status]}</span>
+          {status === value ? <Check size={13} /> : null}
+        </button>
+      ))}
+    </InlineSelect>
+  );
+}
+
+function PrioritySelect({ value, onChange }: { value: PlanPriority; onChange: (value: PlanPriority) => void }) {
+  return (
+    <InlineSelect
+      label="优先级"
+      trigger={<span>{planPriorityLabel[value]}</span>}
+      triggerClassName={`planPriorityTrigger is-${value}`}
+    >
+      {(close) => planPriorityOrder.map((priority) => (
+        <button className={`toolMenuItem ${priority === value ? "active" : ""}`} type="button" key={priority} onClick={() => { onChange(priority); close(); }}>
+          <span>{planPriorityLabel[priority]}</span>
+          {priority === value ? <Check size={13} /> : null}
+        </button>
+      ))}
+    </InlineSelect>
+  );
+}
+
+function AssigneeSelect({ value, onChange, compact }: { value: string; onChange: (value: string) => void; compact?: boolean }) {
+  const member = memberById.get(value);
+  return (
+    <InlineSelect
+      label="负责人"
+      trigger={<>
+        <span className={`planAvatar ${member?.kind === "agent" ? "isAgent" : ""}`}>{member?.kind === "agent" ? <Bot size={11} /> : member?.name.slice(0, 1)}</span>
+        {compact ? null : <span>{member?.name ?? "未指派"}</span>}
+      </>}
+      triggerClassName="planAssigneeTrigger"
+    >
+      {(close) => projectMembers.map((item) => (
+        <button className={`toolMenuItem ${item.id === value ? "active" : ""}`} type="button" key={item.id} onClick={() => { onChange(item.id); close(); }}>
+          <span>
+            <span className={`planAvatar ${item.kind === "agent" ? "isAgent" : ""}`}>{item.kind === "agent" ? <Bot size={11} /> : item.name.slice(0, 1)}</span>
+            {item.name}
+          </span>
+          {item.id === value ? <Check size={13} /> : null}
+        </button>
+      ))}
+    </InlineSelect>
+  );
+}
+
+function InlineSelect({ label, trigger, triggerClassName, children }: { label: string; trigger: ReactNode; triggerClassName: string; children: (close: () => void) => ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
+  return (
+    <div ref={ref} className="inlineSelect">
+      <button className={`inlineSelectTrigger ${triggerClassName}`} type="button" aria-label={label} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        {trigger}
+        <ChevronDown className="inlineSelectCaret" size={12} />
+      </button>
+      {open ? <div className="toolMenu inlineSelectMenu">{children(() => setOpen(false))}</div> : null}
+    </div>
+  );
+}
+
+function ToolMenu({ icon, label, active, children }: { icon: ReactNode; label: string; active: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
+  return (
+    <div ref={ref} className="toolMenuWrap">
+      <button className={`toolIconButton ${active ? "active" : ""}`} type="button" title={label} aria-label={label} aria-expanded={open} onClick={() => setOpen((value) => !value)}>{icon}</button>
+      {open ? <div className="toolMenu" onClick={() => setOpen(false)}>{children}</div> : null}
+    </div>
+  );
+}
+
+function MenuItem({ active, onSelect, children }: { active: boolean; onSelect: () => void; children: ReactNode }) {
+  return (
+    <button className={`toolMenuItem ${active ? "active" : ""}`} type="button" onClick={onSelect}>
+      <span>{children}</span>{active ? <Check size={13} /> : null}
+    </button>
   );
 }

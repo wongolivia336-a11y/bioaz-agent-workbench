@@ -4155,3 +4155,224 @@ button { -webkit-tap-highlight-color: transparent; }
     opacity: 1;
   }
 }
+
+/* ===== 项目计划 · 列表 / 看板 + 内联属性编辑（Linear 式） ===== */
+
+/* Tab 顶部统一：视图切换器与其他工具同处顶栏工具层 */
+.tabViewSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.tabViewSwitch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 11px;
+}
+.tabViewSwitch button:hover { color: var(--bioaz-text-primary); }
+.tabViewSwitch button.active {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+
+/* 状态点：一套色，列表与看板共用 */
+.planStatusDot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border: 1.5px solid #9ca3af;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+}
+.planStatusDot.is-running { border-color: #5c60b8; background: #5c60b8; }
+.planStatusDot.is-review { border-color: #d97706; background: #fbbf24; }
+.planStatusDot.is-done { border-color: #059669; background: #059669; }
+.planStatusDot.is-blocked { border-color: #dc2626; background: #dc2626; }
+
+/* 内联属性编辑 */
+.inlineSelect { position: relative; display: inline-flex; min-width: 0; }
+.inlineSelectTrigger {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 8px;
+}
+.inlineSelectTrigger:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.inlineSelectTrigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inlineSelectCaret {
+  flex: none;
+  color: var(--bioaz-text-disabled);
+  opacity: 0;
+  transition: opacity var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.inlineSelectTrigger:hover .inlineSelectCaret,
+.inlineSelectTrigger[aria-expanded="true"] .inlineSelectCaret { opacity: 1; }
+.inlineSelectTrigger[aria-expanded="true"] {
+  border-color: rgba(92, 96, 184, 0.28);
+  background: #fff;
+}
+.inlineSelectMenu { left: 0; right: auto; min-width: 168px; }
+.toolMenuItem > span { display: inline-flex; align-items: center; gap: 7px; }
+
+.planPriorityTrigger.is-urgent { color: #991b1b; }
+.planPriorityTrigger.is-high { color: #92400e; }
+
+.planAvatar {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: #e5e7eb;
+  color: #4b5563;
+  font-size: 10px;
+  font-weight: 600;
+  place-items: center;
+}
+.planAvatar.isAgent {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+/* 列表视图：阶段分组 + 扁平行，不做框中框 */
+.planList { display: grid; gap: var(--bioaz-space-6); }
+.planStageHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: var(--bioaz-space-2);
+  margin-bottom: 2px;
+}
+.planStageHeader strong { color: var(--bioaz-text-primary); font-size: 14px; font-weight: 600; }
+.planStageHeader span { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.planRow {
+  display: grid;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: 116px minmax(0, 1fr) 76px 128px 56px;
+  border-bottom: 1px solid var(--bioaz-border);
+  min-height: 44px;
+  padding-inline: var(--bioaz-space-2);
+}
+.planRow:last-child { border-bottom: 0; }
+.planRow:hover { background: rgba(17, 19, 24, 0.02); }
+.planRowTitle {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.planRowDue { color: var(--bioaz-text-tertiary); font-size: 12px; text-align: right; }
+
+/* 看板视图 */
+.planBoard {
+  display: grid;
+  align-items: start;
+  gap: var(--bioaz-space-3);
+  grid-auto-columns: minmax(224px, 1fr);
+  grid-auto-flow: column;
+  overflow-x: auto;
+  padding-bottom: var(--bioaz-space-2);
+}
+.planBoardColumn {
+  display: grid;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: var(--bioaz-space-3);
+}
+.planBoardColumn > header { display: flex; align-items: center; gap: 7px; }
+.planBoardColumn > header strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 600; }
+.planBoardColumn > header b { color: var(--bioaz-text-tertiary); font-size: 12px; font-weight: 500; margin-left: auto; }
+.planBoardCards { display: grid; gap: var(--bioaz-space-2); }
+.planBoardCard {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  padding: var(--bioaz-space-3);
+}
+.planBoardCard > strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 500; line-height: 19px; }
+.planCardStage { color: var(--bioaz-text-tertiary); font-size: 11px; }
+.planCardMeta { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+.planCardMeta .planRowDue { margin-left: auto; }
+.planBoardEmpty {
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-disabled);
+  font-size: 12px;
+  padding: var(--bioaz-space-5) var(--bioaz-space-3);
+  text-align: center;
+}
+
+/* ===== 统一卡片与列表形式：同一套圆角 / 边框 / 内距 ===== */
+.projectFolderStrip > button,
+.kbFolderStrip > button,
+.digitalScenarioCard,
+.digitalCapabilityCard,
+.digitalCoworkerCard,
+.planBoardCard,
+.planBoardColumn,
+.kbStat {
+  border-radius: var(--bioaz-radius-tool);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--bioaz-border);
+}
+.digitalScenarioCard,
+.digitalCapabilityCard,
+.digitalCoworkerCard {
+  padding: var(--bioaz-space-4);
+}
+.kbStat,
+.projectFolderStrip > button,
+.kbFolderStrip > button {
+  padding: var(--bioaz-space-3) var(--bioaz-space-4);
+}
+
+@media (max-width: 900px) {
+  .planRow {
+    grid-template-columns: 104px minmax(0, 1fr) 40px;
+  }
+  .planRow > .planAssigneeTrigger,
+  .planRow > .inlineSelect:nth-child(4),
+  .planRow > .planRowDue {
+    display: none;
+  }
+}
