@@ -4,6 +4,7 @@ import { Bot, Check, ChevronDown, Columns3, Filter, LayoutList, Plus, Users } fr
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
+  deliverableKindLabel,
   initialPlanItems,
   planPriorityLabel,
   planPriorityOrder,
@@ -11,6 +12,7 @@ import {
   planStatusLabel,
   planStatusOrder,
   projectMembers,
+  type Deliverable,
   type PlanItem,
   type PlanPriority,
   type PlanStatus,
@@ -95,15 +97,22 @@ function PlanList({ items, onUpdate }: { items: PlanItem[]; onUpdate: (id: strin
   return (
     <div className="planList">
       {planStages.map((stage) => {
-        const rows = items.filter((item) => item.stage === stage);
+        const rows = items.filter((item) => item.stageId === stage.id);
         if (!rows.length) return null;
-        const done = rows.filter((item) => item.status === "done").length;
+        const shipped = stage.deliverables.filter((item) => item.status === "done").length;
         return (
-          <section className="planStageGroup" key={stage}>
+          <section className="planStageGroup" key={stage.id}>
             <header className="planStageHeader">
-              <strong>{stage}</strong>
-              <span>{done}/{rows.length}</span>
+              <div className="planStageHeading">
+                <strong>{stage.name}</strong>
+                <small>{stage.goal}</small>
+              </div>
+              <span className="planStageWindow">{stage.window}</span>
+              <span className="planStageCount">交付 {shipped}/{stage.deliverables.length}</span>
             </header>
+            <div className="planDeliverables">
+              {stage.deliverables.map((item) => <DeliverableChip key={item.id} deliverable={item} />)}
+            </div>
             <div className="planTable">
               {rows.map((item) => (
                 <article className="planRow" key={item.id}>
@@ -119,6 +128,17 @@ function PlanList({ items, onUpdate }: { items: PlanItem[]; onUpdate: (id: strin
         );
       })}
     </div>
+  );
+}
+
+function DeliverableChip({ deliverable }: { deliverable: Deliverable }) {
+  const owner = memberById.get(deliverable.ownerId);
+  return (
+    <span className="planDeliverable" title={`${deliverableKindLabel[deliverable.kind]} · ${owner?.name ?? ""}`}>
+      <StatusDot status={deliverable.status} />
+      <strong>{deliverable.name}</strong>
+      <small>{deliverableKindLabel[deliverable.kind]}</small>
+    </span>
   );
 }
 
@@ -138,7 +158,7 @@ function PlanBoard({ items, onUpdate }: { items: PlanItem[]; onUpdate: (id: stri
               {column.map((item) => (
                 <article className="planBoardCard" key={item.id}>
                   <strong>{item.title}</strong>
-                  <small className="planCardStage">{item.stage}</small>
+                  <small className="planCardStage">{planStages.find((stage) => stage.id === item.stageId)?.name ?? ""}</small>
                   <div className="planCardMeta">
                     <PrioritySelect value={item.priority} onChange={(priority) => onUpdate(item.id, { priority })} />
                     <AssigneeSelect value={item.assigneeId} onChange={(assigneeId) => onUpdate(item.id, { assigneeId })} compact />

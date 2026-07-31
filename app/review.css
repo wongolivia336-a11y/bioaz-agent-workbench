@@ -4376,3 +4376,262 @@ button { -webkit-tap-highlight-color: transparent; }
     display: none;
   }
 }
+
+/* ===== 卡片列表：折叠只由展开态决定，hover 不再驱动布局 =====
+   历史实现用 .stackDecision:not(:hover) 把第 2、3 行叠成卡牌堆，
+   hover 才摊开，鼠标移开又塌回去。确认类操作不该依赖悬停，
+   这里把布局职责交还给 .isCollapsed / .isExpanded。 */
+
+.stackDecision:not(:hover):not(.isPinned) .warningDecisionList {
+  position: static;
+  min-height: 0;
+  gap: var(--bioaz-space-3);
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3) {
+  position: static;
+  inset: auto;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(n + 2) > * {
+  visibility: visible;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionCopy p,
+.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
+.stackDecision:not(:hover):not(.isPinned) .warningActions,
+.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
+  display: revert;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionCopy strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+.stackDecision:not(:hover):not(.isPinned) .decisionRow {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  min-height: 0;
+}
+/* hover 不再放大卡片，也不再加投影 */
+.stackDecision:hover {
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+  padding: 18px 20px;
+}
+
+/* 折叠态：只显示头部一行，内容整体收起 */
+.tumor-reportModuleShell .gateDecision.isCollapsed .warningDecisionList,
+.tumor-reportModuleShell .gateDecision.isCollapsed .warningActions,
+.tumor-reportModuleShell .gateDecision.isCollapsed .responsibilityNote {
+  display: none;
+}
+.tumor-reportModuleShell .gateDecision.isExpanded .warningDecisionList {
+  display: grid;
+  gap: var(--bioaz-space-3);
+}
+
+/* 展开头部：唯一的可点区域，给出明确的可点反馈但不改变布局 */
+.decisionExpandHeader {
+  width: 100%;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.decisionExpandHeader:hover {
+  background: rgba(17, 19, 24, 0.02);
+}
+
+/* 行本身不再是 hover 变色的目标，避免扫视时整列闪动 */
+.decisionRow,
+.decisionRow:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
+  box-shadow: none;
+  transform: none;
+}
+.tumor-reportModuleShell .gateDecision .decisionRow:hover {
+  border-color: var(--bioaz-border);
+  background: #fff;
+}
+
+/* ===== 思考链完成折叠态：去掉蓝紫底，回到中性（附录 A.1 / C.8） ===== */
+.tumor-reportModuleShell .agentRun.settled,
+.tumor-reportModuleShell .agentRun.settled.collapsed,
+.agentRun.settled.collapsed {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+}
+.tumor-reportModuleShell .agentRun.settled .agentRunHeader strong,
+.agentRun.settled.collapsed strong {
+  color: var(--bioaz-text-secondary);
+}
+
+/* ===== 计划：阶段为主线，阶段头部挂交付物 ===== */
+.planStageHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-3);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: var(--bioaz-space-2);
+}
+.planStageHeading { display: grid; gap: 2px; min-width: 0; }
+.planStageHeading strong { color: var(--bioaz-text-primary); font-size: 14px; font-weight: 600; }
+.planStageHeading small { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.planStageWindow { color: var(--bioaz-text-tertiary); font-size: 12px; margin-left: auto; white-space: nowrap; }
+.planStageCount { color: var(--bioaz-text-secondary); font-size: 12px; white-space: nowrap; }
+
+.planDeliverables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bioaz-space-2);
+  margin: var(--bioaz-space-3) 0 var(--bioaz-space-2);
+}
+.planDeliverable {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  padding: 4px 12px 4px 10px;
+}
+.planDeliverable > strong { color: var(--bioaz-text-primary); font-size: 12px; font-weight: 500; }
+.planDeliverable > small { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+/* ===== Header 三层：路径 / Tab / 工具 ===== */
+.topbarTabLayer:empty { display: none; }
+.topbarTabLayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  border-top: 1px solid var(--bioaz-border);
+  padding: 0 var(--bioaz-space-5);
+}
+.topbarTabLayer .projectSpaceTabs {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-1);
+  margin: 0;
+  overflow-x: auto;
+}
+.topbarTabLayer .projectSpaceTab {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 12px;
+  white-space: nowrap;
+}
+.topbarTabLayer .projectSpaceTab:hover { color: var(--bioaz-text-primary); }
+.topbarTabLayer .projectSpaceTab.active { color: var(--bioaz-text-primary); font-weight: 600; }
+.topbarTabLayer .projectSpaceTab.active::after {
+  position: absolute;
+  right: 12px;
+  bottom: -1px;
+  left: 12px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--bioaz-agent-accent);
+  content: "";
+}
+/* Tab 层存在时，工具层不再重复画上边框 */
+.topbarTabLayer + .topbarToolLayer { border-top: 1px solid var(--bioaz-border); }
+
+/* ===== 动态：按时间分组 + 事件类型标签 ===== */
+.projectActivityGroup + .projectActivityGroup { margin-top: var(--bioaz-space-6); }
+.projectActivityGroupHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  border-bottom: 1px solid var(--bioaz-border);
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding-bottom: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-3);
+}
+.projectActivityGroupHead span { color: var(--bioaz-text-tertiary); font-size: 12px; font-weight: 400; }
+.projectActivityKind {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  padding: 1px 8px;
+}
+.projectActivityHead { display: flex; align-items: center; gap: var(--bioaz-space-2); }
+.projectActivityHead time { color: var(--bioaz-text-tertiary); font-size: 12px; margin-left: auto; white-space: nowrap; }
+
+/* ===== 确认弹窗（附录 C.5：白底 / 浅灰边框 / 无阴影渐变 / 圆角 8px） ===== */
+.confirmDialog {
+  display: grid;
+  width: min(480px, calc(100vw - 32px));
+  gap: var(--bioaz-space-4);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  padding: var(--bioaz-space-5);
+}
+.confirmDialog > header h2 {
+  color: var(--bioaz-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.confirmDialogBody { display: grid; gap: var(--bioaz-space-4); }
+.confirmDialogSection > strong {
+  display: block;
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.confirmDialogSection ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+.confirmDialogSection li { color: var(--bioaz-text-secondary); font-size: 13px; line-height: 20px; }
+.confirmDialog > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: var(--bioaz-space-4);
+}
+
+/* ===== 分析上下文卡片（附录 C.3：与产物卡片分开展示） ===== */
+.analysisContextCard { border: 1px solid var(--bioaz-border); box-shadow: none; }
+.analysisConclusionList {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+.analysisConclusionList li { color: var(--bioaz-text-secondary); font-size: 13px; line-height: 20px; }
+.analysisRiskSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+}
+.analysisRiskDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--bioaz-radius-full);
+}
+.analysisRiskDot.is-high { background: #dc2626; }
+.analysisRiskDot.is-medium { background: #f59e0b; margin-left: var(--bioaz-space-3); }

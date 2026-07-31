@@ -101,10 +101,12 @@ export function FileManager({
   const [projectDraft, setProjectDraft] = useState("");
   const [activeProjectTab, setActiveProjectTab] = useState<ProjectTab>("data");
   const [topbarActionHost, setTopbarActionHost] = useState<HTMLElement | null>(null);
+  const [topbarTabHost, setTopbarTabHost] = useState<HTMLElement | null>(null);
   const project = selectedProject ?? "全部项目";
 
   useEffect(() => {
     setTopbarActionHost(document.getElementById("workbench-topbar-actions"));
+    setTopbarTabHost(document.getElementById("workbench-topbar-tabs"));
   }, []);
 
   useEffect(() => {
@@ -335,20 +337,23 @@ export function FileManager({
         topbarActionHost,
       ) : null}
 
-      <div className="projectSpaceTabs" role="tablist" aria-label="项目空间">
-        {projectTabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`projectSpaceTab ${activeProjectTab === tab.id ? "active" : ""}`}
-            type="button"
-            role="tab"
-            aria-selected={activeProjectTab === tab.id}
-            onClick={() => setActiveProjectTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {topbarTabHost ? createPortal(
+        <div className="projectSpaceTabs" role="tablist" aria-label="项目空间">
+          {projectTabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`projectSpaceTab ${activeProjectTab === tab.id ? "active" : ""}`}
+              type="button"
+              role="tab"
+              aria-selected={activeProjectTab === tab.id}
+              onClick={() => setActiveProjectTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>,
+        topbarTabHost,
+      ) : null}
 
       {activeProjectTab === "activity" ? <ProjectActivityTab project={project} /> : null}
       {activeProjectTab === "plan" ? <ProjectPlanTab project={project} /> : null}
