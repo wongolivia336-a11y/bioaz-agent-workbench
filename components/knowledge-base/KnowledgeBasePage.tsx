@@ -28,6 +28,7 @@ import {
   mockKbFolders,
   type KnowledgeBaseFile,
 } from "../../lib/workbench/knowledgeBaseData";
+import { InlineSelect } from "../workbench-shell/InlineSelect";
 import { WorkspaceAssistant } from "../workbench-shell/ShellControls";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 
@@ -200,6 +201,7 @@ export function KnowledgeBasePage() {
             onPreview={() => setDetailId(file.id)}
             onDetail={() => setDetailId(file.id)}
             onAssign={() => setAssignFor(file)}
+            onAssignDirect={(ids) => setFiles((items) => items.map((item) => item.id === file.id ? { ...item, assignedTo: ids } : item))}
             onMove={() => setMoveFor(file)}
             onDelete={() => remove(file.id)}
           />
@@ -243,7 +245,7 @@ function KbStat({ label, value, tone }: { label: string; value: number; tone?: "
   );
 }
 
-function KbFileRow({ file, onPreview, onDetail, onAssign, onMove, onDelete }: { file: KnowledgeBaseFile; onPreview: () => void; onDetail: () => void; onAssign: () => void; onMove: () => void; onDelete: () => void }) {
+function KbFileRow({ file, onPreview, onDetail, onAssign, onAssignDirect, onMove, onDelete }: { file: KnowledgeBaseFile; onPreview: () => void; onDetail: () => void; onAssign: () => void; onAssignDirect: (ids: string[]) => void; onMove: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLElement>(open, () => setOpen(false));
   const nameById = new Map(digitalTeamData.map((item) => [item.id, item.displayName]));
@@ -257,7 +259,35 @@ function KbFileRow({ file, onPreview, onDetail, onAssign, onMove, onDelete }: { 
       </div>
       <span><em className={`kbStatusChip is-${file.status}`}>{statusLabel[file.status]}</em></span>
       <span>{file.business}</span>
-      <span>{file.assignedTo.length ? file.assignedTo.map((id) => nameById.get(id) ?? id).join("、") : "全部同事"}</span>
+      <span>
+        <InlineSelect
+          label={`修改${file.title}的可用范围`}
+          triggerClassName="kbAssignTrigger"
+          trigger={<span>{file.assignedTo.length ? file.assignedTo.map((id) => nameById.get(id) ?? id).join("、") : "全部同事"}</span>}
+        >
+          {(close) => (
+            <>
+              <button className={`toolMenuItem ${file.assignedTo.length ? "" : "active"}`} type="button" onClick={() => { onAssignDirect([]); close(); }}>
+                <span>全部数字同事可用</span>{file.assignedTo.length ? null : <Check size={13} />}
+              </button>
+              {digitalTeamData.map((coworker) => {
+                const picked = file.assignedTo.includes(coworker.id);
+                return (
+                  <button
+                    className={`toolMenuItem ${picked ? "active" : ""}`}
+                    type="button"
+                    key={coworker.id}
+                    onClick={() => onAssignDirect(picked ? file.assignedTo.filter((id) => id !== coworker.id) : [...file.assignedTo, coworker.id])}
+                  >
+                    <span><Bot size={13} />{coworker.displayName}</span>
+                    {picked ? <Check size={13} /> : null}
+                  </button>
+                );
+              })}
+            </>
+          )}
+        </InlineSelect>
+      </span>
       <span>{file.updatedAt}</span>
       <div className="rowActions">
         <button className="rowActionButton" type="button" aria-label={`预览${file.title}`} onClick={onPreview}><Eye size={15} /></button>

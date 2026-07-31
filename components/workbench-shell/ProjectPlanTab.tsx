@@ -1,6 +1,7 @@
 "use client";
 
-import { Bot, Check, ChevronDown, Columns3, Filter, LayoutList, Plus, Users } from "lucide-react";
+import { Bot, Check, Columns3, Filter, LayoutList, Plus, Users } from "lucide-react";
+import { InlineSelect } from "./InlineSelect";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -234,20 +235,6 @@ function AssigneeSelect({ value, onChange, compact }: { value: string; onChange:
         </button>
       ))}
     </InlineSelect>
-  );
-}
-
-function InlineSelect({ label, trigger, triggerClassName, children }: { label: string; trigger: ReactNode; triggerClassName: string; children: (close: () => void) => ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return (
-    <div ref={ref} className="inlineSelect">
-      <button className={`inlineSelectTrigger ${triggerClassName}`} type="button" aria-label={label} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        {trigger}
-        <ChevronDown className="inlineSelectCaret" size={12} />
-      </button>
-      {open ? <div className="toolMenu inlineSelectMenu">{children(() => setOpen(false))}</div> : null}
-    </div>
   );
 }
 

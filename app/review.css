@@ -4996,3 +4996,163 @@ button { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 900px) {
   .topbarTabLayer .projectSpaceTabs { overflow-x: auto; }
 }
+
+/* ===== 知识库：主按钮统一黑白，不用品牌蓝 ===== */
+.knowledgeHubView .primaryButton:not(:disabled),
+.kbDialog .primaryButton:not(:disabled) {
+  border: 1px solid #17191e;
+  background: #17191e;
+  color: #fff;
+  box-shadow: none;
+}
+.knowledgeHubView .primaryButton:hover:not(:disabled),
+.kbDialog .primaryButton:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+.knowledgeHubView .secondaryButton,
+.kbDialog .secondaryButton {
+  border: 1px solid #d4d7dd;
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.knowledgeHubView .secondaryButton:hover,
+.kbDialog .secondaryButton:hover {
+  background: #f8f9fa;
+}
+
+/* ===== 详情抽屉：两个空间统一为顶天立地 ===== */
+.knowledgeDetailPanel {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(400px, 92vw);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-left: 1px solid var(--bioaz-border);
+  background: #fff;
+  box-shadow: -18px 0 44px rgba(18, 24, 38, 0.10);
+}
+.knowledgeDetailPanel > header {
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-4) var(--bioaz-space-5);
+}
+.knowledgeDetailPanel > dl,
+.knowledgeDetailPanel .kbDetailSection {
+  padding-inline: var(--bioaz-space-5);
+}
+.kbDetailPanel {
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow-y: auto;
+}
+.kbDetailPanel > dl { margin: var(--bioaz-space-4) 0 0; }
+.kbDetailSection { padding-block: var(--bioaz-space-4); }
+.kbDetailSection + .kbDetailSection { border-top: 1px solid var(--bioaz-border); }
+.kbDetailSectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-2);
+}
+.kbDetailSectionHead > strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 600; }
+.kbTagList { display: flex; flex-wrap: wrap; gap: 6px; }
+.kbTagList > span {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 2px 10px;
+}
+
+/* 知识库「指派给」沿用计划里的行内编辑手感 */
+.kbAssignTrigger {
+  max-width: 100%;
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+}
+.kbAssignTrigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inlineSelectMenu.alignEnd { right: 0; left: auto; }
+.kbTable .inlineSelect { min-width: 0; max-width: 100%; }
+
+/* 可用范围选项：与详情抽屉里的表述保持一致 */
+.kbScopeOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.kbScopeOption + .kbScopeOption { margin-top: 6px; }
+.kbScopeOption.active {
+  border-color: rgba(92, 96, 184, 0.28);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+.kbAssignedList { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--bioaz-space-2); }
+.kbAssignedList > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 3px 10px;
+}
+.kbAssignOptions { display: grid; gap: 4px; }
+.kbAssignOptions > button {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 9px 12px;
+  text-align: left;
+}
+.kbAssignOptions > button.active { border-color: rgba(92, 96, 184, 0.3); background: var(--bioaz-agent-accent-soft); }
+.kbAssignOptions > button > span:nth-child(2) { display: grid; gap: 1px; }
+.kbAssignOptions strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 500; }
+.kbAssignOptions small { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.kbAssignMark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+.kbAssignOptions > button > svg:last-child { margin-left: auto; color: var(--bioaz-agent-accent); }
+
+.kbDialog {
+  display: grid;
+  width: min(420px, calc(100vw - 32px));
+  gap: var(--bioaz-space-4);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: #fff;
+  box-shadow: var(--bioaz-shadow-overlay);
+  padding: var(--bioaz-space-5);
+}
+.kbDialog > header { display: flex; align-items: flex-start; gap: var(--bioaz-space-3); }
+.kbDialog h2 { color: var(--bioaz-text-primary); font-size: 15px; font-weight: 600; margin: 0; }
+.kbDialog header p { color: var(--bioaz-text-secondary); font-size: 13px; line-height: 19px; margin: 6px 0 0; }
+.kbDialog header .iconButton { margin-left: auto; }
+.kbDialogBody { max-height: 46vh; overflow-y: auto; }
+.kbDialog > footer { display: flex; justify-content: flex-end; gap: var(--bioaz-space-2); }
