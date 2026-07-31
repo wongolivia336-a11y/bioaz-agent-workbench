@@ -3865,3 +3865,293 @@ button { -webkit-tap-highlight-color: transparent; }
   }
 }
 
+
+/* ===== 项目任务 Tab · 表格 / 看板双视图 ===== */
+
+.projectTaskToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  margin-bottom: var(--bioaz-space-4);
+}
+.taskViewSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.taskViewSwitch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 11px;
+}
+.taskViewSwitch button:hover {
+  color: var(--bioaz-text-primary);
+}
+.taskViewSwitch button.active {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+.projectTaskCount {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* 状态与优先级 chip：与肿瘤报告的状态色系保持一致 */
+.taskStatusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+  font-style: normal;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.taskStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--bioaz-radius-full);
+  background: currentColor;
+}
+.taskStatusChip.status-running {
+  background: rgba(92, 96, 184, 0.08);
+  color: #5c60b8;
+}
+.taskStatusChip.status-awaitingReview {
+  background: #fef3c7;
+  color: #92400e;
+}
+.taskStatusChip.status-done {
+  background: #d1fae5;
+  color: #065f46;
+}
+.taskStatusChip.status-blocked {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.taskPriorityChip {
+  display: inline-flex;
+  border-radius: var(--bioaz-radius-full);
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+  font-style: normal;
+  padding: 1px 9px;
+}
+.taskPriorityChip.priority-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.taskPriorityChip.priority-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+.taskFieldEmpty {
+  color: var(--bioaz-text-disabled);
+}
+
+/* 表格视图 */
+.taskTable {
+  display: grid;
+  border-top: 1px solid var(--bioaz-border);
+}
+.taskTableHeader,
+.taskTableRow {
+  display: grid;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: minmax(200px, 1fr) 108px 150px 76px 110px 40px;
+  padding-inline: var(--bioaz-space-3);
+}
+.taskTableHeader {
+  border-bottom: 1px solid var(--bioaz-border);
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  min-height: 34px;
+}
+.taskTableRow {
+  position: relative;
+  border-bottom: 1px solid var(--bioaz-border);
+  min-height: 48px;
+}
+.taskTableRow:hover {
+  background: rgba(17, 19, 24, 0.02);
+}
+.taskTableTitle {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.taskTableTitle:hover {
+  color: var(--bioaz-agent-accent);
+}
+.taskAssignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.taskAssigneeMark {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+.taskTime {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.taskRowActions {
+  display: flex;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.taskTableRow:hover .taskRowActions,
+.taskTableRow:focus-within .taskRowActions,
+.taskTableRow.menuOpen .taskRowActions {
+  opacity: 1;
+}
+
+/* 看板视图 */
+.taskBoard {
+  display: grid;
+  align-items: start;
+  gap: var(--bioaz-space-3);
+  grid-auto-columns: minmax(232px, 1fr);
+  grid-auto-flow: column;
+  overflow-x: auto;
+  padding-bottom: var(--bioaz-space-2);
+}
+.taskBoardColumn {
+  display: grid;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: var(--bioaz-space-3);
+}
+.taskBoardColumn > header {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+.taskBoardColumn > header > b {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.taskBoardColumn > header > button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  margin-left: auto;
+  padding: 0;
+  place-items: center;
+}
+.taskBoardColumn > header > button:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.taskBoardCards {
+  display: grid;
+  gap: var(--bioaz-space-2);
+}
+.taskBoardCard {
+  display: grid;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  padding: var(--bioaz-space-3);
+  text-align: left;
+}
+.taskBoardCard:hover {
+  border-color: rgba(92, 96, 184, 0.28);
+  box-shadow: 0 4px 12px rgba(18, 24, 38, 0.06);
+}
+.taskBoardCard > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 19px;
+}
+.taskBoardCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.taskBoardCardMeta > small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  margin-left: auto;
+}
+.taskBoardEmpty {
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-disabled);
+  font-size: 12px;
+  padding: var(--bioaz-space-5) var(--bioaz-space-3);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .taskTableHeader,
+  .taskTableRow {
+    grid-template-columns: minmax(0, 1fr) 100px 76px 40px;
+  }
+  .taskTableHeader > span:nth-child(3),
+  .taskTableRow > .taskAssignee,
+  .taskTableHeader > span:nth-child(5),
+  .taskTableRow > .taskTime {
+    display: none;
+  }
+  .taskRowActions {
+    opacity: 1;
+  }
+}

@@ -304,6 +304,7 @@ export default function WorkbenchShell() {
         coworkerName: item.coworkerName ?? "BioAZ Helper",
         time: item.time ?? "",
         status: item.status ?? "",
+        priority: item.priority,
       }));
     return [...runtimeTasks, ...staticTasks].filter((task) => !deletedTaskIds.includes(task.id));
   }, [deletedTaskIds, renamedTaskTitles, runtimeTasks, visibleProjects]);
