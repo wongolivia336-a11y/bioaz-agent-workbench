@@ -22,6 +22,7 @@ declare module "lucide-react" {
   export const ChevronRight: LucideIcon;
   export const ChevronUp: LucideIcon;
   export const Circle: LucideIcon;
+  export const Columns3: LucideIcon;
   export const CircleAlert: LucideIcon;
   export const CircleDollarSign: LucideIcon;
   export const CircleHelp: LucideIcon;
@@ -40,11 +41,14 @@ declare module "lucide-react" {
   export const Filter: LucideIcon;
   export const FlaskConical: LucideIcon;
   export const Folder: LucideIcon;
+  export const FolderInput: LucideIcon;
+  export const FolderOutput: LucideIcon;
   export const GitBranch: LucideIcon;
   export const GripVertical: LucideIcon;
   export const HelpCircle: LucideIcon;
   export const History: LucideIcon;
   export const Inbox: LucideIcon;
+  export const LayoutList: LucideIcon;
   export const Lightbulb: LucideIcon;
   export const ListChecks: LucideIcon;
   export const LoaderCircle: LucideIcon;
