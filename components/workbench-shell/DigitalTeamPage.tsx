@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowLeft, Bot, Check, ChevronDown, ChevronRight, Folder, Network, Search, Sparkles, Users, Zap } from "lucide-react";
+import { ArrowLeft, Bot, ChevronRight, Folder, Network, Search, Sparkles, Users, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import { digitalTeamData, type DigitalCoworker, type DigitalSkill, type DigitalSubAgent } from "../../lib/workbench/digitalTeamData";
+import { digitalScenarios, digitalTeamData, type DigitalCoworker, type DigitalSkill, type DigitalSubAgent } from "../../lib/workbench/digitalTeamData";
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
-import { useDismissableLayer } from "./useDismissableLayer";
+import { McpTab } from "./McpTab";
+import { SkillsTab } from "./SkillsTab";
 
 type Props = {
   projects: WorkbenchProject[];
@@ -13,17 +14,39 @@ type Props = {
   onOpenLibrary: () => void;
 };
 
+type TeamTab = "coworkers" | "skills" | "mcp";
+
+const teamTabs: Array<{ id: TeamTab; label: string }> = [
+  { id: "coworkers", label: "数字同事" },
+  { id: "skills", label: "Skills" },
+  { id: "mcp", label: "MCP" },
+];
+
 const domains = ["全部领域", ...Array.from(new Set(digitalTeamData.map((item) => item.domain)))];
+
+const searchPlaceholder: Record<TeamTab, string> = {
+  coworkers: "搜索数字同事、技能或业务领域",
+  skills: "搜索 Skill 名称或说明",
+  mcp: "搜索连接器或所属系统",
+};
 
 export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary }: Props) {
   const [selectedId, setSelectedId] = useState(digitalTeamData[1]?.id ?? digitalTeamData[0].id);
   const [view, setView] = useState<"gallery" | "detail">("gallery");
+  const [activeTab, setActiveTab] = useState<TeamTab>("coworkers");
   const [query, setQuery] = useState("");
   const [domain, setDomain] = useState(domains[0]);
   const [useOpen, setUseOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const selected = digitalTeamData.find((item) => item.id === selectedId) ?? digitalTeamData[0];
   const selectedNode = getSelectedNode(selected, selectedNodeId);
+
+  const openCoworker = (id: string) => {
+    setSelectedId(id);
+    setUseOpen(false);
+    setSelectedNodeId(null);
+    setView("detail");
+  };
 
   const filteredCoworkers = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -120,6 +143,10 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
             <span>{selectedNode?.kind ?? "数字同事"}</span>
             <h2>{selectedNode?.title ?? selected.displayName}</h2>
             <p>{selectedNode?.description ?? selected.description}</p>
+            <div className="subagentNotice">
+              <Network size={15} />
+              <span>一个数字同事由多个 SubAgent 协作构成，当前有 {selected.subAgents.length} 个 SubAgent、{selected.skills.length} 个 Skill。</span>
+            </div>
             <div>
               <strong>适用任务</strong>
               {selected.taskExamples.map((example) => <button type="button" key={example}>{example}</button>)}
@@ -145,63 +172,92 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
         </div>
       </header>
 
-      <div className="digitalTeamToolbar">
+      <div className="digitalTeamTabs" role="tablist" aria-label="数字团队">
+        {teamTabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`digitalTeamTab ${activeTab === tab.id ? "active" : ""}`}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => { setActiveTab(tab.id); setQuery(""); }}
+          >
+            {tab.label}
+          </button>
+        ))}
         <label className="digitalTeamSearch">
-          <Search size={16} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索数字同事、技能或业务领域" />
+          <Search size={15} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={searchPlaceholder[activeTab]} />
         </label>
-        <DomainFilter value={domain} options={domains} onChange={setDomain} />
       </div>
 
-      <div className="digitalTeamLayout">
-        <div className="digitalCoworkerGrid">
-          {filteredCoworkers.map((coworker) => (
-            <button
-              className={`digitalCoworkerCard ${selected.id === coworker.id ? "active" : ""}`}
-              type="button"
-              key={coworker.id}
-              onClick={() => { setSelectedId(coworker.id); setUseOpen(false); setSelectedNodeId(null); setView("detail"); }}
-            >
-              <header>
-                <span><Bot size={18} /></span>
-                <em>{coworker.status === "active" ? "已启用" : "规划中"}</em>
-              </header>
-              <strong>{coworker.displayName}</strong>
-              <small>{coworker.domain}</small>
-              <p>{coworker.description}</p>
-              <footer>
-                <span>{coworker.skills.length} Skills</span>
-                <span>{coworker.subAgents.length} SubAgents</span>
-                <ChevronRight size={15} />
-              </footer>
-            </button>
-          ))}
-        </div>
-      </div>
+      {activeTab === "coworkers" ? (
+        <>
+          <section className="digitalScenarioStrip" aria-label="精选场景">
+            <div className="digitalScenarioHeading"><strong>精选场景</strong><span>按业务场景快速找到该用哪几位数字同事</span></div>
+            <div className="digitalScenarioRow">
+              {digitalScenarios.map((scenario) => (
+                <article className="digitalScenarioCard" key={scenario.id}>
+                  <strong>{scenario.name}</strong>
+                  <small>{scenario.description}</small>
+                  <div>
+                    {scenario.coworkerIds.map((id) => {
+                      const coworker = digitalTeamData.find((item) => item.id === id);
+                      if (!coworker) return null;
+                      return (
+                        <button type="button" key={id} onClick={() => openCoworker(id)}>
+                          <span><Bot size={14} /></span>{coworker.displayName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <div className="digitalFilterChips" role="tablist" aria-label="业务领域">
+            {domains.map((item) => (
+              <button
+                key={item}
+                className={`digitalFilterChip ${domain === item ? "active" : ""}`}
+                type="button"
+                role="tab"
+                aria-selected={domain === item}
+                onClick={() => setDomain(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+
+          <div className="digitalCoworkerGrid">
+            {filteredCoworkers.map((coworker) => (
+              <button
+                className={`digitalCoworkerCard ${selected.id === coworker.id ? "active" : ""}`}
+                type="button"
+                key={coworker.id}
+                onClick={() => openCoworker(coworker.id)}
+              >
+                <header>
+                  <span><Bot size={18} /></span>
+                  <em>{coworker.status === "active" ? "已启用" : "规划中"}</em>
+                </header>
+                <strong>{coworker.displayName}</strong>
+                <small>{coworker.domain}</small>
+                <p>{coworker.description}</p>
+                <footer>
+                  <span>{coworker.skills.length} Skills</span>
+                  <span>{coworker.subAgents.length} SubAgents</span>
+                  <ChevronRight size={15} />
+                </footer>
+              </button>
+            ))}
+            {!filteredCoworkers.length ? <div className="digitalEmptyState">没有匹配的数字同事</div> : null}
+          </div>
+        </>
+      ) : activeTab === "skills" ? <SkillsTab query={query} /> : <McpTab query={query} />}
     </section>
-  );
-}
-
-function DomainFilter({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return (
-    <div ref={ref} className={`digitalTeamDomainSelect ${open ? "isOpen" : ""}`}>
-      <button type="button" aria-expanded={open} aria-label="筛选领域" onClick={() => setOpen((current) => !current)}>
-        <span>{value}</span>
-        <ChevronDown size={14} />
-      </button>
-      {open ? (
-        <div className="digitalTeamDomainMenu" role="menu" aria-label="筛选领域">
-          {options.map((option) => (
-            <button type="button" className={option === value ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}>
-              <span>{option}</span>
-              {option === value ? <Check size={14} /> : null}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
   );
 }
 

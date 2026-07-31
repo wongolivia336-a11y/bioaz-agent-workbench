@@ -20,6 +20,7 @@ type Props = {
   renamedTaskTitles: Record<string, string>;
   libraryFolders: LibraryFolder[];
   activeLibraryFolderId: string | null;
+  highlightedProjectId: string | null;
   onOpenLibraryFolder: (project: string, folderId: string | null) => void;
   onCreateProject: (name: string) => WorkbenchProject | null;
   onRenameProject: (projectId: string, name: string) => void;
@@ -151,6 +152,7 @@ export function WorkspaceSidebar(props: Props) {
           <SidebarProject
             key={project.id}
             title={project.name}
+            highlighted={props.highlightedProjectId === project.id}
             open={Boolean(openProjects[project.id])}
             onToggle={() => setOpenProjects((current) => ({ ...current, [project.id]: !current[project.id] }))}
             onRename={(name) => props.onRenameProject(project.id, name)}
@@ -211,7 +213,7 @@ function toTask(item: PinItem): WorkbenchTask {
   };
 }
 
-function SidebarProject({ title, open, onToggle, onRename, onOpenFiles, onStartTask, onDelete, children }: { title: string; open: boolean; onToggle: () => void; onRename: (name: string) => void; onOpenFiles: () => void; onStartTask: () => void; onDelete: () => void; children: ReactNode }) {
+function SidebarProject({ title, highlighted = false, open, onToggle, onRename, onOpenFiles, onStartTask, onDelete, children }: { title: string; highlighted?: boolean; open: boolean; onToggle: () => void; onRename: (name: string) => void; onOpenFiles: () => void; onStartTask: () => void; onDelete: () => void; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -223,7 +225,7 @@ function SidebarProject({ title, open, onToggle, onRename, onOpenFiles, onStartT
   };
   return (
     <div className="projectGroup">
-      <div ref={ref} className={`projectRowWrap ${menuOpen ? "menuOpen" : ""}`} onContextMenu={(event) => { event.preventDefault(); setMenuOpen(true); }}>
+      <div ref={ref} className={`projectRowWrap ${menuOpen ? "menuOpen" : ""} ${highlighted ? "justCreated" : ""}`} onContextMenu={(event) => { event.preventDefault(); setMenuOpen(true); }}>
         {editing ? (
           <div className="projectCreateRow sidebarInlineEditor">
             <Folder size={14} />

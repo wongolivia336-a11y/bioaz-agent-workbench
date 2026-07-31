@@ -29,6 +29,23 @@ export type DigitalCoworker = {
   recentGrowth: string;
 };
 
+export type DigitalScenario = {
+  id: string;
+  name: string;
+  description: string;
+  coworkerIds: string[];
+};
+
+export type McpConnector = {
+  id: string;
+  name: string;
+  system: string;
+  status: "connected" | "pending" | "disconnected";
+  scope: string;
+  usedBy: string[];
+  lastSync: string;
+};
+
 export const digitalTeamData: DigitalCoworker[] = [
   {
     id: "bioaz-helper",
@@ -123,3 +140,35 @@ export const digitalTeamData: DigitalCoworker[] = [
     recentGrowth: "新增证据追溯视角",
   },
 ];
+
+export const digitalScenarios: DigitalScenario[] = [
+  { id: "scenario-tumor", name: "肿瘤药效评价", description: "从原始数据到药效报告与专家审核", coworkerIds: ["tumor-report-coworker", "qa-review-coworker", "file-assistant"] },
+  { id: "scenario-dmpk", name: "DMPK 报价", description: "参数收集、规则匹配到报价交付", coworkerIds: ["dmpk-quotation-coworker", "bioaz-helper"] },
+  { id: "scenario-delivery", name: "交付质量把关", description: "交付包复核、证据追溯与风险提示", coworkerIds: ["qa-review-coworker", "tumor-report-coworker"] },
+  { id: "scenario-research", name: "项目资料检索", description: "跨项目搜索、总结与思路拓展", coworkerIds: ["file-assistant", "bioaz-helper"] },
+];
+
+export const mcpData: McpConnector[] = [
+  { id: "mcp-library", name: "项目文件库", system: "内部存储", status: "connected", scope: "全部项目", usedBy: ["file-assistant", "tumor-report-coworker", "qa-review-coworker"], lastSync: "刚刚" },
+  { id: "mcp-pubmed", name: "PubMed", system: "外部数据库", status: "connected", scope: "全局只读", usedBy: ["tumor-report-coworker"], lastSync: "1 小时前" },
+  { id: "mcp-pricing", name: "计价规则库", system: "内部系统", status: "connected", scope: "DMPK 报价", usedBy: ["dmpk-quotation-coworker"], lastSync: "昨天" },
+  { id: "mcp-lims", name: "实验数据平台", system: "内部系统", status: "pending", scope: "需审批", usedBy: [], lastSync: "未同步" },
+  { id: "mcp-crm", name: "客户管理系统", system: "外部系统", status: "disconnected", scope: "未授权", usedBy: [], lastSync: "未连接" },
+];
+
+/** Skills 页按能力聚合展示，数据直接来自数字同事，避免与画布里的技能出现两份定义。 */
+export function aggregateSkills() {
+  const bucket = new Map<string, { id: string; name: string; category: string; description: string; status: DigitalCapabilityStatus; usedBy: string[] }>();
+  digitalTeamData.forEach((coworker) => {
+    coworker.skills.forEach((skill) => {
+      const existing = bucket.get(skill.name);
+      if (existing) {
+        existing.usedBy.push(coworker.id);
+        if (skill.status === "active") existing.status = "active";
+        return;
+      }
+      bucket.set(skill.name, { ...skill, usedBy: [coworker.id] });
+    });
+  });
+  return Array.from(bucket.values());
+}

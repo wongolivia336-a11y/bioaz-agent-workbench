@@ -2576,3 +2576,782 @@ button { -webkit-tap-highlight-color: transparent; }
     animation: none;
   }
 }
+
+/* ===== Phase 1 · 数据中枢骨架（两层 Header / 项目空间 Tab / 新建项目） ===== */
+
+.dmpkWorkspace.workbenchMode {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.dmpkWorkspace.workbenchMode > .topbar {
+  display: flex;
+  height: auto;
+  min-height: 64px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  padding-block: 0;
+}
+.topbarPathLayer {
+  display: flex;
+  min-height: 63px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+.topbarToolLayer {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 1px solid var(--bioaz-border);
+}
+.topbarToolLayer:has(> .topbarActions:empty) {
+  display: none;
+}
+
+.projectSpaceTabs {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-1);
+  border-bottom: 1px solid var(--bioaz-border);
+  margin-bottom: var(--bioaz-space-5);
+}
+.projectSpaceTab {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  transition: color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.projectSpaceTab:hover {
+  color: var(--bioaz-text-primary);
+}
+.projectSpaceTab.active {
+  border-bottom: 2px solid var(--bioaz-agent-accent);
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+}
+
+.projectTabPanel {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--bioaz-space-4);
+  overflow-y: auto;
+  padding-bottom: var(--bioaz-space-8);
+}
+.projectTabIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.projectTabIntro strong {
+  color: var(--bioaz-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+.projectTabIntro span {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+}
+.projectTabPlaceholderNote {
+  border-top: 1px solid var(--bioaz-border);
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  margin: 0;
+  padding-top: var(--bioaz-space-3);
+}
+.projectTabEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  padding: var(--bioaz-space-8) var(--bioaz-space-4);
+  text-align: center;
+}
+.projectTabEmptyState strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+}
+.projectTabEmptyState span {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+}
+
+.projectActivityTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bioaz-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.projectActivityTimeline > li {
+  display: grid;
+  align-items: start;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: 30px minmax(0, 1fr);
+  padding: var(--bioaz-space-3) 0;
+}
+.projectActivityTimeline > li + li {
+  border-top: 1px solid var(--bioaz-border);
+}
+.projectActivityMark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  place-items: center;
+}
+.projectActivityBody {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.projectActivityHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+}
+.projectActivityHead strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.projectActivityHead time {
+  color: var(--bioaz-text-tertiary);
+  flex: none;
+  font-size: 12px;
+}
+.projectActivityBody p {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  margin: 0;
+}
+.projectActivityBody small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+
+.projectPlanStages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bioaz-space-3);
+}
+.projectPlanStage {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+}
+.projectPlanStage > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-3) var(--bioaz-space-4);
+}
+.projectPlanStage > header > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.projectPlanStage > header strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.projectPlanStage > header small {
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+}
+.projectPlanProgress {
+  color: var(--bioaz-text-tertiary);
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.projectPlanStage ul {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: var(--bioaz-space-2) var(--bioaz-space-4);
+}
+.projectPlanStep {
+  display: grid;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+  padding: 7px 0;
+}
+.projectPlanStepMark {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-full);
+  color: #fff;
+  place-items: center;
+}
+.projectPlanStep.is-done .projectPlanStepMark {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent);
+}
+.projectPlanStep.is-running .projectPlanStepMark {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent-soft);
+}
+.projectPlanStepLabel {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  min-width: 0;
+}
+.projectPlanStep.is-done .projectPlanStepLabel {
+  color: var(--bioaz-text-secondary);
+}
+.projectPlanStep small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.projectPlanStep em {
+  border-radius: var(--bioaz-radius-full);
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+  font-style: normal;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.projectPlanStep.is-running em {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-agent-accent);
+}
+.projectPlanStep.is-done em {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.projectTaskList .projectTaskCard {
+  cursor: default;
+}
+.projectTaskStatus {
+  border-radius: var(--bioaz-radius-full);
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+  font-style: normal;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.projectTaskStatus.status-running {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-agent-accent);
+}
+.projectTaskStatus.status-awaitingReview {
+  background: #fef3c7;
+  color: #92400e;
+}
+.projectTaskStatus.status-done {
+  background: #d1fae5;
+  color: #065f46;
+}
+.projectTaskStatus.status-blocked {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.libraryProjectCreateRow {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-agent-accent-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-text-secondary);
+  margin-bottom: var(--bioaz-space-3);
+  padding: var(--bioaz-space-2) var(--bioaz-space-3);
+}
+.libraryProjectCreateRow input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  outline: 0;
+}
+.libraryProjectCreateRow > button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--bioaz-radius-sm, 6px);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  place-items: center;
+}
+.libraryProjectCreateRow > button:hover:not(:disabled) {
+  background: rgba(92, 96, 184, 0.12);
+  color: var(--bioaz-agent-accent);
+}
+.libraryProjectCreateRow > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.libraryEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  padding: var(--bioaz-space-12) var(--bioaz-space-4);
+  text-align: center;
+}
+.libraryEmptyIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  place-items: center;
+}
+.libraryEmptyState strong {
+  color: var(--bioaz-text-primary);
+  font-size: 15px;
+}
+.libraryEmptyState > span:not(.libraryEmptyIcon) {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+}
+.libraryEmptyState .primaryButton {
+  margin-top: var(--bioaz-space-2);
+}
+
+.projectRowWrap.justCreated {
+  border-radius: var(--bioaz-radius-tool);
+  animation: projectJustCreated 2.4s var(--bioaz-ease-standard);
+}
+@keyframes projectJustCreated {
+  0%, 55% {
+    background: rgba(92, 96, 184, 0.14);
+    box-shadow: inset 2px 0 0 var(--bioaz-agent-accent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 2px 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projectRowWrap.justCreated {
+    animation-duration: 1ms;
+  }
+}
+
+@media (max-width: 760px) {
+  .projectSpaceTabs {
+    overflow-x: auto;
+  }
+  .projectSpaceTab {
+    white-space: nowrap;
+  }
+  .projectPlanStep {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+  }
+  .projectPlanStep small {
+    display: none;
+  }
+}
+
+/* ===== Phase 2/3/4 · 工具栏 icon 化 / 列表精致化 / 回收站与空状态 ===== */
+
+/* --- 工具层：搜索 + icon 按钮 + 主操作 --- */
+.libraryToolLayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+}
+.libraryToolSearch {
+  width: clamp(200px, 26vw, 320px);
+  height: 34px;
+  margin-right: var(--bioaz-space-1);
+}
+.libraryToolSearch input {
+  font-size: 13px;
+}
+.libraryToolSearch > button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.libraryToolSearch > button:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+.toolIconButton {
+  position: relative;
+  display: inline-grid;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+  transition: background var(--bioaz-motion-fast) var(--bioaz-ease-standard),
+    color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.toolIconButton:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.toolIconButton.active,
+.toolIconButton[aria-pressed="true"],
+.toolIconButton[aria-expanded="true"] {
+  border-color: rgba(92, 96, 184, 0.2);
+  background: rgba(92, 96, 184, 0.12);
+  color: var(--bioaz-agent-accent);
+}
+.toolBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  padding: 0 3px;
+  text-align: center;
+}
+
+.toolMenuWrap {
+  position: relative;
+  display: inline-flex;
+}
+.toolMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  min-width: 176px;
+  max-height: 60vh;
+  gap: 2px;
+  overflow-y: auto;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  box-shadow: var(--bioaz-shadow-floating);
+  padding: var(--bioaz-space-1);
+}
+.toolMenuGroup {
+  display: grid;
+  gap: 1px;
+}
+.toolMenuGroup + .toolMenuGroup {
+  border-top: 1px solid var(--bioaz-border);
+  margin-top: var(--bioaz-space-1);
+  padding-top: var(--bioaz-space-1);
+}
+.toolMenuGroup > span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  padding: 4px 8px 2px;
+}
+.toolMenuItem {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-2);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  text-align: left;
+}
+.toolMenuItem:hover {
+  background: rgba(92, 96, 184, 0.06);
+}
+.toolMenuItem.active {
+  background: rgba(92, 96, 184, 0.1);
+  color: var(--bioaz-agent-accent);
+  font-weight: 500;
+}
+.toolMenuItem > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- 筛选 chip 回显 --- */
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-4);
+}
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 3px 5px 3px 10px;
+}
+.filterChip > button {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.filterChip > button:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+.clearAllChips {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 4px;
+}
+.clearAllChips:hover {
+  color: var(--bioaz-agent-accent);
+  text-decoration: underline;
+}
+
+/* --- 列表精致化：压平边框、统一行高、弱化表头 --- */
+.libraryListSurface .knowledgeTable,
+.projectFileLane {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.projectOverviewLanes > .overviewFileLane {
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+.projectFileLane .projectLaneHeader {
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: var(--bioaz-space-2);
+}
+.overviewFileViewport {
+  overflow: visible;
+}
+.overviewFileViewport .knowledgeTable {
+  height: auto;
+}
+
+.knowledgeTable .knowledgeTableHeader {
+  align-items: center;
+  border-bottom: 1px solid var(--bioaz-border);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  min-height: 34px;
+  padding-inline: var(--bioaz-space-3);
+}
+.knowledgeTable .knowledgeHeadName {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.knowledgeTable .knowledgeFileRow {
+  position: relative;
+  align-items: center;
+  border-bottom: 1px solid var(--bioaz-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  min-height: 48px;
+  padding-inline: var(--bioaz-space-3);
+}
+.knowledgeTable .knowledgeFileRow:last-child {
+  border-bottom: 0;
+}
+.knowledgeTable .knowledgeFileRow:hover {
+  background: rgba(17, 19, 24, 0.02);
+  box-shadow: none;
+}
+.knowledgeTable .knowledgeFileRow.selected {
+  background: rgba(92, 96, 184, 0.05);
+  box-shadow: inset 2px 0 0 var(--bioaz-agent-accent);
+}
+.knowledgeTable .knowledgeFileRow > span {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.knowledgeFileMain strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 行级操作默认收起，hover / 聚焦 / 菜单展开时才出现 */
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+.knowledgeFileRow:hover .rowActions,
+.knowledgeFileRow:focus-within .rowActions,
+.knowledgeFileRow.menuOpen .rowActions {
+  opacity: 1;
+}
+.rowActionButton {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.rowActionButton:hover {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.libraryListSurface .knowledgeTableHeader,
+.libraryListSurface .knowledgeFileRow {
+  grid-template-columns: minmax(240px, 1fr) 120px 140px 100px 62px;
+}
+.trashTable .knowledgeTableHeader,
+.trashTable .knowledgeFileRow {
+  grid-template-columns: minmax(240px, 1fr) 140px 120px auto;
+}
+
+/* --- 批量操作浮动 bar --- */
+.batchActionBar {
+  position: sticky;
+  bottom: var(--bioaz-space-4);
+  z-index: 30;
+  display: flex;
+  width: min(var(--content-max), 100%);
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  margin-inline: auto;
+  margin-top: var(--bioaz-space-4);
+  background: #fff;
+  box-shadow: var(--bioaz-shadow-floating);
+  padding: var(--bioaz-space-2) var(--bioaz-space-3);
+}
+.batchCount {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.batchActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  margin-left: auto;
+}
+.batchActionBar .iconButton {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  place-items: center;
+}
+.batchActionBar .iconButton:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+@media (max-width: 900px) {
+  .libraryToolSearch {
+    width: clamp(140px, 30vw, 220px);
+  }
+  .libraryListSurface .knowledgeTableHeader,
+  .libraryListSurface .knowledgeFileRow {
+    grid-template-columns: minmax(0, 1fr) 100px 62px;
+  }
+  .libraryListSurface :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(2),
+  .libraryListSurface :is(.knowledgeTableHeader, .knowledgeFileRow) > span:nth-child(3) {
+    display: none;
+  }
+  .rowActions {
+    opacity: 1;
+  }
+}

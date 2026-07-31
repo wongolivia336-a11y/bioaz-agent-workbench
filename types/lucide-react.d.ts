@@ -11,9 +11,11 @@ declare module "lucide-react" {
   export const ArrowLeft: LucideIcon;
   export const ArrowRight: LucideIcon;
   export const ArrowRightLeft: LucideIcon;
+  export const ArrowUpDown: LucideIcon;
   export const ArrowUpRight: LucideIcon;
   export const BadgeDollarSign: LucideIcon;
   export const Bot: LucideIcon;
+  export const Briefcase: LucideIcon;
   export const Calculator: LucideIcon;
   export const Check: LucideIcon;
   export const ChevronDown: LucideIcon;
@@ -35,6 +37,7 @@ declare module "lucide-react" {
   export const FileSearch: LucideIcon;
   export const FileSpreadsheet: LucideIcon;
   export const FileText: LucideIcon;
+  export const Filter: LucideIcon;
   export const FlaskConical: LucideIcon;
   export const Folder: LucideIcon;
   export const GitBranch: LucideIcon;
@@ -58,6 +61,7 @@ declare module "lucide-react" {
   export const PinOff: LucideIcon;
   export const Plus: LucideIcon;
   export const ReceiptText: LucideIcon;
+  export const RotateCcw: LucideIcon;
   export const Search: LucideIcon;
   export const SearchCheck: LucideIcon;
   export const Send: LucideIcon;
