@@ -46,7 +46,7 @@ const assistantCopy = {
   },
 } as const;
 
-export function WorkspaceAssistant({ context, onStartTask, libraryContext }: { context: AssistantContext; onStartTask?: () => void; libraryContext?: LibraryAssistantContext }) {
+export function WorkspaceAssistant({ context, onStartTask, libraryContext, scopeLabel: scopeOverride }: { context: AssistantContext; onStartTask?: () => void; libraryContext?: LibraryAssistantContext; scopeLabel?: string }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [question, setQuestion] = useState<string | null>(null);
@@ -62,8 +62,9 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext }: { c
   const ambient = library || knowledgeBase;
   const copy = library ? assistantCopy.library : assistantCopy.knowledgeBase;
   const suggestions = context === "tasks" ? ["列出我待处理的任务", "按项目整理当前任务", "发起一份 DMPK 报价"] : copy.suggestions;
+  // 知识库进到具体文件夹后，胶囊上的范围跟着收窄到该文件夹
   const scopeLabel = knowledgeBase
-    ? kbScope
+    ? scopeOverride ?? kbScope
     : libraryContext?.project === "全部项目" ? "全部项目" : "当前项目";
   const submit = (value: string) => { const next = value.trim(); if (!next) return; if (thinkingTimerRef.current) window.clearTimeout(thinkingTimerRef.current); setQuestion(next); setThinking(true); setText(""); thinkingTimerRef.current = window.setTimeout(() => { setThinking(false); thinkingTimerRef.current = null; }, 760); if (/DMPK.*报价|报价.*DMPK/i.test(next)) onStartTask?.(); };
   const ambientExpanded = ambientLocked;
