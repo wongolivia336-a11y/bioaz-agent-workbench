@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, Bot, ChevronRight, Folder, Network, Search, Sparkles, Users, Zap } from "lucide-react";
+import { ArrowLeft, Bot, ChevronRight, Folder, Network, Search, Sparkles, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import { digitalScenarios, digitalTeamData, type DigitalCoworker, type DigitalSkill, type DigitalSubAgent } from "../../lib/workbench/digitalTeamData";
+import { aggregateSkills, digitalScenarios, digitalTeamData, mcpData, type DigitalCoworker, type DigitalSkill, type DigitalSubAgent } from "../../lib/workbench/digitalTeamData";
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { McpTab } from "./McpTab";
 import { SkillsTab } from "./SkillsTab";
@@ -23,6 +23,13 @@ const teamTabs: Array<{ id: TeamTab; label: string }> = [
 ];
 
 const domains = ["全部领域", ...Array.from(new Set(digitalTeamData.map((item) => item.domain)))];
+
+// 计数直接挂在 Tab 上，替代原来占一屏的 hero
+const tabCounts: Record<TeamTab, number> = {
+  coworkers: digitalTeamData.length,
+  skills: aggregateSkills().length,
+  mcp: mcpData.length,
+};
 
 const searchPlaceholder: Record<TeamTab, string> = {
   coworkers: "搜索数字同事、技能或业务领域",
@@ -159,19 +166,6 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
 
   return (
     <section className="digitalTeamView" aria-label="数字团队">
-      <header className="digitalTeamHero">
-        <div>
-          <span className="digitalTeamEyebrow"><Users size={14} />已启用数字团队</span>
-          <h1>数字团队</h1>
-          <p>查看 BioAZ 当前可用的数字同事、Skills 和 SubAgents，并从这里快速把能力用于项目或任务。</p>
-        </div>
-        <div className="digitalTeamSummary">
-          <strong>{digitalTeamData.length}</strong>
-          <span>位数字同事</span>
-          <small>{digitalTeamData.reduce((count, item) => count + item.skills.length, 0)} 个 Skills · {digitalTeamData.reduce((count, item) => count + item.subAgents.length, 0)} 个 SubAgents</small>
-        </div>
-      </header>
-
       <div className="digitalTeamTabs" role="tablist" aria-label="数字团队">
         {teamTabs.map((tab) => (
           <button
@@ -182,7 +176,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
             aria-selected={activeTab === tab.id}
             onClick={() => { setActiveTab(tab.id); setQuery(""); }}
           >
-            {tab.label}
+            {tab.label}<i>{tabCounts[tab.id]}</i>
           </button>
         ))}
         <label className="digitalTeamSearch">

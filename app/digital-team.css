@@ -1079,3 +1079,22 @@
     margin-left: 0;
   }
 }
+
+/* Tab 上的轻量计数，替代原 hero 的统计卡 */
+.digitalTeamTab > i {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+  margin-left: 6px;
+  padding: 1px 7px;
+}
+.digitalTeamTab.active > i {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+.digitalTeamView > .digitalTeamTabs {
+  margin-top: var(--bioaz-space-1);
+}

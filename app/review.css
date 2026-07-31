@@ -2386,14 +2386,14 @@ button { -webkit-tap-highlight-color: transparent; }
 .knowledgeBaseView .ambientComposerFrame {
   height: 92px;
   border-radius: 18px;
-  clip-path: inset(24px calc((100% - 210px) / 2) 24px round 999px);
+  clip-path: inset(24px calc((100% - 260px) / 2) 24px round 999px);
   transition:
     clip-path 260ms var(--ambient-ease),
     background-color 220ms var(--ambient-ease),
     box-shadow 220ms var(--ambient-ease);
 }
 .knowledgeBaseView .ambientAssistantEntry {
-  inset: 24px calc((100% - 210px) / 2);
+  inset: 24px calc((100% - 260px) / 2);
   height: 44px;
   border: 1px solid var(--bioaz-border-strong);
   border-radius: 999px;
@@ -2408,28 +2408,22 @@ button { -webkit-tap-highlight-color: transparent; }
     border-color 140ms ease,
     background-color 140ms ease;
 }
-.knowledgeBaseView .ambientAssistantEntry::after {
-  position: absolute;
-  top: -80%;
-  bottom: -80%;
-  left: -42%;
-  width: 34%;
-  background: linear-gradient(90deg, transparent, rgba(112, 116, 214, 0.24), rgba(255, 255, 255, 0.88), transparent);
-  content: "";
-  pointer-events: none;
-  transform: skewX(-18deg);
-  opacity: 0;
-}
-.knowledgeBaseView .ambientAssistantEntry:hover::after {
-  animation: libraryPillSheen 2100ms var(--bioaz-ease-standard) 1;
-}
 .knowledgeBaseView .ambientAssistantEntry > * {
   position: relative;
   z-index: 1;
 }
+/* hover 不做扫光，只做轻微上浮 + 阴影加深，读起来更像实体按钮 */
 .knowledgeBaseView .ambientAssistantEntry:hover {
-  border-color: rgba(92, 96, 184, 0.34);
-  background: rgba(92, 96, 184, 0.04);
+  border-color: rgba(92, 96, 184, 0.28);
+  background: #fff;
+  box-shadow:
+    0 10px 24px rgba(18, 24, 38, 0.09),
+    0 2px 6px rgba(18, 24, 38, 0.04);
+  transform: translateY(-1px);
+}
+.knowledgeBaseView .ambientAssistantEntry:active {
+  box-shadow: 0 4px 12px rgba(18, 24, 38, 0.07);
+  transform: translateY(0);
 }
 .knowledgeBaseView .ambientAssistantEntry svg {
   width: 16px;
@@ -2443,24 +2437,15 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 12px 30px rgba(18, 24, 38, 0.08);
   backdrop-filter: blur(16px);
 }
+/* 展开后不跑渐变描边动画，改为聚焦时一圈柔和的品牌色光圈 */
 .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::after {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  border: 1px solid transparent;
-  border-radius: inherit;
-  background: linear-gradient(110deg, rgba(92, 96, 184, 0.08), rgba(126, 130, 224, 0.52), rgba(255, 255, 255, 0.9), rgba(92, 96, 184, 0.08)) border-box;
-  background-size: 220% 100%;
-  content: "";
-  pointer-events: none;
-  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  animation: libraryComposerSheen 2400ms var(--bioaz-ease-standard) 1;
+  display: none;
 }
-.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame:hover::after {
-  animation: libraryComposerHoverSheen 2400ms var(--bioaz-ease-standard) 1;
+.knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame:focus-within {
+  border-color: rgba(92, 96, 184, 0.32);
+  box-shadow:
+    0 12px 30px rgba(18, 24, 38, 0.08),
+    0 0 0 3px var(--bioaz-agent-focus-ring);
 }
 .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before {
   animation: none;
@@ -2469,57 +2454,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .knowledgeBaseView .ambientAssistantComposer {
   padding: 36px 12px 10px;
   transition: opacity 160ms ease 30ms, transform 240ms var(--ambient-ease);
-}
-@keyframes libraryPillSheen {
-  0% {
-    left: -42%;
-    opacity: 0;
-  }
-  18% {
-    opacity: 0.9;
-  }
-  76% {
-    left: 116%;
-    opacity: 0.45;
-  }
-  100% {
-    left: 116%;
-    opacity: 0;
-  }
-}
-@keyframes libraryComposerSheen {
-  0% {
-    background-position: 100% 0;
-    opacity: 0;
-  }
-  18% {
-    opacity: 0.75;
-  }
-  82% {
-    background-position: -100% 0;
-    opacity: 0.65;
-  }
-  100% {
-    background-position: -100% 0;
-    opacity: 0;
-  }
-}
-@keyframes libraryComposerHoverSheen {
-  0% {
-    background-position: 100% 0;
-    opacity: 0;
-  }
-  18% {
-    opacity: 0.82;
-  }
-  82% {
-    background-position: -100% 0;
-    opacity: 0.72;
-  }
-  100% {
-    background-position: -100% 0;
-    opacity: 0;
-  }
 }
 .knowledgePreviewDialog .primaryButton,
 .knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
@@ -2570,10 +2504,11 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .knowledgeDetailPanel,
-  .knowledgeBaseView .ambientAssistantEntry::after,
-  .knowledgeBaseView .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::after {
+  .knowledgeDetailPanel {
     animation: none;
+  }
+  .knowledgeBaseView .ambientAssistantEntry:hover {
+    transform: none;
   }
 }
 
@@ -3354,4 +3289,17 @@ button { -webkit-tap-highlight-color: transparent; }
   .rowActions {
     opacity: 1;
   }
+}
+
+/* 胶囊文案：助手名 + 作用范围，分隔符弱化 */
+.knowledgeBaseView .ambientAssistantEntry > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.knowledgeBaseView .ambientAssistantEntry > span > i {
+  color: var(--bioaz-text-disabled);
+  font-style: normal;
 }

@@ -1,4 +1,4 @@
-import type { WorkbenchTask } from "../../modules/types";
+import type { TaskPriority, WorkbenchTask } from "../../modules/types";
 
 export type PinItem = {
   id: string;
@@ -10,6 +10,7 @@ export type PinItem = {
   coworkerName?: string;
   time?: string;
   status?: string;
+  priority?: TaskPriority;
 };
 
 export type KnowledgeFile = {
