@@ -5765,3 +5765,68 @@ button { -webkit-tap-highlight-color: transparent; }
   max-height: none;
   overflow-y: auto;
 }
+
+/* ===== DMPK 对齐肿瘤报告：复用同一套 Chatflow 规范 =====
+   肿瘤报告已有一套 .tumor-reportModuleShell 规范，这里给 DMPK 同等待遇，
+   而不是再造一套，避免两个模块继续各画各的。 */
+
+/* 主按钮走黑白，不用品牌亮蓝 */
+.dmpk-quotationModuleShell :is(.primaryButton, .decisionPrimary, .validationStartButton):not(:disabled) {
+  border: 1px solid #17191e;
+  background: #17191e;
+  color: #fff;
+  box-shadow: none;
+}
+.dmpk-quotationModuleShell :is(.primaryButton, .decisionPrimary, .validationStartButton):hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+.dmpk-quotationModuleShell .secondaryButton {
+  border: 1px solid var(--bioaz-border-strong, #d4d7dd);
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.dmpk-quotationModuleShell .secondaryButton:hover {
+  background: #f8f9fa;
+}
+
+/* 用户气泡：与肿瘤报告同一形状 */
+.dmpk-quotationModuleShell :is(.userBubble, .userActionBubble, .legacyInitialRequest) {
+  max-width: min(68%, 560px);
+  justify-self: end;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface-subtle);
+  box-shadow: none;
+  color: var(--bioaz-text-primary);
+}
+.dmpk-quotationModuleShell :is(.userBubble, .userActionBubble)::after {
+  display: none;
+  content: none;
+}
+
+/* Chatflow 卡片：同宽同圆角，不再各自限宽 */
+.dmpk-quotationModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .artifactCard) {
+  width: 100%;
+  max-width: none;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  box-shadow: none;
+}
+
+/* 思考链与折叠态：与肿瘤报告同一套中性外观 */
+.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain),
+.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain) > summary {
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain) {
+  border: 1px solid #e5e7eb;
+}
+
+/* Chatflow 卡片圆角统一为 8px（附录 A.1），气泡保留 12px 以区分对话与内容 */
+.dmpk-quotationModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .artifactCard),
+.tumor-reportModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .analysisContextCard) {
+  border-radius: 8px;
+}
