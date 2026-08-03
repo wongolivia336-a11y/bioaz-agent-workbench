@@ -367,7 +367,8 @@
   border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-status-neutral-soft);
   color: var(--bioaz-status-neutral);
-  font-size: var(--bioaz-type-label-size);
+  /* 11px 而非 label token 的 12px：chip 在密集列表里要让位给主文案 */
+  font-size: 11px;
   font-style: normal;
   padding: 2px 9px;
   white-space: nowrap;

@@ -3,6 +3,7 @@
 import { Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { aggregateSkills, digitalTeamData } from "../../lib/workbench/digitalTeamData";
+import { EmptyState, StatusChip } from "../ui";
 
 export function SkillsTab({ query }: { query: string }) {
   const skills = useMemo(aggregateSkills, []);
@@ -42,7 +43,7 @@ export function SkillsTab({ query }: { query: string }) {
                 <strong>{skill.name}</strong>
                 <small>{skill.category}</small>
               </div>
-              <em className={`digitalStatusChip is-${skill.status}`}>{skill.status === "active" ? "已启用" : "规划中"}</em>
+              <StatusChip tone={skill.status === "active" ? "success" : "neutral"}>{skill.status === "active" ? "已启用" : "规划中"}</StatusChip>
             </header>
             <p>{skill.description}</p>
             <footer>
@@ -51,7 +52,7 @@ export function SkillsTab({ query }: { query: string }) {
             </footer>
           </article>
         ))}
-        {!visible.length ? <div className="digitalEmptyState">没有匹配的 Skill</div> : null}
+        {!visible.length ? <EmptyState variant="inline" title="没有匹配的 Skill" /> : null}
       </div>
     </>
   );

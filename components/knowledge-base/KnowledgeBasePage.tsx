@@ -29,7 +29,7 @@ import {
   type KnowledgeBaseFile,
 } from "../../lib/workbench/knowledgeBaseData";
 import { InlineSelect } from "../workbench-shell/InlineSelect";
-import { Menu, MenuGroup, MenuItem } from "../ui";
+import { Menu, MenuGroup, MenuItem, StatusChip, type StatusTone } from "../ui";
 import { WorkspaceAssistant } from "../workbench-shell/ShellControls";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 
@@ -39,6 +39,12 @@ const statusLabel: Record<KnowledgeBaseFile["status"], string> = {
   parsed: "解析成功",
   parsing: "解析中",
   failed: "解析失败",
+};
+
+const statusTone: Record<KnowledgeBaseFile["status"], StatusTone> = {
+  parsed: "success",
+  parsing: "running",
+  failed: "danger",
 };
 
 const businessOptions = ["全部业务", "肿瘤报告", "DMPK报价", "通用"];
@@ -259,7 +265,7 @@ function KbFileRow({ file, onPreview, onDetail, onAssign, onAssignDirect, onMove
           <span><strong>{file.title}</strong><small>{formatFileSize(file.size)}</small></span>
         </button>
       </div>
-      <span><em className={`kbStatusChip is-${file.status}`}>{statusLabel[file.status]}</em></span>
+      <span><StatusChip tone={statusTone[file.status]}>{statusLabel[file.status]}</StatusChip></span>
       <span>{file.business}</span>
       <span>
         <InlineSelect
@@ -318,7 +324,7 @@ function KbDetailPanel({ file, onClose, onAssign }: { file: KnowledgeBaseFile; o
         <button type="button" onClick={onClose} aria-label="关闭详情"><X size={16} /></button>
       </header>
       <dl>
-        <div><dt>解析状态</dt><dd><em className={`kbStatusChip is-${file.status}`}>{statusLabel[file.status]}</em></dd></div>
+        <div><dt>解析状态</dt><dd><StatusChip tone={statusTone[file.status]}>{statusLabel[file.status]}</StatusChip></dd></div>
         <div><dt>文件类型</dt><dd>{file.type.toUpperCase()}</dd></div>
         <div><dt>文件大小</dt><dd>{formatFileSize(file.size)}</dd></div>
         <div><dt>所属业务</dt><dd>{file.business}</dd></div>

@@ -2,7 +2,7 @@
 
 import { Bot, Check, Columns3, Filter, LayoutList, Plus, Users } from "lucide-react";
 import { InlineSelect } from "./InlineSelect";
-import { Menu, MenuItem } from "../ui";
+import { EmptyState, Menu, MenuItem } from "../ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -85,10 +85,7 @@ export function ProjectPlanTab({ project }: { project: string }) {
         : <PlanBoard items={visible} onUpdate={update} />}
 
       {!visible.length ? (
-        <div className="projectTabEmptyState">
-          <strong>没有匹配的工作项</strong>
-          <span>试试清除筛选条件，或新建一个工作项。</span>
-        </div>
+        <EmptyState title="没有匹配的工作项" description="试试清除筛选条件，或新建一个工作项。" />
       ) : null}
     </section>
   );
