@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ChevronRight, ChevronUp, LogOut, Settings, Settings2 } from "lucide-react";
 import { useState } from "react";
+import { NavTabs } from "../../components/ui";
 import BusinessPicker from "./components/BusinessPicker";
 import DmpkRuleAssistant from "./components/DmpkRuleAssistant";
 import ManagementDialog from "./components/ManagementDialog";
@@ -110,11 +111,7 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
                 <button className="primary" type="button" onClick={() => setDialog("upload-template")}>上传新模板</button>
               ) : null}
             </header>
-            <nav className="quotationTabs">
-              {tabs.map((item) => (
-                <button className={tab === item.id ? "active" : ""} type="button" key={item.id} onClick={() => setTab(item.id)}>{item.label}</button>
-              ))}
-            </nav>
+            <NavTabs items={tabs} value={tab} onChange={setTab} label="报价后台" />
             {tab === "prices" ? (
               <PriceConfig scenario={scenario} onEdit={() => setEditingPrice(true)} />
             ) : tab === "rules" ? (
