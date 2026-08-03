@@ -1915,13 +1915,6 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 .parameterTaskCard,
-.parameterTaskCard .warningDecisionList { transition: min-height 180ms ease, height 180ms ease; }
-
-.parameterTaskCard:not(:hover):not(:focus-within) .warningDecisionList,
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow {
-  min-height: 68px;
-}
-
 .parameterTaskCard .decisionRow {
   min-height: 62px;
   display: block;

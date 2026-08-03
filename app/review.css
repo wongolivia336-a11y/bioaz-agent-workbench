@@ -5156,3 +5156,196 @@ button { -webkit-tap-highlight-color: transparent; }
 .kbDialog header .iconButton { margin-left: auto; }
 .kbDialogBody { max-height: 46vh; overflow-y: auto; }
 .kbDialog > footer { display: flex; justify-content: flex-end; gap: var(--bioaz-space-2); }
+
+/* ===== 确认卡片：完全静止，不允许任何 hover 动效 =====
+   历史实现在 hover 时改 font-size（标题 14px↔其他）、改 decisionIndex 尺寸、
+   叠卡 transform、以及 transition/animation。逐项锁死。 */
+.stackDecision,
+.stackDecision *,
+.gateDecision,
+.gateDecision *,
+.parameterTaskCard,
+.parameterTaskCard * {
+  transition: none;
+  animation: none;
+  transform: none;
+}
+/* 标题字号恒定，与 hover 无关 */
+.warningDecisionHeader strong,
+.stackDecision .warningDecisionHeader strong,
+.stackDecision:not(:hover):not(.isPinned) .warningDecisionHeader strong,
+.stackDecision:hover .warningDecisionHeader strong,
+.gateDecision .warningDecisionHeader strong,
+.gateDecision.isCollapsed .warningDecisionHeader strong {
+  font-size: 14px;
+  line-height: 21px;
+}
+.warningDecisionHeader span,
+.stackDecision .warningDecisionHeader span {
+  font-size: 12px;
+}
+/* 序号恒定 */
+.decisionIndex,
+.stackDecision .decisionIndex,
+.stackDecision:hover .decisionIndex,
+.gateDecision .decisionIndex,
+.parameterTaskCard .decisionIndex {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.decisionRow.done .decisionIndex { animation: none; }
+/* 叠卡位移彻底关闭 */
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3),
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(2),
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(3),
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) {
+  position: static;
+  inset: auto;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) > * { visibility: visible; }
+.parameterTaskCard:not(:hover):not(:focus-within) :is(.warningDecisionList, .decisionRow) {
+  position: static;
+  min-height: 0;
+}
+
+/* ===== 分析上下文卡片：整卡可点，与思考卡同宽，形态尽量简约 ===== */
+.analysisContextCard {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  padding: 0;
+}
+.analysisContextCard:hover { border-color: #d4d7dd; }
+.analysisContextButton {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 14px 16px;
+  text-align: left;
+}
+.analysisContextTop {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+.analysisContextTop > span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.analysisContextTop > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.analysisContextTop > .analysisContextOpen {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  margin-left: auto;
+}
+.analysisContextCard:hover .analysisContextOpen { color: var(--bioaz-text-primary); }
+.analysisConclusionList {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+.analysisConclusionList > li {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+.analysisRiskSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+}
+.analysisRiskDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+.analysisRiskDot.is-high { background: #dc2626; }
+.analysisRiskDot.is-medium { background: #d97706; margin-left: 10px; }
+
+/* ===== 弹窗底部两个按钮：同圆角同尺寸 ===== */
+.confirmDialog > footer,
+.kbDialog > footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+}
+.confirmDialog > footer > button,
+.kbDialog > footer > button {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-width: 96px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 16px;
+}
+
+/* ===== 右侧三类工作面板的入口：展示 / 参数编辑 / 画布 ===== */
+.sidePanelSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.sidePanelSwitch .tumorInspectorToggle {
+  position: static;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+  box-shadow: none;
+}
+.sidePanelSwitch .tumorInspectorToggle:hover:not(:disabled) {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.sidePanelSwitch .tumorInspectorToggle.isActive {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
+  color: var(--bioaz-agent-accent);
+}
+.sidePanelSwitch .tumorInspectorToggle:disabled {
+  color: var(--bioaz-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
