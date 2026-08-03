@@ -5830,3 +5830,56 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .analysisContextCard) {
   border-radius: 8px;
 }
+
+/* ===================================================================
+   Chatflow 内容宽度：思考卡、确认卡、composer 共用同一条约束
+   -------------------------------------------------------------------
+   此前 .chatScroller 用固定 36px 水平内距，而 .composerShell 用
+   min(12vw, 250px) —— 两套规则随视口各走各的，宽度必然对不齐。
+   统一由 --bioaz-chat-width 决定，改一处即可。
+   =================================================================== */
+.tumor-reportModuleShell,
+.dmpk-quotationModuleShell {
+  --bioaz-chat-width: min(920px, 100%);
+}
+
+.tumor-reportModuleShell .chatScroller,
+.dmpk-quotationModuleShell .dmpkChatScroller {
+  padding-inline: 0;
+}
+.tumor-reportModuleShell .chatScroller > *,
+.dmpk-quotationModuleShell .dmpkChatScroller > * {
+  width: var(--bioaz-chat-width);
+  margin-inline: auto;
+}
+
+/* composer 用同一宽度。真正限宽的是外层 .legacyComposerStack
+   （iteration.css 写死 min(860px, 100% - 72px)），不是 .composerShell。 */
+.tumor-reportModuleShell .legacyComposerStack,
+.dmpk-quotationModuleShell .dmpkComposerWrap {
+  /* absolute 定位下 left/right 会与 width 抢，归零后交给 margin auto 居中 */
+  right: 0;
+  left: 0;
+  width: var(--bioaz-chat-width);
+  max-width: none;
+  padding-inline: 0;
+  margin-inline: auto;
+}
+.tumor-reportModuleShell .composerShell {
+  padding-inline: 0;
+}
+
+/* 确认卡片贴合同一宽度，不再自带外边距 */
+.tumor-reportModuleShell :is(.gateDecision, .stackDecision, .warningDecision),
+.dmpk-quotationModuleShell :is(.parameterTaskCard, .warningDecision) {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+@media (max-width: 1024px) {
+  .tumor-reportModuleShell,
+  .dmpk-quotationModuleShell {
+    --bioaz-chat-width: calc(100% - 32px);
+  }
+}
