@@ -5694,3 +5694,74 @@ button { -webkit-tap-highlight-color: transparent; }
 .paramCollectList .inspectorParameterField.isEmpty > strong { color: var(--bioaz-text-disabled); }
 .paramCollectList .inspectorParameterField svg { flex: none; color: var(--bioaz-text-tertiary); }
 .paramCollectList .inspectorParameterField:hover:not(.isEmpty) { background: rgba(17, 19, 24, 0.02); }
+
+/* ===== 思考链折叠条：summary 才是那条淡紫，外层早已是白底 ===== */
+.dmpkShell .activityChain > summary,
+.dmpkShell .activityChain summary,
+.activityChain > summary {
+  border-radius: 8px;
+  background: #fff;
+}
+.dmpkShell .activityChain > summary:hover,
+.activityChain > summary:hover {
+  background: rgba(17, 19, 24, 0.02);
+}
+.dmpkShell .activityChain,
+.activityChain {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+/* ===== composer 上方卡片：高度 transition 会让它自己伸缩，去掉 ===== */
+.dmpkComposerWrap,
+.dmpkComposerWrap *,
+.parameterTaskCard .warningDecisionList,
+.parameterTaskCard .decisionRow {
+  transition: none;
+  animation: none;
+}
+/* 交互反馈保留在按钮上即可 */
+.dmpkComposerWrap :is(button, label, input) {
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+/* ===== 参数收集面板：撑满可用高度，内容自然排布不再挤出滚动条 ===== */
+.dmpkShell > .paramFloatCard.persistentParameterCard {
+  top: 64px;
+  bottom: 16px;
+  height: auto;
+  max-height: none;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.paramFloatCard > .persistentParameterBody {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.paramFloatCard > .persistentParameterBody::-webkit-scrollbar { width: 6px; }
+.paramFloatCard > .persistentParameterBody::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(17, 19, 24, 0.14);
+}
+.paramFloatCard > .persistentParameterBody::-webkit-scrollbar-track { background: transparent; }
+/* 分组之间靠内容自然高度，不再固定行高 */
+.paramCollectList { display: grid; gap: 0; align-content: start; }
+.paramCollectList .inspectorParameterGroup { min-height: 0; }
+
+/* 参数面板：显式撑满视口高度，避免被内容高度决定后又内部滚动 */
+.dmpkShell > .paramFloatCard.persistentParameterCard,
+.dmpkShell > .paramFloatCard.persistentParameterCard.isExpanded {
+  top: 64px;
+  bottom: 16px;
+  height: calc(100dvh - 80px);
+  max-height: calc(100dvh - 80px);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.dmpkShell > .paramFloatCard.persistentParameterCard > .persistentParameterBody {
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow-y: auto;
+}
