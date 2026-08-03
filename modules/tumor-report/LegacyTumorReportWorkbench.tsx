@@ -16,6 +16,7 @@ import {
   Folder,
   FileSpreadsheet,
   FileText,
+  ListChecks,
   MessageSquare,
   MoreHorizontal,
   PanelRight,
@@ -28,6 +29,7 @@ import {
   SearchCheck,
   Send,
   ShieldCheck,
+  SquarePen,
   X,
 } from "lucide-react";
 import {
@@ -414,19 +416,29 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
             <ChevronRight size={15} />
             <strong>{taskTitle}</strong>
           </div>
-          <button
-            className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
-            type="button"
-            aria-label={inspectorOpen ? "关闭详情面板" : "打开详情面板"}
-            aria-pressed={inspectorOpen}
-            onClick={() => {
-              if (inspectorOpen) setSuppressInspectorHover(true);
-              setInspectorOpen((current) => !current);
-            }}
-            onMouseLeave={() => setSuppressInspectorHover(false)}
-          >
-            <PanelRight size={17} />
-          </button>
+          {/* 右侧三类工作面板：展示 / 参数编辑 / 画布。后两类留待 DMPK 与 QA 模块接入，此处先占位置灰。 */}
+          <div className="sidePanelSwitch" role="group" aria-label="右侧面板">
+            <button
+              className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
+              type="button"
+              title="产物与依据"
+              aria-label={inspectorOpen ? "关闭产物与依据" : "打开产物与依据"}
+              aria-pressed={inspectorOpen}
+              onClick={() => {
+                if (inspectorOpen) setSuppressInspectorHover(true);
+                setInspectorOpen((current) => !current);
+              }}
+              onMouseLeave={() => setSuppressInspectorHover(false)}
+            >
+              <PanelRight size={17} />
+            </button>
+            <button className="tumorInspectorToggle" type="button" title="参数收集（DMPK 报价可用）" aria-label="参数收集，当前模块不适用" disabled>
+              <ListChecks size={17} />
+            </button>
+            <button className="tumorInspectorToggle" type="button" title="标注画布（QA 审核可用）" aria-label="标注画布，当前模块不适用" disabled>
+              <SquarePen size={17} />
+            </button>
+          </div>
         </header>
 
         <div className="chatScroller" ref={chatScrollerRef}>
@@ -449,6 +461,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
               reviews={reviews}
               followupState={followupState}
               onPreviewArtifact={openArtifactPreview}
+              onPreviewWorkflow={openWorkflowPreview}
               onInspector={(topic) => {
                 setInspectorTopic(topic);
                 setInspectorOpen(true);
@@ -1143,6 +1156,7 @@ function Conversation({
   followupState,
   onPreviewArtifact,
   onInspector,
+  onPreviewWorkflow,
 }: {
   files: UploadedFile[];
   userEvents: UserEvent[];
@@ -1160,6 +1174,7 @@ function Conversation({
   followupState: FollowupState;
   onPreviewArtifact: (kind: ArtifactPreviewKind) => void;
   onInspector: (topic: InspectorTopic) => void;
+  onPreviewWorkflow: (kind: PreviewKind, section?: PreviewSection) => void;
 }) {
   const validationVisible = [
     "validating",
@@ -1223,7 +1238,7 @@ function Conversation({
             </AgentReply>
           ) : null}
           {["warning", "generating", "generated", "reviewing", "review", "exported"].includes(stage) ? (
-            <AnalysisContextCard onOpenDetail={() => onInspector("warnings")} />
+            <AnalysisContextCard onOpenDetail={() => onPreviewWorkflow("validation", "context")} />
           ) : null}
           <UserEventBubbles events={userEvents} after="warning" />
         </section>
@@ -1806,25 +1821,23 @@ function reviewEvidence(id: string) {
 /** 分析上下文与产物卡片分开展示（附录 C.3），详情复用风险确认那套弹窗 */
 function AnalysisContextCard({ onOpenDetail }: { onOpenDetail: () => void }) {
   return (
-    <article className="warningDecision analysisContextCard">
-      <button className="analysisContextTrigger" type="button" onClick={onOpenDetail} aria-label="查看分析上下文与风险详情">
-        <div className="warningDecisionHeader">
-          <div>
-            <span>分析上下文</span>
-            <strong>关键结论与风险提示</strong>
-          </div>
+    <article className="analysisContextCard">
+      <button className="analysisContextButton" type="button" onClick={onOpenDetail}>
+        <div className="analysisContextTop">
+          <span>分析上下文</span>
+          <strong>关键结论与风险提示</strong>
+          <span className="analysisContextOpen">查看详情<ChevronRight size={14} /></span>
         </div>
-        <span className="analysisContextPeek" aria-hidden="true"><Eye size={16} /></span>
+        <ul className="analysisConclusionList">
+          <li>肿瘤体积增长显著，Day28 抑瘤率达到评价阈值</li>
+          <li>统计显著性 p &lt; 0.05，样本量满足统计要求</li>
+          <li>终点日存在缺失值，已按历史对照口径补齐</li>
+        </ul>
+        <div className="analysisRiskSummary">
+          <span className="analysisRiskDot is-high" aria-hidden="true" />高风险 1 项
+          <span className="analysisRiskDot is-medium" aria-hidden="true" />中风险 2 项
+        </div>
       </button>
-      <ul className="analysisConclusionList">
-        <li>肿瘤体积增长显著，Day28 抑瘤率达到评价阈值</li>
-        <li>统计显著性 p &lt; 0.05，样本量满足统计要求</li>
-        <li>终点日存在缺失值，已按历史对照口径补齐</li>
-      </ul>
-      <div className="analysisRiskSummary">
-        <span className="analysisRiskDot is-high" aria-hidden="true" />高风险 1 项
-        <span className="analysisRiskDot is-medium" aria-hidden="true" />中风险 2 项
-      </div>
     </article>
   );
 }

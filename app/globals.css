@@ -3369,86 +3369,6 @@ button {
     padding 150ms ease;
 }
 
-.stackDecision:hover,
-.stackDecision.isPinned {
-  border-color: rgba(41, 0, 255, 0.2);
-  box-shadow: 0 14px 40px rgba(17, 19, 24, 0.08);
-  padding: 18px 20px;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionHeader {
-  align-items: center;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionHeader div {
-  gap: 3px;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionHeader strong {
-  font-size: 14px;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionList {
-  position: relative;
-  min-height: 74px;
-  gap: 0;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionRow {
-  grid-template-columns: 40px minmax(0, 1fr);
-  min-height: 68px;
-  padding: 11px 13px;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:first-child {
-  position: relative;
-  z-index: 3;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3) {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2) {
-  z-index: 2;
-  transform: translateY(7px) scale(0.985);
-  opacity: 0.72;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3) {
-  z-index: 1;
-  transform: translateY(14px) scale(0.97);
-  opacity: 0.46;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(n + 2) > * {
-  visibility: hidden;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy {
-  gap: 3px;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy p,
-.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
-.stackDecision:not(:hover):not(.isPinned) .warningActions,
-.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
-  display: none;
-}
-
-.stackDecision:hover .warningDecisionList,
-.stackDecision.isPinned .warningDecisionList {
-  gap: 10px;
-}
 
 .traceRef {
   position: relative;
@@ -3956,45 +3876,6 @@ button {
   transition: min-height 160ms ease;
 }
 
-.parameterTaskCard:not(:hover):not(:focus-within) .warningDecisionList {
-  min-height: 88px;
-  gap: 0;
-}
-
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow {
-  min-height: 88px;
-}
-
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(2) {
-  z-index: 2;
-  transform: translateY(7px) scale(0.988);
-  opacity: 0.5;
-}
-
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(3) {
-  z-index: 1;
-  transform: translateY(14px) scale(0.976);
-  opacity: 0.28;
-}
-
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 4) {
-  display: none;
-}
-
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) > * {
-  visibility: hidden;
-}
-
-.parameterTaskCard:hover .warningDecisionList,
-.parameterTaskCard:focus-within .warningDecisionList {
-  gap: 10px;
-}
 
 .parameterTaskCard .warningDecisionHeader p {
   margin: 0;

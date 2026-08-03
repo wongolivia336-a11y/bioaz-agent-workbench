@@ -4996,3 +4996,701 @@ button { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 900px) {
   .topbarTabLayer .projectSpaceTabs { overflow-x: auto; }
 }
+
+/* ===== 知识库：主按钮统一黑白，不用品牌蓝 ===== */
+.knowledgeHubView .primaryButton:not(:disabled),
+.kbDialog .primaryButton:not(:disabled) {
+  border: 1px solid #17191e;
+  background: #17191e;
+  color: #fff;
+  box-shadow: none;
+}
+.knowledgeHubView .primaryButton:hover:not(:disabled),
+.kbDialog .primaryButton:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+.knowledgeHubView .secondaryButton,
+.kbDialog .secondaryButton {
+  border: 1px solid #d4d7dd;
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.knowledgeHubView .secondaryButton:hover,
+.kbDialog .secondaryButton:hover {
+  background: #f8f9fa;
+}
+
+/* ===== 详情抽屉：两个空间统一为顶天立地 ===== */
+.knowledgeDetailPanel {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(400px, 92vw);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-left: 1px solid var(--bioaz-border);
+  background: #fff;
+  box-shadow: -18px 0 44px rgba(18, 24, 38, 0.10);
+}
+.knowledgeDetailPanel > header {
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-4) var(--bioaz-space-5);
+}
+.knowledgeDetailPanel > dl,
+.knowledgeDetailPanel .kbDetailSection {
+  padding-inline: var(--bioaz-space-5);
+}
+.kbDetailPanel {
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow-y: auto;
+}
+.kbDetailPanel > dl { margin: var(--bioaz-space-4) 0 0; }
+.kbDetailSection { padding-block: var(--bioaz-space-4); }
+.kbDetailSection + .kbDetailSection { border-top: 1px solid var(--bioaz-border); }
+.kbDetailSectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-2);
+}
+.kbDetailSectionHead > strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 600; }
+.kbTagList { display: flex; flex-wrap: wrap; gap: 6px; }
+.kbTagList > span {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 2px 10px;
+}
+
+/* 知识库「指派给」沿用计划里的行内编辑手感 */
+.kbAssignTrigger {
+  max-width: 100%;
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+}
+.kbAssignTrigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inlineSelectMenu.alignEnd { right: 0; left: auto; }
+.kbTable .inlineSelect { min-width: 0; max-width: 100%; }
+
+/* 可用范围选项：与详情抽屉里的表述保持一致 */
+.kbScopeOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.kbScopeOption + .kbScopeOption { margin-top: 6px; }
+.kbScopeOption.active {
+  border-color: rgba(92, 96, 184, 0.28);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+.kbAssignedList { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--bioaz-space-2); }
+.kbAssignedList > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 3px 10px;
+}
+.kbAssignOptions { display: grid; gap: 4px; }
+.kbAssignOptions > button {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 9px 12px;
+  text-align: left;
+}
+.kbAssignOptions > button.active { border-color: rgba(92, 96, 184, 0.3); background: var(--bioaz-agent-accent-soft); }
+.kbAssignOptions > button > span:nth-child(2) { display: grid; gap: 1px; }
+.kbAssignOptions strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 500; }
+.kbAssignOptions small { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.kbAssignMark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+.kbAssignOptions > button > svg:last-child { margin-left: auto; color: var(--bioaz-agent-accent); }
+
+.kbDialog {
+  display: grid;
+  width: min(420px, calc(100vw - 32px));
+  gap: var(--bioaz-space-4);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: #fff;
+  box-shadow: var(--bioaz-shadow-overlay);
+  padding: var(--bioaz-space-5);
+}
+.kbDialog > header { display: flex; align-items: flex-start; gap: var(--bioaz-space-3); }
+.kbDialog h2 { color: var(--bioaz-text-primary); font-size: 15px; font-weight: 600; margin: 0; }
+.kbDialog header p { color: var(--bioaz-text-secondary); font-size: 13px; line-height: 19px; margin: 6px 0 0; }
+.kbDialog header .iconButton { margin-left: auto; }
+.kbDialogBody { max-height: 46vh; overflow-y: auto; }
+.kbDialog > footer { display: flex; justify-content: flex-end; gap: var(--bioaz-space-2); }
+
+/* ===== 确认卡片：完全静止，不允许任何 hover 动效 =====
+   历史实现在 hover 时改 font-size（标题 14px↔其他）、改 decisionIndex 尺寸、
+   叠卡 transform、以及 transition/animation。逐项锁死。 */
+.stackDecision,
+.stackDecision *,
+.gateDecision,
+.gateDecision *,
+.parameterTaskCard,
+.parameterTaskCard * {
+  transition: none;
+  animation: none;
+  transform: none;
+}
+/* 标题字号恒定，与 hover 无关 */
+.warningDecisionHeader strong,
+.stackDecision .warningDecisionHeader strong,
+.stackDecision:not(:hover):not(.isPinned) .warningDecisionHeader strong,
+.stackDecision:hover .warningDecisionHeader strong,
+.gateDecision .warningDecisionHeader strong,
+.gateDecision.isCollapsed .warningDecisionHeader strong {
+  font-size: 14px;
+  line-height: 21px;
+}
+.warningDecisionHeader span,
+.stackDecision .warningDecisionHeader span {
+  font-size: 12px;
+}
+/* 序号恒定 */
+.decisionIndex,
+.stackDecision .decisionIndex,
+.stackDecision:hover .decisionIndex,
+.gateDecision .decisionIndex,
+.parameterTaskCard .decisionIndex {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.decisionRow.done .decisionIndex { animation: none; }
+/* 叠卡位移彻底关闭 */
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
+.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3),
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(2),
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(3),
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) {
+  position: static;
+  inset: auto;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) > * { visibility: visible; }
+.parameterTaskCard:not(:hover):not(:focus-within) :is(.warningDecisionList, .decisionRow) {
+  position: static;
+  min-height: 0;
+}
+
+/* ===== 分析上下文卡片：整卡可点，与思考卡同宽，形态尽量简约 ===== */
+.analysisContextCard {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  padding: 0;
+}
+.analysisContextCard:hover { border-color: #d4d7dd; }
+.analysisContextButton {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 14px 16px;
+  text-align: left;
+}
+.analysisContextTop {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+.analysisContextTop > span {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.analysisContextTop > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.analysisContextTop > .analysisContextOpen {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  margin-left: auto;
+}
+.analysisContextCard:hover .analysisContextOpen { color: var(--bioaz-text-primary); }
+.analysisConclusionList {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+.analysisConclusionList > li {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+.analysisRiskSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+}
+.analysisRiskDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+.analysisRiskDot.is-high { background: #dc2626; }
+.analysisRiskDot.is-medium { background: #d97706; margin-left: 10px; }
+
+/* ===== 弹窗底部两个按钮：同圆角同尺寸 ===== */
+.confirmDialog > footer,
+.kbDialog > footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+}
+.confirmDialog > footer > button,
+.kbDialog > footer > button {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-width: 96px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 16px;
+}
+
+/* ===== 右侧三类工作面板的入口：展示 / 参数编辑 / 画布 ===== */
+.sidePanelSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.sidePanelSwitch .tumorInspectorToggle {
+  position: static;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+  box-shadow: none;
+}
+.sidePanelSwitch .tumorInspectorToggle:hover:not(:disabled) {
+  background: rgba(92, 96, 184, 0.08);
+  color: var(--bioaz-text-primary);
+}
+.sidePanelSwitch .tumorInspectorToggle.isActive {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
+  color: var(--bioaz-agent-accent);
+}
+.sidePanelSwitch .tumorInspectorToggle:disabled {
+  color: var(--bioaz-text-disabled);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ===== 分析上下文卡与思考卡同宽：不再单独限宽 ===== */
+.analysisContextCard {
+  max-width: none;
+}
+
+/* ===== 弹窗底部按钮：同高同圆角同内距，宽度随文字 =====
+   模块内 .tumor-reportModuleShell .primaryButton 特异性与通用规则相同，
+   这里用 shell + dialog 双层选择器确保压过它。 */
+.tumor-reportModuleShell .confirmDialog > footer > button,
+.confirmDialog > footer > button,
+.kbDialog > footer > button {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-width: 0;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0 16px;
+}
+.tumor-reportModuleShell .confirmDialog > footer > .secondaryButton,
+.confirmDialog > footer > .secondaryButton,
+.kbDialog > footer > .secondaryButton {
+  border-color: #d4d7dd;
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.tumor-reportModuleShell .confirmDialog > footer > .secondaryButton:hover,
+.confirmDialog > footer > .secondaryButton:hover {
+  background: #f8f9fa;
+}
+.tumor-reportModuleShell .confirmDialog > footer > .primaryButton,
+.confirmDialog > footer > .primaryButton,
+.kbDialog > footer > .primaryButton {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.tumor-reportModuleShell .confirmDialog > footer > .primaryButton:hover:not(:disabled),
+.confirmDialog > footer > .primaryButton:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+
+/* ===== DMPK 参数收集：独立浮层，与产物卡分栏解耦 ===== */
+.paramFloatScrim {
+  position: fixed;
+  z-index: 55;
+  inset: 0;
+  background: transparent;
+}
+.paramFloatCard {
+  position: fixed;
+  z-index: 56;
+  top: 64px;
+  right: 16px;
+  display: grid;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 96px);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(18, 24, 38, 0.12);
+}
+.paramFloatCard > .persistentParameterHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-3) var(--bioaz-space-4);
+}
+.paramFloatTitle {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+.paramFloatTitle > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.paramFloatTitle > em {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  padding: 1px 8px;
+}
+.paramFloatCard .parameterConversationEdit { margin-left: auto; }
+.paramFloatClose {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.paramFloatClose:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+.paramFloatCard > .persistentParameterBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--bioaz-space-4);
+}
+/* 右侧栏现在只承载产物与依据 */
+.dmpkPanel.dmpkInspectorRail > .secondaryInspectorSlot { height: 100%; }
+
+/* chatflow 里的参数卡：去掉悬停动效，保持静止 */
+.parameterTaskCard,
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within,
+.parameterTaskCard * {
+  transition: none;
+  animation: none;
+  transform: none;
+}
+.parameterTaskCard:hover {
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+}
+
+/* 浮层定位：只锚右侧，避免被 left 规则拉满宽度 */
+.dmpkShell > .paramFloatCard.persistentParameterCard {
+  position: fixed;
+  top: 64px;
+  right: 16px;
+  bottom: auto;
+  left: auto;
+  width: min(420px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 96px);
+}
+
+/* ===== DMPK 向肿瘤报告对齐 ===== */
+
+/* 1) 主按钮改黑：iteration.css 用 --primary(#2900ff) 盖掉了 globals 的 --ink，这里在模块内收回 */
+.dmpkShell .primaryButton:not(:disabled),
+.dmpkWorkspace .primaryButton:not(:disabled),
+.paramFloatCard .primaryButton:not(:disabled),
+.dmpkShell .strategyDialogActions .primary,
+.dmpkShell .parameterPager button.primary,
+.dmpkShell .decisionPrimary:not(:disabled) {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+  box-shadow: none;
+}
+.dmpkShell .primaryButton:hover:not(:disabled),
+.dmpkWorkspace .primaryButton:hover:not(:disabled),
+.paramFloatCard .primaryButton:hover:not(:disabled),
+.dmpkShell .strategyDialogActions .primary:hover,
+.dmpkShell .decisionPrimary:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+
+/* 2) composer 区：去掉抖动与蓝色呼吸外发光 */
+.dmpkComposerWrap > .parameterTaskCard,
+.dmpkComposerWrap.needsAttention .dmpkComposer,
+.dmpkComposerWrap .dmpkComposer,
+.parameterTaskCard.isEditing {
+  animation: none;
+  transition: none;
+  transform: none;
+}
+.dmpkComposerWrap.needsAttention .dmpkComposer {
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+}
+.dmpkComposerWrap > .parameterTaskCard {
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+/* 3) 用户气泡与 agent 消息：沿用肿瘤报告的中性矩形 */
+.dmpkShell :is(.userBubble, .userActionBubble) {
+  max-width: min(68%, 560px);
+  justify-self: end;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-primary);
+  box-shadow: none;
+}
+.dmpkShell :is(.userBubble, .userActionBubble)::after {
+  display: none;
+  content: none;
+}
+
+/* 4) agent 思考卡：白底中性边框，无紫色 */
+.dmpkShell :is(.agentRun, .thinkingCard, .activityChain) {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+.dmpkShell .agentRun.settled,
+.dmpkShell .agentRun.settled.collapsed {
+  border-color: #e5e7eb;
+  background: #fff;
+}
+
+/* 5) chatflow 卡片同宽 */
+.dmpkChatScroller :is(.agentRun, .thinkingCard, .agentReply, .parameterTaskCard, .artifactCard) {
+  width: 100%;
+  max-width: none;
+}
+
+/* ===== 参数收集：右侧常驻面板，形态按参考稿 ===== */
+.paramCollectHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bioaz-space-3);
+}
+.paramCollectMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  place-items: center;
+}
+.paramCollectHead > div { display: grid; min-width: 0; gap: 2px; }
+.paramCollectHead strong { color: var(--bioaz-text-primary); font-size: 15px; font-weight: 600; }
+.paramCollectHead small { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.paramCollectHead > em {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  margin-left: auto;
+}
+.paramCollectProgress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eceef2;
+  margin: var(--bioaz-space-3) 0 var(--bioaz-space-1);
+}
+.paramCollectProgress > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #17191e;
+}
+.paramCollectList .inspectorParameterGroup {
+  border: 0;
+  border-bottom: 1px solid var(--bioaz-border);
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+.paramCollectList .inspectorParameterGroupHeader {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 12px 2px;
+}
+.paramGroupDot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border: 1.5px solid #c9cdd6;
+  border-radius: 999px;
+}
+.inspectorParameterGroup.isComplete .paramGroupDot { border-color: #5c60b8; background: #5c60b8; }
+.inspectorParameterGroup.isPartial .paramGroupDot { border-color: #5c60b8; background: transparent; }
+.paramCollectList .inspectorParameterGroupHeader > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.inspectorParameterGroup.isEmpty .inspectorParameterGroupHeader > strong { color: var(--bioaz-text-disabled); }
+.paramCollectList .inspectorParameterGroupHeader > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-tertiary);
+  margin-left: auto;
+}
+.paramGroupState {
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+  font-style: normal;
+  padding: 2px 9px;
+}
+.inspectorParameterGroup.isComplete .paramGroupState { background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+.inspectorParameterGroup.isPartial .paramGroupState { background: #fef3c7; color: #92400e; }
+.paramCollectList .inspectorParameterFields { display: grid; gap: 0; padding-bottom: 6px; }
+.paramCollectList .inspectorParameterField {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  border: 0;
+  border-bottom: 1px solid var(--bioaz-border);
+  background: transparent;
+  font: inherit;
+  padding: 9px 2px 9px 20px;
+  text-align: left;
+}
+.paramCollectList .inspectorParameterField:last-child { border-bottom: 0; }
+.paramCollectList .inspectorParameterField > span:first-child {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+}
+.paramCollectList .inspectorParameterField > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 400;
+  margin-left: auto;
+}
+.paramCollectList .inspectorParameterField.isEmpty > strong { color: var(--bioaz-text-disabled); }
+.paramCollectList .inspectorParameterField svg { flex: none; color: var(--bioaz-text-tertiary); }
+.paramCollectList .inspectorParameterField:hover:not(.isEmpty) { background: rgba(17, 19, 24, 0.02); }

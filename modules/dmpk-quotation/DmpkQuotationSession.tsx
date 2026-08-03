@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ChevronDown, ChevronRight, PanelRight, SlidersHorizontal, WandSparkles } from "lucide-react";
+import { ChevronRight, ListChecks, PanelRight, SlidersHorizontal, SquarePen, WandSparkles, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
@@ -41,6 +41,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [suppressInspectorHover, setSuppressInspectorHover] = useState(false);
+  // 参数收集是 DMPK 的常驻工作面，默认就展开
+  const [paramFloatOpen, setParamFloatOpen] = useState(true);
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
   const [parametersExpanded, setParametersExpanded] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
@@ -237,38 +239,68 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <section className="dmpkWorkspace">
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
-          <button
-            className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
-            type="button"
-            aria-label={inspectorOpen ? "关闭详情面板" : "打开详情面板"}
-            aria-pressed={inspectorOpen}
-            onClick={() => {
-              if (inspectorOpen) setSuppressInspectorHover(true);
-              setInspectorOpen((current) => !current);
-            }}
-            onMouseLeave={() => setSuppressInspectorHover(false)}
-          >
-            <PanelRight size={17} />
-          </button>
+          {/* 与肿瘤报告同一套三类面板入口：产物与依据 / 参数收集 / 标注画布 */}
+          <div className="sidePanelSwitch" role="group" aria-label="右侧面板">
+            <button
+              className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
+              type="button"
+              title="产物与依据"
+              aria-label={inspectorOpen ? "关闭产物与依据" : "打开产物与依据"}
+              aria-pressed={inspectorOpen}
+              onClick={() => {
+                if (inspectorOpen) setSuppressInspectorHover(true);
+                setInspectorOpen((current) => !current);
+              }}
+              onMouseLeave={() => setSuppressInspectorHover(false)}
+            >
+              <PanelRight size={17} />
+            </button>
+            <button
+              className={`tumorInspectorToggle ${paramFloatOpen ? "isActive" : ""}`}
+              type="button"
+              title="参数收集"
+              aria-label={paramFloatOpen ? "收起参数收集" : "展开参数收集"}
+              aria-pressed={paramFloatOpen}
+              onClick={() => setParamFloatOpen((current) => !current)}
+            >
+              <ListChecks size={17} />
+            </button>
+            <button className="tumorInspectorToggle" type="button" title="标注画布（QA 审核可用）" aria-label="标注画布，当前模块不适用" disabled>
+              <SquarePen size={17} />
+            </button>
+          </div>
         </header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
+      {/* 参数收集：独立浮层，不再和产物卡上下堆在同一条侧栏里 */}
+      {paramFloatOpen ? (
+        <>
+          <section
+            className={`paramFloatCard persistentParameterCard isExpanded ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}
+            role="dialog"
+            aria-label="参数收集"
+          >
+            <div className="persistentParameterHeader">
+              <span className="paramFloatTitle">
+                <SlidersHorizontal size={16} />
+                <strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
+                {identifiedAssayType ? <em>{completedCount}/{totalRequired}</em> : null}
+              </span>
+              <button className="parameterConversationEdit" type="button" aria-pressed={conversationEditing} aria-label="通过对话修改" title="通过对话修改" onClick={startConversationEdit}>
+                <WandSparkles size={15} /><span>对话编辑</span>
+              </button>
+              <button className="paramFloatClose" type="button" aria-label="关闭参数收集" onClick={() => setParamFloatOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className="persistentParameterBody">{parameterPanel?.content}</div>
+          </section>
+        </>
+      ) : null}
       <aside
         className={`dmpkPanel dmpkInspectorRail ${inspectorOpen ? "isOpen" : ""}`}
       >
-        <section className={`persistentParameterCard ${parametersExpanded ? "isExpanded" : ""} ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}>
-          <div className="persistentParameterHeader">
-          <button className="persistentParameterToggle" type="button" aria-expanded={parametersExpanded} disabled={!identifiedAssayType} onClick={() => setParametersExpanded((current) => !current)}>
-            <span><SlidersHorizontal size={16} /><strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong></span>
-            <span>{identifiedAssayType ? `${completedCount}/${totalRequired}` : null}<ChevronDown size={15} /></span>
-          </button>
-          <button className="parameterConversationEdit" type="button" aria-pressed={conversationEditing} aria-label="通过对话修改" title="通过对话修改" onClick={startConversationEdit}>
-            <WandSparkles size={15} /><span>对话编辑</span>
-          </button>
-          </div>
-          {parametersExpanded ? <div className="persistentParameterBody">{parameterPanel?.content}</div> : null}
-        </section>
         <div className="secondaryInspectorSlot">
           <WorkbenchInspector
             panels={secondaryInspectorPanels}
