@@ -48,12 +48,12 @@
 }
 
 .bioazUiButton--primary {
-  background: var(--bioaz-brand-primary);
+  background: var(--bioaz-action-primary);
   color: #fff;
 }
 
 .bioazUiButton--primary:hover:not(:disabled) {
-  background: var(--bioaz-brand-primary-hover);
+  background: var(--bioaz-action-primary-hover);
 }
 
 .bioazUiButton--secondary {
@@ -355,4 +355,240 @@
   .bioazUiButtonSpinner {
     animation-duration: 1.8s;
   }
+}
+
+/* ===================================================================
+   StatusChip — 语气到视觉的唯一映射，替代此前 43 处硬编码色值
+   =================================================================== */
+.bioazUiStatusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-status-neutral-soft);
+  color: var(--bioaz-status-neutral);
+  /* 11px 而非 label token 的 12px：chip 在密集列表里要让位给主文案 */
+  font-size: 11px;
+  font-style: normal;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.bioazUiStatusDot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: currentColor;
+}
+.bioazUiStatusChip--running {
+  background: var(--bioaz-status-running-soft);
+  color: var(--bioaz-status-running);
+}
+.bioazUiStatusChip--warning {
+  background: var(--bioaz-status-warning-soft);
+  color: var(--bioaz-status-warning);
+}
+.bioazUiStatusChip--success {
+  background: var(--bioaz-status-success-soft);
+  color: var(--bioaz-status-success);
+}
+.bioazUiStatusChip--danger {
+  background: var(--bioaz-status-danger-soft);
+  color: var(--bioaz-status-danger);
+}
+
+/* ===================================================================
+   Dialog — 底部按钮同高同圆角同内距，不再由文件顺序决定
+   =================================================================== */
+.bioazUiDialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(520px, calc(100vw - 32px));
+  gap: var(--bioaz-space-5);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  box-shadow: var(--bioaz-shadow-overlay);
+  padding: var(--bioaz-space-5) var(--bioaz-space-5) var(--bioaz-space-4);
+}
+.bioazUiDialog--compact {
+  width: min(420px, calc(100vw - 32px));
+}
+.bioazUiDialogHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bioaz-space-3);
+}
+.bioazUiDialogHeader h2 {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-section-size);
+  font-weight: 600;
+  line-height: var(--bioaz-type-section-line);
+  margin: 0;
+}
+.bioazUiDialogHeader p {
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+  line-height: var(--bioaz-type-small-line);
+  margin: var(--bioaz-space-2) 0 0;
+}
+.bioazUiDialogClose {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  margin-left: auto;
+  padding: 0;
+  place-items: center;
+}
+.bioazUiDialogClose:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+.bioazUiDialogBody {
+  display: grid;
+  max-height: min(60vh, 480px);
+  gap: var(--bioaz-space-2);
+  overflow-y: auto;
+}
+.bioazUiDialogFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+}
+/* 一致性靠这一条保证：两个按钮共享同一组尺寸 */
+.bioazUiDialogFooter > button {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-tool);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 500;
+  line-height: 1;
+  padding: 0 16px;
+}
+
+/* ===================================================================
+   Drawer — 顶天立地，高度取自视口而非父容器
+   =================================================================== */
+.bioazUiDrawer {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  width: min(400px, 92vw);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-left: 1px solid var(--bioaz-border);
+  background: var(--bioaz-surface);
+  box-shadow: var(--bioaz-shadow-overlay);
+}
+.bioazUiDrawerHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bioaz-space-3);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-4) var(--bioaz-space-5);
+}
+.bioazUiDrawerHeader > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.bioazUiDrawerHeader span {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+.bioazUiDrawerHeader strong {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-body-size);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.bioazUiDrawerHeader > button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  margin-left: auto;
+  padding: 0;
+  place-items: center;
+}
+.bioazUiDrawerHeader > button:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+.bioazUiDrawerBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--bioaz-space-4) var(--bioaz-space-5) var(--bioaz-space-6);
+}
+
+/* ===================================================================
+   EmptyState — 合并 .libraryEmptyState / .digitalEmptyState /
+   .projectTabEmptyState 三套留白与字号
+   =================================================================== */
+.bioazUiEmptyState {
+  display: grid;
+  justify-items: center;
+  gap: var(--bioaz-space-2);
+  color: var(--bioaz-text-secondary);
+  text-align: center;
+}
+.bioazUiEmptyState--panel {
+  padding: var(--bioaz-space-12) var(--bioaz-space-4);
+}
+.bioazUiEmptyState--inline {
+  border: 1px dashed var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  grid-column: 1 / -1;
+  padding: var(--bioaz-space-10) var(--bioaz-space-4);
+}
+.bioazUiEmptyIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-tertiary);
+  margin-bottom: var(--bioaz-space-1);
+  place-items: center;
+}
+.bioazUiEmptyState > strong {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-body-size);
+  font-weight: 600;
+}
+.bioazUiEmptyState > span {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-small-size);
+}
+.bioazUiEmptyState > :is(button, label) {
+  margin-top: var(--bioaz-space-2);
+}
+
+/* Menu 的 start 对齐（InlineSelect 那类贴左触发器用） */
+.toolMenu.alignStart {
+  right: auto;
+  left: 0;
 }

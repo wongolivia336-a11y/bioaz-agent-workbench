@@ -6,6 +6,7 @@ import { aggregateSkills, digitalScenarios, digitalTeamData, mcpData, type Digit
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { McpTab } from "./McpTab";
 import { SkillsTab } from "./SkillsTab";
+import { EmptyState } from "../ui";
 
 type Props = {
   projects: WorkbenchProject[];
@@ -247,7 +248,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
                 </footer>
               </button>
             ))}
-            {!filteredCoworkers.length ? <div className="digitalEmptyState">没有匹配的数字同事</div> : null}
+            {!filteredCoworkers.length ? <EmptyState variant="inline" title="没有匹配的数字同事" /> : null}
           </div>
         </>
       ) : activeTab === "skills" ? <SkillsTab query={query} /> : <McpTab query={query} />}

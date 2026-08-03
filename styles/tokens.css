@@ -1,4 +1,10 @@
 :root {
+  /* 动作色：确认、提交、上传等主操作一律用它。附录 A.2 规定主按钮为黑，
+     不要改回品牌蓝——品牌蓝在大面积填充时会盖过内容。 */
+  --bioaz-action-primary: #17191e;
+  --bioaz-action-primary-hover: #050608;
+
+  /* 品牌色：仅限 Logo 与极少数品牌级入口。不要用作默认按钮底色。 */
   --bioaz-brand-primary: #2900ff;
   --bioaz-brand-primary-hover: #2100cc;
   --bioaz-agent-accent: #5c60b8;
@@ -27,6 +33,20 @@
   --bioaz-danger-soft: #f8f4f3;
   --bioaz-info: var(--bioaz-agent-accent);
   --bioaz-info-soft: var(--bioaz-agent-accent-soft);
+
+  /* 状态 chip 专用：取值来自各模块实测渲染色，收敛此前散落 43 处的硬编码。
+     与上面的 --bioaz-success/warning/danger 不同——那组是低饱和的语义强调色，
+     用于文字与图标；这组是 chip 的底色/前景对，对比度按 chip 尺寸调过。 */
+  --bioaz-status-neutral: #6b7280;
+  --bioaz-status-neutral-soft: #f3f4f6;
+  --bioaz-status-running: #5c60b8;
+  --bioaz-status-running-soft: rgba(92, 96, 184, 0.08);
+  --bioaz-status-warning: #92400e;
+  --bioaz-status-warning-soft: #fef3c7;
+  --bioaz-status-success: #065f46;
+  --bioaz-status-success-soft: #d1fae5;
+  --bioaz-status-danger: #991b1b;
+  --bioaz-status-danger-soft: #fee2e2;
 
   --bioaz-radius-tool: 8px;
   --bioaz-radius-control: 12px;

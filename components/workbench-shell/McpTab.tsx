@@ -3,11 +3,19 @@
 import { Network } from "lucide-react";
 import { useState } from "react";
 import { digitalTeamData, mcpData, type McpConnector } from "../../lib/workbench/digitalTeamData";
+import { EmptyState, StatusChip, type StatusTone } from "../ui";
 
 const statusLabel: Record<McpConnector["status"], string> = {
   connected: "已连接",
   pending: "待审批",
   disconnected: "未连接",
+};
+
+// 业务状态各模块自己定义，只有「语气」共享
+const statusTone: Record<McpConnector["status"], StatusTone> = {
+  connected: "success",
+  pending: "warning",
+  disconnected: "neutral",
 };
 
 const statusFilters = ["全部状态", "已连接", "待审批", "未连接"];
@@ -48,9 +56,7 @@ export function McpTab({ query }: { query: string }) {
                 <strong>{connector.name}</strong>
                 <small>{connector.system}</small>
               </div>
-              <em className={`digitalStatusChip is-${connector.status}`}>
-                <i className="digitalStatusDot" aria-hidden="true" />{statusLabel[connector.status]}
-              </em>
+              <StatusChip tone={statusTone[connector.status]} dot>{statusLabel[connector.status]}</StatusChip>
             </header>
             <dl className="digitalConnectorMeta">
               <div><dt>可访问范围</dt><dd>{connector.scope}</dd></div>
@@ -64,7 +70,7 @@ export function McpTab({ query }: { query: string }) {
             </footer>
           </article>
         ))}
-        {!visible.length ? <div className="digitalEmptyState">没有匹配的连接器</div> : null}
+        {!visible.length ? <EmptyState variant="inline" title="没有匹配的连接器" /> : null}
       </div>
     </>
   );

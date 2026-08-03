@@ -29,6 +29,7 @@ import {
   type KnowledgeBaseFile,
 } from "../../lib/workbench/knowledgeBaseData";
 import { InlineSelect } from "../workbench-shell/InlineSelect";
+import { Menu, MenuGroup, MenuItem, StatusChip, type StatusTone } from "../ui";
 import { WorkspaceAssistant } from "../workbench-shell/ShellControls";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 
@@ -38,6 +39,12 @@ const statusLabel: Record<KnowledgeBaseFile["status"], string> = {
   parsed: "解析成功",
   parsing: "解析中",
   failed: "解析失败",
+};
+
+const statusTone: Record<KnowledgeBaseFile["status"], StatusTone> = {
+  parsed: "success",
+  parsing: "running",
+  failed: "danger",
 };
 
 const businessOptions = ["全部业务", "肿瘤报告", "DMPK报价", "通用"];
@@ -143,7 +150,8 @@ export function KnowledgeBasePage() {
           ))}
         </div>
         <div className="sectionBarActions">
-          <ToolMenu icon={<Filter size={16} />} label="筛选" active={business !== "全部业务" || tagFilter.length > 0}>
+          {/* 标签是多选，选完不关闭 */}
+          <Menu icon={<Filter size={16} />} label="筛选" active={business !== "全部业务" || tagFilter.length > 0} closeOnSelect={false}>
             <MenuGroup label="业务">
               {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
             </MenuGroup>
@@ -152,10 +160,10 @@ export function KnowledgeBasePage() {
                 <MenuItem key={tag} active={tagFilter.includes(tag)} onSelect={() => setTagFilter((current) => current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])}>{tag}</MenuItem>
               ))}
             </MenuGroup>
-          </ToolMenu>
-          <ToolMenu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
+          </Menu>
+          <Menu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
             {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
-          </ToolMenu>
+          </Menu>
           <button className="secondaryButton compact" type="button"><Plus size={15} />新建文件夹</button>
           <label className="primaryButton compact" htmlFor="kb-upload"><Upload size={15} />上传文件</label>
           <input className="visuallyHidden" id="kb-upload" type="file" multiple />
@@ -257,7 +265,7 @@ function KbFileRow({ file, onPreview, onDetail, onAssign, onAssignDirect, onMove
           <span><strong>{file.title}</strong><small>{formatFileSize(file.size)}</small></span>
         </button>
       </div>
-      <span><em className={`kbStatusChip is-${file.status}`}>{statusLabel[file.status]}</em></span>
+      <span><StatusChip tone={statusTone[file.status]}>{statusLabel[file.status]}</StatusChip></span>
       <span>{file.business}</span>
       <span>
         <InlineSelect
@@ -316,7 +324,7 @@ function KbDetailPanel({ file, onClose, onAssign }: { file: KnowledgeBaseFile; o
         <button type="button" onClick={onClose} aria-label="关闭详情"><X size={16} /></button>
       </header>
       <dl>
-        <div><dt>解析状态</dt><dd><em className={`kbStatusChip is-${file.status}`}>{statusLabel[file.status]}</em></dd></div>
+        <div><dt>解析状态</dt><dd><StatusChip tone={statusTone[file.status]}>{statusLabel[file.status]}</StatusChip></dd></div>
         <div><dt>文件类型</dt><dd>{file.type.toUpperCase()}</dd></div>
         <div><dt>文件大小</dt><dd>{formatFileSize(file.size)}</dd></div>
         <div><dt>所属业务</dt><dd>{file.business}</dd></div>
@@ -408,29 +416,6 @@ function Dialog({ title, description, children, confirmLabel, onClose, onConfirm
         </footer>
       </section>
     </div>
-  );
-}
-
-function ToolMenu({ icon, label, active, children }: { icon: ReactNode; label: string; active: boolean; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return (
-    <div ref={ref} className="toolMenuWrap">
-      <button className={`toolIconButton ${active ? "active" : ""}`} type="button" title={label} aria-label={label} aria-expanded={open} onClick={() => setOpen((value) => !value)}>{icon}</button>
-      {open ? <div className="toolMenu">{children}</div> : null}
-    </div>
-  );
-}
-
-function MenuGroup({ label, children }: { label: string; children: ReactNode }) {
-  return <div className="toolMenuGroup"><span>{label}</span>{children}</div>;
-}
-
-function MenuItem({ active, onSelect, children }: { active: boolean; onSelect: () => void; children: ReactNode }) {
-  return (
-    <button className={`toolMenuItem ${active ? "active" : ""}`} type="button" onClick={onSelect}>
-      <span>{children}</span>{active ? <Check size={13} /> : null}
-    </button>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { Bot, Check, Columns3, Filter, LayoutList, Plus, Users } from "lucide-react";
 import { InlineSelect } from "./InlineSelect";
+import { EmptyState, Menu, MenuItem } from "../ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -54,18 +55,18 @@ export function ProjectPlanTab({ project }: { project: string }) {
               <Columns3 size={14} />看板
             </button>
           </div>
-          <ToolMenu icon={<Users size={16} />} label="负责人" active={Boolean(assigneeFilter)}>
+          <Menu icon={<Users size={16} />} label="负责人" active={Boolean(assigneeFilter)}>
             <MenuItem active={!assigneeFilter} onSelect={() => setAssigneeFilter(null)}>全部负责人</MenuItem>
             {projectMembers.map((member) => (
               <MenuItem key={member.id} active={assigneeFilter === member.id} onSelect={() => setAssigneeFilter(member.id)}>{member.name}</MenuItem>
             ))}
-          </ToolMenu>
-          <ToolMenu icon={<Filter size={16} />} label="优先级" active={Boolean(priorityFilter)}>
+          </Menu>
+          <Menu icon={<Filter size={16} />} label="优先级" active={Boolean(priorityFilter)}>
             <MenuItem active={!priorityFilter} onSelect={() => setPriorityFilter(null)}>全部优先级</MenuItem>
             {planPriorityOrder.map((priority) => (
               <MenuItem key={priority} active={priorityFilter === priority} onSelect={() => setPriorityFilter(priority)}>{planPriorityLabel[priority]}</MenuItem>
             ))}
-          </ToolMenu>
+          </Menu>
           <button className="primaryButton compact" type="button"><Plus size={15} />新建工作项</button>
         </div>,
         host,
@@ -84,10 +85,7 @@ export function ProjectPlanTab({ project }: { project: string }) {
         : <PlanBoard items={visible} onUpdate={update} />}
 
       {!visible.length ? (
-        <div className="projectTabEmptyState">
-          <strong>没有匹配的工作项</strong>
-          <span>试试清除筛选条件，或新建一个工作项。</span>
-        </div>
+        <EmptyState title="没有匹配的工作项" description="试试清除筛选条件，或新建一个工作项。" />
       ) : null}
     </section>
   );
@@ -238,21 +236,3 @@ function AssigneeSelect({ value, onChange, compact }: { value: string; onChange:
   );
 }
 
-function ToolMenu({ icon, label, active, children }: { icon: ReactNode; label: string; active: boolean; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return (
-    <div ref={ref} className="toolMenuWrap">
-      <button className={`toolIconButton ${active ? "active" : ""}`} type="button" title={label} aria-label={label} aria-expanded={open} onClick={() => setOpen((value) => !value)}>{icon}</button>
-      {open ? <div className="toolMenu" onClick={() => setOpen(false)}>{children}</div> : null}
-    </div>
-  );
-}
-
-function MenuItem({ active, onSelect, children }: { active: boolean; onSelect: () => void; children: ReactNode }) {
-  return (
-    <button className={`toolMenuItem ${active ? "active" : ""}`} type="button" onClick={onSelect}>
-      <span>{children}</span>{active ? <Check size={13} /> : null}
-    </button>
-  );
-}

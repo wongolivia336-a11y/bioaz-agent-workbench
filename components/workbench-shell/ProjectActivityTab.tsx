@@ -4,6 +4,7 @@ import { Check, Clock3, Filter, FileText, MessageSquare, ShieldCheck, TriangleAl
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDismissableLayer } from "./useDismissableLayer";
+import { EmptyState } from "../ui";
 
 type ActivityEntry = {
   id: string;
@@ -84,10 +85,7 @@ export function ProjectActivityTab({ project }: { project: string }) {
         );
       })}
       {!visible.length ? (
-        <div className="projectTabEmptyState">
-          <strong>没有匹配的动态</strong>
-          <span>换一个参与者，或清除筛选条件。</span>
-        </div>
+        <EmptyState title="没有匹配的动态" description="换一个参与者，或清除筛选条件。" />
       ) : null}
     </section>
   );

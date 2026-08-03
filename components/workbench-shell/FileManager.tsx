@@ -29,6 +29,7 @@ import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbe
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { ProjectActivityTab } from "./ProjectActivityTab";
 import { ProjectPlanTab } from "./ProjectPlanTab";
+import { Menu, MenuGroup, MenuItem } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
@@ -287,16 +288,16 @@ export function FileManager({
             <strong>最近更新</strong>
             <span>{recentFiles.length} 项</span>
             <div className="sectionBarActions">
-              <ToolMenu icon={<Filter size={16} />} label="筛选" active={Boolean(rootKind)}>
+              <Menu icon={<Filter size={16} />} label="筛选" active={Boolean(rootKind)}>
                 <MenuItem active={!rootKind} onSelect={() => setRootKind(null)}>全部类型</MenuItem>
                 {rootKindOptions.map((kind) => <MenuItem key={kind} active={rootKind === kind} onSelect={() => setRootKind(kind)}>{kind}</MenuItem>)}
-              </ToolMenu>
-              <ToolMenu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
+              </Menu>
+              <Menu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
                 {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
-              </ToolMenu>
-              <ToolMenu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
+              </Menu>
+              <Menu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
                 {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
-              </ToolMenu>
+              </Menu>
             </div>
           </div>
           <FileTable files={recentFiles} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
@@ -322,7 +323,7 @@ export function FileManager({
           <LibrarySearch value={query} onChange={setQuery} placeholder={inTrash ? "搜索回收站文件..." : "搜索当前项目文件..."} />
           {inTrash ? null : (
             <>
-              <ToolMenu icon={<Filter size={16} />} label="筛选" active={Boolean(kindFilter || sourceFilter || timeFilter !== "all")}>
+              <Menu icon={<Filter size={16} />} label="筛选" active={Boolean(kindFilter || sourceFilter || timeFilter !== "all")}>
                 <MenuGroup label="文件类型">
                   {kindOptions.map((kind) => <MenuItem key={kind} active={kindFilter === kind} onSelect={() => setKindFilter(kindFilter === kind ? null : kind)}>{kind}</MenuItem>)}
                 </MenuGroup>
@@ -332,13 +333,13 @@ export function FileManager({
                 <MenuGroup label="更新时间">
                   {timeOptions.map((option) => <MenuItem key={option.id} active={timeFilter === option.id} onSelect={() => setTimeFilter(option.id)}>{option.label}</MenuItem>)}
                 </MenuGroup>
-              </ToolMenu>
-              <ToolMenu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
+              </Menu>
+              <Menu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
                 {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
-              </ToolMenu>
-              <ToolMenu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
+              </Menu>
+              <Menu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
                 {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
-              </ToolMenu>
+              </Menu>
             </>
           )}
           <button
@@ -508,39 +509,6 @@ function LibrarySearch({ value, onChange, placeholder }: { value: string; onChan
       <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
       {value ? <button type="button" onClick={() => onChange("")} aria-label="清除搜索"><X size={13} /></button> : null}
     </div>
-  );
-}
-
-function ToolMenu({ icon, label, active, children }: { icon: ReactNode; label: string; active: boolean; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return (
-    <div ref={ref} className="toolMenuWrap">
-      <button
-        className={`toolIconButton ${active ? "active" : ""}`}
-        type="button"
-        title={label}
-        aria-label={label}
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-      >
-        {icon}
-      </button>
-      {open ? <div className="toolMenu" onClick={() => setOpen(false)}>{children}</div> : null}
-    </div>
-  );
-}
-
-function MenuGroup({ label, children }: { label: string; children: ReactNode }) {
-  return <div className="toolMenuGroup"><span>{label}</span>{children}</div>;
-}
-
-function MenuItem({ active, onSelect, children }: { active: boolean; onSelect: () => void; children: ReactNode }) {
-  return (
-    <button className={`toolMenuItem ${active ? "active" : ""}`} type="button" onClick={onSelect}>
-      <span>{children}</span>
-      {active ? <Check size={13} /> : null}
-    </button>
   );
 }
 

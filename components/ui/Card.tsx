@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes } from "react";
+import { cn } from "../../lib/cn";
 
 export type CardDensity = "compact" | "default" | "spacious";
 
@@ -14,7 +15,7 @@ export const SurfaceCard = forwardRef<HTMLDivElement, SurfaceCardProps>(
       <div
         {...props}
         ref={ref}
-        className={`bioazUiSurfaceCard bioazUiSurfaceCard--${density} ${className}`.trim()}
+        className={cn("bioazUiSurfaceCard", `bioazUiSurfaceCard--${density}`, className)}
       />
     );
   },
@@ -31,7 +32,7 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(
         {...props}
         ref={ref}
         type={type}
-        className={`bioazUiActionCard bioazUiActionCard--${density} ${className}`.trim()}
+        className={cn("bioazUiActionCard", `bioazUiActionCard--${density}`, className)}
       />
     );
   },
