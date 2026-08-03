@@ -5349,3 +5349,153 @@ button { -webkit-tap-highlight-color: transparent; }
   cursor: not-allowed;
   opacity: 0.55;
 }
+
+/* ===== 分析上下文卡与思考卡同宽：不再单独限宽 ===== */
+.analysisContextCard {
+  max-width: none;
+}
+
+/* ===== 弹窗底部按钮：同高同圆角同内距，宽度随文字 =====
+   模块内 .tumor-reportModuleShell .primaryButton 特异性与通用规则相同，
+   这里用 shell + dialog 双层选择器确保压过它。 */
+.tumor-reportModuleShell .confirmDialog > footer > button,
+.confirmDialog > footer > button,
+.kbDialog > footer > button {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-width: 0;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0 16px;
+}
+.tumor-reportModuleShell .confirmDialog > footer > .secondaryButton,
+.confirmDialog > footer > .secondaryButton,
+.kbDialog > footer > .secondaryButton {
+  border-color: #d4d7dd;
+  background: #fff;
+  color: var(--bioaz-text-primary);
+}
+.tumor-reportModuleShell .confirmDialog > footer > .secondaryButton:hover,
+.confirmDialog > footer > .secondaryButton:hover {
+  background: #f8f9fa;
+}
+.tumor-reportModuleShell .confirmDialog > footer > .primaryButton,
+.confirmDialog > footer > .primaryButton,
+.kbDialog > footer > .primaryButton {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+}
+.tumor-reportModuleShell .confirmDialog > footer > .primaryButton:hover:not(:disabled),
+.confirmDialog > footer > .primaryButton:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+
+/* ===== DMPK 参数收集：独立浮层，与产物卡分栏解耦 ===== */
+.paramFloatScrim {
+  position: fixed;
+  z-index: 55;
+  inset: 0;
+  background: transparent;
+}
+.paramFloatCard {
+  position: fixed;
+  z-index: 56;
+  top: 64px;
+  right: 16px;
+  display: grid;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 96px);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(18, 24, 38, 0.12);
+}
+.paramFloatCard > .persistentParameterHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-3) var(--bioaz-space-4);
+}
+.paramFloatTitle {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+.paramFloatTitle > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.paramFloatTitle > em {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  padding: 1px 8px;
+}
+.paramFloatCard .parameterConversationEdit { margin-left: auto; }
+.paramFloatClose {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.paramFloatClose:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+.paramFloatCard > .persistentParameterBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--bioaz-space-4);
+}
+/* 右侧栏现在只承载产物与依据 */
+.dmpkPanel.dmpkInspectorRail > .secondaryInspectorSlot { height: 100%; }
+
+/* chatflow 里的参数卡：去掉悬停动效，保持静止 */
+.parameterTaskCard,
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within,
+.parameterTaskCard * {
+  transition: none;
+  animation: none;
+  transform: none;
+}
+.parameterTaskCard:hover {
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+}
+
+/* 浮层定位：只锚右侧，避免被 left 规则拉满宽度 */
+.dmpkShell > .paramFloatCard.persistentParameterCard {
+  position: fixed;
+  top: 64px;
+  right: 16px;
+  bottom: auto;
+  left: auto;
+  width: min(420px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 96px);
+}
