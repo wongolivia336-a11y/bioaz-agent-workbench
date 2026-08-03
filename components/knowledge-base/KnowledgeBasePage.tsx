@@ -29,6 +29,7 @@ import {
   type KnowledgeBaseFile,
 } from "../../lib/workbench/knowledgeBaseData";
 import { InlineSelect } from "../workbench-shell/InlineSelect";
+import { Menu, MenuGroup, MenuItem } from "../ui";
 import { WorkspaceAssistant } from "../workbench-shell/ShellControls";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 
@@ -143,7 +144,8 @@ export function KnowledgeBasePage() {
           ))}
         </div>
         <div className="sectionBarActions">
-          <ToolMenu icon={<Filter size={16} />} label="筛选" active={business !== "全部业务" || tagFilter.length > 0}>
+          {/* 标签是多选，选完不关闭 */}
+          <Menu icon={<Filter size={16} />} label="筛选" active={business !== "全部业务" || tagFilter.length > 0} closeOnSelect={false}>
             <MenuGroup label="业务">
               {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
             </MenuGroup>
@@ -152,10 +154,10 @@ export function KnowledgeBasePage() {
                 <MenuItem key={tag} active={tagFilter.includes(tag)} onSelect={() => setTagFilter((current) => current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])}>{tag}</MenuItem>
               ))}
             </MenuGroup>
-          </ToolMenu>
-          <ToolMenu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
+          </Menu>
+          <Menu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
             {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
-          </ToolMenu>
+          </Menu>
           <button className="secondaryButton compact" type="button"><Plus size={15} />新建文件夹</button>
           <label className="primaryButton compact" htmlFor="kb-upload"><Upload size={15} />上传文件</label>
           <input className="visuallyHidden" id="kb-upload" type="file" multiple />
@@ -408,29 +410,6 @@ function Dialog({ title, description, children, confirmLabel, onClose, onConfirm
         </footer>
       </section>
     </div>
-  );
-}
-
-function ToolMenu({ icon, label, active, children }: { icon: ReactNode; label: string; active: boolean; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return (
-    <div ref={ref} className="toolMenuWrap">
-      <button className={`toolIconButton ${active ? "active" : ""}`} type="button" title={label} aria-label={label} aria-expanded={open} onClick={() => setOpen((value) => !value)}>{icon}</button>
-      {open ? <div className="toolMenu">{children}</div> : null}
-    </div>
-  );
-}
-
-function MenuGroup({ label, children }: { label: string; children: ReactNode }) {
-  return <div className="toolMenuGroup"><span>{label}</span>{children}</div>;
-}
-
-function MenuItem({ active, onSelect, children }: { active: boolean; onSelect: () => void; children: ReactNode }) {
-  return (
-    <button className={`toolMenuItem ${active ? "active" : ""}`} type="button" onClick={onSelect}>
-      <span>{children}</span>{active ? <Check size={13} /> : null}
-    </button>
   );
 }
 

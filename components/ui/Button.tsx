@@ -2,6 +2,7 @@
 
 import { LoaderCircle } from "lucide-react";
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { cn } from "../../lib/cn";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "small" | "default" | "large";
@@ -31,7 +32,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       {...props}
       ref={ref}
-      className={`bioazUiButton bioazUiButton--${variant} bioazUiButton--${size} ${className}`.trim()}
+      className={cn("bioazUiButton", `bioazUiButton--${variant}`, `bioazUiButton--${size}`, className)}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
     >
@@ -57,7 +58,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         {...props}
         ref={ref}
-        className={`bioazUiIconButton bioazUiIconButton--${size} ${selected ? "bioazUiIconButton--selected" : ""} ${className}`.trim()}
+        className={cn("bioazUiIconButton", `bioazUiIconButton--${size}`, selected && "bioazUiIconButton--selected", className)}
         aria-label={label}
         aria-pressed={selected || undefined}
         title={props.title ?? label}
