@@ -5499,3 +5499,198 @@ button { -webkit-tap-highlight-color: transparent; }
   max-width: calc(100vw - 32px);
   max-height: calc(100dvh - 96px);
 }
+
+/* ===== DMPK 向肿瘤报告对齐 ===== */
+
+/* 1) 主按钮改黑：iteration.css 用 --primary(#2900ff) 盖掉了 globals 的 --ink，这里在模块内收回 */
+.dmpkShell .primaryButton:not(:disabled),
+.dmpkWorkspace .primaryButton:not(:disabled),
+.paramFloatCard .primaryButton:not(:disabled),
+.dmpkShell .strategyDialogActions .primary,
+.dmpkShell .parameterPager button.primary,
+.dmpkShell .decisionPrimary:not(:disabled) {
+  border-color: #17191e;
+  background: #17191e;
+  color: #fff;
+  box-shadow: none;
+}
+.dmpkShell .primaryButton:hover:not(:disabled),
+.dmpkWorkspace .primaryButton:hover:not(:disabled),
+.paramFloatCard .primaryButton:hover:not(:disabled),
+.dmpkShell .strategyDialogActions .primary:hover,
+.dmpkShell .decisionPrimary:hover:not(:disabled) {
+  border-color: #050608;
+  background: #050608;
+}
+
+/* 2) composer 区：去掉抖动与蓝色呼吸外发光 */
+.dmpkComposerWrap > .parameterTaskCard,
+.dmpkComposerWrap.needsAttention .dmpkComposer,
+.dmpkComposerWrap .dmpkComposer,
+.parameterTaskCard.isEditing {
+  animation: none;
+  transition: none;
+  transform: none;
+}
+.dmpkComposerWrap.needsAttention .dmpkComposer {
+  border-color: var(--bioaz-border);
+  box-shadow: none;
+}
+.dmpkComposerWrap > .parameterTaskCard {
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+/* 3) 用户气泡与 agent 消息：沿用肿瘤报告的中性矩形 */
+.dmpkShell :is(.userBubble, .userActionBubble) {
+  max-width: min(68%, 560px);
+  justify-self: end;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-primary);
+  box-shadow: none;
+}
+.dmpkShell :is(.userBubble, .userActionBubble)::after {
+  display: none;
+  content: none;
+}
+
+/* 4) agent 思考卡：白底中性边框，无紫色 */
+.dmpkShell :is(.agentRun, .thinkingCard, .activityChain) {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+.dmpkShell .agentRun.settled,
+.dmpkShell .agentRun.settled.collapsed {
+  border-color: #e5e7eb;
+  background: #fff;
+}
+
+/* 5) chatflow 卡片同宽 */
+.dmpkChatScroller :is(.agentRun, .thinkingCard, .agentReply, .parameterTaskCard, .artifactCard) {
+  width: 100%;
+  max-width: none;
+}
+
+/* ===== 参数收集：右侧常驻面板，形态按参考稿 ===== */
+.paramCollectHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bioaz-space-3);
+}
+.paramCollectMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  place-items: center;
+}
+.paramCollectHead > div { display: grid; min-width: 0; gap: 2px; }
+.paramCollectHead strong { color: var(--bioaz-text-primary); font-size: 15px; font-weight: 600; }
+.paramCollectHead small { color: var(--bioaz-text-tertiary); font-size: 12px; }
+.paramCollectHead > em {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  margin-left: auto;
+}
+.paramCollectProgress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eceef2;
+  margin: var(--bioaz-space-3) 0 var(--bioaz-space-1);
+}
+.paramCollectProgress > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #17191e;
+}
+.paramCollectList .inspectorParameterGroup {
+  border: 0;
+  border-bottom: 1px solid var(--bioaz-border);
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+.paramCollectList .inspectorParameterGroupHeader {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 12px 2px;
+}
+.paramGroupDot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border: 1.5px solid #c9cdd6;
+  border-radius: 999px;
+}
+.inspectorParameterGroup.isComplete .paramGroupDot { border-color: #5c60b8; background: #5c60b8; }
+.inspectorParameterGroup.isPartial .paramGroupDot { border-color: #5c60b8; background: transparent; }
+.paramCollectList .inspectorParameterGroupHeader > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.inspectorParameterGroup.isEmpty .inspectorParameterGroupHeader > strong { color: var(--bioaz-text-disabled); }
+.paramCollectList .inspectorParameterGroupHeader > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-tertiary);
+  margin-left: auto;
+}
+.paramGroupState {
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+  font-style: normal;
+  padding: 2px 9px;
+}
+.inspectorParameterGroup.isComplete .paramGroupState { background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+.inspectorParameterGroup.isPartial .paramGroupState { background: #fef3c7; color: #92400e; }
+.paramCollectList .inspectorParameterFields { display: grid; gap: 0; padding-bottom: 6px; }
+.paramCollectList .inspectorParameterField {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  border: 0;
+  border-bottom: 1px solid var(--bioaz-border);
+  background: transparent;
+  font: inherit;
+  padding: 9px 2px 9px 20px;
+  text-align: left;
+}
+.paramCollectList .inspectorParameterField:last-child { border-bottom: 0; }
+.paramCollectList .inspectorParameterField > span:first-child {
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+}
+.paramCollectList .inspectorParameterField > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 400;
+  margin-left: auto;
+}
+.paramCollectList .inspectorParameterField.isEmpty > strong { color: var(--bioaz-text-disabled); }
+.paramCollectList .inspectorParameterField svg { flex: none; color: var(--bioaz-text-tertiary); }
+.paramCollectList .inspectorParameterField:hover:not(.isEmpty) { background: rgba(17, 19, 24, 0.02); }

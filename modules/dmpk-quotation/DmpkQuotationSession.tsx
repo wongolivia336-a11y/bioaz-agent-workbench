@@ -41,7 +41,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [suppressInspectorHover, setSuppressInspectorHover] = useState(false);
-  const [paramFloatOpen, setParamFloatOpen] = useState(false);
+  // 参数收集是 DMPK 的常驻工作面，默认就展开
+  const [paramFloatOpen, setParamFloatOpen] = useState(true);
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
   const [parametersExpanded, setParametersExpanded] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
@@ -275,7 +276,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       {/* 参数收集：独立浮层，不再和产物卡上下堆在同一条侧栏里 */}
       {paramFloatOpen ? (
         <>
-          <div className="paramFloatScrim" role="presentation" onClick={() => setParamFloatOpen(false)} />
           <section
             className={`paramFloatCard persistentParameterCard isExpanded ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}
             role="dialog"
