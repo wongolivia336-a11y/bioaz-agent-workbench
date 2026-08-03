@@ -29,7 +29,7 @@ import {
   type KnowledgeBaseFile,
 } from "../../lib/workbench/knowledgeBaseData";
 import { InlineSelect } from "../workbench-shell/InlineSelect";
-import { Menu, MenuGroup, MenuItem, StatusChip, type StatusTone } from "../ui";
+import { Button, Dialog, Drawer, Menu, MenuGroup, MenuItem, StatusChip, type StatusTone } from "../ui";
 import { WorkspaceAssistant } from "../workbench-shell/ShellControls";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 
@@ -318,11 +318,7 @@ function KbFileRow({ file, onPreview, onDetail, onAssign, onAssignDirect, onMove
 function KbDetailPanel({ file, onClose, onAssign }: { file: KnowledgeBaseFile; onClose: () => void; onAssign: () => void }) {
   const nameById = new Map(digitalTeamData.map((item) => [item.id, item.displayName]));
   return (
-    <aside className="knowledgeDetailPanel kbDetailPanel" aria-label={`${file.title}详情`}>
-      <header>
-        <div><span>文件详情</span><strong>{file.title}</strong></div>
-        <button type="button" onClick={onClose} aria-label="关闭详情"><X size={16} /></button>
-      </header>
+    <Drawer className="kbDetailPanel" eyebrow="文件详情" title={file.title} onClose={onClose}>
       <dl>
         <div><dt>解析状态</dt><dd><StatusChip tone={statusTone[file.status]}>{statusLabel[file.status]}</StatusChip></dd></div>
         <div><dt>文件类型</dt><dd>{file.type.toUpperCase()}</dd></div>
@@ -355,7 +351,7 @@ function KbDetailPanel({ file, onClose, onAssign }: { file: KnowledgeBaseFile; o
           {file.tags.length ? file.tags.map((tag) => <span key={tag}>{tag}</span>) : <small>暂无标签</small>}
         </div>
       </section>
-    </aside>
+    </Drawer>
   );
 }
 
@@ -363,7 +359,16 @@ function AssignDialog({ file, onClose, onConfirm }: { file: KnowledgeBaseFile; o
   const [selected, setSelected] = useState<string[]>(file.assignedTo);
   const toggle = (id: string) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   return (
-    <Dialog title="指派给数字同事" description={`选择可以使用「${file.title}」的数字同事，不选则全部同事可用。`} onClose={onClose} onConfirm={() => onConfirm(selected)} confirmLabel="保存">
+    <Dialog
+      title="指派给数字同事"
+      description={`选择可以使用「${file.title}」的数字同事，不选则全部同事可用。`}
+      size="compact"
+      onClose={onClose}
+      footer={<>
+        <Button onClick={onClose}>取消</Button>
+        <Button variant="primary" onClick={() => onConfirm(selected)}>保存</Button>
+      </>}
+    >
       <div className="kbAssignOptions">
         {digitalTeamData.map((coworker) => (
           <button key={coworker.id} className={selected.includes(coworker.id) ? "active" : ""} type="button" onClick={() => toggle(coworker.id)}>
@@ -380,7 +385,16 @@ function AssignDialog({ file, onClose, onConfirm }: { file: KnowledgeBaseFile; o
 function MoveDialog({ file, onClose, onConfirm }: { file: KnowledgeBaseFile; onClose: () => void; onConfirm: (folderId: string | null) => void }) {
   const [target, setTarget] = useState<string | null>(file.folderId);
   return (
-    <Dialog title="改文件夹" description={`把「${file.title}」移动到其他文件夹。`} onClose={onClose} onConfirm={() => onConfirm(target)} confirmLabel="移动">
+    <Dialog
+      title="改文件夹"
+      description={`把「${file.title}」移动到其他文件夹。`}
+      size="compact"
+      onClose={onClose}
+      footer={<>
+        <Button onClick={onClose}>取消</Button>
+        <Button variant="primary" onClick={() => onConfirm(target)}>移动</Button>
+      </>}
+    >
       <div className="kbAssignOptions">
         <button className={target === null ? "active" : ""} type="button" onClick={() => setTarget(null)}>
           <span className="kbAssignMark"><Folder size={15} /></span>
@@ -396,26 +410,6 @@ function MoveDialog({ file, onClose, onConfirm }: { file: KnowledgeBaseFile; onC
         ))}
       </div>
     </Dialog>
-  );
-}
-
-function Dialog({ title, description, children, confirmLabel, onClose, onConfirm }: { title: string; description: string; children: ReactNode; confirmLabel: string; onClose: () => void; onConfirm: () => void }) {
-  useEffect(() => {
-    const close = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
-    document.addEventListener("keydown", close);
-    return () => document.removeEventListener("keydown", close);
-  }, [onClose]);
-  return (
-    <div className="modalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="kbDialog" role="dialog" aria-modal="true" aria-label={title}>
-        <header><div><h2>{title}</h2><p>{description}</p></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>
-        <div className="kbDialogBody">{children}</div>
-        <footer>
-          <button className="secondaryButton compact" type="button" onClick={onClose}>取消</button>
-          <button className="primaryButton compact" type="button" onClick={onConfirm}>{confirmLabel}</button>
-        </footer>
-      </section>
-    </div>
   );
 }
 

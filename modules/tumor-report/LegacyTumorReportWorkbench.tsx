@@ -57,6 +57,7 @@ import type {
 } from "./legacy-types";
 import { classifyFile, formatSize, makeSteps } from "./legacy-workflow";
 import type { AgentModuleSessionProps } from "../types";
+import { Button, Dialog } from "../../components/ui";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard, PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 
@@ -567,33 +568,17 @@ function ReviewConfirmDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
-  useEffect(() => {
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", close);
-    return () => document.removeEventListener("keydown", close);
-  }, [onCancel]);
-
   return (
-    <div
-      className="modalBackdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onCancel();
-      }}
-    >
-      <section className="confirmDialog" role="dialog" aria-modal="true" aria-labelledby="review-confirm-title">
-        <header>
-          <h2 id="review-confirm-title">确认发起专家审核</h2>
-          <p>本次报告、{warningCount} 项已确认风险与业务证据将一并派发给肿瘤报告专家小组。</p>
-        </header>
-        <footer>
-          <button className="secondaryButton compact" type="button" onClick={onCancel}>取消</button>
-          <button className="primaryButton compact" type="button" onClick={onConfirm}>确认发起审核</button>
-        </footer>
-      </section>
-    </div>
+    <Dialog
+      title="确认发起专家审核"
+      description={`本次报告、${warningCount} 项已确认风险与业务证据将一并派发给肿瘤报告专家小组。`}
+      size="compact"
+      onClose={onCancel}
+      footer={<>
+        <Button onClick={onCancel}>取消</Button>
+        <Button variant="primary" onClick={onConfirm}>确认发起审核</Button>
+      </>}
+    />
   );
 }
 

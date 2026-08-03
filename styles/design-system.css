@@ -592,3 +592,149 @@
   right: auto;
   left: 0;
 }
+
+/* ===== Dialog / Drawer 迁移到共享组件后的桥接 =====
+   知识库与肿瘤报告改用 bioazUiDialog / bioazUiDrawer，
+   原先挂在 .kbDialog / .knowledgeDetailPanel 上的内容样式在此对接。 */
+.bioazUiDialog .kbAssignOptions {
+  display: grid;
+  gap: 6px;
+}
+.bioazUiDialog .kbAssignOptions button {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  padding: var(--bioaz-space-3);
+  text-align: left;
+}
+.bioazUiDialog .kbAssignOptions button:hover {
+  background: var(--bioaz-surface-hover);
+}
+.bioazUiDialog .kbAssignOptions button.active {
+  border-color: rgba(92, 96, 184, 0.32);
+  background: var(--bioaz-agent-accent-soft);
+}
+.bioazUiDialog .kbAssignOptions button > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.bioazUiDialog .kbAssignOptions strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.bioazUiDialog .kbAssignOptions small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.bioazUiDialog .kbAssignOptions svg:last-child {
+  margin-left: auto;
+  color: var(--bioaz-agent-accent);
+}
+.kbAssignMark {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+
+/* 抽屉内容：原 .knowledgeDetailPanel 的排版迁到 bioazUiDrawer 体内 */
+.bioazUiDrawer .bioazUiDrawerBody > dl {
+  display: grid;
+  gap: var(--bioaz-space-3);
+  margin: 0 0 var(--bioaz-space-4);
+}
+.bioazUiDrawer .bioazUiDrawerBody > dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+}
+.bioazUiDrawer dt {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bioazUiDrawer dd {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.bioazUiDrawer .kbDetailSection {
+  padding-block: var(--bioaz-space-4);
+}
+.bioazUiDrawer .kbDetailSection + .kbDetailSection {
+  border-top: 1px solid var(--bioaz-border);
+}
+.bioazUiDrawer .kbDetailSectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-2);
+}
+.bioazUiDrawer .kbDetailSectionHead > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.bioazUiDrawer .kbDetailSectionHead > button {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-agent-accent);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  margin-left: auto;
+  padding: 0;
+}
+.bioazUiDrawer .kbScopeOption {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  padding: 9px var(--bioaz-space-3);
+}
+.bioazUiDrawer .kbScopeOption + .kbScopeOption {
+  margin-top: 6px;
+}
+.bioazUiDrawer .kbScopeOption.active {
+  border-color: rgba(92, 96, 184, 0.32);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-text-primary);
+}
+.bioazUiDrawer .kbScopeOption svg {
+  margin-left: auto;
+  color: var(--bioaz-agent-accent);
+}
+.bioazUiDrawer .kbAssignedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--bioaz-space-2);
+}
+.bioazUiDrawer .kbAssignedList > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 3px 10px;
+}
