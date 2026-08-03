@@ -18,3 +18,4 @@ export { Drawer } from "./Drawer";
 export { EmptyState } from "./EmptyState";
 export { Menu, MenuGroup, MenuItem } from "./Menu";
 export { StatusChip, type StatusTone } from "./StatusChip";
+export { NavTabs, SegmentedControl, type TabItem } from "./Tabs";

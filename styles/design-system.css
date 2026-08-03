@@ -738,3 +738,105 @@
   font-size: 12px;
   padding: 3px 10px;
 }
+
+/* ===================================================================
+   NavTabs — 换「看什么」。下划线式，可带计数徽标
+   =================================================================== */
+.bioazUiNavTabs {
+  --bioaz-navtab-pad-x: 14px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--bioaz-space-1);
+  overflow-x: auto;
+}
+.bioazUiNavTab {
+  position: relative;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 500;
+  padding: 10px var(--bioaz-navtab-pad-x);
+  white-space: nowrap;
+}
+.bioazUiNavTab:hover:not(:disabled) {
+  color: var(--bioaz-text-primary);
+}
+.bioazUiNavTab.active {
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+}
+.bioazUiNavTab.active::after {
+  position: absolute;
+  right: var(--bioaz-navtab-pad-x);
+  bottom: -1px;
+  left: var(--bioaz-navtab-pad-x);
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--bioaz-agent-accent);
+  content: "";
+}
+.bioazUiNavTab:disabled {
+  color: var(--bioaz-text-disabled);
+  cursor: not-allowed;
+}
+.bioazUiNavTab > i {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+  margin-left: 6px;
+  padding: 1px 7px;
+}
+.bioazUiNavTab.active > i {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+/* ===================================================================
+   SegmentedControl — 换「怎么看」。同一内容的不同呈现
+   =================================================================== */
+.bioazUiSegmented {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.bioazUiSegmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--bioaz-type-small-size);
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+.bioazUiSegmented button:hover {
+  color: var(--bioaz-text-primary);
+}
+.bioazUiSegmented button.active {
+  background: var(--bioaz-surface);
+  box-shadow: var(--bioaz-shadow-subtle);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+
+/* header 的 Tab 层更紧凑，只调内距变量，不另起一套类 */
+.topbarTabLayer .bioazUiNavTabs {
+  --bioaz-navtab-pad-x: 12px;
+}

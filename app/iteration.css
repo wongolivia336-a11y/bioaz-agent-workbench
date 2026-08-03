@@ -435,7 +435,6 @@ textarea {
 }
 
 .knowledgeBaseView > header,
-.fileSpaceTabs,
 .knowledgeToolbar,
 .projectFolderStrip,
 .fileListHeading,
@@ -444,37 +443,13 @@ textarea {
   margin-inline: auto;
 }
 
-.fileSpaceTabs {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid #e4e7ec;
-}
 
-.fileSpaceTabs button {
-  position: relative;
-  min-height: 38px;
-  border: 0;
-  background: transparent;
-  padding: 0 2px;
-  color: #667085;
-  font-size: 13px;
-}
 
-.fileSpaceTabs button.active {
-  color: #101828;
-  font-weight: 650;
-}
 
-.fileSpaceTabs button.active::after {
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 2px;
-  background: #101828;
-  content: "";
-}
+
+
+
+
 
 .knowledgeToolbar {
   justify-content: flex-start;
@@ -657,13 +632,6 @@ textarea {
     padding: 11px;
   }
 
-  .fileSpaceTabs {
-    overflow-x: auto;
-  }
-
-  .fileSpaceTabs button {
-    flex: 0 0 auto;
-  }
 }
 
 /* Reusable workbench inspector: floating by default, stacked in the right rail when pinned. */
@@ -2584,28 +2552,6 @@ body > main.dmpkShell::after { content: none; }
   margin: 8px 0 22px;
   font-size: 32px;
   line-height: 1.1;
-}
-
-.ruleTabs {
-  display: flex;
-  gap: 22px;
-  border-bottom: 1px solid #dfe5ee;
-}
-
-.ruleTabs button {
-  height: 42px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: #64748b;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.ruleTabs button.active {
-  border-color: #2900ff;
-  color: #111318;
 }
 
 .ruleWorkbenchGrid {
