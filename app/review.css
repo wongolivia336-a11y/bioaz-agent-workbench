@@ -5727,3 +5727,66 @@ button { -webkit-tap-highlight-color: transparent; }
     --bioaz-chat-width: calc(100% - 32px);
   }
 }
+
+/* ===================================================================
+   参数收集面板 —— 响应式浮层，不再顶天立地
+   -------------------------------------------------------------------
+   之前用 top/bottom 撑满视口，结果盖住了 composer 的发送按钮。
+   改为顶部对齐 + 内容自适应高度，并给底部留出 composer 的空间。
+   =================================================================== */
+.dmpkShell > .paramFloatCard.persistentParameterCard,
+.dmpkShell > .paramFloatCard.persistentParameterCard.isExpanded {
+  top: 64px;
+  bottom: auto;
+  height: auto;
+  /* 180px ≈ composer 高度 + 安全间距，保证发送按钮始终可点 */
+  max-height: min(calc(100dvh - 180px), 720px);
+  border-radius: var(--bioaz-radius-container);
+  box-shadow: var(--bioaz-shadow-floating);
+  grid-template-rows: auto minmax(0, auto);
+}
+.dmpkShell > .paramFloatCard.persistentParameterCard > .persistentParameterBody {
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow-y: auto;
+}
+
+/* 进度条改用品牌蓝 */
+.paramCollectProgress > i {
+  background: color-mix(in srgb, var(--bioaz-brand-primary) 39%, transparent);
+}
+
+/* ===================================================================
+   参数补全卡 —— 全静态，无 hover 动效
+   与肿瘤报告的确认卡片同一种「不动」的手感。
+   =================================================================== */
+.parameterTaskCard,
+.parameterTaskCard *,
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within {
+  transition: none;
+  animation: none;
+}
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface);
+  box-shadow: none;
+  transform: none;
+}
+/* 选项按钮只留最轻的底色反馈，不位移不投影 */
+.parameterTaskCard .optionGrid button:hover,
+.parameterTaskCard .customOptionInput:hover {
+  border-color: var(--bioaz-border-strong);
+  background: var(--bioaz-surface-hover);
+  box-shadow: none;
+  transform: none;
+}
+.parameterTaskCard .decisionRow,
+.parameterTaskCard .decisionRow:hover {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface);
+  box-shadow: none;
+  transform: none;
+}

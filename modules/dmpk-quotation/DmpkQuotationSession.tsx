@@ -31,6 +31,22 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
+  // 一组参数收齐后自动折叠，把注意力交给还缺的那组
+  useEffect(() => {
+    setOpenGroups((current) => {
+      let changed = false;
+      const next = { ...current };
+      for (const group of dmpkGroups) {
+        const groupFields = fields.filter((field) => field.group === group.id);
+        const filled = groupFields.length > 0 && groupFields.every((field) => field.value);
+        if (filled && next[group.id]) {
+          next[group.id] = false;
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [fields]);
   const [draftTabs, setDraftTabs] = useState<DmpkDraftTab[]>([]);
   const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest
     ? [{ id: "initial-request", role: "user", text: initialRequest }, { id: "context", role: "agent", text: openingMessage }]

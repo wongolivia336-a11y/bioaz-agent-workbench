@@ -445,8 +445,9 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
         <div className="chatScroller" ref={chatScrollerRef}>
           <PriorSessionHistory snapshots={priorSessionSnapshots} />
           {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
-          {stage === "empty" && initialRequest ? <div className="legacyInitialRequest"><p>{initialRequest}</p></div> : null}
-          {stage === "empty" ? <div className="legacyTumorOpening"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div> : null}
+          {/* 开场白与初始请求是会话的一部分，上传后不该消失 */}
+          {initialRequest ? <div className="legacyInitialRequest"><p>{initialRequest}</p></div> : null}
+          <div className="legacyTumorOpening"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div>
           {stage !== "empty" && stage !== "uploaded" ? (
             <Conversation
               files={files}
