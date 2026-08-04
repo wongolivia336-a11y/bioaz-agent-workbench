@@ -5727,3 +5727,205 @@ button { -webkit-tap-highlight-color: transparent; }
     --bioaz-chat-width: calc(100% - 32px);
   }
 }
+
+/* ===================================================================
+   参数收集面板 —— 响应式浮层，不再顶天立地
+   -------------------------------------------------------------------
+   之前用 top/bottom 撑满视口，结果盖住了 composer 的发送按钮。
+   改为顶部对齐 + 内容自适应高度，并给底部留出 composer 的空间。
+   =================================================================== */
+.dmpkShell > .paramFloatCard.persistentParameterCard,
+.dmpkShell > .paramFloatCard.persistentParameterCard.isExpanded {
+  top: 64px;
+  bottom: auto;
+  height: auto;
+  /* 180px ≈ composer 高度 + 安全间距，保证发送按钮始终可点 */
+  max-height: min(calc(100dvh - 180px), 720px);
+  border-radius: var(--bioaz-radius-container);
+  box-shadow: var(--bioaz-shadow-floating);
+  grid-template-rows: auto minmax(0, auto);
+}
+.dmpkShell > .paramFloatCard.persistentParameterCard > .persistentParameterBody {
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow-y: auto;
+}
+
+/* 进度条改用品牌蓝 */
+.paramCollectProgress > i {
+  background: color-mix(in srgb, var(--bioaz-brand-primary) 39%, transparent);
+}
+
+/* ===================================================================
+   参数补全卡 —— 全静态，无 hover 动效
+   与肿瘤报告的确认卡片同一种「不动」的手感。
+   =================================================================== */
+.parameterTaskCard,
+.parameterTaskCard *,
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within {
+  transition: none;
+  animation: none;
+}
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface);
+  box-shadow: none;
+  transform: none;
+}
+/* 选项按钮只留最轻的底色反馈，不位移不投影 */
+.parameterTaskCard .optionGrid button:hover,
+.parameterTaskCard .customOptionInput:hover {
+  border-color: var(--bioaz-border-strong);
+  background: var(--bioaz-surface-hover);
+  box-shadow: none;
+  transform: none;
+}
+.parameterTaskCard .decisionRow,
+.parameterTaskCard .decisionRow:hover {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ===================================================================
+   知识库：所有区块共用一个内容宽度，左右对齐
+   -------------------------------------------------------------------
+   项目中枢用 .libraryListSurface 统一了容器宽度，知识库的统计卡、
+   文件夹 chip、表格各自为政，于是文件夹靠左、表格靠右对不齐。
+   =================================================================== */
+.knowledgeHubView > .kbStatRow,
+.knowledgeHubView > .kbBreadcrumb,
+.knowledgeHubView > .kbFolderStrip,
+.knowledgeHubView > .kbTable,
+.knowledgeHubView > .kbPagination,
+.knowledgeHubView > .filterChips,
+.knowledgeHubView > .sectionBar {
+  box-sizing: border-box;
+  width: min(var(--content-max), 100%);
+  margin-inline: auto;
+}
+
+/* ===================================================================
+   DMPK 顶天立地面板 —— 与肿瘤报告同一形态
+   贴右侧边缘铺满，无圆角无阴影，顶部只留标题与关闭
+   =================================================================== */
+.dmpk-quotationModuleShell .dmpkPanel,
+.dmpk-quotationModuleShell > .dmpkPanel {
+  border-radius: 0;
+  box-shadow: none;
+  border-left: 1px solid var(--bioaz-border);
+  padding: var(--bioaz-space-5) var(--bioaz-space-5) var(--bioaz-space-6);
+}
+/* 步骤时间轴：圆点 + 标题 + 描述，与肿瘤报告同字号同行距 */
+.dmpk-quotationModuleShell .inspectorStepList,
+.tumor-reportModuleShell .inspectorStepList {
+  display: grid;
+  gap: var(--bioaz-space-4);
+}
+.dmpk-quotationModuleShell .inspectorStepList > li,
+.tumor-reportModuleShell .inspectorStepList > li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--bioaz-space-3);
+}
+.dmpk-quotationModuleShell .inspectorStepList strong,
+.tumor-reportModuleShell .inspectorStepList strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.dmpk-quotationModuleShell .inspectorStepList p,
+.tumor-reportModuleShell .inspectorStepList p {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  margin: 2px 0 0;
+}
+
+/* ===================================================================
+   思考链展开 —— DMPK 对齐肿瘤报告
+   无外框、实心圆点、每步带技术详情入口
+   =================================================================== */
+.dmpk-quotationModuleShell .activityChainPanel,
+.dmpk-quotationModuleShell .activityChain[open] > .activityChainPanel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: var(--bioaz-space-2) 0 var(--bioaz-space-1);
+}
+.dmpk-quotationModuleShell .activityStep,
+.tumor-reportModuleShell .activityStep {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--bioaz-space-3);
+  padding-block: var(--bioaz-space-2);
+}
+.dmpk-quotationModuleShell .activityStep > span:first-child,
+.tumor-reportModuleShell .activityStep > span:first-child {
+  display: grid;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent);
+  margin-top: 6px;
+  place-items: center;
+}
+
+/* ===================================================================
+   底部胶囊 —— hover 时一次极淡扫过，静止时完全不动
+   =================================================================== */
+@keyframes bioazPillSheen {
+  from { transform: translateX(-120%) skewX(-12deg); }
+  to { transform: translateX(220%) skewX(-12deg); }
+}
+.knowledgeBaseView .ambientAssistantEntry {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.knowledgeBaseView .ambientAssistantEntry::after {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 38%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in srgb, var(--bioaz-agent-accent) 14%, transparent),
+    transparent
+  );
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-120%) skewX(-12deg);
+}
+.knowledgeBaseView .ambientAssistantEntry:hover::after {
+  opacity: 1;
+  animation: bioazPillSheen var(--bioaz-duration-5, 700ms) var(--bioaz-ease-out-3, ease-out) 1;
+}
+.knowledgeBaseView .ambientAssistantEntry > * {
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .knowledgeBaseView .ambientAssistantEntry::after { display: none; }
+}
+
+/* 顶天立地面板：贴满右侧，不留圆角与上下缝隙（覆盖 shell 层的 16px 圆角） */
+.dmpkShell.dmpk-quotationModuleShell > .dmpkPanel,
+.dmpkShell.tumor-reportModuleShell > .dmpkPanel {
+  border-radius: 0;
+  box-shadow: none;
+  border-left: 1px solid var(--bioaz-border);
+  margin: 0;
+}

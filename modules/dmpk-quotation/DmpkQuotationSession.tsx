@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ChevronRight, ListChecks, PanelRight, SlidersHorizontal, SquarePen, WandSparkles, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -31,6 +31,22 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
+  // 一组参数收齐后自动折叠，把注意力交给还缺的那组
+  useEffect(() => {
+    setOpenGroups((current) => {
+      let changed = false;
+      const next = { ...current };
+      for (const group of dmpkGroups) {
+        const groupFields = fields.filter((field) => field.group === group.id);
+        const filled = groupFields.length > 0 && groupFields.every((field) => field.value);
+        if (filled && next[group.id]) {
+          next[group.id] = false;
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [fields]);
   const [draftTabs, setDraftTabs] = useState<DmpkDraftTab[]>([]);
   const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest
     ? [{ id: "initial-request", role: "user", text: initialRequest }, { id: "context", role: "agent", text: openingMessage }]
@@ -87,6 +103,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
       setFields(nextFields);
+      setInspectorOpen(false);
       setParametersExpanded(Boolean(patch.assayType));
       setActiveGroup(nextGroup);
       setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
@@ -113,6 +130,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const field = fields.find((item) => item.id === fieldId);
     if (!field) return;
     const invalidatesQuotation = stage === "generated";
+    setInspectorOpen(false);
     setParametersExpanded(true);
     setConversationEditing(false);
     setEditingFieldId(field.id);
@@ -129,6 +147,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   };
 
   const startConversationEdit = () => {
+    setInspectorOpen(false);
     setParametersExpanded(Boolean(identifiedAssayType));
     setEditingFieldId(null);
     setConversationEditing(true);
@@ -206,7 +225,13 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     }, 1800);
   };
 
+  /* 右侧三个入口是互斥的：参数收集浮层与顶天立地面板不能同时在，
+     否则后者会盖住前者。开一个就关另一个。 */
+  /* 右侧三个入口是互斥的：参数收集浮层与顶天立地面板不能同时在，
+     否则后者会盖住前者。开一个就关另一个。 */
   const openInspector = (panelId: DmpkInspectorPanelId) => {
+    setParamFloatOpen(false);
+    setParametersExpanded(false);
     setInspectorPanelId(panelId);
     setInspectorOpen(true);
   };
@@ -249,7 +274,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
               aria-pressed={inspectorOpen}
               onClick={() => {
                 if (inspectorOpen) setSuppressInspectorHover(true);
-                setInspectorOpen((current) => !current);
+                const next = !inspectorOpen;
+                // 与参数收集互斥，避免顶天立地面板盖住浮层
+                if (next) setParamFloatOpen(false);
+                setInspectorOpen(next);
               }}
               onMouseLeave={() => setSuppressInspectorHover(false)}
             >
@@ -261,7 +289,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
               title="参数收集"
               aria-label={paramFloatOpen ? "收起参数收集" : "展开参数收集"}
               aria-pressed={paramFloatOpen}
-              onClick={() => setParamFloatOpen((current) => !current)}
+              onClick={() => {
+                const next = !paramFloatOpen;
+                // 三个入口互斥：打开参数收集就收起顶天立地面板
+                if (next) setInspectorOpen(false);
+                setParamFloatOpen(next);
+              }}
             >
               <ListChecks size={17} />
             </button>

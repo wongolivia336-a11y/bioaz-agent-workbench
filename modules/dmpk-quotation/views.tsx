@@ -50,6 +50,7 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
 }
 
 function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: string; steps: string[]; running: boolean; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {
+  const [expandedTech, setExpandedTech] = useState<string | null>(null);
   return (
     <details className="activityChain" open={running}>
       <summary>
@@ -61,7 +62,29 @@ function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: 
       <div className="activityChainPanel">
         <header><span className={running ? "agentLogoMark isThinking" : "agentLogoMark"}><img src="/logo/bioaz-logo.svg" alt="" /></span><strong>{title.replace("已完成", "")}</strong><em>{running ? "处理中" : "4s"}</em></header>
         <div className="activitySteps">
-          {steps.map((step, index) => <p key={step} style={{ animationDelay: `${index * 70}ms` }}><i /><span><strong>{step}</strong><small>{processStepDetail(step)}</small></span></p>)}
+          {steps.map((step) => (
+            <p key={step}>
+              <i />
+              <span>
+                <strong>{step}</strong>
+                <small>{processStepDetail(step)}</small>
+                <button
+                  className="textButton"
+                  type="button"
+                  onClick={() => setExpandedTech(expandedTech === step ? null : step)}
+                >
+                  技术详情
+                </button>
+                {expandedTech === step ? (
+                  <pre className="techBlock">
+                    {processStepTech(step)}
+                    {"\n"}job_id=job_dmpk_4c1f8a2e9b7d
+                    {"\n"}trace_id=trc_quotation_58ad31
+                  </pre>
+                ) : null}
+              </span>
+            </p>
+          ))}
         </div>
       </div>
     </details>
@@ -171,4 +194,15 @@ export function DmpkArtifactPreviewModal({ kind, onClose }: { kind: "word" | "ex
 
 function PreviewTable({ title, rows }: { title: string; rows: string[][] }) {
   return <div className="previewTableWrap"><h3>{title}</h3><table className="previewTable"><thead><tr><th>类别</th><th>项目</th><th>说明</th></tr></thead><tbody>{rows.map((row) => <tr key={row.join("-")}><td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td></tr>)}</tbody></table></div>;
+}
+
+function processStepTech(step: string) {
+  if (step.includes("读取")) return "parser=nlp-slot-filler/v3  fields_matched=6  confidence=0.91";
+  if (step.includes("识别")) return "router=business-line-classifier  matched=DMPK/PK  score=0.88";
+  if (step.includes("检查")) return "validator=required-fields  checked=14  missing=0";
+  if (step.includes("匹配 PK")) return "rule_set=animal-experiment/v8  hit=3  price_table=pt_sd_rat_2026";
+  if (step.includes("匹配生物")) return "rule_set=bioanalysis/v5  hit=2  method=LC-MS/MS";
+  if (step.includes("生成")) return "renderer=docx+xlsx  template=dmpk_quote_v8  pages=4";
+  if (step.includes("校验")) return "checker=amount-consistency  page=xlsx=docx  delta=0.00";
+  return "step executed";
 }
