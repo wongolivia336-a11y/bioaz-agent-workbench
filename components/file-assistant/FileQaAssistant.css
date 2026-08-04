@@ -438,7 +438,7 @@
   width: 22px;
   height: 22px;
   place-items: center;
-  animation: logoBreath 1600ms ease-in-out infinite;
+  animation: bioazThinkingPulse 1600ms var(--bioaz-ease-in-out-2) infinite;
 }
 
 .fileQaChatThinkingLogo img {
@@ -537,17 +537,7 @@
   }
 }
 
-@keyframes logoBreath {
-  0%,
-  100% {
-    opacity: 0.86;
-    transform: scale(1) rotate(-1deg);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.035) rotate(1.5deg);
-  }
-}
+/* logoBreath 已并入 design-system.css 的 bioazThinkingPulse */
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 

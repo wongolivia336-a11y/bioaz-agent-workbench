@@ -1957,23 +1957,12 @@ button.inspectorParameterField:hover { background: var(--surface); }
 
 .inspectorParameterField.isEditing svg {
   color: var(--brand);
-  animation: parameterEditNudge 420ms ease;
 }
 
 .dmpkComposerWrap.needsAttention .dmpkComposer {
-  animation: composerAttention 680ms ease;
 }
 
-@keyframes parameterEditNudge {
-  0%, 100% { transform: rotate(0); }
-  35% { transform: rotate(-10deg) translateY(-1px); }
-  70% { transform: rotate(8deg); }
-}
 
-@keyframes composerAttention {
-  0%, 100% { border-color: var(--line); box-shadow: 0 18px 48px rgba(17, 19, 24, 0.09); }
-  45% { border-color: rgba(41, 67, 255, 0.42); box-shadow: 0 18px 52px rgba(41, 67, 255, 0.15), 0 0 0 3px rgba(41, 67, 255, 0.07); }
-}
 
 .roleSelectorMenu {
   width: 356px;
@@ -2078,7 +2067,7 @@ body > main.dmpkShell::after { content: none; }
 .newTaskIntro { position: relative; z-index: 1; display: grid; width: min(1080px, 100%); min-height: 0; align-content: center; justify-items: center; margin-inline: auto; padding: clamp(20px, 4vh, 48px) 0 clamp(28px, 5vh, 60px); transform: translateY(clamp(-22px, -2vh, -8px)); }
 
 .logoAwakening { display: grid; width: 88px; height: 88px; place-items: center; pointer-events: none; }
-.logoAwakening svg { width: 82px; height: 81px; overflow: visible; animation: logoAwakening 900ms cubic-bezier(.22,1,.36,1) both; transform-origin: center; }
+.logoAwakening svg { width: 82px; height: 81px; overflow: visible; transform-origin: center; }
 .logoAwakeningLeft { fill: url(#bioaz-left); }
 .logoAwakeningRight { fill: url(#bioaz-right); }
 .logoAwakeningDot { fill: url(#bioaz-dot); }
@@ -2147,25 +2136,15 @@ body > main.dmpkShell::after { content: none; }
   transform: none;
 }
 
-@keyframes logoAwakening {
-  0% { opacity: .18; filter: blur(14px); transform: scale(1); }
-  11% { opacity: .28; filter: blur(12px); transform: scale(1); }
-  22% { opacity: .42; filter: blur(9px); transform: scale(1); }
-  36% { opacity: .60; filter: blur(6px); transform: scale(1); }
-  49% { opacity: .78; filter: blur(3px); transform: scale(.985); }
-  62% { opacity: .92; filter: blur(1px); transform: scale(1); }
-  78% { opacity: 1; filter: blur(.35px); transform: scale(1); }
-  100% { opacity: 1; filter: blur(0); transform: scale(1); }
-}
 
 @keyframes introTitleArrival {
-  from { opacity: .88; filter: blur(2px); transform: translateY(6px); }
-  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+  from { opacity: .88; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes introCardArrival {
-  from { opacity: .9; filter: blur(1px); transform: translateY(8px); }
-  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+  from { opacity: .9; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes introComposerArrival {

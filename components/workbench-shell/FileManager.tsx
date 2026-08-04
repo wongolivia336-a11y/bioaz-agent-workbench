@@ -269,7 +269,7 @@ export function FileManager({
           <div className="projectFolderStrip">
             {projectCards.map((item) => (
               <button type="button" key={item.name} onClick={() => openProject(item.name)}>
-                <Folder size={18} /><span><strong>{item.name}</strong><small>{item.count} 项</small></span><ChevronRight size={15} />
+                <Folder size={16} /><span>{item.name}</span><small>{item.count} 项</small>
               </button>
             ))}
           </div>
