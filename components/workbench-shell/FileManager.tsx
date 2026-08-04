@@ -29,7 +29,7 @@ import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbe
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { ProjectActivityTab } from "./ProjectActivityTab";
 import { ProjectPlanTab } from "./ProjectPlanTab";
-import { Menu, MenuGroup, MenuItem } from "../ui";
+import { Menu, MenuGroup, MenuItem, NavTabs } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
@@ -269,7 +269,7 @@ export function FileManager({
           <div className="projectFolderStrip">
             {projectCards.map((item) => (
               <button type="button" key={item.name} onClick={() => openProject(item.name)}>
-                <Folder size={18} /><span><strong>{item.name}</strong><small>{item.count} 项</small></span><ChevronRight size={15} />
+                <Folder size={16} /><span>{item.name}</span><small>{item.count} 项</small>
               </button>
             ))}
           </div>
@@ -359,20 +359,7 @@ export function FileManager({
       ) : null}
 
       {topbarTabHost ? createPortal(
-        <div className="projectSpaceTabs" role="tablist" aria-label="项目空间">
-          {projectTabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`projectSpaceTab ${activeProjectTab === tab.id ? "active" : ""}`}
-              type="button"
-              role="tab"
-              aria-selected={activeProjectTab === tab.id}
-              onClick={() => setActiveProjectTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>,
+        <NavTabs items={projectTabs} value={activeProjectTab} onChange={setActiveProjectTab} label="项目空间" />,
         topbarTabHost,
       ) : null}
 

@@ -6,7 +6,7 @@ import { aggregateSkills, digitalScenarios, digitalTeamData, mcpData, type Digit
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { McpTab } from "./McpTab";
 import { SkillsTab } from "./SkillsTab";
-import { EmptyState } from "../ui";
+import { EmptyState, NavTabs } from "../ui";
 
 type Props = {
   projects: WorkbenchProject[];
@@ -167,24 +167,18 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
 
   return (
     <section className="digitalTeamView" aria-label="数字团队">
-      <div className="digitalTeamTabs" role="tablist" aria-label="数字团队">
-        {teamTabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`digitalTeamTab ${activeTab === tab.id ? "active" : ""}`}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            onClick={() => { setActiveTab(tab.id); setQuery(""); }}
-          >
-            {tab.label}<i>{tabCounts[tab.id]}</i>
-          </button>
-        ))}
+      <NavTabs
+        className="digitalTeamTabs"
+        items={teamTabs.map((tab) => ({ ...tab, count: tabCounts[tab.id] }))}
+        value={activeTab}
+        onChange={(id) => { setActiveTab(id); setQuery(""); }}
+        label="数字团队"
+      >
         <label className="digitalTeamSearch">
           <Search size={15} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={searchPlaceholder[activeTab]} />
         </label>
-      </div>
+      </NavTabs>
 
       {activeTab === "coworkers" ? (
         <>

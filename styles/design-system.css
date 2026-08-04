@@ -592,3 +592,399 @@
   right: auto;
   left: 0;
 }
+
+/* ===== Dialog / Drawer 迁移到共享组件后的桥接 =====
+   知识库与肿瘤报告改用 bioazUiDialog / bioazUiDrawer，
+   原先挂在 .kbDialog / .knowledgeDetailPanel 上的内容样式在此对接。 */
+.bioazUiDialog .kbAssignOptions {
+  display: grid;
+  gap: 6px;
+}
+.bioazUiDialog .kbAssignOptions button {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-3);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  padding: var(--bioaz-space-3);
+  text-align: left;
+}
+.bioazUiDialog .kbAssignOptions button:hover {
+  background: var(--bioaz-surface-hover);
+}
+.bioazUiDialog .kbAssignOptions button.active {
+  border-color: rgba(92, 96, 184, 0.32);
+  background: var(--bioaz-agent-accent-soft);
+}
+.bioazUiDialog .kbAssignOptions button > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.bioazUiDialog .kbAssignOptions strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.bioazUiDialog .kbAssignOptions small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+}
+.bioazUiDialog .kbAssignOptions svg:last-child {
+  margin-left: auto;
+  color: var(--bioaz-agent-accent);
+}
+.kbAssignMark {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  place-items: center;
+}
+
+/* 抽屉内容：原 .knowledgeDetailPanel 的排版迁到 bioazUiDrawer 体内 */
+.bioazUiDrawer .bioazUiDrawerBody > dl {
+  display: grid;
+  gap: var(--bioaz-space-3);
+  margin: 0 0 var(--bioaz-space-4);
+}
+.bioazUiDrawer .bioazUiDrawerBody > dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--bioaz-space-3);
+}
+.bioazUiDrawer dt {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bioazUiDrawer dd {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.bioazUiDrawer .kbDetailSection {
+  padding-block: var(--bioaz-space-4);
+}
+.bioazUiDrawer .kbDetailSection + .kbDetailSection {
+  border-top: 1px solid var(--bioaz-border);
+}
+.bioazUiDrawer .kbDetailSectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bioaz-space-2);
+  margin-bottom: var(--bioaz-space-2);
+}
+.bioazUiDrawer .kbDetailSectionHead > strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.bioazUiDrawer .kbDetailSectionHead > button {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-agent-accent);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  margin-left: auto;
+  padding: 0;
+}
+.bioazUiDrawer .kbScopeOption {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  padding: 9px var(--bioaz-space-3);
+}
+.bioazUiDrawer .kbScopeOption + .kbScopeOption {
+  margin-top: 6px;
+}
+.bioazUiDrawer .kbScopeOption.active {
+  border-color: rgba(92, 96, 184, 0.32);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-text-primary);
+}
+.bioazUiDrawer .kbScopeOption svg {
+  margin-left: auto;
+  color: var(--bioaz-agent-accent);
+}
+.bioazUiDrawer .kbAssignedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--bioaz-space-2);
+}
+.bioazUiDrawer .kbAssignedList > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+/* ===================================================================
+   NavTabs — 换「看什么」。下划线式，可带计数徽标
+   =================================================================== */
+.bioazUiNavTabs {
+  --bioaz-navtab-pad-x: 14px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--bioaz-space-1);
+  overflow-x: auto;
+}
+.bioazUiNavTab {
+  position: relative;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 500;
+  padding: 10px var(--bioaz-navtab-pad-x);
+  white-space: nowrap;
+}
+.bioazUiNavTab:hover:not(:disabled) {
+  color: var(--bioaz-text-primary);
+}
+.bioazUiNavTab.active {
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+}
+.bioazUiNavTab.active::after {
+  position: absolute;
+  right: var(--bioaz-navtab-pad-x);
+  bottom: -1px;
+  left: var(--bioaz-navtab-pad-x);
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--bioaz-agent-accent);
+  content: "";
+}
+.bioazUiNavTab:disabled {
+  color: var(--bioaz-text-disabled);
+  cursor: not-allowed;
+}
+.bioazUiNavTab > i {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+  margin-left: 6px;
+  padding: 1px 7px;
+}
+.bioazUiNavTab.active > i {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+/* ===================================================================
+   SegmentedControl — 换「怎么看」。同一内容的不同呈现
+   =================================================================== */
+.bioazUiSegmented {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 2px;
+}
+.bioazUiSegmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--bioaz-type-small-size);
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+.bioazUiSegmented button:hover {
+  color: var(--bioaz-text-primary);
+}
+.bioazUiSegmented button.active {
+  background: var(--bioaz-surface);
+  box-shadow: var(--bioaz-shadow-subtle);
+  color: var(--bioaz-text-primary);
+  font-weight: 500;
+}
+
+/* header 的 Tab 层更紧凑，只调内距变量，不另起一套类 */
+.topbarTabLayer .bioazUiNavTabs {
+  --bioaz-navtab-pad-x: 12px;
+}
+
+/* ===================================================================
+   思考中动效 — 全局唯一一套
+   -------------------------------------------------------------------
+   此前有 5 套并存：logoBreath / tumorLogoBreath+Glint+Sweep /
+   dmpkLogoBreath+Sheen / assistantLogoThink+Halo / logoAwakening。
+   同一个概念五种实现，且多数动 filter、box-shadow、left 这类
+   合成器无法优化的属性（dmpkLogoSheen 动 left，每帧触发重排）。
+
+   这里只动 transform 与 opacity，两者都能交给 GPU 合成。
+   =================================================================== */
+@keyframes bioazThinkingPulse {
+  0%, 100% {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+.bioazUiThinkingMark,
+.agentLogoMark.isThinking,
+.motionLogo.running,
+.assistantThinkingLogo img,
+.dmpkLogoMark.isThinking {
+  animation: bioazThinkingPulse 1600ms var(--bioaz-ease-in-out-2) infinite;
+  will-change: transform, opacity;
+}
+
+/* 首页 logo 入场沿用 review.css 的 reviewMarkSettle（已是 transform+opacity），
+   这里不再另起一条，避免两条入场动画互相覆盖。 */
+
+/* 光晕、扫光一类装饰层统一撤除：它们跑在 filter/mask/left 上 */
+.assistantThinkingLogo::after,
+.dmpkLogoMark::after,
+.motionLogo::after {
+  display: none;
+  content: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bioazUiThinkingMark,
+  .agentLogoMark.isThinking,
+  .motionLogo.running,
+  .assistantThinkingLogo img,
+  .dmpkLogoMark.isThinking,
+  .logoAwakening svg {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===================================================================
+   文件夹 chip — 项目中枢与知识库共用一种形态
+   -------------------------------------------------------------------
+   两者语义相同（进入一个容器），此前一个是换行小 chip、
+   一个是 112px 高的三列网格卡片。统一为 chip：文件夹会越来越多
+   且有嵌套，网格卡片占屏严重。
+   =================================================================== */
+.projectFolderStrip,
+.kbFolderStrip {
+  display: flex;
+  width: auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  grid-template-columns: none;
+  margin: 0 0 var(--bioaz-space-4);
+}
+.projectFolderStrip > button,
+.kbFolderStrip > button {
+  display: inline-flex;
+  min-height: 0;
+  align-items: center;
+  gap: 7px;
+  grid-template-columns: none;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  box-shadow: none;
+  color: var(--bioaz-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  text-align: left;
+  transform: none;
+  transition:
+    border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-2),
+    background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-2);
+}
+/* hover 只变边框与底色——不上浮、不加阴影 */
+.projectFolderStrip > button:hover,
+.kbFolderStrip > button:hover {
+  border-color: rgba(92, 96, 184, 0.28);
+  background: var(--bioaz-surface-hover);
+  box-shadow: none;
+  transform: none;
+}
+.projectFolderStrip > button > svg:first-child,
+.kbFolderStrip > button > svg:first-child {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--bioaz-text-tertiary);
+  transform: none;
+}
+.projectFolderStrip > button:hover > svg:first-child,
+.kbFolderStrip > button:hover > svg:first-child {
+  color: var(--bioaz-agent-accent);
+  transform: none;
+}
+.projectFolderStrip > button > span,
+.kbFolderStrip > button > span {
+  display: inline;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 0;
+}
+.projectFolderStrip > button > small,
+.kbFolderStrip > button > small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+/* chip 内文字回归单行行高：旧的网格卡片样式给 span/small 设过大 line-height，
+   chip 形态下会把按钮撑到 80px+。 */
+.projectFolderStrip > button > span,
+.kbFolderStrip > button > span,
+.projectFolderStrip > button > small,
+.kbFolderStrip > button > small {
+  display: inline;
+  min-height: 0;
+  height: auto;
+  line-height: 1.35;
+  margin: 0;
+  padding: 0;
+}
+.projectFolderStrip > button,
+.kbFolderStrip > button {
+  min-height: 0;
+  height: auto;
+  line-height: 1.35;
+}

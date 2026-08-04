@@ -384,18 +384,9 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .assistantThinking { align-items: center; min-height: 36px; }
 .assistantThinkingLogo { position: relative; display: grid; width: 28px; height: 26px; place-items: center; flex: 0 0 auto; }
-.assistantThinkingLogo::after {
-  position: absolute;
-  inset: 2px;
-  border-radius: 50%;
-  background: rgba(41, 0, 255, .09);
-  filter: blur(8px);
-  content: "";
-  animation: assistantLogoHalo 1200ms ease-in-out infinite;
-}
-.assistantThinkingLogo img { position: relative; z-index: 1; width: 24px; height: 21px; object-fit: contain; animation: assistantLogoThink 1200ms cubic-bezier(.4,0,.2,1) infinite; }
-@keyframes assistantLogoThink { 0%,100% { transform: translateY(0) scale(.97); opacity: .76; } 50% { transform: translateY(-1px) scale(1.035); opacity: 1; } }
-@keyframes assistantLogoHalo { 0%,100% { transform: scale(.78); opacity: .25; } 50% { transform: scale(1.12); opacity: .65; } }
+/* 光晕层曾是一个 filter: blur(8px) 的圆盘 + infinite 缩放，成本高且不必要。
+   思考动效由 design-system.css 的 bioazThinkingPulse 统一提供。 */
+.assistantThinkingLogo img { position: relative; z-index: 1; width: 24px; height: 21px; object-fit: contain; }
 
 @media (prefers-reduced-motion: reduce) {
   .assistantThinkingLogo img,
@@ -460,9 +451,10 @@ button { -webkit-tap-highlight-color: transparent; }
   from { opacity: 0; transform: translateY(5px) scale(.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+/* clip-path 动画每帧都要重新裁切，换成纯位移 */
 @keyframes reviewHeadingSettle {
-  from { opacity: 0; clip-path: inset(0 0 18% 0); transform: translateY(7px); }
-  to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes reviewGroupSettle {
   from { opacity: 0; transform: translateY(8px); }
@@ -647,7 +639,6 @@ button { -webkit-tap-highlight-color: transparent; }
   border-color: var(--bioaz-agent-accent);
   background: var(--bioaz-surface);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--bioaz-agent-accent) 9%, transparent);
-  animation: tumorTimelineBreath 1800ms ease-in-out infinite;
 }
 .tumor-reportModuleShell .timelineLine {
   background: linear-gradient(
@@ -669,69 +660,9 @@ button { -webkit-tap-highlight-color: transparent; }
   overflow: hidden;
   isolation: isolate;
 }
-.tumor-reportModuleShell .motionLogo.running img {
-  animation: tumorLogoBreath 1800ms ease-in-out infinite;
-  transform-origin: center;
-}
+/* 思考动效由 design-system.css 统一提供；扫光层（mask + 遮罩渐变）撤除 */
 .tumor-reportModuleShell .motionLogo.running > span {
-  z-index: 3;
-  inset: 0;
-  border-radius: 0;
-  background: linear-gradient(
-    112deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.14) 41%,
-    rgba(255, 255, 255, 0.88) 49%,
-    rgba(255, 255, 255, 0.18) 57%,
-    transparent 68%
-  );
-  opacity: 0;
-  pointer-events: none;
-  -webkit-mask: url("/logo/bioaz-logo.svg") center / 24px 20px no-repeat;
-  mask: url("/logo/bioaz-logo.svg") center / 24px 20px no-repeat;
-  animation: tumorLogoGlint 240ms var(--bioaz-ease-emphasized) both;
-}
-.tumor-reportModuleShell .motionLogo.running[data-step="0"] > span {
-  animation-duration: 520ms;
-}
-
-@keyframes tumorLogoBreath {
-  0%,
-  100% {
-    opacity: 0.9;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.02);
-  }
-}
-
-@keyframes tumorLogoGlint {
-  0% {
-    opacity: 0;
-    transform: translateX(-80%);
-  }
-  22% {
-    opacity: 0.78;
-  }
-  78% {
-    opacity: 0.78;
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(80%);
-  }
-}
-
-@keyframes tumorTimelineBreath {
-  0%,
-  100% {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--bioaz-agent-accent) 7%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 0 5px color-mix(in srgb, var(--bioaz-agent-accent) 11%, transparent);
-  }
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -969,52 +900,8 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #fff;
 }
 
-/* A visible light sweep made from a second Logo layer, clipped by a moving mask. */
-.tumor-reportModuleShell .motionLogo.running > span {
-  inset: 4px 2px;
-  background: url("/logo/bioaz-logo.svg") center / 24px 20px no-repeat;
-  filter: brightness(2.15) saturate(0.65);
-  opacity: 0;
-  -webkit-mask-image: linear-gradient(
-    112deg,
-    transparent 35%,
-    #000 45%,
-    #000 55%,
-    transparent 65%
-  );
-  mask-image: linear-gradient(
-    112deg,
-    transparent 35%,
-    #000 45%,
-    #000 55%,
-    transparent 65%
-  );
-  -webkit-mask-size: 260% 100%;
-  mask-size: 260% 100%;
-  -webkit-mask-position: 130% 0;
-  mask-position: 130% 0;
-  animation: tumorLogoVisibleSweep 620ms var(--bioaz-ease-emphasized) both;
-}
-.tumor-reportModuleShell .motionLogo.running[data-step="0"] > span {
-  animation-duration: 760ms;
-}
-
-@keyframes tumorLogoVisibleSweep {
-  0% {
-    opacity: 0;
-    -webkit-mask-position: 130% 0;
-    mask-position: 130% 0;
-  }
-  18%,
-  82% {
-    opacity: 0.96;
-  }
-  100% {
-    opacity: 0;
-    -webkit-mask-position: -30% 0;
-    mask-position: -30% 0;
-  }
-}
+/* 扫光层已撤除：它同时动 filter 与 mask-position，两者都无法交给合成器。
+   思考动效统一由 design-system.css 的 bioazThinkingPulse 提供。 */
 
 /* Scroll-aware confirmation Gate: stable geometry, internal list scroll, no hover layout. */
 .tumor-reportModuleShell .gateDecision,
@@ -1719,22 +1606,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpk-quotationModuleShell .agentLogoMark.isThinking {
   position: relative;
   overflow: hidden;
-  animation: dmpkLogoBreath 1800ms var(--bioaz-ease-standard) infinite;
 }
-.dmpk-quotationModuleShell .agentLogoMark.isThinking::after {
-  position: absolute;
-  inset: -25% auto -25% -65%;
-  width: 42%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.92),
-    transparent
-  );
-  content: "";
-  transform: skewX(-18deg);
-  animation: dmpkLogoSheen 1900ms var(--bioaz-ease-standard) infinite;
-}
+/* 原本这里挂一条 infinite 扫光，动的是 left —— 每帧触发重排。已撤除。 */
 .dmpk-quotationModuleShell .artifactCards {
   display: grid;
   gap: var(--bioaz-space-3);
@@ -1764,35 +1637,6 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
 }
 
-@keyframes dmpkLogoBreath {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.82;
-  }
-  50% {
-    transform: scale(1.035);
-    opacity: 1;
-  }
-}
-@keyframes dmpkLogoSheen {
-  0%,
-  24% {
-    left: -65%;
-    opacity: 0;
-  }
-  38% {
-    opacity: 0.9;
-  }
-  62% {
-    left: 122%;
-    opacity: 0;
-  }
-  100% {
-    left: 122%;
-    opacity: 0;
-  }
-}
 
 @media (max-width: 1199px) {
   .dmpk-quotationModuleShell > .dmpkPanel.isOpen {
@@ -2905,14 +2749,14 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: var(--bioaz-radius-tool);
   animation: projectJustCreated 2.4s var(--bioaz-ease-standard);
 }
+/* 用 background-color 而非 background 简写：简写会连带展开 background-position，
+   看起来像在动位置，实际只是底色渐隐。 */
 @keyframes projectJustCreated {
   0%, 55% {
-    background: rgba(92, 96, 184, 0.14);
-    box-shadow: inset 2px 0 0 var(--bioaz-agent-accent);
+    background-color: rgba(92, 96, 184, 0.14);
   }
   100% {
-    background: transparent;
-    box-shadow: inset 2px 0 0 transparent;
+    background-color: transparent;
   }
 }
 

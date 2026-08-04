@@ -2,7 +2,7 @@
 
 import { Bot, Check, Columns3, Filter, LayoutList, Plus, Users } from "lucide-react";
 import { InlineSelect } from "./InlineSelect";
-import { EmptyState, Menu, MenuItem } from "../ui";
+import { EmptyState, Menu, MenuItem, SegmentedControl } from "../ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -47,14 +47,15 @@ export function ProjectPlanTab({ project }: { project: string }) {
     <section className="projectTabPanel projectPlanPanel">
       {host ? createPortal(
         <div className="libraryToolLayer">
-          <div className="tabViewSwitch" role="tablist" aria-label="计划视图">
-            <button className={view === "list" ? "active" : ""} type="button" role="tab" aria-selected={view === "list"} onClick={() => setView("list")}>
-              <LayoutList size={14} />列表
-            </button>
-            <button className={view === "board" ? "active" : ""} type="button" role="tab" aria-selected={view === "board"} onClick={() => setView("board")}>
-              <Columns3 size={14} />看板
-            </button>
-          </div>
+          <SegmentedControl
+            items={[
+              { id: "list", label: "列表", icon: <LayoutList size={14} /> },
+              { id: "board", label: "看板", icon: <Columns3 size={14} /> },
+            ]}
+            value={view}
+            onChange={setView}
+            label="计划视图"
+          />
           <Menu icon={<Users size={16} />} label="负责人" active={Boolean(assigneeFilter)}>
             <MenuItem active={!assigneeFilter} onSelect={() => setAssigneeFilter(null)}>全部负责人</MenuItem>
             {projectMembers.map((member) => (
