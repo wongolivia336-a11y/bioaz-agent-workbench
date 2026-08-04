@@ -5929,3 +5929,71 @@ button { -webkit-tap-highlight-color: transparent; }
   border-left: 1px solid var(--bioaz-border);
   margin: 0;
 }
+
+/* ===================================================================
+   参数补全卡 —— 文字尺寸与 hover 完全解耦
+   -------------------------------------------------------------------
+   基础态 .warningDecisionHeader strong 是 16px，压制层写的是 14px，
+   两者特异性不同，于是标题在 14/16 之间跳。这里按元素钉死，
+   无论 hover / focus-within 都取同一组值。
+   =================================================================== */
+.parameterTaskCard .warningDecisionHeader strong,
+.parameterTaskCard:hover .warningDecisionHeader strong,
+.parameterTaskCard:focus-within .warningDecisionHeader strong,
+.dmpkComposerWrap .parameterTaskCard .warningDecisionHeader strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+  letter-spacing: 0;
+}
+.parameterTaskCard .warningDecisionHeader span,
+.parameterTaskCard:hover .warningDecisionHeader span,
+.parameterTaskCard:focus-within .warningDecisionHeader span {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.parameterTaskCard .decisionCopy strong,
+.parameterTaskCard:hover .decisionCopy strong,
+.parameterTaskCard:focus-within .decisionCopy strong {
+  font-size: 14px;
+  line-height: 21px;
+}
+.parameterTaskCard .decisionCopy span,
+.parameterTaskCard:hover .decisionCopy span,
+.parameterTaskCard:focus-within .decisionCopy span {
+  font-size: 12px;
+  line-height: 18px;
+}
+.parameterTaskCard .decisionIndex,
+.parameterTaskCard:hover .decisionIndex,
+.parameterTaskCard:focus-within .decisionIndex {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ===================================================================
+   DMPK 产物面板 —— 去掉框里套框
+   面板本身已是容器，内部卡片不该再画一层边框与底色。
+   =================================================================== */
+.dmpk-quotationModuleShell .dmpkInspectorRail .dmpkInspectorList,
+.dmpk-quotationModuleShell .dmpkInspectorRail .inspectorPanelBody,
+.dmpk-quotationModuleShell .dmpkInspectorRail .workbenchInspectorPanel,
+.dmpk-quotationModuleShell .dmpkInspectorRail > .secondaryInspectorSlot > * {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+}
+.dmpk-quotationModuleShell .dmpkInspectorRail .panelIntro,
+.dmpk-quotationModuleShell .dmpkInspectorRail .inspectorInfoRow {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+}
