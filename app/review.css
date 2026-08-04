@@ -5029,11 +5029,11 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 12px;
 }
 /* 序号恒定 */
+/* 参数卡的序号另有一套 24px，不并入这里，避免两个尺寸打架 */
 .decisionIndex,
 .stackDecision .decisionIndex,
 .stackDecision:hover .decisionIndex,
-.gateDecision .decisionIndex,
-.parameterTaskCard .decisionIndex {
+.gateDecision .decisionIndex {
   width: 28px;
   min-width: 28px;
   height: 28px;
@@ -5042,24 +5042,6 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 600;
 }
 .decisionRow.done .decisionIndex { animation: none; }
-/* 叠卡位移彻底关闭 */
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3),
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(2),
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(3),
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) {
-  position: static;
-  inset: auto;
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-}
-.parameterTaskCard:not(:hover):not(:focus-within) .decisionRow:nth-child(n + 2) > * { visibility: visible; }
-.parameterTaskCard:not(:hover):not(:focus-within) :is(.warningDecisionList, .decisionRow) {
-  position: static;
-  min-height: 0;
-}
-
 /* ===== 分析上下文卡片：整卡可点，与思考卡同宽，形态尽量简约 ===== */
 .analysisContextCard {
   display: block;
@@ -5317,21 +5299,6 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 /* 右侧栏现在只承载产物与依据 */
 .dmpkPanel.dmpkInspectorRail > .secondaryInspectorSlot { height: 100%; }
-
-/* chatflow 里的参数卡：去掉悬停动效，保持静止 */
-.parameterTaskCard,
-.parameterTaskCard:hover,
-.parameterTaskCard:focus-within,
-.parameterTaskCard * {
-  transition: none;
-  animation: none;
-  transform: none;
-}
-.parameterTaskCard:hover {
-  border-color: var(--bioaz-border);
-  box-shadow: none;
-}
-
 /* 浮层定位：只锚右侧，避免被 left 规则拉满宽度 */
 .dmpkShell > .paramFloatCard.persistentParameterCard {
   position: fixed;
@@ -5756,41 +5723,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .paramCollectProgress > i {
   background: color-mix(in srgb, var(--bioaz-brand-primary) 39%, transparent);
 }
-
-/* ===================================================================
-   参数补全卡 —— 全静态，无 hover 动效
-   与肿瘤报告的确认卡片同一种「不动」的手感。
-   =================================================================== */
-.parameterTaskCard,
-.parameterTaskCard *,
-.parameterTaskCard:hover,
-.parameterTaskCard:focus-within {
-  transition: none;
-  animation: none;
-}
-.parameterTaskCard:hover,
-.parameterTaskCard:focus-within {
-  border-color: var(--bioaz-border);
-  background: var(--bioaz-surface);
-  box-shadow: none;
-  transform: none;
-}
-/* 选项按钮只留最轻的底色反馈，不位移不投影 */
-.parameterTaskCard .optionGrid button:hover,
-.parameterTaskCard .customOptionInput:hover {
-  border-color: var(--bioaz-border-strong);
-  background: var(--bioaz-surface-hover);
-  box-shadow: none;
-  transform: none;
-}
-.parameterTaskCard .decisionRow,
-.parameterTaskCard .decisionRow:hover {
-  border-color: var(--bioaz-border);
-  background: var(--bioaz-surface);
-  box-shadow: none;
-  transform: none;
-}
-
 /* ===================================================================
    知识库：所有区块共用一个内容宽度，左右对齐
    -------------------------------------------------------------------
@@ -5928,4 +5860,86 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
   border-left: 1px solid var(--bioaz-border);
   margin: 0;
+}
+/* ===================================================================
+   DMPK 产物面板 —— 去掉框里套框
+   面板本身已是容器，内部卡片不该再画一层边框与底色。
+   =================================================================== */
+.dmpk-quotationModuleShell .dmpkInspectorRail .dmpkInspectorList,
+.dmpk-quotationModuleShell .dmpkInspectorRail .inspectorPanelBody,
+.dmpk-quotationModuleShell .dmpkInspectorRail .workbenchInspectorPanel,
+.dmpk-quotationModuleShell .dmpkInspectorRail > .secondaryInspectorSlot > * {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+}
+.dmpk-quotationModuleShell .dmpkInspectorRail .panelIntro,
+.dmpk-quotationModuleShell .dmpkInspectorRail .inspectorInfoRow {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+}
+
+/* ===================================================================
+   参数补全卡 —— 单一出处
+   -------------------------------------------------------------------
+   此前这里堆了 14 段带 :hover / :focus-within / :not(:hover) 的压制层，
+   彼此覆盖（decisionIndex 一处 28px、一处 24px），于是标题与卡片
+   在悬停时忽大忽小。全部删除，改为这一组不带任何伪类的规则：
+   卡片的尺寸与字号不随指针状态变化，从根上不存在可跳的余地。
+   =================================================================== */
+.parameterTaskCard {
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: var(--bioaz-surface);
+  box-shadow: none;
+}
+.parameterTaskCard .warningDecisionHeader strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+}
+.parameterTaskCard .warningDecisionHeader span {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.parameterTaskCard .warningDecisionHeader small {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+}
+.parameterTaskCard .decisionCopy strong { font-size: 14px; line-height: 21px; }
+.parameterTaskCard .decisionCopy span { font-size: 12px; line-height: 18px; }
+.parameterTaskCard .decisionIndex {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  font-size: 12px;
+  line-height: 1;
+}
+.parameterTaskCard .decisionRow {
+  position: static;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: var(--bioaz-surface);
+  box-shadow: none;
+  min-height: 0;
+  opacity: 1;
+}
+.parameterTaskCard .warningDecisionList {
+  position: static;
+  min-height: 0;
+}
+/* 唯一的指针反馈留给可点的选项，且只改颜色 */
+.parameterTaskCard .optionGrid button {
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.parameterTaskCard .optionGrid button:hover {
+  border-color: var(--bioaz-border-strong);
+  background: var(--bioaz-surface-hover);
 }

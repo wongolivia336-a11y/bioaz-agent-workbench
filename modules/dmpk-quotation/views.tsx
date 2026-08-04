@@ -60,7 +60,7 @@ function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: 
         <em>{running ? "处理中" : "4s"}</em>
       </summary>
       <div className="activityChainPanel">
-        <header><span className={running ? "agentLogoMark isThinking" : "agentLogoMark"}><img src="/logo/bioaz-logo.svg" alt="" /></span><strong>{title.replace("已完成", "")}</strong><em>{running ? "处理中" : "4s"}</em></header>
+        {/* summary 里已经有 logo 与标题，展开后不再重复一栏 */}
         <div className="activitySteps">
           {steps.map((step) => (
             <p key={step}>

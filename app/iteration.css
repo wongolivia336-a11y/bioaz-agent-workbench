@@ -2071,11 +2071,13 @@ body > main.dmpkShell::after { content: none; }
 .logoAwakeningLeft { fill: url(#bioaz-left); }
 .logoAwakeningRight { fill: url(#bioaz-right); }
 .logoAwakeningDot { fill: url(#bioaz-dot); }
-.newTaskIntro h1 { margin: 24px 0 36px; color: var(--home-ink); font-size: clamp(34px, 2.2vw, 36px); font-weight: 600; letter-spacing: -.035em; line-height: 1.18; opacity: .88; filter: blur(2px); transform: translateY(6px); }
+/* 这三项原是入场动画的起始帧；动画已改为只动 opacity 与 transform，
+   起始帧不能再写死在基础态上，否则标题永远停在模糊状态。 */
+.newTaskIntro h1 { margin: 24px 0 36px; color: var(--home-ink); font-size: clamp(34px, 2.2vw, 36px); font-weight: 600; letter-spacing: -.035em; line-height: 1.18; }
 .introSequenceStarted .newTaskIntro h1 { animation: introTitleArrival 300ms cubic-bezier(.22,1,.36,1) 120ms both; }
 
 .taskExampleGrid { display: grid; width: min(1080px, 100%); grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-.taskExampleGrid button { position: relative; min-height: 132px; overflow: hidden; gap: 20px; border: 1px solid var(--home-line); border-radius: 14px; background: rgba(255,255,255,.92); padding: 18px; color: #334155; box-shadow: 0 1px 2px rgba(15,23,42,.025); opacity: .9; filter: blur(1px); transform: translateY(8px); transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
+.taskExampleGrid button { position: relative; min-height: 132px; overflow: hidden; gap: 20px; border: 1px solid var(--home-line); border-radius: 14px; background: rgba(255,255,255,.92); padding: 18px; color: #334155; box-shadow: 0 1px 2px rgba(15,23,42,.025); transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
 .introSequenceStarted .taskExampleGrid button { animation: introCardArrival 300ms cubic-bezier(.22,1,.36,1) both; }
 .introSequenceStarted .taskExampleGrid button:nth-child(1) { animation-delay: 180ms; }
 .introSequenceStarted .taskExampleGrid button:nth-child(2) { animation-delay: 215ms; }
