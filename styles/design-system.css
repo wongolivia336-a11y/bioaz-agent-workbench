@@ -988,3 +988,177 @@
   height: auto;
   line-height: 1.35;
 }
+
+/* ===================================================================
+   指针门控 —— 触屏不该有 hover 位移
+   -------------------------------------------------------------------
+   全站有 40+ 条带 transform 的 :hover 规则，只有 4 条做过门控。
+   触屏点击会合成一次 hover，元素跟着跳一下才响应，手感是错的。
+
+   这里不逐条去改那 40 多个选择器（那又是一层补丁），而是：
+   默认把这些元素的 hover 位移压平，再在支持精确指针的设备上放开。
+   新增的 hover 位移只要落在这批选择器里，自动受同一套约束。
+   =================================================================== */
+:where(
+  .taskExampleGrid button,
+  .workbenchTaskCard,
+  .knowledgeCard,
+  .digitalCoworkerCard,
+  .artifactCard,
+  .artifactMini.deliverable,
+  .decisionRow,
+  .documentAltar,
+  .uploadReadyPanel,
+  .projectFolderStrip > button,
+  .kbFolderStrip > button,
+  .bioazUiActionCard,
+  .workspaceAssistantLauncher,
+  .assistantSuggestions button,
+  .knowledgeBaseView .ambientAssistantEntry
+):hover {
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(
+    .taskExampleGrid button,
+    .workbenchTaskCard,
+    .knowledgeCard,
+    .digitalCoworkerCard,
+    .artifactCard,
+    .artifactMini.deliverable,
+    .documentAltar,
+    .uploadReadyPanel,
+    .bioazUiActionCard,
+    .workspaceAssistantLauncher,
+    .knowledgeBaseView .ambientAssistantEntry
+  ):hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+/* 已明确定为静止的卡片不参与上抬：确认类卡片要稳，扫视时不能抖 */
+:where(.decisionRow, .parameterTaskCard, .gateDecision, .stackDecision):hover {
+  transform: none;
+}
+
+/* ===================================================================
+   按压反馈 —— 响应发生在按下那一刻
+   -------------------------------------------------------------------
+   苹果交互的核心是「按下即响应」，而不是等松手。此前全站按钮点下去
+   没有任何反馈，这是「不够灵动」最直接的来源。
+
+   数值取自 apple-design / AUDIT.md：scale(0.97)、160ms、强 ease-out。
+   幅度刻意保守（0.97 而非 0.95）——医药 ToB 要克制，够察觉即可。
+   transform + opacity 都在合成器上，不会掉帧。
+   =================================================================== */
+:where(
+  button,
+  [role="button"],
+  .bioazUiButton,
+  .bioazUiIconButton,
+  .primaryButton,
+  .secondaryButton,
+  .iconButton,
+  .toolIconButton,
+  .rowActionButton,
+  .rowMoreButton,
+  .digitalFilterChip,
+  .projectFolderStrip > button,
+  .kbFolderStrip > button,
+  .bioazUiNavTab,
+  .segmentedControl button
+):not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 160ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 松手回弹稍快，形成「按得动、弹得快」的非对称手感 */
+:where(
+  button,
+  [role="button"],
+  .bioazUiButton,
+  .bioazUiIconButton,
+  .primaryButton,
+  .secondaryButton,
+  .iconButton,
+  .toolIconButton
+):not(:disabled) {
+  transition: transform 120ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 大面积卡片按下时幅度更小，否则整块塌陷会显得笨重 */
+:where(
+  .bioazUiActionCard,
+  .taskExampleGrid button,
+  .digitalCoworkerCard,
+  .workbenchTaskCard,
+  .knowledgeCard,
+  .planBoardCard
+):not(:disabled):active {
+  transform: scale(0.995);
+}
+
+/* 输入框与文本域不参与按压 */
+:where(input, textarea, select, label):active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, [role="button"], .bioazUiActionCard):active {
+    transform: none;
+  }
+}
+
+/* ===================================================================
+   下拉从触发器展开，而不是从自己中心放大
+   -------------------------------------------------------------------
+   三套下拉此前都没有 transform-origin，默认从中心缩放，看起来像
+   凭空出现在按钮旁边，而不是从按钮里长出来。
+
+   origin 跟着各自的对齐边走：.toolMenu 右对齐 → top right，
+   .compactSelectMenu 与 .alignStart 左对齐 → top left。
+
+   入场用 scale(0.96) 起步（不是 scale(0)——没有东西从虚无出现），
+   150ms 落在 AUDIT.md 给下拉的 150–250ms 区间下沿，克制优先。
+   =================================================================== */
+.toolMenu,
+.inlineSelectMenu {
+  transform-origin: top right;
+}
+.toolMenu.alignStart,
+.inlineSelectMenu.alignStart,
+.compactSelectMenu {
+  transform-origin: top left;
+}
+
+@keyframes bioazMenuIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.toolMenu,
+.inlineSelectMenu,
+.compactSelectMenu {
+  animation: bioazMenuIn 150ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1)) both;
+}
+
+/* 菜单项是高频扫视目标，只换底色，不做位移 */
+.toolMenuItem:hover,
+.compactSelectMenu button:hover {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolMenu,
+  .inlineSelectMenu,
+  .compactSelectMenu {
+    animation: none;
+  }
+}
