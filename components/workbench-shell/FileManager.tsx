@@ -99,6 +99,10 @@ export function FileManager({
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rootKind, setRootKind] = useState<string | null>(null);
+  const [rootProject, setRootProject] = useState<string | null>(null);
+  const [rootSource, setRootSource] = useState<string | null>(null);
+  const [rootStatus, setRootStatus] = useState<string | null>(null);
+  const [rootTime, setRootTime] = useState<TimeBucket>("all");
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
   const [projectDraft, setProjectDraft] = useState("");
   const [activeProjectTab, setActiveProjectTab] = useState<ProjectTab>("data");
@@ -170,11 +174,19 @@ export function FileManager({
   const visibleTrashFiles = trashFiles.filter((file) => file.title.toLowerCase().includes(query.toLowerCase()));
   const rootFiles = activeFiles.filter((file) => file.space === "projects");
   const rootKindOptions = rootFiles.map((file) => file.kind).filter((kind, index, list) => list.indexOf(kind) === index);
-  const recentFiles = sortFiles(rootFiles.filter((file) => (
+  const rootProjectOptions = rootFiles.map((file) => file.project).filter((name, index, list) => list.indexOf(name) === index);
+  const rootSourceOptions = rootFiles.map(sourceOf).filter((source, index, list) => list.indexOf(source) === index);
+  const rootStatusOptions = rootFiles.map((file) => file.status).filter((status, index, list) => list.indexOf(status) === index);
+  const rootFilterActive = Boolean(rootKind || rootProject || rootSource || rootStatus || rootTime !== "all");
+  const allRootFiles = sortFiles(rootFiles.filter((file) => (
     file.title.toLowerCase().includes(query.toLowerCase())
     && (!rootKind || file.kind === rootKind)
+    && (!rootProject || file.project === rootProject)
+    && (!rootSource || sourceOf(file) === rootSource)
+    && (!rootStatus || file.status === rootStatus)
+    && (rootTime === "all" || timeBucketOf(file.updated) === rootTime)
     && (business === "全部业务" || file.business === business)
-  ))).slice(0, 6);
+  )));
 
   const upload = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []);
@@ -283,14 +295,31 @@ export function FileManager({
           />
         )}
 
-        <section className="rootRecentOutputs">
+        <section className="rootRecentOutputs rootAllFiles">
           <div className="sectionBar">
-            <strong>最近更新</strong>
-            <span>{recentFiles.length} 项</span>
+            <strong>全部文件</strong>
+            <span>{allRootFiles.length} 项</span>
             <div className="sectionBarActions">
-              <Menu icon={<Filter size={16} />} label="筛选" active={Boolean(rootKind)}>
-                <MenuItem active={!rootKind} onSelect={() => setRootKind(null)}>全部类型</MenuItem>
-                {rootKindOptions.map((kind) => <MenuItem key={kind} active={rootKind === kind} onSelect={() => setRootKind(kind)}>{kind}</MenuItem>)}
+              <Menu icon={<Filter size={16} />} label="筛选" active={rootFilterActive}>
+                <MenuGroup label="所属项目">
+                  <MenuItem active={!rootProject} onSelect={() => setRootProject(null)}>全部项目</MenuItem>
+                  {rootProjectOptions.map((name) => <MenuItem key={name} active={rootProject === name} onSelect={() => setRootProject(rootProject === name ? null : name)}>{name}</MenuItem>)}
+                </MenuGroup>
+                <MenuGroup label="文件类型">
+                  <MenuItem active={!rootKind} onSelect={() => setRootKind(null)}>全部类型</MenuItem>
+                  {rootKindOptions.map((kind) => <MenuItem key={kind} active={rootKind === kind} onSelect={() => setRootKind(rootKind === kind ? null : kind)}>{kind}</MenuItem>)}
+                </MenuGroup>
+                <MenuGroup label="来源">
+                  <MenuItem active={!rootSource} onSelect={() => setRootSource(null)}>全部来源</MenuItem>
+                  {rootSourceOptions.map((source) => <MenuItem key={source} active={rootSource === source} onSelect={() => setRootSource(rootSource === source ? null : source)}>{source}</MenuItem>)}
+                </MenuGroup>
+                <MenuGroup label="解析状态">
+                  <MenuItem active={!rootStatus} onSelect={() => setRootStatus(null)}>全部状态</MenuItem>
+                  {rootStatusOptions.map((status) => <MenuItem key={status} active={rootStatus === status} onSelect={() => setRootStatus(rootStatus === status ? null : status)}>{status}</MenuItem>)}
+                </MenuGroup>
+                <MenuGroup label="更新时间">
+                  {timeOptions.map((option) => <MenuItem key={option.id} active={rootTime === option.id} onSelect={() => setRootTime(option.id)}>{option.label}</MenuItem>)}
+                </MenuGroup>
               </Menu>
               <Menu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
                 {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
@@ -300,7 +329,7 @@ export function FileManager({
               </Menu>
             </div>
           </div>
-          <FileTable files={recentFiles} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+          <FileTable files={allRootFiles} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
         </section>
 
         <WorkspaceAssistant context="library" libraryContext={{ project: "全部项目", business: "全部业务" }} />
@@ -393,8 +422,8 @@ export function FileManager({
               ) : null}
               {projectFiles.length ? (
                 <div className="projectFileLanes projectOverviewLanes">
-                  <OverviewLane title="项目资料" icon={<FolderInput size={18} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} files={projectInputs.slice(0, 5)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
-                  <OverviewLane title="任务产物" icon={<FolderOutput size={18} />} description={`由项目任务生成 · ${projectOutputs.length} 项`} files={projectOutputs.slice(0, 5)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="项目资料" icon={<FolderInput size={18} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} total={projectInputs.length} files={projectInputs.slice(0, 10)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="任务产物" icon={<FolderOutput size={18} />} description={`由项目任务生成 · ${projectOutputs.length} 项`} total={projectOutputs.length} files={projectOutputs.slice(0, 10)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
                 </div>
               ) : (
                 <EmptyState
@@ -528,7 +557,7 @@ function SelectToggle({ checked, label, onToggle }: { checked: boolean; label: s
   );
 }
 
-function OverviewLane({ title, icon, description, files, onOpenAll, onPreview, onDetail, onDelete }: { title: string; icon: ReactNode; description: string; files: KnowledgeFile[]; onOpenAll: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
+function OverviewLane({ title, icon, description, total, files, onOpenAll, onPreview, onDetail, onDelete }: { title: string; icon: ReactNode; description: string; total: number; files: KnowledgeFile[]; onOpenAll: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
   return (
     <section className="projectFileLane overviewFileLane">
       <div className="projectLaneHeader">
@@ -539,8 +568,10 @@ function OverviewLane({ title, icon, description, files, onOpenAll, onPreview, o
       </div>
       <div className="overviewFileViewport">
         <FileTable files={files} onPreview={onPreview} onDetail={onDetail} onDelete={onDelete} />
+        <button className="overviewViewAll" type="button" onClick={onOpenAll}>
+          <span>查看全部 {total} 项</span><ChevronRight size={14} />
+        </button>
       </div>
-      <button className="overviewViewAll" type="button" onClick={onOpenAll}>查看全部 <ChevronRight size={14} /></button>
     </section>
   );
 }
@@ -552,7 +583,7 @@ function FileTable({ files, selectable = false, selectedIds = [], onToggle, onTo
       <div className="knowledgeTableHeader" role="row">
         <span className="knowledgeHeadName">
           {selectable ? <SelectToggle checked={allSelected} label={allSelected ? "取消全选" : "全选"} onToggle={() => onToggleAll?.()} /> : null}
-          名称
+          文件名称
         </span>
         <span>文件类型</span>
         <span>来源</span>
