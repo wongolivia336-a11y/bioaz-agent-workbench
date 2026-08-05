@@ -21,12 +21,26 @@
   }
 }
 
-@media (max-width: 899px) {
+@media (max-width: 1023px) {
   .dmpkShell.workbenchShell,
   .dmpkShell.workbenchShell.sidebarCollapsed,
   .dmpkShell.moduleSessionShell,
-  .dmpkShell.moduleSessionShell.sidebarCollapsed {
-    grid-template-columns: minmax(0, 1fr);
+  .dmpkShell.moduleSessionShell.sidebarCollapsed,
+  .dmpkShell.tumor-reportModuleShell:has(> .inspector.open),
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(> .inspector.open),
+  .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned),
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned),
+  .dmpkShell.dmpk-quotationModuleShell:has(> .dmpkPanel.isOpen),
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed:has(> .dmpkPanel.isOpen) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .dmpkShell > :is(.dmpkWorkspace, .workspace),
+  .dmpkShell.workbenchShell > .dmpkWorkspace.workbenchMode,
+  .dmpkShell.moduleSessionShell > :is(.dmpkWorkspace, .workspace) {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1;
   }
 
   .dmpkShell > .sidebar {

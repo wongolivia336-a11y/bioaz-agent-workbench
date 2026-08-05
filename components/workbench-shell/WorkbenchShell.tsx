@@ -16,7 +16,9 @@ import type { WorkbenchProject } from "../../modules/types";
 import { QuotationManagement } from "../../modules/quotation-management";
 
 export default function WorkbenchShell() {
-  const [collapsed, setCollapsed] = useState(false);
+  // Start closed so narrow viewports never paint the desktop sidebar before
+  // hydration. The viewport effect below restores the expanded desktop state.
+  const [collapsed, setCollapsed] = useState(true);
   const [route, setRoute] = useState<WorkbenchRoute>("newTask");
   const [project, setProject] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState("新建任务");
@@ -200,9 +202,9 @@ export default function WorkbenchShell() {
   }, [highlightedProjectId]);
 
   useEffect(() => {
-    const compactViewport = window.matchMedia("(max-width: 899px)");
+    const compactViewport = window.matchMedia("(max-width: 1023px)");
     const syncSidebar = (event: MediaQueryList | MediaQueryListEvent) => {
-      if (event.matches) setCollapsed(true);
+      setCollapsed(event.matches);
     };
     syncSidebar(compactViewport);
     compactViewport.addEventListener("change", syncSidebar);
@@ -210,13 +212,13 @@ export default function WorkbenchShell() {
   }, []);
 
   useEffect(() => {
-    if (window.matchMedia("(max-width: 899px)").matches) setCollapsed(true);
+    if (window.matchMedia("(max-width: 1023px)").matches) setCollapsed(true);
   }, [route]);
 
   useEffect(() => {
     if (collapsed) return;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && window.matchMedia("(max-width: 899px)").matches) {
+      if (event.key === "Escape" && window.matchMedia("(max-width: 1023px)").matches) {
         setCollapsed(true);
       }
     };
