@@ -4,6 +4,7 @@ import { ChevronRight, ListChecks, PanelRight, SlidersHorizontal, SquarePen, Wan
 import { useEffect, useMemo, useState } from "react";
 import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
+import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
 import {
   dmpkGroups,
@@ -52,6 +53,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     ? [{ id: "initial-request", role: "user", text: initialRequest }, { id: "context", role: "agent", text: openingMessage }]
     : [{ id: "context", role: "agent", text: openingMessage }]);
   const [composerText, setComposerText] = useState("");
+  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [stage, setStage] = useState<DmpkStage>("idle");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
@@ -87,12 +89,19 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     });
   }, [activeCoworker?.name, fields, messages, onSessionSnapshotChange, stage]);
 
-  const appendMessage = (role: DmpkChatMessage["role"], text: string) => {
-    setMessages((items) => [...items, { id: `${role}-${Date.now()}-${items.length}`, role, text }]);
+  const appendMessage = (role: DmpkChatMessage["role"], text: string, attachments?: ComposerAttachment[]) => {
+    setMessages((items) => [...items, { id: `${role}-${Date.now()}-${items.length}`, role, text, attachments }]);
+  };
+
+  /** 发送时把 chip 里的内容固化到这条用户消息上，composer 随即清空 */
+  const consumeAttachments = () => {
+    if (!attachments.length) return undefined;
+    setAttachments([]);
+    return attachments;
   };
 
   const handleInitialRequest = (text: string, skipUserMessage = false) => {
-    if (!skipUserMessage) appendMessage("user", text);
+    if (!skipUserMessage) appendMessage("user", text, consumeAttachments());
     setComposerText("");
     setStage("thinking");
     setInspectorPanelId("process");
@@ -159,7 +168,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const sendDraft = () => {
     if (!draftTabs.length) return;
     const sentTabs = draftTabs;
-    appendMessage("user", `补充报价参数：\n${sentTabs.map((tab) => `${tab.label}：${tab.value}`).join("\n")}`);
+    appendMessage("user", `补充报价参数：\n${sentTabs.map((tab) => `${tab.label}：${tab.value}`).join("\n")}`, consumeAttachments());
     setStage("thinking");
     setInspectorPanelId("process");
     window.setTimeout(() => {
@@ -194,14 +203,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const reportFeeMatch = text.match(/(?:这次|本次)?.*报告费.*?(\d[\d,]*)\s*元?/);
     const minimumSampleMatch = text.match(/以后.*?PK.*?样品.*?少于\s*(\d+)\s*个?.*?按\s*(\d+)\s*个?.*?收费/i);
     if (reportFeeMatch) {
-      appendMessage("user", text);
+      appendMessage("user", text, consumeAttachments());
       setComposerText("");
       setEditProposal({ kind: "current-price", request: text, previousPrice: 3000, nextPrice: Number(reportFeeMatch[1].replaceAll(",", "")) });
       setConversationEditing(false);
       return;
     }
     if (minimumSampleMatch) {
-      appendMessage("user", text);
+      appendMessage("user", text, consumeAttachments());
       setComposerText("");
       setEditProposal({ kind: "global-rule", request: text, minimumSamples: Number(minimumSampleMatch[2]) });
       setConversationEditing(false);
@@ -304,7 +313,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           </div>
         </header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
+        <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
       {/* 参数收集：独立浮层，不再和产物卡上下堆在同一条侧栏里 */}
       {paramFloatOpen ? (

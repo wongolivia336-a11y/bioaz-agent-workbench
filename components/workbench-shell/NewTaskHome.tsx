@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowUpRight, Check, ChevronDown, CircleAlert, Folder, Plus, Send } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, CircleAlert, Folder, Send } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition } from "../../modules/types";
 import { LogoAwakening } from "../hero/LogoAwakening";
 import { ActionCard } from "../ui";
 import { DispatchConfirmCard } from "./BioAZHelper";
 import { CoworkerSelector } from "./CoworkerSelector";
+import { MessageAttachments, WorkbenchComposer } from "./WorkbenchComposer";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 export type QuickStartItem = { id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder" };
@@ -34,11 +36,23 @@ type Props = {
 };
 
 export function NewTaskHome(props: Props) {
+  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
+  const [sentAttachments, setSentAttachments] = useState<ComposerAttachment[]>([]);
   const request = props.clarification?.request ?? props.pendingRequest;
   const helperMessage = props.clarification?.question
     ?? (props.pendingRequest && props.suggestedCoworker
       ? `我建议将这项任务分派给${props.suggestedCoworker.name}，请在下方确认。`
       : "请补充你希望完成的工作，我会识别任务并推荐合适的数字同事。");
+
+  const submit = () => {
+    if (!props.text.trim()) return;
+    // 没选项目时 shell 只会弹提示、不会真的发出去，chip 要留在原地
+    if (props.project) {
+      setSentAttachments(attachments);
+      setAttachments([]);
+    }
+    props.onSubmit();
+  };
 
   return <section className={`newTaskHome introSequenceStarted ${props.conversationStarted ? "introSequenceSettled isConversation" : ""}`}>
     {!props.conversationStarted ? <div className="newTaskIntro">
@@ -54,7 +68,7 @@ export function NewTaskHome(props: Props) {
       </ActionCard>)}</div>
     </div> : <div className="helperConversationCanvas" aria-live="polite">
       <div className="helperConversationInner">
-        {request ? <div className="helperUserMessage"><span>{request}</span></div> : null}
+        {request ? <div className="helperUserMessage"><span>{request}<MessageAttachments items={sentAttachments} /></span></div> : null}
         <div className="helperAgentMessage"><img src="/logo/bioaz-logo.svg" alt="" /><div><strong>BioAZ Helper</strong><p>{helperMessage}</p></div></div>
       </div>
     </div>}
@@ -64,11 +78,17 @@ export function NewTaskHome(props: Props) {
       {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard taskType={props.pendingTaskType ?? "待确认任务"} coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
       {!props.conversationStarted ? <ProjectSelector project={props.project} options={props.projectOptions} invalid={Boolean(props.projectNotice)} onChange={props.onProjectChange} /> : null}
       {props.conversationStarted ? <CoworkerSelector coworkers={props.coworkers} activeCoworkerId={props.activeCoworkerId} onChange={props.onCoworkerChange} /> : null}
-      <div className="newTaskComposer workbenchComposer">
-        <label className="composerAddButton" aria-label="上传文件"><Plus size={18} /><input type="file" multiple /></label>
-        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); props.onSubmit(); } }} placeholder="描述你要完成的任务..." rows={1} />
-        <button className="sendIconButton" type="button" onClick={props.onSubmit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button>
-      </div>
+      <WorkbenchComposer
+        className="newTaskComposer"
+        attachments={attachments}
+        onAttachmentsChange={setAttachments}
+        activeCoworkerId={props.conversationStarted ? props.activeCoworkerId : null}
+        project={props.project}
+        globalDrop
+      >
+        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(); } }} placeholder="描述你要完成的任务..." rows={1} />
+        <button className="sendIconButton" type="button" onClick={submit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button>
+      </WorkbenchComposer>
     </div>
   </section>;
 }

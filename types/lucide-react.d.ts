@@ -50,6 +50,7 @@ declare module "lucide-react" {
   export const Inbox: LucideIcon;
   export const LayoutList: LucideIcon;
   export const Lightbulb: LucideIcon;
+  export const Link2: LucideIcon;
   export const ListChecks: LucideIcon;
   export const LoaderCircle: LucideIcon;
   export const LogOut: LucideIcon;

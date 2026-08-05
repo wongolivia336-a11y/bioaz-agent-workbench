@@ -2,6 +2,8 @@
 
 import { ArrowLeft, ChevronDown, FileSearch, Lightbulb, ListChecks, MessageSquare, Plus, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
+import { WorkbenchComposer } from "./WorkbenchComposer";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 export function CompactSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
@@ -49,6 +51,7 @@ const assistantCopy = {
 export function WorkspaceAssistant({ context, onStartTask, libraryContext, scopeLabel: scopeOverride }: { context: AssistantContext; onStartTask?: () => void; libraryContext?: LibraryAssistantContext; scopeLabel?: string }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [question, setQuestion] = useState<string | null>(null);
   const [thinking, setThinking] = useState(false);
   const [assistantProject, setAssistantProject] = useState(libraryContext?.project ?? "全部项目");
@@ -119,7 +122,8 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext, scope
             {question ? <><div className="assistantExchange"><p>{question}</p>{thinking ? <div className="assistantThinking" role="status" aria-live="polite"><span className="assistantThinkingLogo"><img src="/logo/bioaz-logo.svg" alt="" /></span><span>正在理解并整理当前范围</span></div> : <div><Sparkles size={14} /><span>{library ? `我已结合${assistantProject === "全部项目" ? "全部项目" : assistantProject}范围内的文件与任务整理相关内容。` : knowledgeBase ? `我已在${kbScope}范围内检索并整理相关内容，下面是引用来源。` : "已按最近更新时间检查任务，顶部三项需要你处理。"}</span></div>}</div>{ambient && !thinking ? <div className="assistantReferences">{(library ? libraryReferences : knowledgeReferences).map((item) => <button type="button" key={item.title}>{item.kind === "list" ? <ListChecks size={16} /> : <FileSearch size={16} />}<span><strong>{item.title}</strong><small>{item.meta}</small></span></button>)}</div> : null}</> : <div className="assistantWelcome"><span className="assistantHeroMark"><img src="/logo/bioaz-logo.svg" alt="" /></span><strong>{ambient ? copy.welcome : "你好，我是 BioAZ Helper"}</strong><p>{ambient ? copy.intro : "找任务、查进度或发起新工作。"}</p></div>}
             {!question ? <div className="assistantSuggestions">{suggestions.map((item, index) => <button type="button" key={item} onClick={() => submit(item)}>{ambient ? [<FileSearch key="search" size={16} />, <ListChecks key="summary" size={16} />, <Lightbulb key="ideas" size={16} />][index] : null}<span>{item}</span></button>)}</div> : null}
           </div>
-          <form className="workspaceAssistantComposer workbenchComposer" onSubmit={(event) => { event.preventDefault(); submit(text); }}><label className="composerAddButton" aria-label="添加文件"><Plus size={18} /><input type="file" multiple /></label><input value={text} onChange={(event) => setText(event.target.value)} placeholder={ambient ? copy.placeholder : "给 BioAZ Helper 发消息..."} aria-label={`给 ${ambient ? copy.name : "BioAZ Helper"} 发消息`} /><button className="sendIconButton" type="submit" aria-label="发送" disabled={!text.trim()}><Send size={16} /></button></form>
+          {/* 抽屉太窄，二级悬浮子菜单会顶到屏幕边，这里只保留上传 */}
+          <WorkbenchComposer as="form" className="workspaceAssistantComposer" menu={false} attachments={attachments} onAttachmentsChange={setAttachments} onSubmit={(event) => { event.preventDefault(); submit(text); }}><input value={text} onChange={(event) => setText(event.target.value)} placeholder={ambient ? copy.placeholder : "给 BioAZ Helper 发消息..."} aria-label={`给 ${ambient ? copy.name : "BioAZ Helper"} 发消息`} /><button className="sendIconButton" type="submit" aria-label="发送" disabled={!text.trim()}><Send size={16} /></button></WorkbenchComposer>
         </section>
       ) : null}
       {!open && ambient ? (
