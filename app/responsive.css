@@ -1,0 +1,335 @@
+/* Responsive rules are imported last so the active prototype has one clear
+   place for viewport-specific overrides instead of adding more cascade layers. */
+
+.mobileSidebarBackdrop,
+.mobileModuleSidebarTrigger {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .quotationParameterBuilder {
+    grid-template-columns: minmax(180px, 0.65fr) minmax(0, 1.35fr);
+  }
+
+  .quotationFieldSettings {
+    grid-column: 1 / -1;
+  }
+
+  .ruleConfigLayout,
+  .quotationRuleGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1023px) {
+  .dmpkShell.workbenchShell,
+  .dmpkShell.workbenchShell.sidebarCollapsed,
+  .dmpkShell.moduleSessionShell,
+  .dmpkShell.moduleSessionShell.sidebarCollapsed,
+  .dmpkShell.tumor-reportModuleShell:has(> .inspector.open),
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(> .inspector.open),
+  .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned),
+  .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned),
+  .dmpkShell.dmpk-quotationModuleShell:has(> .dmpkPanel.isOpen),
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed:has(> .dmpkPanel.isOpen) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .dmpkShell > :is(.dmpkWorkspace, .workspace),
+  .dmpkShell.workbenchShell > .dmpkWorkspace.workbenchMode,
+  .dmpkShell.moduleSessionShell > :is(.dmpkWorkspace, .workspace) {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  .dmpkShell > .sidebar {
+    position: fixed;
+    z-index: 400;
+    inset: 0 auto 0 0;
+    width: min(280px, calc(100vw - 48px));
+    height: 100dvh;
+    border-radius: 0;
+    transform: translateX(0);
+    transition: transform var(--bioaz-motion-spatial) var(--bioaz-ease-emphasized);
+  }
+
+  .dmpkShell.sidebarCollapsed > .sidebar {
+    display: flex;
+    transform: translateX(-105%);
+  }
+
+  .dmpkShell:not(.sidebarCollapsed) > .mobileSidebarBackdrop {
+    position: fixed;
+    z-index: 390;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: color-mix(in srgb, var(--bioaz-text-primary) 24%, transparent);
+    cursor: default;
+  }
+
+  .dmpkShell.sidebarCollapsed .brand img,
+  .dmpkShell.sidebarCollapsed .brand span,
+  .dmpkShell.sidebarCollapsed .sidebarSearchButton,
+  .dmpkShell.sidebarCollapsed .navBlock p,
+  .dmpkShell.sidebarCollapsed .projectRow strong,
+  .dmpkShell.sidebarCollapsed .projectRow > svg:last-child,
+  .dmpkShell.sidebarCollapsed .chatRow strong,
+  .dmpkShell.sidebarCollapsed .chatRow small,
+  .dmpkShell.sidebarCollapsed .account > div:nth-child(2) {
+    display: initial;
+  }
+
+  .dmpkShell.sidebarCollapsed .sidebarActions,
+  .dmpkShell.sidebarCollapsed .workspaceViews,
+  .dmpkShell.sidebarCollapsed .projectTree,
+  .dmpkShell.sidebarCollapsed .projectGroup,
+  .dmpkShell.sidebarCollapsed .chatTree,
+  .dmpkShell.sidebarCollapsed .account {
+    display: grid;
+    width: 100%;
+  }
+
+  .mobileSidebarTrigger {
+    display: grid;
+    flex: none;
+  }
+
+  .mobileModuleSidebarTrigger {
+    position: fixed;
+    z-index: 380;
+    top: var(--bioaz-space-3);
+    left: var(--bioaz-space-3);
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid var(--bioaz-border);
+    border-radius: var(--bioaz-radius-control);
+    background: var(--bioaz-surface);
+    color: var(--bioaz-text-secondary);
+    box-shadow: var(--bioaz-shadow-subtle);
+  }
+
+  .dmpkShell:not(.sidebarCollapsed) > .mobileModuleSidebarTrigger {
+    display: none;
+  }
+
+  .dmpkWorkspace.workbenchMode > .topbar,
+  .dmpkWorkspace > .topbar,
+  .workspace > .topbar {
+    padding-inline: var(--bioaz-space-4);
+  }
+
+  .topbarPathLayer,
+  .topbarSecondRow,
+  .topbarToolLayer,
+  .topbarInlineTools {
+    min-width: 0;
+  }
+
+  .breadcrumb {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .breadcrumb > :is(span, strong, button) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .workbenchView,
+  .newTaskHome {
+    padding-inline: var(--bioaz-space-4);
+  }
+
+  .workbenchView > header,
+  .sectionBar,
+  .libraryToolLayer,
+  .quotationPageHeader,
+  .quotationToolbar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .libraryToolLayer,
+  .sectionBarActions,
+  .quotationToolbar {
+    gap: var(--bioaz-space-2);
+  }
+
+  .knowledgeSearch,
+  .quotationToolbar label {
+    width: min(100%, 360px);
+  }
+
+  .knowledgeTable,
+  .overviewFileViewport,
+  .digitalScenarioStrip,
+  .quotationTabs {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .knowledgeTableHeader,
+  .knowledgeTable > button,
+  .knowledgeTable > article {
+    min-width: 680px;
+  }
+
+  .quotationManagementPage {
+    width: calc(100% - 32px);
+    padding-block: var(--bioaz-space-6) var(--bioaz-space-10);
+  }
+
+  .quotationParameterBuilder {
+    grid-template-columns: 1fr;
+  }
+
+  .quotationFieldSettings {
+    grid-column: auto;
+  }
+
+  .workflowNodeEditor {
+    inset: auto var(--bioaz-space-4) var(--bioaz-space-4);
+    width: auto;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .dmpkWorkspace.workbenchMode,
+  .dmpkWorkspace,
+  .workspace {
+    min-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dmpkWorkspace.workbenchMode > .topbar {
+    height: auto;
+    min-height: 56px;
+    grid-template-rows: auto;
+  }
+
+  .topbarSecondRow:empty,
+  .topbarTabLayer:empty,
+  .topbarToolLayer:empty {
+    display: none;
+  }
+
+  .newTaskHome {
+    padding: 0 var(--bioaz-space-3) var(--bioaz-space-3);
+  }
+
+  .newTaskIntro {
+    align-content: start;
+    padding-block: var(--bioaz-space-6);
+    transform: none;
+  }
+
+  .logoAwakening {
+    width: 64px;
+    height: 64px;
+  }
+
+  .logoAwakening svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .newTaskIntro h1 {
+    margin: var(--bioaz-space-4) 0 var(--bioaz-space-5);
+    font-size: clamp(26px, 8vw, 32px);
+    text-align: center;
+  }
+
+  .taskExampleGrid,
+  .quotationBusinessGrid,
+  .digitalCoworkerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .taskExampleGrid {
+    gap: var(--bioaz-space-2);
+  }
+
+  .taskExampleGrid button {
+    min-height: 88px;
+    gap: var(--bioaz-space-3);
+    padding: var(--bioaz-space-3);
+  }
+
+  .newTaskComposer,
+  .newTaskComposer.workbenchComposer {
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    padding: var(--bioaz-space-3);
+  }
+
+  .newTaskComposer > .sendIconButton {
+    width: 40px;
+    height: 40px;
+  }
+
+  .workbenchView {
+    padding-inline: var(--bioaz-space-3);
+  }
+
+  .workbenchView > header,
+  .quotationPageHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sectionBarActions,
+  .batchActionBar,
+  .batchActions,
+  .quotationRuleCard > footer,
+  .quotationRuleCard > footer div,
+  .quotationDrawer > footer {
+    flex-wrap: wrap;
+  }
+
+  .knowledgeSearch,
+  .quotationToolbar label,
+  .quotationToolbar select,
+  .quotationPageHeader button {
+    width: 100%;
+  }
+
+  .quotationTable {
+    overflow-x: auto;
+  }
+
+  .quotationTableHead,
+  .quotationTable > button {
+    min-width: 520px;
+  }
+
+  .quotationDrawer {
+    width: 100%;
+    padding: var(--bioaz-space-5);
+  }
+
+  .quotationTemplateList article {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .quotationTemplateList article > :is(em, button) {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .quotationRuleSentence {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dmpkShell > .sidebar {
+    transition: none;
+  }
+}
