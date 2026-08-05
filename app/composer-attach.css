@@ -1,0 +1,385 @@
+/* ===================================================================
+   输入框能力入口 —— 加号二级菜单 / 附件 chip / 拖拽落区
+   -------------------------------------------------------------------
+   职责划分：加号只管「带什么进去、用什么能力」（文件 / 技能 / 连接器），
+   「谁来干活」永远只有输入框上方的数字同事下拉一个入口，不在这里重复。
+
+   加号此前是 5 处各写一遍的装饰性 <label>，连 onChange 都没接。现在统一
+   由 WorkbenchComposer 提供，这份样式只描述新增结构，既有 .workbenchComposer
+   的边框、投影与三列骨架保持不动。
+   =================================================================== */
+
+.composerFileInput { display: none; }
+
+.composerAttachMenu {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: center;
+}
+
+.composerAttachMenu .composerAddButton {
+  padding: 0;
+  cursor: pointer;
+}
+
+.composerAttachMenu .composerAddButton[aria-expanded="true"] {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+/* 菜单在输入框上方向上展开，origin 落在加号那一侧，看起来是从按钮里长出来的 */
+.composerAttachPanel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  z-index: 40;
+  display: grid;
+  gap: 2px;
+  min-width: 192px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: 6px;
+  box-shadow: var(--bioaz-shadow-floating);
+  transform-origin: bottom left;
+  animation: bioazComposerMenuIn var(--bioaz-motion-standard) var(--bioaz-ease-out-2);
+}
+
+.composerAttachRow { position: relative; }
+
+.composerAttachRow > button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  padding: 8px 10px;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  line-height: var(--bioaz-type-small-line);
+  text-align: left;
+  cursor: pointer;
+}
+
+.composerAttachRow > button > span { flex: 1; }
+.composerAttachRow > button svg:last-child { color: var(--bioaz-text-tertiary); }
+.composerAttachRow.isOpen > button,
+.composerAttachRow > button:hover { background: var(--bioaz-surface-hover); }
+
+/* 子面板贴着所在行的下沿展开，鼠标从行水平移过去即可，不用先绕上去 */
+.composerAttachSubmenu {
+  position: absolute;
+  bottom: -6px;
+  left: calc(100% + 8px);
+  z-index: 41;
+  display: grid;
+  gap: 6px;
+  width: 284px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: 8px;
+  box-shadow: var(--bioaz-shadow-floating);
+  transform-origin: bottom left;
+  animation: bioazComposerMenuIn var(--bioaz-motion-fast) var(--bioaz-ease-out-2);
+}
+
+.composerAttachUpload {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 2px 10px;
+  border: 1px dashed var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 9px 10px;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.composerAttachUpload svg { grid-row: 1 / span 2; color: var(--bioaz-text-secondary); }
+.composerAttachUpload small { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
+.composerAttachUpload:hover { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); }
+
+.composerAttachSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 0 10px;
+  color: var(--bioaz-text-tertiary);
+}
+
+.composerAttachSearch input {
+  width: 100%;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+}
+
+.composerAttachSearch input:focus { outline: none; }
+
+.composerAttachList {
+  display: grid;
+  gap: 8px;
+  max-height: 268px;
+  overflow-y: auto;
+}
+
+.composerAttachGroup { display: grid; gap: 1px; }
+
+.composerAttachGroupLabel {
+  padding: 4px 8px 2px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: var(--bioaz-type-label-line);
+}
+
+.composerAttachOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  padding: 7px 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.composerAttachOptionCopy { display: grid; flex: 1; gap: 1px; min-width: 0; }
+.composerAttachOptionCopy strong {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 500;
+  line-height: var(--bioaz-type-small-line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composerAttachOptionCopy small { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
+.composerAttachOption:hover:not(:disabled) { background: var(--bioaz-surface-hover); }
+.composerAttachOption.isAttached { color: var(--bioaz-agent-accent); }
+.composerAttachOption.isAttached svg { color: var(--bioaz-agent-accent); }
+.composerAttachOption:disabled { cursor: not-allowed; opacity: .48; }
+
+.composerAttachEmpty {
+  margin: 0;
+  padding: 12px 8px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-small-size);
+  text-align: center;
+}
+
+/* ---------- 选中之后的 chip：属于这一条消息，所以留在输入框边框之内 ---------- */
+
+.composerChipRow {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+/* 有 chip 时输入框从固定高度改为按内容撑开，其余三列骨架不变 */
+.workbenchComposer:has(.composerChipRow),
+.newTaskComposer.workbenchComposer:has(.composerChipRow) {
+  height: auto;
+  min-height: 0;
+  align-items: center;
+}
+
+.composerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  padding: 3px 6px 3px 10px;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: var(--bioaz-type-label-line);
+}
+
+.composerChip svg { color: var(--bioaz-text-secondary); }
+
+.composerChipLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composerChip em {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-warning-soft);
+  padding: 1px 6px;
+  color: var(--bioaz-warning);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.composerChip.isBorrowed { border-color: #ece5d6; }
+
+.composerChip > button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  padding: 0;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+}
+
+.composerChip > button:hover { background: var(--bioaz-surface-active); color: var(--bioaz-text-primary); }
+
+/* ---------- 发送后跟在用户气泡下方的只读附件条 ---------- */
+
+/* 全站用户气泡都是浅色底，附件条走描边式，不要用半透明白 */
+.messageAttachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.messageAttachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 220px;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 2px 9px;
+  color: var(--bioaz-text-secondary);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.messageAttachment svg { color: var(--bioaz-text-tertiary); }
+
+.messageAttachment > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messageAttachment em {
+  color: var(--bioaz-warning);
+  font-style: normal;
+}
+
+/* ---------- 拖拽落区：整页接住，视觉只落在 composer 上 ---------- */
+
+.workbenchComposer.isDropTarget {
+  position: relative;
+  border-style: dashed;
+  border-color: var(--bioaz-agent-accent);
+}
+
+.composerDropHint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 5;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+  pointer-events: none;
+}
+
+/* ===================================================================
+   反污染
+   -------------------------------------------------------------------
+   .workspaceAssistantComposer 的基础样式里有一条 `… button {}` 通配规则
+   （36px 黑色圆钮）。加号此前是 <label> 所以躲过了它，改成 <button> 之后
+   菜单里的每个按钮都会被命中，这里按更高特异度还原。
+
+   顺带把这个 composer 补成三列——它一直是两列，加号、输入框、发送三个
+   格子里发送按钮会被挤到第二行。
+   =================================================================== */
+.workspaceAssistantComposer.workbenchComposer {
+  grid-template-columns: 40px minmax(0, 1fr) 36px;
+}
+
+.workbenchComposer .composerAttachMenu button,
+.workbenchComposer .composerChip > button {
+  width: auto;
+  height: auto;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-primary);
+}
+
+.workbenchComposer .composerAttachMenu .composerAddButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  color: var(--bioaz-text-secondary);
+}
+
+.workbenchComposer .composerAttachMenu .composerAddButton:hover,
+.workbenchComposer .composerAttachMenu .composerAddButton[aria-expanded="true"] {
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-primary);
+}
+
+.workbenchComposer .composerAttachMenu .composerAttachRow > button:hover,
+.workbenchComposer .composerAttachMenu .composerAttachRow.isOpen > button,
+.workbenchComposer .composerAttachMenu .composerAttachOption:hover:not(:disabled) {
+  background: var(--bioaz-surface-hover);
+}
+
+.workbenchComposer .composerAttachMenu .composerAttachUpload { background: var(--bioaz-surface-subtle); }
+.workbenchComposer .composerAttachMenu .composerAttachUpload:hover { background: var(--bioaz-agent-accent-soft); }
+.workbenchComposer .composerAttachMenu .composerAttachOption.isAttached { color: var(--bioaz-agent-accent); }
+
+.workbenchComposer .composerChip > button {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--bioaz-radius-full);
+  color: var(--bioaz-text-tertiary);
+}
+
+.workbenchComposer .composerChip > button:hover {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+@keyframes bioazComposerMenuIn {
+  from { opacity: 0; transform: scale(0.96) translateY(3px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 窄屏没有右侧空间放子面板，改成叠在一级菜单上方 */
+@media (max-width: 900px) {
+  .composerAttachSubmenu {
+    right: 0;
+    bottom: calc(100% + 8px);
+    left: auto;
+    width: min(284px, calc(100vw - 48px));
+    transform-origin: bottom right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composerAttachPanel,
+  .composerAttachSubmenu { animation: none; }
+}

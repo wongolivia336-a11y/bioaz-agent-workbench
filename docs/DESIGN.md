@@ -122,6 +122,60 @@ There is no large upload card or drag-and-drop altar.
 - Show a subtle `#5C60B8` focus ring only when focused.
 - Keep a fixed visual gap between the confirmation Gate and Composer.
 
+#### Capability Entry (Plus Menu)
+
+The plus button is a capability entry, not a file picker. It answers *what do
+I bring in and which abilities apply*, never *who does the work*.
+
+- **Who does the work has exactly one entry**: the coworker dropdown above the
+  input. The plus menu must never list experts or coworkers. Duplicating that
+  choice in two places is the failure mode this rule exists to prevent.
+- Three sections only: **add file / skills / connectors (MCP)**. Do **not**
+  add a conversation "mode" (Plan / Ask). BioAZ is flow-driven — how a task
+  runs is already defined by the coworker's flow. `ProjectPlanTab` is a
+  project-level tab, not a conversation mode.
+- Two levels: three first-level rows, each expanding a submenu to the right.
+  Add file offers local upload plus searchable project-library and knowledge-base
+  lists; skills and connectors are searchable lists.
+- Skill and connector lists are **grouped, not filtered**. Before a coworker is
+  known (home screen) they are flat. Once one is active, `<coworker> 已具备`
+  sits on top and `其他可用…` follows. Borrowed items carry a
+  `本次临时启用` marker on their chip so the temporary scope stays visible.
+- Disconnected or pending connectors render disabled rather than hidden — the
+  catalogue should stay legible.
+
+#### Attachment Chips
+
+- Selected items become removable chips **inside the composer border, above the
+  textarea**. Chips belong to the message; the coworker belongs to the session,
+  which is why they live at different altitudes.
+- On send, chips move into the user message bubble as a read-only trail and
+  clear from the composer. They do not change flow branching.
+- User bubbles are light across the product; the trail uses an outlined chip,
+  never translucent white.
+
+#### Drag and Drop
+
+- The whole page accepts a file drop and suppresses the browser's default
+  "open this file" behaviour. Aiming at a 40px button from the desktop is not a
+  reasonable ask.
+- Visual feedback is confined to the composer: dashed border plus
+  `松手以添加到对话`. No full-screen overlay — it is louder than this product.
+- Only one composer per screen may claim the page-level listener.
+
+#### Where It Applies
+
+`WorkbenchComposer` owns the plus menu, chip row, and drop handling, and is
+wired into new-task home, DMPK quotation, and the DMPK rule assistant. The
+Helper drawer uses the same component with the menu disabled — a two-level
+floating submenu has nowhere to go in a narrow drawer. The legacy tumor-report
+composer is untouched; its plus button drives a scripted demo upload, not a
+file picker.
+
+Keyboard triggers (`/` for skills, `@` for files) are deliberately deferred.
+They need cursor measurement, inline popover placement, and trigger-character
+cleanup — almost nothing is shared with the floating menu.
+
 ### Right Inspector
 
 - The Inspector has no Pin mode or Pin control.

@@ -2,6 +2,8 @@
 
 import { ArrowLeft, FileText, GitBranch, ListChecks, Plus, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { MessageAttachments, WorkbenchComposer } from "../../../components/workbench-shell/WorkbenchComposer";
+import type { ComposerAttachment } from "../../../lib/workbench/composerAttachments";
 import type { DetectionScenario } from "./ScenarioSelector";
 
 type Tab = "prices" | "rules" | "parameters" | "templates";
@@ -18,6 +20,7 @@ type ChatMessage = {
   role: "user" | "assistant";
   text: string;
   proposal?: string;
+  attachments?: ComposerAttachment[];
 };
 
 export default function DmpkRuleAssistant({ onTabChange, onRuleDraft }: Props) {
@@ -26,6 +29,7 @@ export default function DmpkRuleAssistant({ onTabChange, onRuleDraft }: Props) {
   const [proposal, setProposal] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [thinking, setThinking] = useState(false);
+  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [hovered, setHovered] = useState(false);
   const [locked, setLocked] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -42,9 +46,11 @@ export default function DmpkRuleAssistant({ onTabChange, onRuleDraft }: Props) {
     setOpen(true);
     setText("");
     setProposal(null);
+    const sent = attachments;
+    setAttachments([]);
     setMessages((current) => [
       ...current,
-      { id: `dmpk-user-${Date.now()}`, role: "user", text: trimmed },
+      { id: `dmpk-user-${Date.now()}`, role: "user", text: trimmed, attachments: sent.length ? sent : undefined },
     ]);
     setThinking(true);
     window.setTimeout(() => {
@@ -133,6 +139,7 @@ export default function DmpkRuleAssistant({ onTabChange, onRuleDraft }: Props) {
                     {message.role === "assistant" ? <span className="quotationAssistantAvatar"><img src="/logo/bioaz-logo.svg" alt="" /></span> : null}
                     <div className="quotationAssistantBubble">
                       <p>{message.text}</p>
+                      <MessageAttachments items={message.attachments} />
                       {message.proposal ? (
                         <div className="quotationChangeProposal">
                           <span className="quotationAiTag"><Sparkles size={13} />已识别修改对象</span>
@@ -168,11 +175,18 @@ export default function DmpkRuleAssistant({ onTabChange, onRuleDraft }: Props) {
               </div>
             )}
           </div>
-          <form className="workspaceAssistantComposer workbenchComposer" onSubmit={(event) => { event.preventDefault(); submit(text); }}>
-            <label className="composerAddButton" aria-label="添加文件"><Plus size={18} /><input type="file" multiple /></label>
+          <WorkbenchComposer
+            as="form"
+            className="workspaceAssistantComposer"
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+            activeCoworkerId="dmpk-quotation-coworker"
+            globalDrop
+            onSubmit={(event) => { event.preventDefault(); submit(text); }}
+          >
             <input value={text} onChange={(event) => setText(event.target.value)} placeholder="描述要改的字段、规则或模板..." aria-label="给 DMPK 报价同事发消息" />
             <button className="sendIconButton" type="submit" aria-label="发送" disabled={!text.trim() || thinking}><Send size={16} /></button>
-          </form>
+          </WorkbenchComposer>
         </section>
       ) : null}
     </>

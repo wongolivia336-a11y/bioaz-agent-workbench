@@ -12,6 +12,7 @@ import "./dmpk-adjustment-drawer.css";
 import "./quotation-dialogs.css";
 import "./dmpk-rule-assistant.css";
 import "./digital-team.css";
+import "./composer-attach.css";
 import "../styles/design-system.css";
 
 export const metadata: Metadata = {

@@ -2,6 +2,8 @@
 
 import { Check, ChevronDown, Clock3, LoaderCircle } from "lucide-react";
 import type { ReactNode } from "react";
+import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
+import { MessageAttachments } from "./WorkbenchComposer";
 
 export function AgentReply({ children }: { children: ReactNode }) {
   return (
@@ -12,8 +14,8 @@ export function AgentReply({ children }: { children: ReactNode }) {
   );
 }
 
-export function UserBubble({ text }: { text: string }) {
-  return <div className="userBubble">{text}</div>;
+export function UserBubble({ text, attachments }: { text: string; attachments?: ComposerAttachment[] }) {
+  return <div className="userBubble">{text}<MessageAttachments items={attachments} /></div>;
 }
 
 export function PanelLink<T extends string>({ panelId, onOpen, children }: { panelId: T; onOpen: (panelId: T) => void; children: ReactNode }) {
