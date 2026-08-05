@@ -1,19 +1,46 @@
-import { ArrowLeft, ArrowUpRight, Download, MoreHorizontal, Pin, Plus, Trash2 } from "lucide-react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { ActionCard, Button, IconButton, SurfaceCard } from "../../components/ui";
+import { DesignSystemExamples } from "./DesignSystemExamples";
 
-const colors = [
-  { label: "Brand Primary", value: "#2900FF", color: "var(--bioaz-brand-primary)" },
-  { label: "Agent Accent", value: "#5C60B8", color: "var(--bioaz-agent-accent)" },
-  { label: "Canvas", value: "#F7F8FA", color: "var(--bioaz-canvas)" },
-  { label: "Surface", value: "#FFFFFF", color: "var(--bioaz-surface)" },
-  { label: "Success", value: "#60756A", color: "var(--bioaz-success)" },
-  { label: "Warning", value: "#7B705A", color: "var(--bioaz-warning)" },
-  { label: "Danger", value: "#876B68", color: "var(--bioaz-danger)" },
-  { label: "Border", value: "#E7EAF0", color: "var(--bioaz-border)" },
+type Token = { name: string; value: string; group: string };
+
+const groupOf = (name: string) => {
+  if (name.includes("color") || /(brand|action|agent|text|canvas|surface|border|success|warning|danger|info|status)/.test(name)) return "Color";
+  if (name.includes("radius")) return "Radius";
+  if (name.includes("space")) return "Spacing";
+  if (name.includes("type") || name.includes("font")) return "Typography";
+  if (name.includes("shadow")) return "Elevation";
+  if (name.includes("motion") || name.includes("duration") || name.includes("ease")) return "Motion";
+  return "Other";
+};
+
+function readTokens(): Token[] {
+  const source = readFileSync(join(process.cwd(), "styles", "tokens.css"), "utf8");
+  return Array.from(source.matchAll(/^\s*(--bioaz-[\w-]+):\s*([^;]+);/gm), ([, name, value]) => ({
+    name,
+    value: value.replace(/\s+/g, " ").trim(),
+    group: groupOf(name),
+  }));
+}
+
+const components = [
+  { name: "Button / IconButton", status: "stable", props: "variant, size, loading, disabled, leadingIcon, icon, label, selected", use: "明确操作、工具栏图标操作", avoid: "不要模拟导航或 Tab；同一区域避免多个 Primary" },
+  { name: "SurfaceCard / ActionCard", status: "stable", props: "density, className, HTML attributes", use: "静态信息分组或整体可点击入口", avoid: "SurfaceCard 不添加点击语义；不要用卡片包裹所有内容" },
+  { name: "Menu / MenuGroup / MenuItem", status: "stable", props: "icon, label, active, align, closeOnSelect", use: "筛选、排序和低频工具操作", avoid: "高频主操作不要藏进菜单；多选必须关闭 closeOnSelect" },
+  { name: "StatusChip", status: "stable", props: "tone, dot, className", use: "密集列表中的状态扫读", avoid: "不要把业务状态枚举塞进基础组件" },
+  { name: "NavTabs / SegmentedControl", status: "stable", props: "items, value, onChange, label, className", use: "NavTabs 换内容；SegmentedControl 换呈现方式", avoid: "不要仅凭外观选择二者" },
+  { name: "Dialog", status: "stable", props: "title, description, size, onClose, footer", use: "需要用户集中确认的模态任务", avoid: "轻量详情不使用；不要覆盖 footer 按钮尺寸" },
+  { name: "Drawer", status: "stable", props: "title, eyebrow, onClose, className", use: "保持当前上下文的右侧详情", avoid: "完整工作流和高密度编辑不塞进抽屉" },
+  { name: "EmptyState", status: "stable", props: "icon, title, description, action, variant", use: "空列表、首次进入和无结果状态", avoid: "不要堆多段解释或多个主行动" },
+  { name: "WorkbenchComposer", status: "candidate", props: "attachments, activeCoworkerId, project, menu, globalDrop", use: "任务输入、附件与能力入口", avoid: "窄 Drawer 不启用二级菜单；同屏仅一个 globalDrop" },
 ];
 
 export default function DesignSystemPage() {
+  const tokens = readTokens();
+  const groups = ["Color", "Typography", "Spacing", "Radius", "Elevation", "Motion", "Other"];
+
   return (
     <div className="bioazDesignSystemPage">
       <header className="bioazDesignSystemHeader">
@@ -22,72 +49,34 @@ export default function DesignSystemPage() {
       </header>
       <main className="bioazDesignSystemMain">
         <section className="bioazDesignSystemIntro">
-          <h1>Clinical Canvas Foundations</h1>
-          <p>面向 BioAZ Agent Workbench 的可执行设计规范。第一批覆盖 Foundation Tokens、Button、IconButton、Surface Card 与 Action Card。</p>
+          <span className="bioazDsEyebrow">Developer & Agent Reference</span>
+          <h1>BioAZ Interface Foundations</h1>
+          <p>真实组件、设计 Token 与使用边界的可执行目录。Token 自动读取自 styles/tokens.css；设计判断与禁用场景由人工维护。</p>
+          <div className="bioazDsSummary"><span>{tokens.length} Tokens</span><span>{components.filter((item) => item.status === "stable").length} Stable</span><span>{components.filter((item) => item.status === "candidate").length} Candidate</span></div>
         </section>
 
-        <section className="bioazDesignSystemSection">
-          <h2>Color tokens</h2>
-          <div className="bioazDesignSystemGrid">
-            {colors.map((color) => (
-              <div className="bioazTokenSwatch" key={color.label} style={{ background: color.color }}>
-                <strong>{color.label}</strong>
-                <small>{color.value}</small>
-              </div>
-            ))}
-          </div>
+        <nav className="bioazDsIndex" aria-label="设计系统目录">
+          <a href="#tokens">Foundations</a><a href="#components">Components</a><a href="#rules">Rules</a>
+        </nav>
+
+        <section className="bioazDesignSystemSection" id="tokens">
+          <div className="bioazDsSectionHeading"><div><span>Foundations</span><h2>Token catalogue</h2></div><code>styles/tokens.css</code></div>
+          {groups.map((group) => {
+            const items = tokens.filter((token) => token.group === group);
+            if (!items.length) return null;
+            return <div className="bioazTokenGroup" key={group}><h3>{group}</h3><div className="bioazTokenList">{items.map((token) => <div className="bioazTokenRow" key={token.name}>{group === "Color" ? <i style={{ background: `var(${token.name})` }} /> : null}<code>{token.name}</code><span>{token.value}</span></div>)}</div></div>;
+          })}
         </section>
 
-        <section className="bioazDesignSystemSection">
-          <h2>Buttons</h2>
-          <p>一个操作区域原则上只有一个 Primary。Loading 保留动作文字并锁定宽度。</p>
-          <div className="bioazDesignSystemRow">
-            <Button variant="primary" leadingIcon={<Plus size={16} />}>创建任务</Button>
-            <Button variant="secondary" leadingIcon={<Download size={16} />}>导出</Button>
-            <Button variant="ghost">取消</Button>
-            <Button variant="danger" leadingIcon={<Trash2 size={16} />}>删除任务</Button>
-            <Button variant="primary" loading>正在生成</Button>
-            <Button disabled>不可用</Button>
-          </div>
-          <div className="bioazDesignSystemRow">
-            <Button size="small">Small 32</Button>
-            <Button size="default">Default 40</Button>
-            <Button size="large" variant="primary">Large 44</Button>
-          </div>
+        <section className="bioazDesignSystemSection" id="components">
+          <div className="bioazDsSectionHeading"><div><span>Inventory</span><h2>Component catalogue</h2></div><code>components/ui</code></div>
+          <div className="bioazComponentDocs">{components.map((component) => <article key={component.name}><header><h3>{component.name}</h3><em className={`is-${component.status}`}>{component.status}</em></header><dl><div><dt>Props</dt><dd><code>{component.props}</code></dd></div><div><dt>Use when</dt><dd>{component.use}</dd></div><div><dt>Avoid when</dt><dd>{component.avoid}</dd></div></dl></article>)}</div>
+          <DesignSystemExamples />
         </section>
 
-        <section className="bioazDesignSystemSection">
-          <h2>Icon buttons</h2>
-          <p>熟悉图标提供可访问名称；陌生和低频动作同时提供 Tooltip。</p>
-          <div className="bioazDesignSystemRow">
-            <IconButton size="compact" icon={<MoreHorizontal size={14} />} label="更多操作" />
-            <IconButton icon={<Pin size={16} />} label="固定" />
-            <IconButton selected icon={<Pin size={16} />} label="取消固定" />
-            <IconButton disabled icon={<Download size={16} />} label="下载不可用" />
-          </div>
-        </section>
-
-        <section className="bioazDesignSystemSection">
-          <h2>Cards</h2>
-          <div className="bioazDesignSystemGrid">
-            <SurfaceCard className="bioazCardDemo">
-              <h3>Surface Card</h3>
-              <p>用于任务摘要、上下文和静态信息分组。默认不可点击，也没有 hover 抬升。</p>
-            </SurfaceCard>
-            <ActionCard className="bioazCardDemo">
-              <ArrowUpRight size={18} />
-              <h3>Action Card</h3>
-              <p>进入一个能力或流程。Hover 时使用低强调紫色交互光效。</p>
-            </ActionCard>
-            <SurfaceCard density="compact" className="bioazCardDemo">
-              <h3>Compact 12</h3>
-              <p>Inspector 与紧凑摘要。</p>
-            </SurfaceCard>
-            <SurfaceCard density="spacious" className="bioazCardDemo">
-              <h3>Spacious 24</h3>
-              <p>首页入口和大型任务概览。</p>
-            </SurfaceCard>
-          </div>
+        <section className="bioazDesignSystemSection" id="rules">
+          <div className="bioazDsSectionHeading"><div><span>Guidance</span><h2>Agent implementation rules</h2></div><code>AGENTS.md</code></div>
+          <div className="bioazRuleGrid"><article><strong>Reuse primitives</strong><p>业务模块可以新增业务组件，但不得重复实现 components/ui 已有的基础组件。</p></article><article><strong>Name every color</strong><p>优先使用全局 --bioaz-* Token；业务特有颜色先声明模块语义 Token。</p></article><article><strong>Promote with evidence</strong><p>业务组件经过两个以上真实场景验证后，再考虑提升为共享 Primitive。</p></article></div>
         </section>
       </main>
     </div>

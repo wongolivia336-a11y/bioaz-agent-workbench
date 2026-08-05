@@ -32,6 +32,24 @@ Vercel: https://prototype-bioaz-agent-workbench.vercel.app/
 - `/?view=quotation-management&business=dmpk` — DMPK rule management and its rule assistant.
 - `/design-system` — executable design foundations: tokens, buttons, menus, chips, cards.
 
+### Design System
+
+The shared UI system is maintained for developers and coding agents:
+
+- [docs/design-system.md](docs/design-system.md) — component inventory, Props, usage boundaries, and migration guidance.
+- [styles/tokens.css](styles/tokens.css) — the single source of truth for global `--bioaz-*` tokens.
+- [components/ui](components/ui) — stable shared UI primitives.
+- `/design-system` — executable catalogue rendering the real components and an automatically extracted Token list.
+
+Run it locally:
+
+```powershell
+$env:npm_config_cache='D:\.cache\npm'
+npm.cmd run dev -- --port 3001
+```
+
+Then open http://localhost:3001/design-system.
+
 The composer at the bottom of every conversation is the shared `WorkbenchComposer`: its plus button opens a two-level menu (file / skill / connector), selections become chips inside the input, and files can be dropped anywhere on the page. Who does the work is a separate control — the coworker dropdown above the input. See the Capability Entry section in [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Vercel Deployment

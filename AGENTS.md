@@ -48,6 +48,16 @@ These are generated or local-only artifacts.
 - `docs/API_CONTRACT.md` is the backend API planning draft.
 - `docs/archive/` stores historical process documents. Do not delete archived files unless the user explicitly asks.
 
+## Design System Rules
+
+- Prefer existing primitives from `components/ui` for buttons, cards, dialogs, drawers, menus, tabs, status chips, and empty states.
+- Business modules may add business-specific components, but must not reimplement an existing UI primitive under a new local class or component name.
+- Keep business-specific components inside their owning module. Promote one to `components/ui` only after at least two real cross-module use cases establish a stable API.
+- Component styles must not introduce raw hex, RGB, or HSL colors. Use global `--bioaz-*` tokens first; define a semantic token on the module root when the color is genuinely business-specific.
+- Third-party brand colors, scientific chart series, and externally rendered content are documented exceptions. Add a short source/scope comment when using one.
+- These are review guidelines, not CI-blocking rules. When no existing primitive or token fits, document the gap instead of forcing an incorrect abstraction.
+- See `docs/design-system.md` for component usage boundaries and `/design-system` for the executable catalogue.
+
 ## Git Rules
 
 - Inspect `git status --short --branch` before edits and before final summary.
