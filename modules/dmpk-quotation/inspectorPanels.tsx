@@ -78,7 +78,7 @@ const withError = (
 const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> = [
   {
     id: "parameters",
-    label: "参数收集",
+    label: (context) => `参数收集 ${context.fields.filter((field) => field.value).length}/${context.fields.length}`,
     icon: SlidersHorizontal,
     defaultWhen: (context) => context.stage !== "generated",
     state: (context) => withError(context),
@@ -182,7 +182,7 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
   };
   const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
   const pct = context.fields.length ? Math.round((completed / context.fields.length) * 100) : 0;
-  return <div className="dmpkInspectorList paramCollectList"><header className="paramCollectHead"><span className="paramCollectMark"><FileText size={16} /></span><div><strong>报价参数收集</strong><small>计价参数随对话实时更新</small></div><em>{completed}/{context.fields.length}</em></header><div className="paramCollectProgress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${pct}%` }} /></div>{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
+  return <div className="dmpkInspectorList paramCollectList"><p className="paramCollectHint">计价参数随对话实时更新</p><div className="paramCollectProgress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${pct}%` }} /></div>{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
     const fields = context.fields.filter((field) => field.group === group);
     const open = context.openGroups[group];
     const groupCompleted = fields.filter((field) => field.value).length;

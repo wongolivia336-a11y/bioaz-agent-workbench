@@ -24,7 +24,8 @@ export type InspectorContentState = "empty" | "loading" | "populated" | "error";
 
 export type InspectorPanelDefinition<TContext> = {
   id: string;
-  label: string;
+  /** 可给函数，让标题带上随上下文变化的计数（如「参数收集 7/14」） */
+  label: string | ((context: TContext) => string);
   icon: LucideIcon;
   available?: (context: TContext) => boolean;
   defaultWhen?: (context: TContext) => boolean;
@@ -55,7 +56,7 @@ export function resolveInspectorPanels<TContext>(
     .filter((panel) => panel.available?.(context) ?? true)
     .map((panel) => ({
       id: panel.id,
-      label: panel.label,
+      label: typeof panel.label === "function" ? panel.label(context) : panel.label,
       icon: panel.icon,
       content: panel.render(context),
       state: panel.state?.(context) ?? "populated",
