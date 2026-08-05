@@ -26,6 +26,17 @@ There is no test suite and no ESLint config; `typecheck` is the gate before a co
 
 Vercel: https://prototype-bioaz-agent-workbench.vercel.app/
 
+## Version Baseline
+
+`responsive-baseline-2026-08-05` preserves the responsive Workbench before the
+next large product iteration. Use that Git tag to compare or restore this UI;
+the active branch can continue evolving independently.
+
+This baseline covers desktop, tablet, and mobile shell behavior, responsive
+content spacing, horizontally scrollable data tables, stacked narrow-screen
+forms, and mobile drawers. The intended review widths are 1440, 1024, 768,
+and 390 CSS pixels.
+
 ## What To Look At First
 
 - `/` — new-task home. Describe a task, Helper routes it to a coworker, confirm the dispatch to enter a module.

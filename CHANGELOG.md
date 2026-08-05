@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-05 — Responsive Baseline Archive
+
+- Aligned the sidebar collapse breakpoint with its mobile drawer behavior.
+- Added mobile sidebar dismissal by backdrop, Escape, and route navigation.
+- Added shared tablet and mobile rules for shell spacing, headers, toolbars,
+  data tables, new-task cards and composer, quotation forms, editors, and drawers.
+- Recorded the pre-major-change baseline as `responsive-baseline-2026-08-05`.
+
 ## 2026-07-29 — Tumor Report UI Polish, Batch 1
 
 - Replaced the tumor-report Inspector hover hot zone with an explicit header toggle.

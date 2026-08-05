@@ -14,6 +14,7 @@ import "./dmpk-rule-assistant.css";
 import "./digital-team.css";
 import "./composer-attach.css";
 import "../styles/design-system.css";
+import "./responsive.css";
 
 export const metadata: Metadata = {
   title: "BioAZ Agent Workbench",

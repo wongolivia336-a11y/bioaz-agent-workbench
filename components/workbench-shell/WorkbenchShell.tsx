@@ -200,7 +200,7 @@ export default function WorkbenchShell() {
   }, [highlightedProjectId]);
 
   useEffect(() => {
-    const compactViewport = window.matchMedia("(max-width: 1199px)");
+    const compactViewport = window.matchMedia("(max-width: 899px)");
     const syncSidebar = (event: MediaQueryList | MediaQueryListEvent) => {
       if (event.matches) setCollapsed(true);
     };
@@ -208,6 +208,21 @@ export default function WorkbenchShell() {
     compactViewport.addEventListener("change", syncSidebar);
     return () => compactViewport.removeEventListener("change", syncSidebar);
   }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 899px)").matches) setCollapsed(true);
+  }, [route]);
+
+  useEffect(() => {
+    if (collapsed) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && window.matchMedia("(max-width: 899px)").matches) {
+        setCollapsed(true);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [collapsed]);
 
   const openTask = (task: WorkbenchTask) => {
     setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setInitialRequest(undefined); setHandoffNotice(undefined);
@@ -321,6 +336,8 @@ export default function WorkbenchShell() {
   if (quotationManagementOpen) return <QuotationManagement onBack={() => setQuotationManagementOpen(false)} />;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
     <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} deletedProjectIds={deletedProjectIds} deletedTaskIds={deletedTaskIds} renamedTaskTitles={renamedTaskTitles} libraryFolders={libraryFolders} activeLibraryFolderId={libraryFolderId} highlightedProjectId={highlightedProjectId} onOpenLibraryFolder={(projectName, folderId) => { setLibraryProject(projectName); setLibraryFolderId(folderId); setLibraryView(folderId ? "folder" : "overview"); setRoute("library"); }} onCreateProject={createProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onRenameTask={renameTask} onDeleteTask={deleteTask} onTogglePinnedItem={togglePin} onRouteChange={navigateShellRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationManagementOpen(true)} onToggleCollapsed={() => setCollapsed((value) => !value)} />
+    <button className="mobileSidebarBackdrop" type="button" aria-label="关闭侧边栏" onClick={() => setCollapsed(true)} />
+    {route === "module" ? <button className="mobileModuleSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={18} /></button> : null}
     {route === "module" && Session && activeModule ? <Session projectName={project ?? "未归属项目"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="topbarPathLayer"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={18} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={15} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "未归属项目"}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></> : route === "library" && libraryProject ? <><button type="button" onClick={() => { setLibraryProject(null); setLibraryFolderId(null); setLibraryView("overview"); }}>项目中枢</button><ChevronRight size={15} />{librarySectionLabel ? <><button type="button" onClick={() => { setLibraryFolderId(null); setLibraryView("overview"); }}>{libraryProject}</button><ChevronRight size={15} /><strong>{librarySectionLabel}</strong></> : <strong>{libraryProject}</strong>}</> : <strong>{route === "library" ? "项目中枢" : route === "knowledgeBase" ? "知识库" : route === "digitalTeam" ? "数字团队" : "新建任务"}</strong>}</div><div className="topbarInlineTools" id="workbench-topbar-actions" /></div><div className="topbarSecondRow"><div id="workbench-topbar-tabs" className="topbarTabLayer" /><div className="topbarToolLayer"><div className="topbarActions" /></div></div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager projects={visibleProjects} selectedProject={libraryProject} selectedFolderId={libraryFolderId} folders={libraryFolders} view={libraryView} onSelectedProjectChange={(nextProject) => { setLibraryProject(nextProject); if (!nextProject) { setLibraryFolderId(null); setLibraryView("overview"); } }} onSelectedFolderChange={setLibraryFolderId} onViewChange={setLibraryView} onCreateProject={createProject} /> : route === "digitalTeam" ? <DigitalTeamPage projects={visibleProjects} tasks={runtimeTasks.filter((task) => !deletedTaskIds.includes(task.id))} onStartModule={startModuleDirect} onOpenLibrary={() => navigateShellRoute("library")} /> : route === "knowledgeBase" ? <KnowledgeBasePage /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={quickStarts} projectOptions={visibleProjectOptions} projectNotice={projectNotice} onProjectChange={(nextProject) => { setProject(nextProject); setProjectNotice(null); }} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }
