@@ -57,6 +57,20 @@ modules/                 ← 业务模块
 
 全部从 `components/ui` 导入。
 
+### 组件状态
+
+- `stable`：API 与使用边界已稳定，开发和 Agent 默认优先使用。
+- `candidate`：已有真实实现，但 API 仍可能调整；使用前检查调用范围。
+- `deprecated`：不得新增使用，文档必须给出替代方案。
+
+当前 `components/ui` 中的 Button、IconButton、SurfaceCard、ActionCard、Menu、StatusChip、NavTabs、SegmentedControl、Dialog、Drawer 与 EmptyState 视为 `stable`。`WorkbenchComposer` 暂列为 `candidate`，因为它仍然同时服务首页、业务会话和窄 Drawer 等不同容器。
+
+### 选择与提升规则
+
+业务模块可以新增业务组件，例如 `QuotationSummary` 或 `EvidencePanel`，但不得在模块内重新实现已有 Primitive。一个业务组件只有在至少两个真实跨模块场景中形成稳定 API 后，才考虑提升到 `components/ui`。
+
+当现有 Primitive 无法满足需求时，先记录缺口并判断它是业务专用问题还是共享问题，不要为了遵守目录规则而强行使用错误组件。
+
 ### Button / IconButton
 
 ```tsx
@@ -192,3 +206,16 @@ Escape 与点击遮罩都能关闭。底部按钮由 `.bioazUiDialogFooter > but
 2. **注意行为差异**，不只是视觉。共享组件的默认值可能与某个调用点原本的行为不同（`closeOnSelect` 就是一例）。
 3. **注意元素类型的改变会踩到祖先的通配规则**。加号从 `<label>` 改成 `<button>` 后，被 `.workspaceAssistantComposer button {}`（36px 黑色圆钮）整片命中，菜单里每个按钮都变成了黑圆点。改标签名前先 grep 祖先容器有没有 `… button {}` / `… input {}` 这类不带类名的后代规则。
 3. **组件类名沿用既有 CSS 类**（如 Menu 沿用 `.toolMenu`），迁移即可做到视觉上完全无变化，风险最低。
+
+## Agent 使用约束
+
+1. 新功能优先从 `components/ui` 导入已有基础组件。
+2. 业务组件留在业务模块内，不得用新名字重复实现 Button、Dialog、Drawer、Menu、Tabs、StatusChip 等 Primitive。
+3. 组件 CSS 不新增十六进制、RGB 或 HSL 色值。优先消费 `styles/tokens.css` 中的全局 `--bioaz-*` Token。
+4. 业务特有颜色先在模块根节点声明语义化局部 Token，例如 `--tumor-evidence-highlight`，内部组件只消费变量。
+5. 第三方品牌色、科学图表数据色和外部内容渲染可以例外，但需要用简短注释注明来源与作用范围。
+6. 这些规则用于代码评审和 Agent 决策，当前不阻断 typecheck、build 或 CI。
+
+## 可视化与 Token 清单
+
+运行开发服务后访问 `/design-system`。页面直接渲染真实 React 组件，并在服务端读取 `styles/tokens.css` 自动生成 Token 清单。不要另建手工维护的静态 HTML 副本；需要分享时应从真实页面导出，避免文档与组件实现漂移。

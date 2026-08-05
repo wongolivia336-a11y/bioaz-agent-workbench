@@ -206,6 +206,16 @@
   font-family: var(--bioaz-font-sans);
 }
 
+/* Workbench 主界面锁定视口并在内部滚动；规范站是普通长页面。 */
+html:has(.bioazDesignSystemPage),
+body:has(.bioazDesignSystemPage) {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
 .bioazDesignSystemHeader {
   position: sticky;
   z-index: 10;
@@ -219,6 +229,173 @@
   background: rgba(255, 255, 255, 0.92);
   padding: 0 clamp(24px, 5vw, 64px);
   backdrop-filter: blur(12px);
+}
+
+.bioazDsEyebrow,
+.bioazDsSectionHeading span {
+  color: var(--bioaz-agent-accent);
+  font-size: var(--bioaz-type-label-size);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bioazDsSummary,
+.bioazDsIndex,
+.bioazDsSectionHeading,
+.bioazComponentDocs article > header,
+.bioazExampleBlock > header {
+  display: flex;
+  align-items: center;
+}
+
+.bioazDsSummary { flex-wrap: wrap; gap: var(--bioaz-space-2); margin-top: var(--bioaz-space-5); }
+.bioazDsSummary span,
+.bioazExampleBlock > header span,
+.bioazComponentDocs article > header em {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  font-style: normal;
+  padding: var(--bioaz-space-1) var(--bioaz-space-2);
+}
+
+.bioazDsIndex {
+  position: sticky;
+  z-index: 5;
+  top: 64px;
+  gap: var(--bioaz-space-1);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: var(--bioaz-space-2);
+  box-shadow: var(--bioaz-shadow-subtle);
+}
+.bioazDsIndex a { border-radius: var(--bioaz-radius-tool); color: var(--bioaz-text-secondary); font-size: var(--bioaz-type-small-size); padding: var(--bioaz-space-2) var(--bioaz-space-3); text-decoration: none; }
+.bioazDsIndex a:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
+
+.bioazDesignSystemSection {
+  scroll-margin-top: 124px;
+}
+
+.bioazDsSectionHeading { justify-content: space-between; gap: var(--bioaz-space-4); margin-bottom: var(--bioaz-space-6); }
+.bioazDsSectionHeading > div { display: grid; gap: var(--bioaz-space-1); }
+.bioazDsSectionHeading h2 { margin: 0; }
+.bioazDsSectionHeading > code { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
+
+.bioazTokenGroup { margin-top: var(--bioaz-space-6); }
+.bioazTokenGroup h3 { margin: 0 0 var(--bioaz-space-3); font-size: var(--bioaz-type-section-size); }
+.bioazTokenList { overflow: hidden; border: 1px solid var(--bioaz-border); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); }
+.bioazTokenRow { display: grid; min-height: 44px; grid-template-columns: minmax(240px, 1fr) minmax(180px, 1fr); align-items: center; gap: var(--bioaz-space-3); border-bottom: 1px solid var(--bioaz-border); padding: 0 var(--bioaz-space-4); }
+.bioazTokenRow.hasSwatch { grid-template-columns: 20px minmax(220px, 1fr) minmax(180px, 1fr); }
+.bioazTokenRow:last-child { border-bottom: 0; }
+.bioazTokenRow i { width: 18px; height: 18px; border: 1px solid var(--bioaz-border); border-radius: var(--bioaz-radius-tool); }
+.bioazTokenRow code { color: var(--bioaz-text-primary); font-size: var(--bioaz-type-small-size); }
+.bioazTokenRow span { overflow-wrap: anywhere; color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
+
+.bioazComponentDocs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--bioaz-space-4); }
+.bioazComponentDocs article,
+.bioazExampleBlock,
+.bioazRuleGrid article { border: 1px solid var(--bioaz-border); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: var(--bioaz-space-4); }
+.bioazComponentDocs article > header,
+.bioazExampleBlock > header { justify-content: space-between; gap: var(--bioaz-space-3); }
+.bioazComponentDocs h3,
+.bioazExampleBlock h3,
+.bioazExampleBlock h4 { margin: 0; }
+.bioazComponentDocs article > header em.is-stable { border-color: var(--bioaz-status-success-soft); background: var(--bioaz-status-success-soft); color: var(--bioaz-status-success); }
+.bioazComponentDocs article > header em.is-candidate { border-color: var(--bioaz-status-warning-soft); background: var(--bioaz-status-warning-soft); color: var(--bioaz-status-warning); }
+.bioazComponentDocs dl { display: grid; gap: var(--bioaz-space-3); margin: var(--bioaz-space-4) 0 0; }
+.bioazComponentDocs dl > div { display: grid; gap: var(--bioaz-space-1); }
+.bioazComponentDocs dt { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
+.bioazComponentDocs dd { margin: 0; color: var(--bioaz-text-secondary); font-size: var(--bioaz-type-small-size); line-height: var(--bioaz-type-small-line); }
+.bioazComponentDocs code { overflow-wrap: anywhere; }
+
+.bioazExampleStack { display: grid; gap: var(--bioaz-space-4); margin-top: var(--bioaz-space-8); }
+.bioazExampleBlock { display: grid; gap: var(--bioaz-space-5); }
+.bioazExampleColumn { display: grid; gap: var(--bioaz-space-4); }
+.bioazExampleBlock p { margin: var(--bioaz-space-2) 0 0; color: var(--bioaz-text-secondary); font-size: var(--bioaz-type-small-size); }
+.bioazRuleGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--bioaz-space-4); }
+.bioazRuleGrid article { display: grid; gap: var(--bioaz-space-2); }
+.bioazRuleGrid p { margin: 0; color: var(--bioaz-text-secondary); font-size: var(--bioaz-type-small-size); line-height: var(--bioaz-type-small-line); }
+
+@media (max-width: 860px) {
+  .bioazComponentDocs,
+  .bioazRuleGrid { grid-template-columns: 1fr; }
+  .bioazDesignSystemMain { width: min(100% - 32px, 720px); gap: var(--bioaz-space-6); padding-block: var(--bioaz-space-8) var(--bioaz-space-12); }
+  .bioazTokenRow,
+  .bioazTokenRow.hasSwatch { grid-template-columns: minmax(0, 1fr) minmax(140px, 0.65fr); padding-block: var(--bioaz-space-2); }
+  .bioazTokenRow.hasSwatch { grid-template-columns: 20px minmax(0, 1fr) minmax(140px, 0.65fr); }
+  .bioazDsSectionHeading { align-items: flex-end; }
+}
+
+@media (max-width: 620px) {
+  .bioazDesignSystemHeader {
+    min-height: 56px;
+    padding-inline: var(--bioaz-space-4);
+  }
+  .bioazDesignSystemHeader strong { font-size: var(--bioaz-type-body-size); }
+  .bioazDesignSystemHeader a { flex: 0 0 auto; }
+  .bioazDesignSystemMain {
+    width: calc(100% - 24px);
+    gap: var(--bioaz-space-6);
+    padding-block: var(--bioaz-space-6) var(--bioaz-space-10);
+  }
+  .bioazDesignSystemIntro h1 {
+    font-size: var(--bioaz-type-page-size);
+    line-height: var(--bioaz-type-page-line);
+  }
+  .bioazDsSummary { margin-top: var(--bioaz-space-3); }
+  .bioazDsIndex {
+    top: 56px;
+    max-width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    border-radius: var(--bioaz-radius-tool);
+    padding: var(--bioaz-space-1);
+    scrollbar-width: none;
+  }
+  .bioazDsIndex::-webkit-scrollbar { display: none; }
+  .bioazDsIndex a { flex: 0 0 auto; padding: var(--bioaz-space-2); }
+  .bioazDesignSystemSection { scroll-margin-top: 108px; }
+  .bioazDsSectionHeading {
+    display: grid;
+    align-items: start;
+    gap: var(--bioaz-space-2);
+    margin-bottom: var(--bioaz-space-4);
+  }
+  .bioazDsSectionHeading > code { overflow-wrap: anywhere; }
+  .bioazTokenGroup { margin-top: var(--bioaz-space-4); }
+  .bioazTokenList { border-radius: var(--bioaz-radius-tool); }
+  .bioazTokenRow,
+  .bioazTokenRow.hasSwatch {
+    min-height: 58px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: var(--bioaz-space-2) var(--bioaz-space-3);
+  }
+  .bioazTokenRow.hasSwatch { grid-template-columns: 20px minmax(0, 1fr); }
+  .bioazTokenRow.hasSwatch > span { grid-column: 2; }
+  .bioazTokenRow > span { grid-column: 1; }
+  .bioazComponentDocs article,
+  .bioazExampleBlock,
+  .bioazRuleGrid article { padding: var(--bioaz-space-3); }
+  .bioazComponentDocs article > header,
+  .bioazExampleBlock > header { align-items: flex-start; }
+  .bioazExampleStack { margin-top: var(--bioaz-space-6); }
+  .bioazExampleBlock { gap: var(--bioaz-space-4); }
+  .bioazExampleBlock .bioazDesignSystemRow > .bioazUiButton { flex: 1 1 140px; }
+  .bioazExampleBlock .bioazUiNavTabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .bioazExampleBlock .bioazUiNavTabs::-webkit-scrollbar { display: none; }
+  .bioazDesignSystemGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 380px) {
+  .bioazDesignSystemHeader { gap: var(--bioaz-space-2); padding-inline: var(--bioaz-space-3); }
+  .bioazDesignSystemHeader a { font-size: var(--bioaz-type-label-size); }
+  .bioazDesignSystemMain { width: calc(100% - 16px); }
+  .bioazComponentDocs article > header { display: grid; justify-items: start; }
 }
 
 .bioazDesignSystemHeader strong {
