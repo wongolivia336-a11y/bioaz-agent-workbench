@@ -64,7 +64,7 @@ export default function DesignSystemPage() {
           {groups.map((group) => {
             const items = tokens.filter((token) => token.group === group);
             if (!items.length) return null;
-            return <div className="bioazTokenGroup" key={group}><h3>{group}</h3><div className="bioazTokenList">{items.map((token) => <div className="bioazTokenRow" key={token.name}>{group === "Color" ? <i style={{ background: `var(${token.name})` }} /> : null}<code>{token.name}</code><span>{token.value}</span></div>)}</div></div>;
+            return <div className="bioazTokenGroup" key={group}><h3>{group}</h3><div className="bioazTokenList">{items.map((token) => <div className={`bioazTokenRow ${group === "Color" ? "hasSwatch" : ""}`} key={token.name}>{group === "Color" ? <i style={{ background: `var(${token.name})` }} /> : null}<code>{token.name}</code><span>{token.value}</span></div>)}</div></div>;
           })}
         </section>
 
