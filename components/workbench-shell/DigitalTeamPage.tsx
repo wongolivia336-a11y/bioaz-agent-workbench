@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowLeft, Bot, ChevronRight, Folder, Network, Search, Sparkles, Zap } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { aggregateSkills, digitalScenarios, digitalTeamData, mcpData, type DigitalCoworker, type DigitalSkill, type DigitalSubAgent } from "../../lib/workbench/digitalTeamData";
 import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { McpTab } from "./McpTab";
@@ -43,6 +44,8 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
   const [view, setView] = useState<"gallery" | "detail">("gallery");
   const [activeTab, setActiveTab] = useState<TeamTab>("coworkers");
   const [query, setQuery] = useState("");
+  const [topbarHost, setTopbarHost] = useState<HTMLElement | null>(null);
+  useEffect(() => { setTopbarHost(document.getElementById("workbench-topbar-actions")); }, []);
   const [domain, setDomain] = useState(domains[0]);
   const [useOpen, setUseOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -167,18 +170,24 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
 
   return (
     <section className="digitalTeamView" aria-label="数字团队">
+      {/* 搜索框统一挂在顶栏工具层，与项目中枢、知识库同一位置 */}
+      {topbarHost ? createPortal(
+        <div className="libraryToolLayer">
+          <label className="knowledgeSearch libraryToolSearch">
+            <Search size={15} />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={searchPlaceholder[activeTab]} aria-label={searchPlaceholder[activeTab]} />
+          </label>
+        </div>,
+        topbarHost,
+      ) : null}
+
       <NavTabs
         className="digitalTeamTabs"
         items={teamTabs.map((tab) => ({ ...tab, count: tabCounts[tab.id] }))}
         value={activeTab}
         onChange={(id) => { setActiveTab(id); setQuery(""); }}
         label="数字团队"
-      >
-        <label className="digitalTeamSearch">
-          <Search size={15} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={searchPlaceholder[activeTab]} />
-        </label>
-      </NavTabs>
+      />
 
       {activeTab === "coworkers" ? (
         <>

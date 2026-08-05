@@ -3241,7 +3241,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #475467;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
 }
 
 .kbFolderStrip button:hover {
@@ -3308,7 +3308,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #475467;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
 }
 
 .kbPagination button:hover:not(:disabled) {
@@ -3578,7 +3578,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fff;
   padding: 10px 12px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
 }
 
 .kbAssignOptions button:hover {

@@ -988,3 +988,323 @@
   height: auto;
   line-height: 1.35;
 }
+
+/* ===================================================================
+   指针门控 —— 触屏不该有 hover 位移
+   -------------------------------------------------------------------
+   全站有 40+ 条带 transform 的 :hover 规则，只有 4 条做过门控。
+   触屏点击会合成一次 hover，元素跟着跳一下才响应，手感是错的。
+
+   这里不逐条去改那 40 多个选择器（那又是一层补丁），而是：
+   默认把这些元素的 hover 位移压平，再在支持精确指针的设备上放开。
+   新增的 hover 位移只要落在这批选择器里，自动受同一套约束。
+   =================================================================== */
+:where(
+  .taskExampleGrid button,
+  .workbenchTaskCard,
+  .knowledgeCard,
+  .digitalCoworkerCard,
+  .artifactCard,
+  .artifactMini.deliverable,
+  .decisionRow,
+  .documentAltar,
+  .uploadReadyPanel,
+  .projectFolderStrip > button,
+  .kbFolderStrip > button,
+  .bioazUiActionCard,
+  .workspaceAssistantLauncher,
+  .assistantSuggestions button,
+  .knowledgeBaseView .ambientAssistantEntry
+):hover {
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(
+    .taskExampleGrid button,
+    .workbenchTaskCard,
+    .knowledgeCard,
+    .digitalCoworkerCard,
+    .artifactCard,
+    .artifactMini.deliverable,
+    .documentAltar,
+    .uploadReadyPanel,
+    .bioazUiActionCard,
+    .workspaceAssistantLauncher,
+    .knowledgeBaseView .ambientAssistantEntry
+  ):hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+/* 已明确定为静止的卡片不参与上抬：确认类卡片要稳，扫视时不能抖 */
+:where(.decisionRow, .parameterTaskCard, .gateDecision, .stackDecision):hover {
+  transform: none;
+}
+
+/* ===================================================================
+   按压反馈 —— 响应发生在按下那一刻
+   -------------------------------------------------------------------
+   苹果交互的核心是「按下即响应」，而不是等松手。此前全站按钮点下去
+   没有任何反馈，这是「不够灵动」最直接的来源。
+
+   数值取自 apple-design / AUDIT.md：scale(0.97)、160ms、强 ease-out。
+   幅度刻意保守（0.97 而非 0.95）——医药 ToB 要克制，够察觉即可。
+   transform + opacity 都在合成器上，不会掉帧。
+   =================================================================== */
+:where(
+  button,
+  [role="button"],
+  .bioazUiButton,
+  .bioazUiIconButton,
+  .primaryButton,
+  .secondaryButton,
+  .iconButton,
+  .toolIconButton,
+  .rowActionButton,
+  .rowMoreButton,
+  .digitalFilterChip,
+  .projectFolderStrip > button,
+  .kbFolderStrip > button,
+  .bioazUiNavTab,
+  .segmentedControl button
+):not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 160ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 松手回弹稍快，形成「按得动、弹得快」的非对称手感 */
+:where(
+  button,
+  [role="button"],
+  .bioazUiButton,
+  .bioazUiIconButton,
+  .primaryButton,
+  .secondaryButton,
+  .iconButton,
+  .toolIconButton
+):not(:disabled) {
+  transition: transform 120ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* 大面积卡片按下时幅度更小，否则整块塌陷会显得笨重 */
+:where(
+  .bioazUiActionCard,
+  .taskExampleGrid button,
+  .digitalCoworkerCard,
+  .workbenchTaskCard,
+  .knowledgeCard,
+  .planBoardCard
+):not(:disabled):active {
+  transform: scale(0.995);
+}
+
+/* 输入框与文本域不参与按压 */
+:where(input, textarea, select, label):active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, [role="button"], .bioazUiActionCard):active {
+    transform: none;
+  }
+}
+
+/* ===================================================================
+   下拉从触发器展开，而不是从自己中心放大
+   -------------------------------------------------------------------
+   三套下拉此前都没有 transform-origin，默认从中心缩放，看起来像
+   凭空出现在按钮旁边，而不是从按钮里长出来。
+
+   origin 跟着各自的对齐边走：.toolMenu 右对齐 → top right，
+   .compactSelectMenu 与 .alignStart 左对齐 → top left。
+
+   入场用 scale(0.96) 起步（不是 scale(0)——没有东西从虚无出现），
+   150ms 落在 AUDIT.md 给下拉的 150–250ms 区间下沿，克制优先。
+   =================================================================== */
+.toolMenu,
+.inlineSelectMenu {
+  transform-origin: top right;
+}
+.toolMenu.alignStart,
+.inlineSelectMenu.alignStart,
+.compactSelectMenu {
+  transform-origin: top left;
+}
+
+@keyframes bioazMenuIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.toolMenu,
+.inlineSelectMenu,
+.compactSelectMenu {
+  animation: bioazMenuIn 150ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1)) both;
+}
+
+/* 菜单项是高频扫视目标，只换底色，不做位移 */
+.toolMenuItem:hover,
+.compactSelectMenu button:hover {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolMenu,
+  .inlineSelectMenu,
+  .compactSelectMenu {
+    animation: none;
+  }
+}
+
+/* ===================================================================
+   一级页面顶部：标题行 + 通栏分隔线
+   -------------------------------------------------------------------
+   数字团队原本靠 Tab 撑住左侧才显得饱满，项目中枢与知识库没有 Tab，
+   同样的位置就只剩右侧一个搜索框、左边一大片空。
+
+   统一为：标题在左、搜索与主操作在右，同一行；行下一条通栏分隔线。
+   搜索框三页同宽，切换页面时不跳。
+   =================================================================== */
+.topbarPathLayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--bioaz-space-4);
+}
+.topbarPathLayer > .breadcrumb {
+  min-width: 0;
+  flex: none;
+}
+
+/* 顶栏工具层并入标题行右侧 */
+.topbarSecondRow:has(.topbarTabLayer:empty) {
+  border-top: 0;
+  margin-top: -1px;
+}
+
+/* 搜索框三页统一宽度 */
+.libraryToolLayer > .libraryToolSearch,
+.libraryToolLayer > .knowledgeSearch {
+  width: clamp(200px, 24vw, 320px);
+  flex: none;
+}
+
+/* 通栏分隔线：标题行与内容之间只有这一条 */
+.dmpkWorkspace.workbenchMode > .topbar {
+  border-bottom: 1px solid var(--bioaz-border);
+}
+.dmpkWorkspace.workbenchMode > .topbar .topbarSecondRow {
+  border-top: 0;
+}
+
+/* 内容区不再自带上边框，避免和通栏线形成双线 */
+.workbenchView > .kbStatRow,
+.workbenchView > .projectFolderStrip:first-child,
+.workbenchView > .digitalTeamTabs {
+  margin-top: var(--bioaz-space-5);
+}
+
+/* 工具移入标题行后：让标题行成为「标题 + 工具」的两端对齐布局 */
+.topbarInlineTools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
+  margin-left: auto;
+}
+.topbarInlineTools:empty { display: none; }
+.topbarInlineTools .libraryToolLayer {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+
+/* 没有 Tab 时第二行整体不占位，标题行下就是通栏线 */
+.topbarSecondRow:has(.topbarTabLayer:empty):has(.topbarToolLayer:empty) {
+  display: none;
+}
+.topbarSecondRow > .topbarToolLayer:empty { display: none; }
+
+/* ===================================================================
+   修掉嵌套滚动容器冒出的箭头
+   -------------------------------------------------------------------
+   .workbenchView 与 .digitalTeamView 都设了 overflow: auto，
+   外层 shell 本身也是滚动容器，于是内容超高时页面里会多出一条
+   带上下箭头的内层滚动条，浮在 Tab 行旁边像渲染错误。
+
+   内容区只允许纵向滚动，且滚动条走细样式、不画箭头按钮。
+   =================================================================== */
+.workbenchView,
+.digitalTeamView,
+.dmpkWorkspace.workbenchMode .workbenchView {
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* scrollbar-gutter: stable 会为滚动条预留一条实体沟槽，
+     在 Windows 上连带把带箭头的经典滚动条画进内容区。
+     这里不预留沟槽，滚动条以覆盖方式出现在内容之上。 */
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.workbenchView::-webkit-scrollbar,
+.digitalTeamView::-webkit-scrollbar {
+  width: 8px;
+}
+.workbenchView::-webkit-scrollbar-thumb,
+.digitalTeamView::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(17, 19, 24, 0.16);
+  background-clip: content-box;
+}
+.workbenchView::-webkit-scrollbar-track,
+.digitalTeamView::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* 关掉 Windows 上滚动条两端的箭头按钮——那正是截图里那个方块 */
+.workbenchView::-webkit-scrollbar-button,
+.digitalTeamView::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ===================================================================
+   Tab 栏的上下箭头 —— overflow-x 的隐式副作用
+   -------------------------------------------------------------------
+   只写 overflow-x: auto 时，overflow-y 被隐式提升为 auto。选中态的
+   ::after 下划线定位在 bottom: -1px，制造 1px 垂直溢出，于是浏览器
+   在右侧渲染出一条带上下箭头的垂直滚动条。
+
+   横向要能滚，纵向必须显式关掉——两者不能只写一半。
+   =================================================================== */
+.projectSpaceTabs,
+.topbarTabLayer .projectSpaceTabs,
+.digitalTeamTabs,
+.bioazUiNavTabs {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.projectSpaceTabs::-webkit-scrollbar,
+.topbarTabLayer .projectSpaceTabs::-webkit-scrollbar,
+.digitalTeamTabs::-webkit-scrollbar,
+.bioazUiNavTabs::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+/* 下划线不再制造垂直溢出：改用 inset 定位在容器内 */
+.bioazUiNavTab.active::after,
+.projectSpaceTab.active::after,
+.digitalTeamTab.active::after {
+  bottom: 0;
+}
