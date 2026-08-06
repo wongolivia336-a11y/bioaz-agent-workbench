@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronRight, ListChecks, PanelRight, SlidersHorizontal, SquarePen, WandSparkles, X } from "lucide-react";
+import { ChevronRight, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { WorkbenchInspector } from "../../components/workbench-inspector/WorkbenchInspector";
+import { PanelToggle, WorkbenchPanel } from "../../components/workbench-panel/WorkbenchPanel";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
@@ -57,11 +57,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [stage, setStage] = useState<DmpkStage>("idle");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
-  const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [suppressInspectorHover, setSuppressInspectorHover] = useState(false);
-  // 参数收集是 DMPK 的常驻工作面，默认就展开
-  const [paramFloatOpen, setParamFloatOpen] = useState(true);
-  const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("process");
+  // 右侧是常驻面板：默认显示这三个 tab，其余通过 tab 栏的加号自行加回来
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "process", "artifacts"]);
+  // DMPK 的参数收集是主工作面，右侧默认就展开；肿瘤报告那边是事件驱动的
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("parameters");
+  /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
+  const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
+  const [panelHintIds, setPanelHintIds] = useState<string[]>([]);
   const [parametersExpanded, setParametersExpanded] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [conversationEditing, setConversationEditing] = useState(false);
@@ -104,7 +107,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     if (!skipUserMessage) appendMessage("user", text, consumeAttachments());
     setComposerText("");
     setStage("thinking");
-    setInspectorPanelId("process");
+    suggestPanel("process");
     window.setTimeout(() => {
       const patch = parseDmpkRequest(text);
       const nextFields = fields.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field);
@@ -112,7 +115,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
       setFields(nextFields);
-      setInspectorOpen(false);
+      suggestPanel("parameters");
       setParametersExpanded(Boolean(patch.assayType));
       setActiveGroup(nextGroup);
       setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
@@ -139,7 +142,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const field = fields.find((item) => item.id === fieldId);
     if (!field) return;
     const invalidatesQuotation = stage === "generated";
-    setInspectorOpen(false);
+    openInspector("parameters");
     setParametersExpanded(true);
     setConversationEditing(false);
     setEditingFieldId(field.id);
@@ -156,7 +159,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   };
 
   const startConversationEdit = () => {
-    setInspectorOpen(false);
+    openInspector("parameters");
     setParametersExpanded(Boolean(identifiedAssayType));
     setEditingFieldId(null);
     setConversationEditing(true);
@@ -170,7 +173,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const sentTabs = draftTabs;
     appendMessage("user", `补充报价参数：\n${sentTabs.map((tab) => `${tab.label}：${tab.value}`).join("\n")}`, consumeAttachments());
     setStage("thinking");
-    setInspectorPanelId("process");
+    suggestPanel("process");
     window.setTimeout(() => {
       setFields((items) => items.map((field) => {
         const draft = sentTabs.find((tab) => tab.fieldId === field.id);
@@ -224,25 +227,31 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setPreviewOpen(false);
     setParametersExpanded(false);
     setStage("generating");
-    setInspectorPanelId("process");
+    suggestPanel("process");
     appendMessage("user", "确认参数，生成正式报价单。");
     window.setTimeout(() => {
       setStage("generated");
-      setInspectorPanelId("artifacts");
-      setInspectorOpen(true);
+      suggestPanel("artifacts");
       appendMessage("agent", "报价单已生成。Word 与 Excel 金额校验一致。");
     }, 1800);
   };
 
-  /* 右侧三个入口是互斥的：参数收集浮层与顶天立地面板不能同时在，
-     否则后者会盖住前者。开一个就关另一个。 */
-  /* 右侧三个入口是互斥的：参数收集浮层与顶天立地面板不能同时在，
-     否则后者会盖住前者。开一个就关另一个。 */
-  const openInspector = (panelId: DmpkInspectorPanelId) => {
-    setParamFloatOpen(false);
-    setParametersExpanded(false);
+  /** 阶段推进时的建议切换：用户没自己点过 tab 才真的切，否则只打点提示 */
+  const suggestPanel = (panelId: DmpkInspectorPanelId) => {
+    setVisiblePanelIds((ids) => ids.includes(panelId) ? ids : [...ids, panelId]);
+    if (tabPinnedByUser) {
+      setPanelHintIds((ids) => ids.includes(panelId) ? ids : [...ids, panelId]);
+      return;
+    }
     setInspectorPanelId(panelId);
-    setInspectorOpen(true);
+  };
+
+  /** 用户显式要求看某个面板（点对话里的卡片、点 tab），一定切过去 */
+  const openInspector = (panelId: DmpkInspectorPanelId) => {
+    setPanelOpen(true);
+    setVisiblePanelIds((ids) => ids.includes(panelId) ? ids : [...ids, panelId]);
+    setInspectorPanelId(panelId);
+    setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
   };
 
   const inspectorPanels = getDmpkInspectorPanels({
@@ -265,102 +274,49 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     onPreviewArtifact: setArtifactPreview,
     onPreviewQuotation: () => setPreviewOpen(true),
   });
-  const parameterPanel = inspectorPanels.find((panel) => panel.id === "parameters");
-  const secondaryInspectorPanels = inspectorPanels.filter((panel) => panel.id !== "parameters");
+  /* 参数面板顶部保留「对话编辑」入口——它原本挂在浮层头上，浮层撤掉后跟着参数进 tab */
+  const railPanels = inspectorPanels.map((panel) => panel.id !== "parameters" ? panel : {
+    ...panel,
+    content: (
+      <>
+        <div className="paramPanelToolbar">
+          <span>
+            <strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
+            {identifiedAssayType ? <em>{completedCount}/{totalRequired}</em> : null}
+          </span>
+          <button className="parameterConversationEdit" type="button" aria-pressed={conversationEditing} title="通过对话修改" onClick={startConversationEdit}>
+            <WandSparkles size={15} /><span>对话编辑</span>
+          </button>
+        </div>
+        {panel.content}
+      </>
+    ),
+  });
 
   return (
     <>
       <section className="dmpkWorkspace">
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
-          {/* 与肿瘤报告同一套三类面板入口：产物与依据 / 参数收集 / 标注画布 */}
-          <div className="sidePanelSwitch" role="group" aria-label="右侧面板">
-            <button
-              className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
-              type="button"
-              title="产物与依据"
-              aria-label={inspectorOpen ? "关闭产物与依据" : "打开产物与依据"}
-              aria-pressed={inspectorOpen}
-              onClick={() => {
-                if (inspectorOpen) setSuppressInspectorHover(true);
-                const next = !inspectorOpen;
-                // 与参数收集互斥，避免顶天立地面板盖住浮层
-                if (next) setParamFloatOpen(false);
-                setInspectorOpen(next);
-              }}
-              onMouseLeave={() => setSuppressInspectorHover(false)}
-            >
-              <PanelRight size={17} />
-            </button>
-            <button
-              className={`tumorInspectorToggle ${paramFloatOpen ? "isActive" : ""}`}
-              type="button"
-              title="参数收集"
-              aria-label={paramFloatOpen ? "收起参数收集" : "展开参数收集"}
-              aria-pressed={paramFloatOpen}
-              onClick={() => {
-                const next = !paramFloatOpen;
-                // 三个入口互斥：打开参数收集就收起顶天立地面板
-                if (next) setInspectorOpen(false);
-                setParamFloatOpen(next);
-              }}
-            >
-              <ListChecks size={17} />
-            </button>
-            <button className="tumorInspectorToggle" type="button" title="标注画布（QA 审核可用）" aria-label="标注画布，当前模块不适用" disabled>
-              <SquarePen size={17} />
-            </button>
-          </div>
+          <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
       </section>
-      {/* 参数收集：独立浮层，不再和产物卡上下堆在同一条侧栏里 */}
-      {paramFloatOpen ? (
-        <>
-          <section
-            className={`paramFloatCard persistentParameterCard isExpanded ${conversationEditing ? "isConversationEditing" : ""} ${stage === "generating" || stage === "generated" ? "isConfirmed" : ""}`}
-            role="dialog"
-            aria-label="参数收集"
-          >
-            <div className="persistentParameterHeader">
-              <span className="paramFloatTitle">
-                <SlidersHorizontal size={16} />
-                <strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
-                {identifiedAssayType ? <em>{completedCount}/{totalRequired}</em> : null}
-              </span>
-              <button className="parameterConversationEdit" type="button" aria-pressed={conversationEditing} aria-label="通过对话修改" title="通过对话修改" onClick={startConversationEdit}>
-                <WandSparkles size={15} /><span>对话编辑</span>
-              </button>
-              <button className="paramFloatClose" type="button" aria-label="关闭参数收集" onClick={() => setParamFloatOpen(false)}>
-                <X size={16} />
-              </button>
-            </div>
-            <div className="persistentParameterBody">{parameterPanel?.content}</div>
-          </section>
-        </>
-      ) : null}
-      <aside
-        className={`dmpkPanel dmpkInspectorRail ${inspectorOpen ? "isOpen" : ""}`}
-      >
-        <div className="secondaryInspectorSlot">
-          <WorkbenchInspector
-            panels={secondaryInspectorPanels}
-            activePanelId={inspectorPanelId}
-            open={inspectorOpen}
-            pinned={false}
-            showPinControl={false}
-            hoverActivation={false}
-            inline
-            onOpenChange={(open) => {
-              if (!open) setSuppressInspectorHover(true);
-              setInspectorOpen(open);
-            }}
-            onPinnedChange={() => undefined}
-            onPanelChange={(panelId) => setInspectorPanelId(panelId as DmpkInspectorPanelId)}
-          />
-        </div>
-      </aside>
+      <WorkbenchPanel
+        panels={railPanels}
+        visibleIds={visiblePanelIds}
+        onVisibleIdsChange={setVisiblePanelIds}
+        activePanelId={inspectorPanelId}
+        hintIds={panelHintIds}
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        onPanelChange={(panelId) => {
+          setTabPinnedByUser(true);
+          setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
+          setInspectorPanelId(panelId as DmpkInspectorPanelId);
+        }}
+      />
       {previewOpen ? <DmpkQuotationPreviewModal fields={fields} onClose={() => setPreviewOpen(false)} /> : null}
       {artifactPreview ? <DmpkArtifactPreviewModal kind={artifactPreview} onClose={() => setArtifactPreview(null)} /> : null}
     </>

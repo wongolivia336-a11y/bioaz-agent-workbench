@@ -91,7 +91,7 @@ export type ApiResponse<T> = {
   };
 };
 
-export type InspectorTopic = "process" | "warnings" | "generation" | "review" | "artifacts";
+export type InspectorTopic = "files" | "process" | "warnings" | "generation" | "review" | "artifacts";
 export type PreviewSection = "recognized" | "issues" | "qa" | "context";
 export type PreviewKind = "validation" | "review";
 export type ArtifactPreviewKind = "word" | "package" | "prism" | "figure" | "qc" | "evidence" | "review-doc";

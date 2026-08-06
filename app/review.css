@@ -517,14 +517,16 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (min-width: 1200px) and (max-width: 1439px) {
-  .dmpkShell.dmpk-quotationModuleShell { grid-template-columns: 240px minmax(0, 1fr) 320px; }
-  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr) 320px; }
+  .dmpkShell.dmpk-quotationModuleShell { grid-template-columns: 240px minmax(0, 1fr); }
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr); }
+  .dmpkShell.dmpk-quotationModuleShell:has(> .workbenchPanel.isOpen) { grid-template-columns: 240px minmax(0, 1fr) 320px; }
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed:has(> .workbenchPanel.isOpen) { grid-template-columns: 72px minmax(0, 1fr) 320px; }
   .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) { grid-template-columns: 240px minmax(0, 1fr) 400px; }
   .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 400px; }
 }
 
 @media (min-width: 900px) and (max-width: 1199px) {
-  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr) minmax(300px, 32vw); }
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr); }
   .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 400px; }
 }
 
@@ -1348,17 +1350,18 @@ button { -webkit-tap-highlight-color: transparent; }
   transform: none;
 }
 @media (min-width: 1200px) {
+  /* 第三列随 WorkbenchPanel 的展开态出现；折叠后对话区吃掉整个 400px */
   .dmpkShell.dmpk-quotationModuleShell {
     grid-template-columns: 280px minmax(0, 1fr);
   }
   .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed {
     grid-template-columns: 72px minmax(0, 1fr);
   }
-  .dmpkShell.dmpk-quotationModuleShell:has(> .dmpkPanel.isOpen) {
-    grid-template-columns: 280px minmax(0, 1fr) 360px;
+  .dmpkShell:has(> .workbenchPanel.isOpen) {
+    grid-template-columns: 280px minmax(0, 1fr) 400px;
   }
-  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed:has(> .dmpkPanel.isOpen) {
-    grid-template-columns: 72px minmax(0, 1fr) 360px;
+  .dmpkShell.sidebarCollapsed:has(> .workbenchPanel.isOpen) {
+    grid-template-columns: 72px minmax(0, 1fr) 400px;
   }
   .dmpk-quotationModuleShell > .dmpkPanel {
     display: none;
@@ -4226,42 +4229,41 @@ button { -webkit-tap-highlight-color: transparent; }
    hover 才摊开，鼠标移开又塌回去。确认类操作不该依赖悬停，
    这里把布局职责交还给 .isCollapsed / .isExpanded。 */
 
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionList {
+.stackDecision:not(.isPinned) .warningDecisionList {
   position: static;
   min-height: 0;
   gap: var(--bioaz-space-3);
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3) {
+.stackDecision:not(.isPinned) .decisionRow:nth-child(2),
+.stackDecision:not(.isPinned) .decisionRow:nth-child(3) {
   position: static;
   inset: auto;
   opacity: 1;
   pointer-events: auto;
   transform: none;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(n + 2) > * {
+.stackDecision:not(.isPinned) .decisionRow:nth-child(n + 2) > * {
   visibility: visible;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy p,
-.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
-.stackDecision:not(:hover):not(.isPinned) .warningActions,
-.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
+.stackDecision:not(.isPinned) .decisionCopy p,
+.stackDecision:not(.isPinned) .decisionInlineActions,
+.stackDecision:not(.isPinned) .warningActions,
+.stackDecision:not(.isPinned) .responsibilityNote {
   display: revert;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy strong {
+.stackDecision:not(.isPinned) .decisionCopy strong {
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionRow {
+.stackDecision:not(.isPinned) .decisionRow {
   grid-template-columns: 40px minmax(0, 1fr) auto;
   min-height: 0;
 }
-/* hover 不再放大卡片，也不再加投影 */
+/* hover 只留边框反馈，padding 交给下方锁死尺寸的规则，避免整卡重排 */
 .stackDecision:hover {
   border-color: var(--bioaz-border);
   box-shadow: none;
-  padding: 18px 20px;
 }
 
 /* 折叠态：只显示头部一行，内容整体收起 */
@@ -4525,19 +4527,19 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 /* 行内操作恒定可见，不靠 hover 出现 */
 .stackDecision .decisionInlineActions,
-.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
+.stackDecision:not(.isPinned) .decisionInlineActions,
 .stackDecision .warningActions,
-.stackDecision:not(:hover):not(.isPinned) .warningActions,
+.stackDecision:not(.isPinned) .warningActions,
 .stackDecision .responsibilityNote,
-.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
+.stackDecision:not(.isPinned) .responsibilityNote {
   display: flex;
 }
 .stackDecision .decisionCopy p,
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy p {
+.stackDecision:not(.isPinned) .decisionCopy p {
   display: block;
 }
 .stackDecision .warningDecisionList,
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionList,
+.stackDecision:not(.isPinned) .warningDecisionList,
 .stackDecision:hover .warningDecisionList {
   position: static;
   min-height: 0;
@@ -5017,7 +5019,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 标题字号恒定，与 hover 无关 */
 .warningDecisionHeader strong,
 .stackDecision .warningDecisionHeader strong,
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionHeader strong,
+.stackDecision:not(.isPinned) .warningDecisionHeader strong,
 .stackDecision:hover .warningDecisionHeader strong,
 .gateDecision .warningDecisionHeader strong,
 .gateDecision.isCollapsed .warningDecisionHeader strong {
@@ -6079,6 +6081,58 @@ button { -webkit-tap-highlight-color: transparent; }
   position: static;
   min-height: 0;
 }
+/* 护栏：composer 上方这张卡里，任何指针状态都不许改动影响布局的属性。
+   上面那组无伪类规则解决的是「当时存在的 14 段压制层」，但挡不住以后
+   别的样式表再加一条 :hover。这里把尺寸类属性在三种指针状态下锁成同值，
+   任何新的 hover 规则都改不动它们。 */
+.dmpkComposerWrap > .parameterTaskCard,
+.dmpkComposerWrap > .parameterTaskCard:hover,
+.dmpkComposerWrap > .parameterTaskCard:focus-within {
+  padding: 12px 14px;
+  transform: none;
+}
+
+.parameterTaskCard .decisionRow,
+.parameterTaskCard:hover .decisionRow,
+.parameterTaskCard .decisionRow:hover,
+.parameterTaskCard .decisionRow:focus-within {
+  display: block;
+  min-height: 62px;
+  padding: 8px 11px;
+  transform: none;
+}
+
+/* 字号同样锁死：同一组值在静止 / 悬停 / 聚焦三种状态下重复一遍，
+   这样后来者再写 :hover { font-size } 也顶不过去。 */
+.parameterTaskCard .decisionCopy strong,
+.parameterTaskCard:hover .decisionCopy strong,
+.parameterTaskCard .decisionRow:hover .decisionCopy strong,
+.parameterTaskCard .warningDecisionHeader strong,
+.parameterTaskCard:hover .warningDecisionHeader strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+}
+
+.parameterTaskCard .decisionCopy span,
+.parameterTaskCard:hover .decisionCopy span,
+.parameterTaskCard .decisionRow:hover .decisionCopy span,
+.parameterTaskCard .warningDecisionHeader span,
+.parameterTaskCard:hover .warningDecisionHeader span {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.parameterTaskCard .parameterPages button,
+.parameterTaskCard .parameterPages button:hover,
+.parameterTaskCard .optionGrid button,
+.parameterTaskCard .optionGrid button:hover {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 /* 唯一的指针反馈留给可点的选项，且只改颜色 */
 .parameterTaskCard .optionGrid button {
   transition: background-color 120ms ease, border-color 120ms ease;
@@ -6086,4 +6140,289 @@ button { -webkit-tap-highlight-color: transparent; }
 .parameterTaskCard .optionGrid button:hover {
   border-color: var(--bioaz-border-strong);
   background: var(--bioaz-surface-hover);
+}
+
+/* ===== 右侧常驻工作面板：tab 栏 + 加号，取代原来的三按钮互斥入口 ===== */
+.workbenchPanel {
+  display: none;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-left: 1px solid var(--bioaz-border);
+  background: #fff;
+}
+
+.workbenchPanel.isOpen { display: grid; }
+
+.workbenchPanelTabs {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 8px 8px 8px 12px;
+}
+
+.workbenchPanelTabScroll {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.workbenchPanelTabScroll::-webkit-scrollbar { display: none; }
+
+.workbenchPanelTab {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border-radius: 8px;
+  color: var(--bioaz-text-secondary);
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.workbenchPanelTab > button:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 6px 10px;
+  color: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.workbenchPanelTab:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
+
+.workbenchPanelTab.isActive {
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+}
+
+/* 叉号只在悬停或当前 tab 上出现，静止时 tab 栏保持干净 */
+.workbenchPanelTabClose {
+  display: grid;
+  width: 0;
+  height: 16px;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  opacity: 0;
+  cursor: pointer;
+  transition: width 140ms ease, opacity 140ms ease, margin 140ms ease;
+}
+
+.workbenchPanelTab:hover .workbenchPanelTabClose,
+.workbenchPanelTab.isActive .workbenchPanelTabClose,
+.workbenchPanelTabClose:focus-visible {
+  width: 16px;
+  margin-right: 6px;
+  opacity: 1;
+}
+
+.workbenchPanelTabClose:hover {
+  background: rgba(17, 19, 24, 0.08);
+  color: var(--bioaz-text-primary);
+}
+
+.workbenchPanelCollapse {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+}
+
+.workbenchPanelCollapse:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
+
+.workbenchPanelTabDot {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--bioaz-brand-primary, #2943ff);
+}
+
+.workbenchPanelAdd { position: relative; flex: none; }
+
+.workbenchPanelAdd > button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+}
+
+.workbenchPanelAdd > button:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
+.workbenchPanelAdd.isOpen > button { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
+
+.workbenchPanelAddMenu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  width: 224px;
+  gap: 1px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(17, 19, 24, 0.12);
+}
+
+.workbenchPanelAddMenuLabel {
+  padding: 6px 8px 4px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+}
+
+.workbenchPanelAddMenu button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  padding: 7px 8px;
+  color: var(--bioaz-text-secondary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workbenchPanelAddMenu button:hover { background: var(--bioaz-surface-subtle); }
+.workbenchPanelAddMenu button.isChecked { color: var(--bioaz-text-primary); }
+
+.workbenchPanelBody {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 14px 20px;
+}
+
+.workbenchPanelNotice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 18px 4px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 13px;
+}
+
+.workbenchPanelNotice.isError { color: #b42318; }
+
+/* 参数 tab 顶部工具条：原浮层头上的「对话编辑」跟着参数进 tab */
+.paramPanelToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.paramPanelToolbar > span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.paramPanelToolbar strong { color: var(--bioaz-text-primary); font-size: 14px; font-weight: 600; }
+.paramPanelToolbar em { color: var(--bioaz-text-tertiary); font-size: 12px; font-style: normal; }
+
+/* 报价规则 tab：本次可改 / 全局只读 两段 */
+.ruleDisclosureActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.ruleDisclosureActions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+  color: var(--bioaz-text-primary);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ruleDisclosureActions button:hover:not(:disabled) { background: var(--bioaz-surface-subtle); }
+.ruleDisclosureActions button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.ruleDisclosureApplied {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #15803d;
+  font-size: 12px;
+}
+
+.ruleDisclosureDivider { height: 1px; margin: 6px 0; background: var(--bioaz-border); }
+
+/* 对话列、参数卡、composer 共用同一条居中轴与同一个宽度。
+   之前三者各算各的（对话 920 左靠、composer 900 居中），基准线差了 148px。 */
+.dmpk-quotationModuleShell {
+  --dmpk-column: 900px;
+}
+
+.dmpkChatScroller { justify-items: center; }
+
+.dmpk-quotationModuleShell .dmpkConversation,
+.dmpk-quotationModuleShell .dmpkComposerWrap,
+.dmpk-quotationModuleShell .dmpkComposerWrap > .parameterTaskCard,
+.dmpk-quotationModuleShell .dmpkComposer {
+  width: min(var(--dmpk-column), 100%);
+  max-width: min(var(--dmpk-column), 100%);
+  margin-inline: auto;
+}
+
+/* 面板展开时与对话区合成同一块白卡：外框圆角归到最外侧，接缝处拉平，
+   两块之间只保留 panel 自己的 1px 左边框作为分隔线。 */
+.dmpkShell:has(> .workbenchPanel.isOpen) > :is(.dmpkWorkspace, .workspace) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.workbenchPanel.isOpen {
+  border-top-right-radius: var(--bioaz-radius-container);
+  border-bottom-right-radius: var(--bioaz-radius-container);
+}
+
+/* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列 */
+@media (max-width: 1199px) {
+  .workbenchPanel.isOpen {
+    position: fixed;
+    z-index: 320;
+    inset: 0 0 0 auto;
+    display: grid;
+    width: min(420px, calc(100vw - 48px));
+    height: 100dvh;
+    border-left: 1px solid var(--bioaz-border);
+    border-radius: 0;
+    box-shadow: -18px 0 48px rgba(17, 19, 24, 0.14);
+  }
 }

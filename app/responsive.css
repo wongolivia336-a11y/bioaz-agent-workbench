@@ -30,8 +30,8 @@
   .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(> .inspector.open),
   .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned),
   .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned),
-  .dmpkShell.dmpk-quotationModuleShell:has(> .dmpkPanel.isOpen),
-  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed:has(> .dmpkPanel.isOpen) {
+  .dmpkShell:has(> .workbenchPanel.isOpen),
+  .dmpkShell.sidebarCollapsed:has(> .workbenchPanel.isOpen) {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 

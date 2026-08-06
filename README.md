@@ -40,6 +40,8 @@ and 390 CSS pixels.
 ## What To Look At First
 
 - `/` — new-task home. Describe a task, Helper routes it to a coworker, confirm the dispatch to enter a module.
+- DMPK quotation — reached from the home quick-start card. The right side opens expanded on the parameter tab; the `+` chooses which panels are shown, including the quotation-rules tab that discloses back-office pricing configuration in the front end.
+- Tumor report — reached the same way. Upload, validate, accept risks, generate, then launch the expert-squad review to see the member-status card. Its right panel is the same component, collapsed until artifacts are generated.
 - `/?view=quotation-management&business=dmpk` — DMPK rule management and its rule assistant.
 - `/design-system` — executable design foundations: tokens, buttons, menus, chips, cards.
 
@@ -50,18 +52,14 @@ The shared UI system is maintained for developers and coding agents:
 - [docs/design-system.md](docs/design-system.md) — component inventory, Props, usage boundaries, and migration guidance.
 - [styles/tokens.css](styles/tokens.css) — the single source of truth for global `--bioaz-*` tokens.
 - [components/ui](components/ui) — stable shared UI primitives.
-- `/design-system` — executable catalogue rendering the real components and an automatically extracted Token list.
+- `/design-system` — executable catalogue rendering the real components and an automatically extracted Token list. Start the dev server as above and open http://localhost:3000/design-system.
 
-Run it locally:
+Two shared pieces are worth knowing before touching a module:
 
-```powershell
-$env:npm_config_cache='D:\.cache\npm'
-npm.cmd run dev -- --port 3001
-```
+- `WorkbenchComposer` — the composer at the bottom of every conversation. Its plus button opens a two-level menu (file / skill / connector), selections become chips inside the input, and files can be dropped anywhere on the page. Who does the work is a separate control: the coworker dropdown above the input.
+- `WorkbenchPanel` — the right-side panel in an Agent session, shared by DMPK and tumor report. A per-module tab registry plus a `+` that toggles which tabs are visible and an `×` on each tab; the topbar `PanelToggle` collapses the whole column (an overlay drawer below 1200px). Stage progression suggests a tab but stops stealing the view once the user picks one.
 
-Then open http://localhost:3001/design-system.
-
-The composer at the bottom of every conversation is the shared `WorkbenchComposer`: its plus button opens a two-level menu (file / skill / connector), selections become chips inside the input, and files can be dropped anywhere on the page. Who does the work is a separate control — the coworker dropdown above the input. See the Capability Entry section in [docs/DESIGN.md](docs/DESIGN.md).
+Both are documented in [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Vercel Deployment
 
@@ -116,7 +114,10 @@ If a previous failed deployment configured `dist`, `out`, or another output dire
   Product shell: sidebar, task entry, Helper routing, task list, file manager, and shared controls.
 
 - `components/workbench-inspector/`
-  Reusable Inspector container and public types.
+  Reusable Inspector container and public types. Its `ResolvedInspectorPanel` shape is also what `WorkbenchPanel` consumes.
+
+- `components/workbench-panel/`
+  The persistent right-side panel: tab bar, `+` visibility menu, and content area.
 
 - `components/ui/`
   Shared BioAZ UI primitives such as buttons and cards.
