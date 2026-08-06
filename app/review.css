@@ -6100,12 +6100,18 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .workbenchPanel.isOpen { display: grid; }
 
-/* tab 栏住在 workspace 的 topbar 里，所以它自己不带边框、不带底色 */
+/* tab 栏是面板自己的头部，与左侧对话区的 topbar 等高对齐 */
+.workbenchPanel.isOpen {
+  display: grid;
+  grid-template-rows: 58px minmax(0, 1fr);
+}
+
 .workbenchPanelTabs {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 4px;
+  padding: 0 8px 0 12px;
 }
 
 .workbenchPanelTabScroll {
@@ -6361,25 +6367,27 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-inline: auto;
 }
 
-/* 面板住在 workspace 内部：顶栏横贯整张白卡，只有顶栏以下才分成
-   对话 | 灰槽 | 面板 三列。灰槽用 panel 向左投的硬阴影画出来，
-   不需要额外元素，也不会被 workspace 的白底 !important 盖掉。 */
+/* 面板住在 workspace 内部，占满右侧一整列（含顶栏那一行），
+   左侧一条顶天立地的淡分界线把这张白卡分成「对话」与「面板」两半。
+   分界线只用一条，且比常规边框更淡——它是卡内分区，不是两张卡的边。 */
 :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) {
-  grid-template-columns: minmax(0, 1fr) 20px 400px;
+  grid-template-columns: minmax(0, 1fr) 400px;
 }
 
-:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > .topbar {
-  grid-column: 1 / -1;
-}
-
-:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > :not(.topbar):not(.workbenchPanel) {
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > :not(.workbenchPanel) {
   grid-column: 1;
 }
 
 .workbenchPanel.isOpen {
-  grid-column: 3;
-  grid-row: 2 / -1;
-  box-shadow: -20px 0 0 0 var(--bioaz-canvas);
+  grid-column: 2;
+  grid-row: 1 / -1;
+  border-left: 1px solid rgba(17, 19, 24, 0.06);
+}
+
+/* composer 是 position:absolute / left:0 / right:0，不吃 grid-column，
+   所以要显式把右边界收到面板左侧，它才会和上方对话列共用一条居中轴。 */
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) > :is(.dmpkComposerWrap, .legacyComposerStack) {
+  right: 400px;
 }
 
 /* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列 */
