@@ -4229,42 +4229,41 @@ button { -webkit-tap-highlight-color: transparent; }
    hover 才摊开，鼠标移开又塌回去。确认类操作不该依赖悬停，
    这里把布局职责交还给 .isCollapsed / .isExpanded。 */
 
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionList {
+.stackDecision:not(.isPinned) .warningDecisionList {
   position: static;
   min-height: 0;
   gap: var(--bioaz-space-3);
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(2),
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(3) {
+.stackDecision:not(.isPinned) .decisionRow:nth-child(2),
+.stackDecision:not(.isPinned) .decisionRow:nth-child(3) {
   position: static;
   inset: auto;
   opacity: 1;
   pointer-events: auto;
   transform: none;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionRow:nth-child(n + 2) > * {
+.stackDecision:not(.isPinned) .decisionRow:nth-child(n + 2) > * {
   visibility: visible;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy p,
-.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
-.stackDecision:not(:hover):not(.isPinned) .warningActions,
-.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
+.stackDecision:not(.isPinned) .decisionCopy p,
+.stackDecision:not(.isPinned) .decisionInlineActions,
+.stackDecision:not(.isPinned) .warningActions,
+.stackDecision:not(.isPinned) .responsibilityNote {
   display: revert;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy strong {
+.stackDecision:not(.isPinned) .decisionCopy strong {
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
 }
-.stackDecision:not(:hover):not(.isPinned) .decisionRow {
+.stackDecision:not(.isPinned) .decisionRow {
   grid-template-columns: 40px minmax(0, 1fr) auto;
   min-height: 0;
 }
-/* hover 不再放大卡片，也不再加投影 */
+/* hover 只留边框反馈，padding 交给下方锁死尺寸的规则，避免整卡重排 */
 .stackDecision:hover {
   border-color: var(--bioaz-border);
   box-shadow: none;
-  padding: 18px 20px;
 }
 
 /* 折叠态：只显示头部一行，内容整体收起 */
@@ -4528,19 +4527,19 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 /* 行内操作恒定可见，不靠 hover 出现 */
 .stackDecision .decisionInlineActions,
-.stackDecision:not(:hover):not(.isPinned) .decisionInlineActions,
+.stackDecision:not(.isPinned) .decisionInlineActions,
 .stackDecision .warningActions,
-.stackDecision:not(:hover):not(.isPinned) .warningActions,
+.stackDecision:not(.isPinned) .warningActions,
 .stackDecision .responsibilityNote,
-.stackDecision:not(:hover):not(.isPinned) .responsibilityNote {
+.stackDecision:not(.isPinned) .responsibilityNote {
   display: flex;
 }
 .stackDecision .decisionCopy p,
-.stackDecision:not(:hover):not(.isPinned) .decisionCopy p {
+.stackDecision:not(.isPinned) .decisionCopy p {
   display: block;
 }
 .stackDecision .warningDecisionList,
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionList,
+.stackDecision:not(.isPinned) .warningDecisionList,
 .stackDecision:hover .warningDecisionList {
   position: static;
   min-height: 0;
@@ -5020,7 +5019,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 标题字号恒定，与 hover 无关 */
 .warningDecisionHeader strong,
 .stackDecision .warningDecisionHeader strong,
-.stackDecision:not(:hover):not(.isPinned) .warningDecisionHeader strong,
+.stackDecision:not(.isPinned) .warningDecisionHeader strong,
 .stackDecision:hover .warningDecisionHeader strong,
 .gateDecision .warningDecisionHeader strong,
 .gateDecision.isCollapsed .warningDecisionHeader strong {
@@ -6082,6 +6081,58 @@ button { -webkit-tap-highlight-color: transparent; }
   position: static;
   min-height: 0;
 }
+/* 护栏：composer 上方这张卡里，任何指针状态都不许改动影响布局的属性。
+   上面那组无伪类规则解决的是「当时存在的 14 段压制层」，但挡不住以后
+   别的样式表再加一条 :hover。这里把尺寸类属性在三种指针状态下锁成同值，
+   任何新的 hover 规则都改不动它们。 */
+.dmpkComposerWrap > .parameterTaskCard,
+.dmpkComposerWrap > .parameterTaskCard:hover,
+.dmpkComposerWrap > .parameterTaskCard:focus-within {
+  padding: 12px 14px;
+  transform: none;
+}
+
+.parameterTaskCard .decisionRow,
+.parameterTaskCard:hover .decisionRow,
+.parameterTaskCard .decisionRow:hover,
+.parameterTaskCard .decisionRow:focus-within {
+  display: block;
+  min-height: 62px;
+  padding: 8px 11px;
+  transform: none;
+}
+
+/* 字号同样锁死：同一组值在静止 / 悬停 / 聚焦三种状态下重复一遍，
+   这样后来者再写 :hover { font-size } 也顶不过去。 */
+.parameterTaskCard .decisionCopy strong,
+.parameterTaskCard:hover .decisionCopy strong,
+.parameterTaskCard .decisionRow:hover .decisionCopy strong,
+.parameterTaskCard .warningDecisionHeader strong,
+.parameterTaskCard:hover .warningDecisionHeader strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+}
+
+.parameterTaskCard .decisionCopy span,
+.parameterTaskCard:hover .decisionCopy span,
+.parameterTaskCard .decisionRow:hover .decisionCopy span,
+.parameterTaskCard .warningDecisionHeader span,
+.parameterTaskCard:hover .warningDecisionHeader span {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.parameterTaskCard .parameterPages button,
+.parameterTaskCard .parameterPages button:hover,
+.parameterTaskCard .optionGrid button,
+.parameterTaskCard .optionGrid button:hover {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 /* 唯一的指针反馈留给可点的选项，且只改颜色 */
 .parameterTaskCard .optionGrid button {
   transition: background-color 120ms ease, border-color 120ms ease;
@@ -6332,9 +6383,34 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .ruleDisclosureDivider { height: 1px; margin: 6px 0; background: var(--bioaz-border); }
 
-/* chatflow 左靠：宽屏下不再两侧留白，与左侧边栏和面包屑对齐同一条基准线 */
-.dmpkChatScroller { justify-items: start; }
-.dmpk-quotationModuleShell .dmpkConversation { margin-inline: 0; }
+/* 对话列、参数卡、composer 共用同一条居中轴与同一个宽度。
+   之前三者各算各的（对话 920 左靠、composer 900 居中），基准线差了 148px。 */
+.dmpk-quotationModuleShell {
+  --dmpk-column: 900px;
+}
+
+.dmpkChatScroller { justify-items: center; }
+
+.dmpk-quotationModuleShell .dmpkConversation,
+.dmpk-quotationModuleShell .dmpkComposerWrap,
+.dmpk-quotationModuleShell .dmpkComposerWrap > .parameterTaskCard,
+.dmpk-quotationModuleShell .dmpkComposer {
+  width: min(var(--dmpk-column), 100%);
+  max-width: min(var(--dmpk-column), 100%);
+  margin-inline: auto;
+}
+
+/* 面板展开时与对话区合成同一块白卡：外框圆角归到最外侧，接缝处拉平，
+   两块之间只保留 panel 自己的 1px 左边框作为分隔线。 */
+.dmpkShell:has(> .workbenchPanel.isOpen) > :is(.dmpkWorkspace, .workspace) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.workbenchPanel.isOpen {
+  border-top-right-radius: var(--bioaz-radius-container);
+  border-bottom-right-radius: var(--bioaz-radius-container);
+}
 
 /* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列 */
 @media (max-width: 1199px) {
