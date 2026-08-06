@@ -238,14 +238,21 @@ and tumor report's dropdown panel selector. The old DMPK exclusivity existed
 only to stop the full-height rail from covering the floating parameter card;
 once nothing floats, the reason disappears.
 
-- **Structure.** Tab bar plus content area. No floating layer ever sits over
-  Chatflow. Tabs come from a per-module registry of `ResolvedInspectorPanel`;
+- **Structure.** The panel lives inside the workspace, not beside it. The topbar
+  spans the whole white card — breadcrumb on the left, the panel's tab bar and
+  collapse control on the right — and only the area below the topbar splits into
+  three columns: conversation, a 20px canvas-grey gutter, and the panel. No
+  border is drawn at the split; the gutter is what separates them, so the card
+  reads as one surface divided rather than two cards butted together.
+- **Tabs.** From a per-module registry of `ResolvedInspectorPanel`;
   `available()` gates a panel by stage, the `+` menu decides which available
-  panels are shown, and each tab carries an `×` to hide itself. The last
-  remaining tab keeps neither `×` nor the ability to be unchecked, so the panel
-  can never become an exit-less blank.
-- **Collapse.** The topbar `PanelToggle` collapses the panel; the third layout
-  column disappears entirely and Chatflow takes the full 400px. Below 1200px the
+  panels are shown, and each tab carries an `×` to hide itself. The selected tab
+  is marked by a grey underline, not a filled background. The `×` always
+  occupies its 16px and only toggles visibility — sizing it on hover makes the
+  whole tab strip jump. The last remaining tab keeps neither `×` nor the ability
+  to be unchecked, so the panel can never become an exit-less blank.
+- **Collapse.** The topbar toggle collapses the panel; the gutter and panel
+  columns disappear and the conversation takes the full width. Below 1200px the
   open panel is a fixed overlay drawer pinned to the right edge instead of a
   layout column.
 - **Defaults.** DMPK opens expanded on the parameter tab, because parameter
@@ -278,6 +285,16 @@ once nothing floats, the reason disappears.
 - Tumor report and DMPK share the same Chatflow grid, user-message geometry,
   Composer focus treatment, process-card width, artifact-row height, and
   restrained motion.
+- Both modules render the thinking chain with the same `agentRun` /
+  `runHeader` / `timeline` structure: one card, one border, a header carrying
+  the motion logo and elapsed time, and a timeline inside. Running shows the
+  blue motion logo and opens the timeline; settled collapses to a single
+  transparent, borderless line. DMPK previously used a `details`/`summary`
+  variant where the element, its summary, and its panel each drew their own
+  border, which read as three nested boxes.
+- In DMPK the conversation column, the parameter card, and the Composer all use
+  one `--dmpk-column` width and one centre axis. Do not give any of them a
+  separate width.
 - Process nodes, weak links, and auxiliary status use low-saturation purple-blue
   `#5C60B8`; Logo and primary brand identity keep the primary brand blue.
 - User messages are right-aligned rounded rectangles without chat tails.

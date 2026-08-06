@@ -61,7 +61,7 @@ import type { AgentModuleSessionProps } from "../types";
 import { Button, Dialog } from "../../components/ui";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard, PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
-import { PanelToggle, WorkbenchPanel } from "../../components/workbench-panel/WorkbenchPanel";
+import { WorkbenchPanelBody, WorkbenchPanelTabs } from "../../components/workbench-panel/WorkbenchPanel";
 import { resolveInspectorPanels, type InspectorPanelRegistry } from "../../components/workbench-inspector/WorkbenchInspector";
 
 export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange }: AgentModuleSessionProps) {
@@ -454,7 +454,20 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
             <ChevronRight size={15} />
             <strong>{taskTitle}</strong>
           </div>
-          <PanelToggle open={inspectorOpen} onToggle={() => setInspectorOpen((current) => !current)} />
+          <WorkbenchPanelTabs
+            panels={tumorPanels}
+            visibleIds={visiblePanelIds}
+            onVisibleIdsChange={setVisiblePanelIds}
+            activePanelId={inspectorTopic}
+            hintIds={panelHintIds}
+            open={inspectorOpen}
+            onToggleOpen={() => setInspectorOpen((current) => !current)}
+            onPanelChange={(panelId) => {
+              setTabPinnedByUser(true);
+              setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
+              setInspectorTopic(panelId as InspectorTopic);
+            }}
+          />
         </header>
 
         <div className="chatScroller" ref={chatScrollerRef}>
@@ -527,22 +540,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           accept=".docx,.xlsx"
           onChange={(event) => onFilesSelected(event.target.files)}
         />
+        <WorkbenchPanelBody panels={tumorPanels} visibleIds={visiblePanelIds} activePanelId={inspectorTopic} open={inspectorOpen} />
       </section>
-
-      <WorkbenchPanel
-        panels={tumorPanels}
-        visibleIds={visiblePanelIds}
-        onVisibleIdsChange={setVisiblePanelIds}
-        activePanelId={inspectorTopic}
-        hintIds={panelHintIds}
-        open={inspectorOpen}
-        onClose={() => setInspectorOpen(false)}
-        onPanelChange={(panelId) => {
-          setTabPinnedByUser(true);
-          setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
-          setInspectorTopic(panelId as InspectorTopic);
-        }}
-      />
 
       {previewOpen ? (
         <ValidationPreviewModal
