@@ -3407,32 +3407,111 @@ button {
   line-height: 1.6;
 }
 
-.squadThinking {
+/* 专家小队成员状态卡：外壳复用 .agentRun，与其余三张过程卡等宽同款 */
+.squadStatusMark {
   display: grid;
-  gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
-  padding: 14px 18px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  justify-self: center;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
 }
 
-.squadThinking > span {
+.agentRun.collapsed .squadStatusMark {
+  width: 22px;
+  height: 22px;
+  background: transparent;
+}
+
+.squadStatusHeader {
+  cursor: default;
+}
+
+.squadStatusHeader strong {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
-.squadSteps {
-  display: grid;
+.squadStatusHeader small {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.squadMembers {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  padding: 12px 15px 14px;
 }
 
-.squadStep {
-  display: grid;
-  grid-template-columns: 9px minmax(0, 1fr);
+.squadMember {
+  display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  padding: 5px 11px 5px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  transition: border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.squadMember > i {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: #d5d9e0;
+}
+
+.squadMember > b {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
   color: var(--body);
-  font-size: 13px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.squadMember.done {
+  border-color: rgba(22, 163, 74, 0.22);
+  color: var(--ink);
+}
+
+.squadMember.done > i { background: #16a34a; }
+
+.squadMember.active {
+  border-color: rgba(41, 67, 255, 0.28);
+  color: var(--ink);
+}
+
+.squadMember.active > i {
+  background: #2943ff;
+  animation: squadMemberPulse 1.4s ease-in-out infinite;
+}
+
+.squadMember.active > b {
+  background: rgba(41, 67, 255, 0.1);
+  color: #2943ff;
+}
+
+.squadMember.pending { opacity: 0.55; }
+
+@keyframes squadMemberPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.32; transform: scale(0.7); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .squadMember.active > i { animation: none; }
 }
 
 .squadStep i {

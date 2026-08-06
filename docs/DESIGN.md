@@ -225,10 +225,36 @@ cleanup — almost nothing is shared with the floating menu.
   only when artifacts are generated during the current live session. Closing
   it is respected; refreshes, historical tasks, validation, review, Home,
   Digital Team, and Data Hub do not force it open again.
-- In DMPK, the parameter summary permanently owns the top of the right column.
-  It stays compact by default, expands to at most 36–40% of the viewport, and
-  scrolls internally when its content grows. The remaining Inspector content
-  fills the space below without coordinate-based positioning.
+- Tumor report still uses this trigger. DMPK has moved on to the persistent
+  panel described below and no longer has a panel trigger at all.
+
+### DMPK Persistent Right Panel
+
+DMPK replaced the three mutually exclusive panel entries (artifacts / parameter
+collection / annotation canvas) with a single always-present right panel. The
+old exclusivity existed only to stop the full-height rail from covering the
+floating parameter card; once nothing floats, the reason disappears.
+
+- The right column is always reserved at desktop width, so making the panel
+  persistent costs no layout width — the column was already allocated.
+- The panel is a tab bar plus a content area. No floating layer ever sits over
+  Chatflow.
+- Tabs come from a fixed registry: parameter collection, process, materials,
+  gaps, evidence, artifacts, review, and quotation rules. The `+` control at the
+  end of the tab bar toggles which of them are shown; it never creates a second
+  instance of the same tab. Default visible set is parameters / process /
+  artifacts.
+- Stage progression suggests a tab (collecting → parameters, generating →
+  process, generated → artifacts). Once the user selects a tab themselves, later
+  suggestions stop stealing the view and only mark the target tab with a dot.
+- Explicit user intent — clicking a card in Chatflow, editing a field — always
+  switches the tab and clears its dot.
+- The quotation-rules tab is the front-of-house disclosure of back-office
+  pricing configuration. Its boundary matches `DmpkEditProposalCard`: values
+  scoped to the current quotation are editable in place; global rules are
+  read-only and deep-link to the quotation-management back office.
+- Chatflow in DMPK is left-aligned rather than centred; the 900px cap is
+  unchanged and user bubbles stay right-aligned.
 
 ### Shared Chatflow Grammar
 
@@ -240,6 +266,22 @@ cleanup — almost nothing is shared with the floating menu.
 - User messages are right-aligned rounded rectangles without chat tails.
 - Business-specific forms, quotation tables, and parameter structures keep
   their domain hierarchy rather than copying another module's content layout.
+
+### Multi-Member Progress
+
+Long parallel work — currently the tumor-report expert squad — needs a progress
+signal that is not another copy of the process timeline.
+
+- One dataset, one expanded representation. While the squad is running, the
+  member-status card owns "who is where" and the process card collapses; once
+  the review lands, the member card collapses to a single summary line and the
+  process card becomes expandable again.
+- The member card reuses the `.agentRun` shell so it is pixel-identical in width
+  and framing to the other process cards.
+- Members render as a single row of chips: status dot, initial, short name. The
+  running member's dot pulses; the full name, task, and finding stay in hover.
+- Time is reported once, in the card header, using the same relative elapsed
+  format as every other card. No fabricated absolute timestamps.
 
 ### Data Hub
 

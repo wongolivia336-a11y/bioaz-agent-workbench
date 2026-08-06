@@ -30,6 +30,7 @@ import {
   Send,
   ShieldCheck,
   SquarePen,
+  Users,
   X,
 } from "lucide-react";
 import {
@@ -177,7 +178,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     if (stage !== "reviewing") return;
 
     setReviewProgress(0);
-    setExpandedThinking((current) => ({ ...current, review: true }));
+    // 审核期间由成员状态卡负责「谁到哪了」，过程卡收起，避免两份专家清单同时展开
+    setExpandedThinking((current) => ({ ...current, review: false }));
 
     const timer = window.setInterval(() => {
       setReviewProgress((current) => {
@@ -1291,7 +1293,7 @@ function Conversation({
             running={stage === "reviewing"}
             elapsed={reviewElapsed}
             steps={reviewSteps}
-            expanded={stage === "reviewing" || expandedThinking.review}
+            expanded={expandedThinking.review}
             title="专家检查过程"
             collapsedLabel="已完成专家检查过程 · 查看过程"
             expandedTech={expandedTech}
@@ -1305,11 +1307,7 @@ function Conversation({
             }
             onInspector={() => onInspector("review")}
           />
-          {stage === "reviewing" ? (
-            <AgentReply title="专家小队审核已发起。" tone="neutral">
-              审核小队正在从数据溯源、统计口径、安全性和图表版式几个方向检查报告。审核建议生成前，产物保持可预览状态。
-            </AgentReply>
-          ) : null}
+          <SquadStatusCard steps={reviewSteps} elapsed={reviewElapsed} running={stage === "reviewing"} />
           {followupState !== "idle" ? <FollowupAnswer state={followupState} /> : null}
           {stage !== "reviewing" && reviews.every((item) => item.status === "confirmed") ? (
             <section className="artifactStack">
@@ -1394,28 +1392,57 @@ function UserEventBubbles({
   );
 }
 
-function SquadThinkingStrip() {
-  const experts = [
-    { name: "数据核对专家 D", task: "核对报告与 Excel 来源" },
-    { name: "统计复核专家 C", task: "复核统计口径和结论措辞" },
-    { name: "安全性专家 S", task: "检查异常事件与人道终点" },
-    { name: "图表版式专家 G", task: "检查图表、目录和交付格式" },
-    { name: "终审专家 F", task: "合并建议并给出放行判断" },
-  ];
+/**
+ * 专家小队成员状态。数据直接取自 reviewSteps，不另建一份成员清单，
+ * 避免同一批专家在屏幕上出现两份互相打架的进度。
+ * 审核进行中展开成员芯片，审核结束后只剩一行汇总。
+ */
+function SquadStatusCard({
+  steps,
+  elapsed,
+  running,
+}: {
+  steps: ActionStep[];
+  elapsed: string;
+  running: boolean;
+}) {
+  const doneCount = steps.filter((step) => step.status === "done").length;
 
   return (
-    <article className="squadThinking">
-      <span>专家检查</span>
-      <div className="squadSteps">
-        {experts.map((expert) => (
-          <span className="squadStep" key={expert.name}>
-            <i />
-            <ExpertName name={expert.name} task={expert.task} />
-          </span>
-        ))}
+    <article className={`agentRun squadStatus ${running ? "running" : "settled collapsed"}`}>
+      <div className="runHeader squadStatusHeader">
+        <span className="squadStatusMark">
+          <Users size={15} strokeWidth={1.9} />
+        </span>
+        <strong>{running ? "专家小队审核中" : "专家小队检查完成"}</strong>
+        <small>
+          {doneCount}/{steps.length} 已完成
+          {elapsed ? ` · ${elapsed}` : ""}
+        </small>
       </div>
+      {running ? (
+        <div className="squadMembers">
+          {steps.map((step) => (
+            <span className={`squadMember ${step.status}`} key={step.label}>
+              <i />
+              <b>{squadInitial(step.label)}</b>
+              <ExpertName name={step.label} task={step.detail} display={squadShortName(step.label)} />
+            </span>
+          ))}
+        </div>
+      ) : null}
     </article>
   );
+}
+
+/** "数据核对专家 D" → "D"，取不到就退回名字首字 */
+function squadInitial(name: string) {
+  return name.trim().match(/([A-Za-z])$/)?.[1] ?? name.trim().charAt(0);
+}
+
+/** "数据核对专家 D" → "数据核对"，芯片里放全名太长，完整名字留在 hover 里 */
+function squadShortName(name: string) {
+  return name.trim().replace(/\s*[A-Za-z]$/, "").replace(/专家$/, "");
 }
 
 function artifactKindFromName(name: string): ArtifactPreviewKind {
@@ -2121,12 +2148,12 @@ function TraceReference({ label }: { label: string }) {
   );
 }
 
-function ExpertName({ name, task }: { name: string; task?: string }) {
+function ExpertName({ name, task, display }: { name: string; task?: string; display?: string }) {
   const profile = expertProfiles[name] ?? expertProfiles["终审专家 F"];
 
   return (
     <span className="expertHover">
-      {name}
+      {display ?? name}
       <span className="expertTooltip">
         <strong>{name}</strong>
         <small>{task ?? profile.role}</small>
