@@ -225,34 +225,51 @@ cleanup — almost nothing is shared with the floating menu.
   only when artifacts are generated during the current live session. Closing
   it is respected; refreshes, historical tasks, validation, review, Home,
   Digital Team, and Data Hub do not force it open again.
-- Tumor report still uses this trigger. DMPK has moved on to the persistent
-  panel described below and no longer has a panel trigger at all.
+- Both modules now use this trigger through the shared `PanelToggle`, which
+  drives the `WorkbenchPanel` described below. The three mutually exclusive
+  entries (artifacts / parameter collection / annotation canvas) are gone from
+  both.
 
-### DMPK Persistent Right Panel
+### Shared Right Panel
 
-DMPK replaced the three mutually exclusive panel entries (artifacts / parameter
-collection / annotation canvas) with a single always-present right panel. The
-old exclusivity existed only to stop the full-height rail from covering the
-floating parameter card; once nothing floats, the reason disappears.
+DMPK and tumor report share one `WorkbenchPanel`: a tab bar, a `+` visibility
+menu, and a content area. It replaced DMPK's three mutually exclusive entries
+and tumor report's dropdown panel selector. The old DMPK exclusivity existed
+only to stop the full-height rail from covering the floating parameter card;
+once nothing floats, the reason disappears.
 
-- The right column is always reserved at desktop width, so making the panel
-  persistent costs no layout width — the column was already allocated.
-- The panel is a tab bar plus a content area. No floating layer ever sits over
-  Chatflow.
-- Tabs come from a fixed registry: parameter collection, process, materials,
-  gaps, evidence, artifacts, review, and quotation rules. The `+` control at the
-  end of the tab bar toggles which of them are shown; it never creates a second
-  instance of the same tab. Default visible set is parameters / process /
+- **Structure.** Tab bar plus content area. No floating layer ever sits over
+  Chatflow. Tabs come from a per-module registry of `ResolvedInspectorPanel`;
+  `available()` gates a panel by stage, the `+` menu decides which available
+  panels are shown, and each tab carries an `×` to hide itself. The last
+  remaining tab keeps neither `×` nor the ability to be unchecked, so the panel
+  can never become an exit-less blank.
+- **Collapse.** The topbar `PanelToggle` collapses the panel; the third layout
+  column disappears entirely and Chatflow takes the full 400px. Below 1200px the
+  open panel is a fixed overlay drawer pinned to the right edge instead of a
+  layout column.
+- **Defaults.** DMPK opens expanded on the parameter tab, because parameter
+  collection is its main working surface. Tumor report stays event-driven per
+  the rule above: collapsed by default, auto-opened once when artifacts are
+  generated.
+- **Stage suggestions.** Stage progression suggests a tab (DMPK: collecting →
+  parameters, generating → process, generated → artifacts; tumor report:
+  uploaded → files, validating → process, generated → artifacts). Once the user
+  selects a tab themselves, later suggestions stop stealing the view and only
+  mark the target tab with a dot. Explicit user intent — clicking a card in
+  Chatflow, editing a field — always switches the tab, clears its dot, and
+  expands a collapsed panel.
+- **DMPK tabs.** Parameter collection, process, materials, gaps, evidence,
+  artifacts, review, quotation rules. Default visible: parameters / process /
   artifacts.
-- Stage progression suggests a tab (collecting → parameters, generating →
-  process, generated → artifacts). Once the user selects a tab themselves, later
-  suggestions stop stealing the view and only mark the target tab with a dot.
-- Explicit user intent — clicking a card in Chatflow, editing a field — always
-  switches the tab and clears its dot.
-- The quotation-rules tab is the front-of-house disclosure of back-office
-  pricing configuration. Its boundary matches `DmpkEditProposalCard`: values
-  scoped to the current quotation are editable in place; global rules are
-  read-only and deep-link to the quotation-management back office.
+- **Tumor report tabs.** Uploaded files, process, generation, risk review,
+  artifacts, review suggestions. Default visible: files / process / artifacts.
+  The uploaded-files tab is read-only; it exists because input files otherwise
+  scroll out of Chatflow and cannot be found again.
+- **Quotation rules** is the front-of-house disclosure of back-office pricing
+  configuration. Its boundary matches `DmpkEditProposalCard`: values scoped to
+  the current quotation are editable in place; global rules are read-only and
+  deep-link to the quotation-management back office.
 - Chatflow in DMPK is left-aligned rather than centred; the 900px cap is
   unchanged and user bubbles stay right-aligned.
 

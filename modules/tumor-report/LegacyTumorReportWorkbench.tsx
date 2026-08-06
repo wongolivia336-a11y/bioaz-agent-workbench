@@ -61,6 +61,8 @@ import type { AgentModuleSessionProps } from "../types";
 import { Button, Dialog } from "../../components/ui";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard, PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
+import { PanelToggle, WorkbenchPanel } from "../../components/workbench-panel/WorkbenchPanel";
+import { resolveInspectorPanels, type InspectorPanelRegistry } from "../../components/workbench-inspector/WorkbenchInspector";
 
 export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange }: AgentModuleSessionProps) {
   const [stage, setStage] = useState<Stage>("empty");
@@ -76,9 +78,31 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   });
   const [warnings, setWarnings] = useState<WarningItem[]>(initialWarnings);
   const [reviews, setReviews] = useState<ReviewItem[]>(initialReviews);
+  // 右侧面板：与 DMPK 同一个 WorkbenchPanel，但这里保持事件驱动——默认折叠，产物生成时自动展开一次
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [suppressInspectorHover, setSuppressInspectorHover] = useState(false);
-  const [inspectorTopic, setInspectorTopic] = useState<InspectorTopic>("process");
+  const [inspectorTopic, setInspectorTopic] = useState<InspectorTopic>("files");
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["files", "process", "artifacts"]);
+  /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
+  const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
+  const [panelHintIds, setPanelHintIds] = useState<string[]>([]);
+  /** 阶段推进时的建议切换：用户没自己点过 tab 才真的切，否则只打点提示 */
+  const suggestTopic = (topic: InspectorTopic) => {
+    setVisiblePanelIds((ids) => ids.includes(topic) ? ids : [...ids, topic]);
+    if (tabPinnedByUser) {
+      setPanelHintIds((ids) => ids.includes(topic) ? ids : [...ids, topic]);
+      return;
+    }
+    setInspectorTopic(topic);
+  };
+
+  /** 用户显式要求看某个面板：一定切过去，并把折叠的面板展开 */
+  const openTopic = (topic: InspectorTopic) => {
+    setVisiblePanelIds((ids) => ids.includes(topic) ? ids : [...ids, topic]);
+    setInspectorTopic(topic);
+    setPanelHintIds((ids) => ids.filter((id) => id !== topic));
+    setInspectorOpen(true);
+  };
+
   const [reviewConfirmOpen, setReviewConfirmOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewKind, setPreviewKind] = useState<PreviewKind>("validation");
@@ -139,7 +163,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           window.setTimeout(() => {
             setStage("warning");
             setExpandedThinking((value) => ({ ...value, validation: false }));
-            setInspectorTopic("warnings");
+            suggestTopic("warnings");
           }, 450);
         }
         return Math.min(next, validationActionsBase.length);
@@ -163,8 +187,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           window.setTimeout(() => {
             setStage("generated");
             setExpandedThinking((value) => ({ ...value, generation: false }));
-            setInspectorTopic("artifacts");
-            setInspectorOpen(true);
+            openTopic("artifacts");
           }, 450);
         }
         return Math.min(next, generationActionsBase.length);
@@ -189,7 +212,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           window.setTimeout(() => {
             setStage("review");
             setExpandedThinking((value) => ({ ...value, review: false }));
-            setInspectorTopic("review");
+            suggestTopic("review");
           }, 450);
         }
         return Math.min(next, reviewActionsBase.length);
@@ -203,7 +226,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     if (stage === "warning" && allWarningsAccepted) {
       const timer = window.setTimeout(() => {
         setStage("generating");
-        setInspectorTopic("generation");
+        suggestTopic("generation");
       }, 420);
 
       return () => window.clearTimeout(timer);
@@ -214,7 +237,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     if (stage === "review" && allReviewsConfirmed) {
       const timer = window.setTimeout(() => {
         setStage("exported");
-        setInspectorTopic("artifacts");
+        suggestTopic("artifacts");
       }, 420);
       return () => window.clearTimeout(timer);
     }
@@ -300,7 +323,8 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     setValidationProgress(0);
     setGenerationProgress(0);
     setReviewProgress(0);
-    setInspectorTopic("process");
+    // 刚传完文件时该看的是文件本身；处理过程要等校验真正开始
+    suggestTopic("files");
   };
 
   const onFilesDropped = (event: React.DragEvent<HTMLElement>) => {
@@ -329,14 +353,14 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     if (!canStart) return;
     addUserEvent("upload", "开始校验");
     setStage("validating");
-    setInspectorTopic("process");
+    suggestTopic("process");
   };
 
   const acceptAllWarnings = () => {
     addUserEvent("warning", "已确认风险并继续生成。");
     setWarnings((items) => items.map((item) => ({ ...item, accepted: true })));
     setStage("generating");
-    setInspectorTopic("generation");
+    suggestTopic("generation");
   };
 
   const acceptWarning = (id: string) => {
@@ -345,7 +369,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
       if (!items.every((item) => item.accepted) && next.every((item) => item.accepted)) {
         addUserEvent("warning", "已确认风险并继续生成。");
         setStage("generating");
-        setInspectorTopic("generation");
+        suggestTopic("generation");
       }
       return next;
     });
@@ -367,7 +391,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     setReviewConfirmOpen(false);
     addUserEvent("review", "发起专家小队审核");
     setStage("reviewing");
-    setInspectorTopic("review");
+    suggestTopic("review");
   };
 
   const confirmReview = (id: string) => {
@@ -395,6 +419,17 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     window.setTimeout(() => composerInputRef.current?.focus(), 0);
   };
 
+  const tumorPanels = getTumorPanels({
+    stage,
+    files,
+    validationSteps,
+    generationSteps,
+    warnings,
+    reviews,
+    onPreviewArtifact: openArtifactPreview,
+    onPreviewWorkflow: openWorkflowPreview,
+  });
+
   const sendComposerMessage = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -419,29 +454,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
             <ChevronRight size={15} />
             <strong>{taskTitle}</strong>
           </div>
-          {/* 右侧三类工作面板：展示 / 参数编辑 / 画布。后两类留待 DMPK 与 QA 模块接入，此处先占位置灰。 */}
-          <div className="sidePanelSwitch" role="group" aria-label="右侧面板">
-            <button
-              className={`tumorInspectorToggle ${inspectorOpen ? "isActive" : ""} ${suppressInspectorHover ? "suppressHover" : ""}`}
-              type="button"
-              title="产物与依据"
-              aria-label={inspectorOpen ? "关闭产物与依据" : "打开产物与依据"}
-              aria-pressed={inspectorOpen}
-              onClick={() => {
-                if (inspectorOpen) setSuppressInspectorHover(true);
-                setInspectorOpen((current) => !current);
-              }}
-              onMouseLeave={() => setSuppressInspectorHover(false)}
-            >
-              <PanelRight size={17} />
-            </button>
-            <button className="tumorInspectorToggle" type="button" title="参数收集（DMPK 报价可用）" aria-label="参数收集，当前模块不适用" disabled>
-              <ListChecks size={17} />
-            </button>
-            <button className="tumorInspectorToggle" type="button" title="标注画布（QA 审核可用）" aria-label="标注画布，当前模块不适用" disabled>
-              <SquarePen size={17} />
-            </button>
-          </div>
+          <PanelToggle open={inspectorOpen} onToggle={() => setInspectorOpen((current) => !current)} />
         </header>
 
         <div className="chatScroller" ref={chatScrollerRef}>
@@ -467,8 +480,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
               onPreviewArtifact={openArtifactPreview}
               onPreviewWorkflow={openWorkflowPreview}
               onInspector={(topic) => {
-                setInspectorTopic(topic);
-                setInspectorOpen(true);
+                openTopic(topic);
               }}
             />
           ) : null}
@@ -501,8 +513,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
             setComposerText={setComposerText}
             inputRef={composerInputRef}
             onOpenInspector={(topic) => {
-              setInspectorTopic(topic);
-              setInspectorOpen(true);
+              openTopic(topic);
             }}
             onPreviewReview={() => openWorkflowPreview("review", "issues")}
           />
@@ -518,21 +529,19 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
         />
       </section>
 
-      <HoverInspector
+      <WorkbenchPanel
+        panels={tumorPanels}
+        visibleIds={visiblePanelIds}
+        onVisibleIdsChange={setVisiblePanelIds}
+        activePanelId={inspectorTopic}
+        hintIds={panelHintIds}
         open={inspectorOpen}
-        topic={inspectorTopic}
-        stage={stage}
-        validationSteps={validationSteps}
-        generationSteps={generationSteps}
-        warnings={warnings}
-        reviews={reviews}
-        onSelectTopic={setInspectorTopic}
-        onClose={() => {
-          setSuppressInspectorHover(true);
-          setInspectorOpen(false);
+        onClose={() => setInspectorOpen(false)}
+        onPanelChange={(panelId) => {
+          setTabPinnedByUser(true);
+          setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
+          setInspectorTopic(panelId as InspectorTopic);
         }}
-        onPreviewArtifact={openArtifactPreview}
-        onPreviewWorkflow={openWorkflowPreview}
       />
 
       {previewOpen ? (
@@ -2217,82 +2226,24 @@ function ArtifactCard({
   );
 }
 
-function HoverInspector({
-  open,
-  topic,
-  stage,
-  validationSteps,
-  generationSteps,
-  warnings,
-  reviews,
-  onSelectTopic,
-  onClose,
-  onPreviewArtifact,
-  onPreviewWorkflow,
-}: {
-  open: boolean;
-  topic: InspectorTopic;
+type TumorPanelContext = {
   stage: Stage;
+  files: UploadedFile[];
   validationSteps: ActionStep[];
   generationSteps: ActionStep[];
   warnings: WarningItem[];
   reviews: ReviewItem[];
-  onSelectTopic: (topic: InspectorTopic) => void;
-  onClose: () => void;
   onPreviewArtifact: (kind: ArtifactPreviewKind) => void;
   onPreviewWorkflow: (kind: PreviewKind, section?: PreviewSection) => void;
-}) {
-  const processSteps = topic === "generation" ? generationSteps : validationSteps;
-  const [panelMenuOpen, setPanelMenuOpen] = useState(false);
-  const panelOptions = inspectorPanels(stage);
-  const activeTopic: InspectorTopic = panelOptions.some((panel) => panel.id === topic)
-    ? topic
-    : (panelOptions[0]?.id ?? "process");
-  const activePanel = panelOptions.find((panel) => panel.id === activeTopic) ?? panelOptions[0];
+};
+
+/** 面板内容沿用迁移前的结构，只是外壳从下拉选择器换成了共用的 WorkbenchPanel */
+function TumorPanelBody({ activeTopic, context }: { activeTopic: InspectorTopic; context: TumorPanelContext }) {
+  const { stage, validationSteps, generationSteps, warnings, reviews, onPreviewArtifact, onPreviewWorkflow } = context;
+  const processSteps = activeTopic === "generation" ? generationSteps : validationSteps;
 
   return (
-    <aside
-      className={`inspector ${open ? "open" : ""}`}
-      aria-hidden={!open}
-    >
-      <header>
-        <div className="workbenchPanelSelector">
-          <button
-            className="workbenchPanelSelectorTrigger"
-            type="button"
-            onClick={() => setPanelMenuOpen((current) => !current)}
-            aria-expanded={panelMenuOpen}
-          >
-            <FileText size={16} />
-            <span>{activePanel?.label ?? "过程"}</span>
-            <ChevronRight className={panelMenuOpen ? "isOpen" : ""} size={15} />
-          </button>
-          {panelMenuOpen ? (
-            <div className="workbenchPanelSelectorMenu">
-              {panelOptions.map((panel) => (
-                <button
-                  key={panel.id}
-                  type="button"
-                  onClick={() => {
-                    onSelectTopic(panel.id);
-                    setPanelMenuOpen(false);
-                  }}
-                >
-                  <FileText size={16} />
-                  <span>{panel.label}</span>
-                  {activeTopic === panel.id ? <Check size={17} /> : null}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-        <div className="inspectorControls">
-          <button type="button" onClick={onClose} aria-label="关闭详情面板">
-            <X size={16} />
-          </button>
-        </div>
-      </header>
-
+    <>
       {activeTopic === "process" || activeTopic === "generation" ? (
         <div className="inspectorSection">
           {processSteps.map((step) => (
@@ -2426,26 +2377,85 @@ function HoverInspector({
           </div>
         </div>
       ) : null}
-    </aside>
+    </>
   );
 }
-function inspectorPanels(stage: Stage): Array<{ id: InspectorTopic; label: string }> {
-  if (stage === "generated" || stage === "reviewing" || stage === "review" || stage === "exported") {
-    return [
-      { id: "artifacts", label: "产物" },
-      { id: "warnings", label: "风险回看" },
-      { id: "review", label: "审核建议" },
-    ];
-  }
 
-  if (stage === "warning" || stage === "generating") {
-    return [
-      { id: "warnings", label: "风险回看" },
-      { id: "artifacts", label: "产物" },
-    ];
+/** 上传的文件是整个任务的输入，全程可见，不随对话滚走。本轮只读。 */
+function TumorFilesPanel({ files, onPreviewWorkflow }: { files: UploadedFile[]; onPreviewWorkflow: (kind: PreviewKind, section?: PreviewSection) => void }) {
+  if (!files.length) {
+    return <div className="inspectorSection"><div className="panelIntro"><strong>上传的文件</strong><p>还没有上传实验方案和原始数据。</p></div></div>;
   }
+  return (
+    <div className="inspectorSection">
+      <div className="panelIntro">
+        <strong>上传的文件</strong>
+        <p>本次任务的输入材料，校验、生成与审核都以这些文件为准。</p>
+      </div>
+      {files.map((file) => (
+        <div className="artifactMini deliverable" key={file.id}>
+          <span className="deliverableIcon">{file.kind === "data" ? <FileSpreadsheet size={18} /> : <FileText size={18} />}</span>
+          <div>
+            <strong>{file.name}</strong>
+            <p>{file.kind === "data" ? "原始数据" : "实验方案"}</p>
+            <small>{file.size}</small>
+          </div>
+          <div className="deliverableActions">
+            <button type="button" aria-label={`预览${file.name}`} onClick={() => onPreviewWorkflow("validation", "recognized")}>
+              <Eye size={14} />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  return [{ id: "process", label: "处理过程" }];
+const tumorPanelRegistry: InspectorPanelRegistry<TumorPanelContext> = [
+  {
+    id: "files",
+    label: "上传的文件",
+    icon: Paperclip,
+    render: (context) => <TumorFilesPanel files={context.files} onPreviewWorkflow={context.onPreviewWorkflow} />,
+  },
+  {
+    id: "process",
+    label: "处理过程",
+    icon: ListChecks,
+    render: (context) => <TumorPanelBody activeTopic="process" context={context} />,
+  },
+  {
+    id: "generation",
+    label: "生成过程",
+    icon: Sparkles,
+    available: (context) => ["generating", "generated", "reviewing", "review", "exported"].includes(context.stage),
+    render: (context) => <TumorPanelBody activeTopic="generation" context={context} />,
+  },
+  {
+    id: "warnings",
+    label: "风险回看",
+    icon: SearchCheck,
+    available: (context) => context.stage !== "empty" && context.stage !== "uploaded" && context.stage !== "validating",
+    render: (context) => <TumorPanelBody activeTopic="warnings" context={context} />,
+  },
+  {
+    id: "artifacts",
+    label: "产物",
+    icon: FileCheck,
+    available: (context) => ["generated", "reviewing", "review", "exported"].includes(context.stage),
+    render: (context) => <TumorPanelBody activeTopic="artifacts" context={context} />,
+  },
+  {
+    id: "review",
+    label: "审核建议",
+    icon: MessageSquare,
+    available: (context) => ["reviewing", "review", "exported"].includes(context.stage),
+    render: (context) => <TumorPanelBody activeTopic="review" context={context} />,
+  },
+];
+
+function getTumorPanels(context: TumorPanelContext) {
+  return resolveInspectorPanels(tumorPanelRegistry, context);
 }
 
 function artifactIcon(kind: string) {

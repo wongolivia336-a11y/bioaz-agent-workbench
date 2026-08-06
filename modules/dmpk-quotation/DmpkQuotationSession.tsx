@@ -2,7 +2,7 @@
 
 import { ChevronRight, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { WorkbenchPanel } from "../../components/workbench-panel/WorkbenchPanel";
+import { PanelToggle, WorkbenchPanel } from "../../components/workbench-panel/WorkbenchPanel";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
@@ -59,6 +59,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
   // 右侧是常驻面板：默认显示这三个 tab，其余通过 tab 栏的加号自行加回来
   const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "process", "artifacts"]);
+  // DMPK 的参数收集是主工作面，右侧默认就展开；肿瘤报告那边是事件驱动的
+  const [panelOpen, setPanelOpen] = useState(true);
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("parameters");
   /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
   const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
@@ -246,6 +248,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   /** 用户显式要求看某个面板（点对话里的卡片、点 tab），一定切过去 */
   const openInspector = (panelId: DmpkInspectorPanelId) => {
+    setPanelOpen(true);
     setVisiblePanelIds((ids) => ids.includes(panelId) ? ids : [...ids, panelId]);
     setInspectorPanelId(panelId);
     setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
@@ -295,6 +298,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <section className="dmpkWorkspace">
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
+          <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
@@ -305,6 +309,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         onVisibleIdsChange={setVisiblePanelIds}
         activePanelId={inspectorPanelId}
         hintIds={panelHintIds}
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
         onPanelChange={(panelId) => {
           setTabPinnedByUser(true);
           setPanelHintIds((ids) => ids.filter((id) => id !== panelId));

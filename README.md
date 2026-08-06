@@ -40,8 +40,8 @@ and 390 CSS pixels.
 ## What To Look At First
 
 - `/` — new-task home. Describe a task, Helper routes it to a coworker, confirm the dispatch to enter a module.
-- DMPK quotation — reached from the home quick-start card. The right side is a persistent panel: a tab bar plus a `+` that chooses which panels are shown, including the quotation-rules tab that discloses back-office pricing configuration in the front end.
-- Tumor report — reached the same way. Upload, validate, accept risks, generate, then launch the expert-squad review to see the member-status card.
+- DMPK quotation — reached from the home quick-start card. The right side opens expanded on the parameter tab; the `+` chooses which panels are shown, including the quotation-rules tab that discloses back-office pricing configuration in the front end.
+- Tumor report — reached the same way. Upload, validate, accept risks, generate, then launch the expert-squad review to see the member-status card. Its right panel is the same component, collapsed until artifacts are generated.
 - `/?view=quotation-management&business=dmpk` — DMPK rule management and its rule assistant.
 - `/design-system` — executable design foundations: tokens, buttons, menus, chips, cards.
 
@@ -57,7 +57,7 @@ The shared UI system is maintained for developers and coding agents:
 Two shared pieces are worth knowing before touching a module:
 
 - `WorkbenchComposer` — the composer at the bottom of every conversation. Its plus button opens a two-level menu (file / skill / connector), selections become chips inside the input, and files can be dropped anywhere on the page. Who does the work is a separate control: the coworker dropdown above the input.
-- `WorkbenchPanel` — the right-side panel in an Agent session. A fixed tab registry plus a `+` that toggles which tabs are visible; stage progression suggests a tab but stops stealing the view once the user picks one. Currently wired into DMPK only; tumor report still uses the older panel trigger.
+- `WorkbenchPanel` — the right-side panel in an Agent session, shared by DMPK and tumor report. A per-module tab registry plus a `+` that toggles which tabs are visible and an `×` on each tab; the topbar `PanelToggle` collapses the whole column (an overlay drawer below 1200px). Stage progression suggests a tab but stops stealing the view once the user picks one.
 
 Both are documented in [docs/DESIGN.md](docs/DESIGN.md).
 
