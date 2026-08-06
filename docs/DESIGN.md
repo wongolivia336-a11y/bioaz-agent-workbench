@@ -238,12 +238,17 @@ and tumor report's dropdown panel selector. The old DMPK exclusivity existed
 only to stop the full-height rail from covering the floating parameter card;
 once nothing floats, the reason disappears.
 
-- **Structure.** The panel lives inside the workspace, not beside it. The topbar
-  spans the whole white card — breadcrumb on the left, the panel's tab bar and
-  collapse control on the right — and only the area below the topbar splits into
-  three columns: conversation, a 20px canvas-grey gutter, and the panel. No
-  border is drawn at the split; the gutter is what separates them, so the card
-  reads as one surface divided rather than two cards butted together.
+- **Structure.** The panel lives inside the workspace, not beside it. Both the
+  conversation and the panel sit inside the one rounded white card, split by a
+  single full-height divider that runs from the top of the card to the bottom.
+  The divider is one hairline at 6% ink — lighter than a normal border, because
+  it marks a division inside a card rather than the edge between two cards. The
+  panel's tab bar is its own header, level with the breadcrumb row, so the two
+  halves are legible on either side of the divider.
+- **Composer.** The composer is absolutely positioned across the workspace, so
+  it does not inherit the grid column. Its right edge must be pulled in to the
+  panel width whenever the panel is open, otherwise it centres on the whole card
+  while the conversation above it centres on the left column.
 - **Tabs.** From a per-module registry of `ResolvedInspectorPanel`;
   `available()` gates a panel by stage, the `+` menu decides which available
   panels are shown, and each tab carries an `×` to hide itself. The selected tab
