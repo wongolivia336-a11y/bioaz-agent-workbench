@@ -2,7 +2,7 @@
 
 import { ChevronRight, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { PanelToggle, WorkbenchPanel } from "../../components/workbench-panel/WorkbenchPanel";
+import { WorkbenchPanelBody, WorkbenchPanelTabs } from "../../components/workbench-panel/WorkbenchPanel";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
@@ -298,25 +298,25 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <section className="dmpkWorkspace">
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
-          <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
+          <WorkbenchPanelTabs
+            panels={railPanels}
+            visibleIds={visiblePanelIds}
+            onVisibleIdsChange={setVisiblePanelIds}
+            activePanelId={inspectorPanelId}
+            hintIds={panelHintIds}
+            open={panelOpen}
+            onToggleOpen={() => setPanelOpen((value) => !value)}
+            onPanelChange={(panelId) => {
+              setTabPinnedByUser(true);
+              setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
+              setInspectorPanelId(panelId as DmpkInspectorPanelId);
+            }}
+          />
         </header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
+        <WorkbenchPanelBody panels={railPanels} visibleIds={visiblePanelIds} activePanelId={inspectorPanelId} open={panelOpen} />
       </section>
-      <WorkbenchPanel
-        panels={railPanels}
-        visibleIds={visiblePanelIds}
-        onVisibleIdsChange={setVisiblePanelIds}
-        activePanelId={inspectorPanelId}
-        hintIds={panelHintIds}
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
-        onPanelChange={(panelId) => {
-          setTabPinnedByUser(true);
-          setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
-          setInspectorPanelId(panelId as DmpkInspectorPanelId);
-        }}
-      />
       {previewOpen ? <DmpkQuotationPreviewModal fields={fields} onClose={() => setPreviewOpen(false)} /> : null}
       {artifactPreview ? <DmpkArtifactPreviewModal kind={artifactPreview} onClose={() => setArtifactPreview(null)} /> : null}
     </>

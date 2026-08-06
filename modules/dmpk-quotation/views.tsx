@@ -51,25 +51,42 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
   );
 }
 
+/**
+ * 与肿瘤报告的 ThinkingCard 同构：同一套 agentRun / runHeader / timeline 结构和 class，
+ * 运行中蓝色 motionLogo、结束后折叠置灰。此前这里是 details/summary，
+ * 外层 details、summary、activityChainPanel 各自带一圈边框，看起来是三层嵌套。
+ */
 function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: string; steps: string[]; running: boolean; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {
   const [expandedTech, setExpandedTech] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const open = running || expanded;
+  const activeStepIndex = steps.length - 1;
+
   return (
-    <details className="activityChain" open={running}>
-      <summary>
-        <span className={running ? "agentLogoMark isThinking" : "agentLogoMark isMuted"}><img src="/logo/bioaz-logo.svg" alt="" /></span>
-        <strong>{title}</strong><span>·</span>
-        <PanelLink panelId="process" onOpen={onOpenInspector}>查看过程</PanelLink>
-        <em>{running ? "处理中" : "4s"}</em>
-      </summary>
-      <div className="activityChainPanel">
-        {/* summary 里已经有 logo 与标题，展开后不再重复一栏 */}
-        <div className="activitySteps">
-          {steps.map((step) => (
-            <p key={step}>
-              <i />
-              <span>
-                <strong>{step}</strong>
-                <small>{processStepDetail(step)}</small>
+    <article className={`agentRun ${running ? "running" : "settled"} ${open ? "" : "collapsed"}`}>
+      <button
+        className="runHeader"
+        type="button"
+        onClick={running ? () => onOpenInspector("process") : () => setExpanded((value) => !value)}
+      >
+        <span className={`motionLogo ${running ? "running" : ""}`} data-step={running ? activeStepIndex : undefined}>
+          <img src="/logo/bioaz-logo.svg" alt="" />
+          <span key={running ? activeStepIndex : "settled"} />
+        </span>
+        <strong>{open ? title : `${title} · 查看过程`}</strong>
+        <small>{running ? "处理中" : "4s"}</small>
+      </button>
+      {open ? (
+        <div className="timeline">
+          {steps.map((step, index) => (
+            <div className={`timelineItem ${running && index === activeStepIndex ? "active" : "done"}`} key={step}>
+              <span className="timelineDot" />
+              <div className="timelineContent">
+                <div className="timelineTitle">
+                  <strong>{step}</strong>
+                  {running && index === activeStepIndex ? <span>进行中</span> : null}
+                </div>
+                <p>{processStepDetail(step)}</p>
                 <button
                   className="textButton"
                   type="button"
@@ -84,12 +101,13 @@ function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: 
                     {"\n"}trace_id=trc_quotation_58ad31
                   </pre>
                 ) : null}
-              </span>
-            </p>
+              </div>
+              {index < steps.length - 1 ? <span className="timelineLine" /> : null}
+            </div>
           ))}
         </div>
-      </div>
-    </details>
+      ) : null}
+    </article>
   );
 }
 

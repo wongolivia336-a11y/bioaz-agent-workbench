@@ -35,7 +35,7 @@ const components = [
   { name: "Drawer", status: "stable", props: "title, eyebrow, onClose, className", use: "保持当前上下文的右侧详情", avoid: "完整工作流和高密度编辑不塞进抽屉" },
   { name: "EmptyState", status: "stable", props: "icon, title, description, action, variant", use: "空列表、首次进入和无结果状态", avoid: "不要堆多段解释或多个主行动" },
   { name: "WorkbenchComposer", status: "candidate", props: "attachments, activeCoworkerId, project, menu, globalDrop", use: "任务输入、附件与能力入口", avoid: "窄 Drawer 不启用二级菜单；同屏仅一个 globalDrop" },
-  { name: "WorkbenchPanel / PanelToggle", status: "candidate", props: "panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds, open, onClose", use: "Agent 会话右侧工作面板：tab 栏 + 加号选面板 + 每个 tab 可叉掉；topbar 的 PanelToggle 负责折叠展开", avoid: "不要再和别的右侧浮层互斥；tab 清单固定，不做可重复实例；最后一个 tab 不可关闭" },
+  { name: "WorkbenchPanelTabs / WorkbenchPanelBody", status: "candidate", props: "panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds, open, onToggleOpen", use: "Agent 会话右侧工作面板。Tabs 放进 workspace 的 topbar（顶栏横贯全卡），Body 占顶栏以下的第三列，两者之间是 20px 灰槽", avoid: "不要在分栏处画边框；tab 的叉号必须恒定占位，只切可见性；最后一个 tab 不可关闭" },
   { name: "SquadStatusCard", status: "candidate", props: "steps, elapsed, running", use: "多成员并行处理时的进度感知（专家小队审核）", avoid: "不要与同一份步骤数据的过程卡同时展开" },
 ];
 

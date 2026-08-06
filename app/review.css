@@ -1350,18 +1350,14 @@ button { -webkit-tap-highlight-color: transparent; }
   transform: none;
 }
 @media (min-width: 1200px) {
-  /* 第三列随 WorkbenchPanel 的展开态出现；折叠后对话区吃掉整个 400px */
-  .dmpkShell.dmpk-quotationModuleShell {
+  /* 面板已经搬进 workspace 内部，shell 恒为两列；第三列由 workspace 自己切分 */
+  .dmpkShell.dmpk-quotationModuleShell,
+  .dmpkShell.dmpk-quotationModuleShell:has(.workbenchPanel.isOpen) {
     grid-template-columns: 280px minmax(0, 1fr);
   }
-  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed {
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed,
+  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed:has(.workbenchPanel.isOpen) {
     grid-template-columns: 72px minmax(0, 1fr);
-  }
-  .dmpkShell:has(> .workbenchPanel.isOpen) {
-    grid-template-columns: 280px minmax(0, 1fr) 400px;
-  }
-  .dmpkShell.sidebarCollapsed:has(> .workbenchPanel.isOpen) {
-    grid-template-columns: 72px minmax(0, 1fr) 400px;
   }
   .dmpk-quotationModuleShell > .dmpkPanel {
     display: none;
@@ -1574,37 +1570,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpk-quotationModuleShell .bluePanelLink {
   color: var(--dmpk-process);
   font-weight: 700;
-}
-.dmpk-quotationModuleShell .activityChain summary {
-  min-height: 44px;
-  border: 1px solid var(--dmpk-process-line);
-  border-radius: var(--bioaz-radius-control);
-  background: var(--dmpk-process-soft);
-  padding: 8px 12px;
-  color: var(--bioaz-text-secondary);
-}
-.dmpk-quotationModuleShell .activityChainPanel {
-  margin-top: var(--bioaz-space-3);
-  border-color: var(--dmpk-process-line);
-  border-radius: var(--bioaz-radius-control);
-  animation: none;
-}
-.dmpk-quotationModuleShell .activityChainPanel header {
-  border-bottom-color: var(--dmpk-process-line);
-  padding: 12px 16px;
-}
-.dmpk-quotationModuleShell .activitySteps {
-  padding: 16px;
-}
-.dmpk-quotationModuleShell .activityChain p {
-  animation: none;
-}
-.dmpk-quotationModuleShell .activityChain i {
-  border: 2px solid var(--dmpk-process);
-  background: #fff;
-}
-.dmpk-quotationModuleShell .activityChain i::after {
-  background: var(--dmpk-process-line);
 }
 .dmpk-quotationModuleShell .agentLogoMark.isThinking {
   position: relative;
@@ -5508,17 +5473,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .paramCollectList .inspectorParameterField svg { flex: none; color: var(--bioaz-text-tertiary); }
 .paramCollectList .inspectorParameterField:hover:not(.isEmpty) { background: rgba(17, 19, 24, 0.02); }
 
-/* ===== 思考链折叠条：summary 才是那条淡紫，外层早已是白底 ===== */
-.dmpkShell .activityChain > summary,
-.dmpkShell .activityChain summary,
-.activityChain > summary {
-  border-radius: 8px;
-  background: #fff;
-}
-.dmpkShell .activityChain > summary:hover,
-.activityChain > summary:hover {
-  background: rgba(17, 19, 24, 0.02);
-}
 .dmpkShell .activityChain,
 .activityChain {
   border: 1px solid #e5e7eb;
@@ -5627,15 +5581,17 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
 }
 
-/* 思考链与折叠态：与肿瘤报告同一套中性外观 */
-.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain),
-.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain) > summary {
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: none;
-}
-.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain) {
+/* 思考链与折叠态：与肿瘤报告同一套中性外观。
+   折叠态要跟肿瘤报告一样退成无框透明的一行，所以排除 .collapsed。 */
+.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain):not(.collapsed) {
   border: 1px solid #e5e7eb;
+}
+
+.dmpk-quotationModuleShell .agentRun.settled.collapsed,
+.dmpk-quotationModuleShell .agentRun.collapsed,
+.dmpk-quotationModuleShell .thinkingCard.collapsed {
+  border-color: transparent;
+  background: transparent;
 }
 
 /* Chatflow 卡片圆角统一为 8px（附录 A.1），气泡保留 12px 以区分对话与内容 */
@@ -5786,14 +5742,6 @@ button { -webkit-tap-highlight-color: transparent; }
    思考链展开 —— DMPK 对齐肿瘤报告
    无外框、实心圆点、每步带技术详情入口
    =================================================================== */
-.dmpk-quotationModuleShell .activityChainPanel,
-.dmpk-quotationModuleShell .activityChain[open] > .activityChainPanel {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: var(--bioaz-space-2) 0 var(--bioaz-space-1);
-}
 .dmpk-quotationModuleShell .activityStep,
 .tumor-reportModuleShell .activityStep {
   display: grid;
@@ -6146,21 +6094,18 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanel {
   display: none;
   min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
-  border-left: 1px solid var(--bioaz-border);
   background: #fff;
 }
 
 .workbenchPanel.isOpen { display: grid; }
 
+/* tab 栏住在 workspace 的 topbar 里，所以它自己不带边框、不带底色 */
 .workbenchPanelTabs {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 4px;
-  border-bottom: 1px solid var(--bioaz-border);
-  padding: 8px 8px 8px 12px;
 }
 
 .workbenchPanelTabScroll {
@@ -6179,9 +6124,21 @@ button { -webkit-tap-highlight-color: transparent; }
   display: inline-flex;
   flex: none;
   align-items: center;
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
   color: var(--bioaz-text-secondary);
   transition: background 140ms ease, color 140ms ease;
+}
+
+/* 选中态用底部一条灰条，不用整块底色，读起来更像标签页 */
+.workbenchPanelTab.isActive::after {
+  position: absolute;
+  right: 8px;
+  bottom: -8px;
+  left: 8px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--bioaz-text-tertiary);
+  content: "";
 }
 
 .workbenchPanelTab > button:first-child {
@@ -6206,28 +6163,32 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 600;
 }
 
-/* 叉号只在悬停或当前 tab 上出现，静止时 tab 栏保持干净 */
+/* 叉号始终占住 16px，只切换可见性。
+   之前用 width 0→16px 展开，hover 时整条 tab 栏会跟着变宽抖动。 */
 .workbenchPanelTabClose {
   display: grid;
-  width: 0;
+  width: 16px;
   height: 16px;
+  flex: none;
   place-items: center;
-  overflow: hidden;
+  margin-right: 6px;
   border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--bioaz-text-tertiary);
-  opacity: 0;
+  visibility: hidden;
   cursor: pointer;
-  transition: width 140ms ease, opacity 140ms ease, margin 140ms ease;
+  transition: background 140ms ease, color 140ms ease;
 }
 
 .workbenchPanelTab:hover .workbenchPanelTabClose,
-.workbenchPanelTab.isActive .workbenchPanelTabClose,
 .workbenchPanelTabClose:focus-visible {
-  width: 16px;
-  margin-right: 6px;
-  opacity: 1;
+  visibility: visible;
+}
+
+.workbenchPanelTabClose:disabled {
+  visibility: hidden;
+  cursor: default;
 }
 
 .workbenchPanelTabClose:hover {
@@ -6400,16 +6361,25 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-inline: auto;
 }
 
-/* 面板展开时与对话区合成同一块白卡：外框圆角归到最外侧，接缝处拉平，
-   两块之间只保留 panel 自己的 1px 左边框作为分隔线。 */
-.dmpkShell:has(> .workbenchPanel.isOpen) > :is(.dmpkWorkspace, .workspace) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+/* 面板住在 workspace 内部：顶栏横贯整张白卡，只有顶栏以下才分成
+   对话 | 灰槽 | 面板 三列。灰槽用 panel 向左投的硬阴影画出来，
+   不需要额外元素，也不会被 workspace 的白底 !important 盖掉。 */
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) {
+  grid-template-columns: minmax(0, 1fr) 20px 400px;
+}
+
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > .topbar {
+  grid-column: 1 / -1;
+}
+
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > :not(.topbar):not(.workbenchPanel) {
+  grid-column: 1;
 }
 
 .workbenchPanel.isOpen {
-  border-top-right-radius: var(--bioaz-radius-container);
-  border-bottom-right-radius: var(--bioaz-radius-container);
+  grid-column: 3;
+  grid-row: 2 / -1;
+  box-shadow: -20px 0 0 0 var(--bioaz-canvas);
 }
 
 /* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列 */
