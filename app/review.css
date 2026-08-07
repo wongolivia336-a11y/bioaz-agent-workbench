@@ -7029,3 +7029,64 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 11.5px;
   line-height: 1.55;
 }
+
+/* ===================================================================
+   风险确认卡：静态化，最终版
+   -------------------------------------------------------------------
+   前面已经按特异性封过三轮，仍有规则赢过压制层导致 hover 时忽大忽小。
+   这里不再猜是哪一条，直接用 !important 把尺寸与动效钉死。
+   按 isExpanded / isCollapsed 两态分别声明，折叠展开仍然正常工作——
+   被禁掉的只有「指针状态引起的变化」，不是状态切换本身。
+   =================================================================== */
+.tumor-reportModuleShell .gateDecision.isExpanded,
+.tumor-reportModuleShell .gateDecision.isExpanded:hover,
+.tumor-reportModuleShell .gateDecision.isExpanded:focus-within {
+  max-height: min(540px, calc(100dvh - 180px)) !important;
+  gap: var(--bioaz-space-3) !important;
+  padding: var(--bioaz-space-4) !important;
+}
+
+.tumor-reportModuleShell .gateDecision.isCollapsed,
+.tumor-reportModuleShell .gateDecision.isCollapsed:hover,
+.tumor-reportModuleShell .gateDecision.isCollapsed:focus-within {
+  max-height: 56px !important;
+  grid-template-rows: 36px 0 0 0 !important;
+  gap: 0 !important;
+  padding: 9px var(--bioaz-space-4) !important;
+}
+
+/* 卡片与其所有后代：任何指针状态下都不做位移、不跑动画、不做过渡 */
+.tumor-reportModuleShell .gateDecision,
+.tumor-reportModuleShell .gateDecision:hover,
+.tumor-reportModuleShell .gateDecision:focus-within,
+.tumor-reportModuleShell .gateDecision *,
+.tumor-reportModuleShell .gateDecision *:hover,
+.tumor-reportModuleShell .gateDecision *:focus-within {
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 行与列表的尺寸同样钉死，hover 只允许改颜色 */
+.tumor-reportModuleShell .gateDecision.isExpanded .warningDecisionList,
+.tumor-reportModuleShell .gateDecision.isExpanded:hover .warningDecisionList {
+  gap: var(--bioaz-space-3) !important;
+  padding-right: 0 !important;
+}
+
+.tumor-reportModuleShell .gateDecision .decisionRow,
+.tumor-reportModuleShell .gateDecision:hover .decisionRow,
+.tumor-reportModuleShell .gateDecision .decisionRow:hover,
+.tumor-reportModuleShell .gateDecision .decisionRow:focus-within {
+  min-height: 0 !important;
+  grid-template-columns: 40px minmax(0, 1fr) auto !important;
+  gap: var(--bioaz-space-4) !important;
+  padding: var(--bioaz-space-4) !important;
+  box-shadow: none !important;
+}
+
+.tumor-reportModuleShell .gateDecision .warningDecisionHeader,
+.tumor-reportModuleShell .gateDecision:hover .warningDecisionHeader {
+  gap: 10px !important;
+  padding: 0 !important;
+}
