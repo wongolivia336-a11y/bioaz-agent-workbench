@@ -271,13 +271,22 @@ once nothing floats, the reason disappears.
   mark the target tab with a dot. Explicit user intent — clicking a card in
   Chatflow, editing a field — always switches the tab, clears its dot, and
   expands a collapsed panel.
-- **DMPK tabs.** Parameter collection, process, materials, gaps, evidence,
-  artifacts, review, quotation rules. Default visible: parameters / process /
-  artifacts.
-- **Tumor report tabs.** Uploaded files, process, generation, risk review,
-  artifacts, review suggestions. Default visible: files / process / artifacts.
-  The uploaded-files tab is read-only; it exists because input files otherwise
-  scroll out of Chatflow and cannot be found again.
+- **Two tiers.** Each registry marks three panels `primary`; only those appear
+  in the tab bar. Everything else lives in the `+` menu under a "更多" group and
+  is never added automatically — stage progression may switch between or flag
+  tabs that are already shown, but it must not pull a secondary panel back into
+  the bar, or "three tabs" stops being a promise the user can rely on.
+- **DMPK tabs.** Primary: parameter collection / quotation result / quotation
+  rules. Secondary: process, materials, gaps, evidence, review.
+- **Tumor report tabs.** Primary: risk confirmation / artifacts / expert
+  suggestions. Secondary: uploaded files, process, generation.
+- **Risk confirmation stays in Chatflow.** The panel tab carries the count and
+  the per-risk evidence, but the accept buttons remain on the blocking card in
+  the conversation. A blocking decision must not live inside a panel that
+  defaults to collapsed.
+- Primary tabs still respect `available()`, so early in a run the bar may hold
+  only one tab and grow as stages unlock. That was chosen over greying out
+  unavailable tabs, at the cost of tab positions shifting as they appear.
 - **Quotation rules** is the front-of-house disclosure of back-office pricing
   configuration. Its boundary matches `DmpkEditProposalCard`: values scoped to
   the current quotation are editable in place; global rules are read-only and

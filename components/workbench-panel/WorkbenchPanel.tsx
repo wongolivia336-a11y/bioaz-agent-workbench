@@ -100,23 +100,33 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
           </button>
           {menuOpen ? (
             <div className="workbenchPanelAddMenu" role="menu">
-              <span className="workbenchPanelAddMenuLabel">显示面板</span>
-              {panels.map((panel) => {
-                const Icon = panel.icon;
-                const checked = visibleIds.includes(panel.id);
+              {/* 分「主要 / 更多」两组：次要面板长期藏在这里，不分组的话
+                  用户看不出哪三个才是常驻的 */}
+              {([["主要", true], ["更多", false]] as const).map(([groupLabel, isPrimary]) => {
+                const group = panels.filter((panel) => panel.primary === isPrimary);
+                if (!group.length) return null;
                 return (
-                  <button
-                    type="button"
-                    role="menuitemcheckbox"
-                    key={panel.id}
-                    aria-checked={checked}
-                    className={checked ? "isChecked" : ""}
-                    onClick={() => toggleVisible(panel.id)}
-                  >
-                    <Icon size={15} strokeWidth={1.9} />
-                    <span>{panel.label}</span>
-                    {checked ? <Check size={14} /> : null}
-                  </button>
+                  <div className="workbenchPanelAddGroup" key={groupLabel}>
+                    <span className="workbenchPanelAddMenuLabel">{groupLabel}</span>
+                    {group.map((panel) => {
+                      const Icon = panel.icon;
+                      const checked = visibleIds.includes(panel.id);
+                      return (
+                        <button
+                          type="button"
+                          role="menuitemcheckbox"
+                          key={panel.id}
+                          aria-checked={checked}
+                          className={checked ? "isChecked" : ""}
+                          onClick={() => toggleVisible(panel.id)}
+                        >
+                          <Icon size={15} strokeWidth={1.9} />
+                          <span>{panel.label}</span>
+                          {checked ? <Check size={14} /> : null}
+                        </button>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </div>

@@ -5336,17 +5336,33 @@ button { -webkit-tap-highlight-color: transparent; }
   content: none;
 }
 
-/* 4) agent 思考卡：白底中性边框，无紫色 */
-.dmpkShell :is(.agentRun, .thinkingCard, .activityChain) {
+/* 4) agent 思考卡：白底中性边框，无紫色。
+   折叠态例外——它要退成无框透明的一行，与肿瘤报告一致。 */
+.dmpkShell :is(.agentRun, .thinkingCard, .activityChain):not(.collapsed) {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
   box-shadow: none;
 }
-.dmpkShell .agentRun.settled,
-.dmpkShell .agentRun.settled.collapsed {
+.dmpkShell .agentRun.settled:not(.collapsed) {
   border-color: #e5e7eb;
   background: #fff;
+}
+/* 折叠态在两个模块里必须是同一条 40px 的紧凑行，取肿瘤报告那一套值。
+   此前 40px 那条只写给了 .tumor-reportModuleShell，DMPK 没有，
+   折叠后卡片就撑成一个高高的空盒子。 */
+.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard).collapsed {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  overflow: hidden;
+  border: 1px solid var(--tumor-process-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--tumor-process-soft);
+  box-shadow: none;
 }
 
 /* 5) chatflow 卡片同宽 */
@@ -5587,12 +5603,6 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 1px solid #e5e7eb;
 }
 
-.dmpk-quotationModuleShell .agentRun.settled.collapsed,
-.dmpk-quotationModuleShell .agentRun.collapsed,
-.dmpk-quotationModuleShell .thinkingCard.collapsed {
-  border-color: transparent;
-  background: transparent;
-}
 
 /* Chatflow 卡片圆角统一为 8px（附录 A.1），气泡保留 12px 以区分对话与内容 */
 .dmpk-quotationModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .artifactCard),
@@ -6257,7 +6267,19 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 16px 40px rgba(17, 19, 24, 0.12);
 }
 
+.workbenchPanelAddGroup {
+  display: grid;
+  gap: 1px;
+}
+
+.workbenchPanelAddGroup + .workbenchPanelAddGroup {
+  margin-top: 4px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 4px;
+}
+
 .workbenchPanelAddMenuLabel {
+  display: block;
   padding: 6px 8px 4px;
   color: var(--bioaz-text-tertiary);
   font-size: 11px;
