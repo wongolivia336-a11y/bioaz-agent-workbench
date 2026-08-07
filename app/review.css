@@ -621,18 +621,18 @@ button { -webkit-tap-highlight-color: transparent; }
   display: none;
 }
 
-.tumor-reportModuleShell .agentRun {
+.dmpkShell .agentRun {
   border-color: var(--bioaz-agent-accent-border);
   border-radius: var(--bioaz-radius-container);
   box-shadow: none;
 }
-.tumor-reportModuleShell .agentRun .runHeader {
+.dmpkShell .agentRun .runHeader {
   border-radius: var(--bioaz-radius-container) var(--bioaz-radius-container) 0 0;
 }
 .dmpkShell .agentRun.collapsed .runHeader {
   border-radius: var(--bioaz-radius-control);
 }
-.tumor-reportModuleShell .timelineItem.done .timelineDot {
+.dmpkShell .timelineItem.done .timelineDot {
   border-color: color-mix(in srgb, var(--bioaz-agent-accent) 20%, transparent);
   background: var(--bioaz-agent-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--bioaz-agent-accent) 8%, transparent);
@@ -642,18 +642,18 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--bioaz-surface);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--bioaz-agent-accent) 9%, transparent);
 }
-.tumor-reportModuleShell .timelineLine {
+.dmpkShell .timelineLine {
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--bioaz-agent-accent) 28%, transparent),
     var(--bioaz-border)
   );
 }
-.tumor-reportModuleShell .timelineTitle span {
+.dmpkShell .timelineTitle span {
   background: var(--bioaz-agent-accent-soft);
   color: var(--bioaz-agent-accent);
 }
-.tumor-reportModuleShell .inlineTextLink {
+.dmpkShell .inlineTextLink {
   border-bottom-color: color-mix(in srgb, var(--bioaz-agent-accent) 34%, transparent);
   color: color-mix(in srgb, var(--bioaz-agent-accent) 78%, var(--bioaz-text-primary));
 }
@@ -826,11 +826,11 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell :is(.inlineTextLink, .textButton, .artifactHover, .traceRef, .expertName) {
   color: var(--tumor-process-accent);
 }
-.tumor-reportModuleShell :is(.agentRun, .activityChain, .thinkingCard) {
+.dmpkShell :is(.agentRun, .activityChain, .thinkingCard) {
   border-color: var(--tumor-process-border);
   box-shadow: none;
 }
-.tumor-reportModuleShell :is(.timelineTitle span, .statusChip.info, .agentStatus) {
+.dmpkShell :is(.timelineTitle span, .statusChip.info, .agentStatus) {
   background: var(--tumor-process-soft);
   color: var(--tumor-process-accent);
 }
@@ -4280,7 +4280,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #ffffff;
   box-shadow: none;
 }
-.tumor-reportModuleShell .agentRun.settled .agentRunHeader strong,
+.dmpkShell .agentRun.settled .agentRunHeader strong,
 .agentRun.settled.collapsed strong {
   color: var(--bioaz-text-secondary);
 }
@@ -6444,4 +6444,38 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .workbenchPanelTabDot {
   background: var(--bioaz-agent-accent);
+}
+
+/* ===================================================================
+   风险确认卡：禁止一切指针驱动的视觉变化
+   -------------------------------------------------------------------
+   这张卡是阻断式决策，指针只是路过就不该让它动。历史上这里的 hover
+   规则被反复"锁成同值"来压制，但只要有一条没锁住就会重新抖起来。
+   这里改成正面禁令：卡片及其后代在任何指针状态下都不做 transform、
+   不跑 transition/animation，滚动条位置固定，不因 hover 改变布局。
+   =================================================================== */
+.tumor-reportModuleShell .gateDecision,
+.tumor-reportModuleShell .gateDecision:hover,
+.tumor-reportModuleShell .gateDecision:focus-within,
+.tumor-reportModuleShell .gateDecision *,
+.tumor-reportModuleShell .gateDecision *:hover,
+.tumor-reportModuleShell .gateDecision *:focus-within {
+  transform: none;
+  transition: none;
+  animation: none;
+}
+
+/* 滚动条常驻占位：否则内容区一旦可滚，滚动条出现会把内容挤窄，
+   看起来就像卡片在 hover 时跳了一下。 */
+.tumor-reportModuleShell .gateDecision .warningDecisionList {
+  scrollbar-gutter: stable;
+  overflow-anchor: none;
+}
+
+/* 行只保留最轻的边框反馈，底色与阴影一律不变 */
+.tumor-reportModuleShell .gateDecision .decisionRow,
+.tumor-reportModuleShell .gateDecision .decisionRow:hover,
+.tumor-reportModuleShell .gateDecision .decisionRow:focus-within {
+  background: #fff;
+  box-shadow: none;
 }
