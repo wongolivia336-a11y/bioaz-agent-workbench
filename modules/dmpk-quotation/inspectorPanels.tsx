@@ -78,7 +78,8 @@ const withError = (
 const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> = [
   {
     id: "parameters",
-    label: (context) => `参数收集 ${context.fields.filter((field) => field.value).length}/${context.fields.length}`,
+    /* 进度已经在面板内容的标题行给了，tab 上不再重复一遍 */
+    label: "参数收集",
     icon: SlidersHorizontal,
     primary: true,
     defaultWhen: (context) => context.stage !== "generated",
