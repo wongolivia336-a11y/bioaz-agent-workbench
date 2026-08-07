@@ -6830,22 +6830,24 @@ button { -webkit-tap-highlight-color: transparent; }
   .dmpk-quotationModuleShell { --dmpk-column: 100%; }
 }
 
-/* chatflow 里的每一张卡都以对话列为准，不再各自限宽 */
+/* 只有对话列和 composer 这两个容器持有列宽，它们居中；
+   里面的卡片才用 100% 填满容器。上一版把 .dmpkChatScroller > .dmpkConversation
+   也写进了 100% 那一组，特异性更高，把列宽顶掉了，对话区于是撑满整栏贴到两边。 */
+.dmpk-quotationModuleShell .dmpkConversation,
+.dmpk-quotationModuleShell .dmpkComposerWrap {
+  box-sizing: border-box;
+  width: min(var(--dmpk-column), 100%);
+  max-width: min(var(--dmpk-column), 100%);
+  margin-inline: auto;
+}
+
 .dmpk-quotationModuleShell .dmpkConversation > *,
-.dmpk-quotationModuleShell .dmpkChatScroller > .dmpkConversation,
-.dmpk-quotationModuleShell .dmpkComposerWrap,
 .dmpk-quotationModuleShell .dmpkComposerWrap > *,
 .dmpk-quotationModuleShell .dmpkComposer {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
   margin-inline: auto;
-}
-
-.dmpk-quotationModuleShell .dmpkConversation,
-.dmpk-quotationModuleShell .dmpkComposerWrap {
-  width: min(var(--dmpk-column), 100%);
-  max-width: min(var(--dmpk-column), 100%);
 }
 
 /* 用户气泡按内容宽度靠右，但右边界不能超出对话列 */
