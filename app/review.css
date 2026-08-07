@@ -6631,3 +6631,38 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanelTabDot {
   background: var(--bioaz-agent-accent);
 }
+
+/* ===================================================================
+   顶栏基线对齐
+   -------------------------------------------------------------------
+   .topbar 高 54px，而 workspace 的第一行是 58px，面板 tab 栏填满
+   这 58px，于是左右两条 hairline 差 4px，看起来就是没对齐。
+   这里让 topbar 占满整行，并把同一条分界线画到左侧，
+   整张卡顶部就是一条连续的水平线。
+   =================================================================== */
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > .topbar {
+  box-sizing: border-box;
+  height: 100%;
+  border-bottom: 1px solid var(--bioaz-border);
+}
+
+.workbenchPanel.isOpen .workbenchPanelTabs {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+/* tab 撑满整条栏，选中条才会正好落在 hairline 上，
+   而不是落在 tab 自身内容盒的底部。 */
+.workbenchPanelTab {
+  height: 100%;
+  align-items: center;
+}
+
+.workbenchPanelTab > button:first-child {
+  height: 100%;
+  padding: 0 4px 0 8px;
+}
+
+.workbenchPanelTabClose {
+  margin-bottom: 0;
+}
