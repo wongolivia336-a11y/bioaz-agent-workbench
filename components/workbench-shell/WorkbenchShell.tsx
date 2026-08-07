@@ -189,10 +189,17 @@ export default function WorkbenchShell() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const moduleId = params.get("module");
+    const view = params.get("view");
     if (moduleId) startModuleDirect(moduleId);
-    if (params.get("view") === "library") setRoute("library");
-    if (params.get("view") === "digital-team") setRoute("digitalTeam");
-    if (params.get("view") === "quotation-management") setQuotationManagementOpen(true);
+    if (view === "library") setRoute("library");
+    if (view === "digital-team") setRoute("digitalTeam");
+    if (view === "quotation-management") setQuotationManagementOpen(true);
+    /* 深链是一次性的：消费完就把 query 从地址栏抹掉。
+       否则参数一直留着，之后每次刷新都会被重新读到，
+       从报价规则跳过一次之后，页面就永远停在后台了。 */
+    if (moduleId || view) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   }, []);
 
   useEffect(() => {
