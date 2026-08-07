@@ -629,7 +629,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell .agentRun .runHeader {
   border-radius: var(--bioaz-radius-container) var(--bioaz-radius-container) 0 0;
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader {
+.dmpkShell .agentRun.collapsed .runHeader {
   border-radius: var(--bioaz-radius-control);
 }
 .tumor-reportModuleShell .timelineItem.done .timelineDot {
@@ -637,7 +637,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--bioaz-agent-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--bioaz-agent-accent) 8%, transparent);
 }
-.tumor-reportModuleShell .timelineItem.active .timelineDot {
+.dmpkShell .timelineItem.active .timelineDot {
   border-color: var(--bioaz-agent-accent);
   background: var(--bioaz-surface);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--bioaz-agent-accent) 9%, transparent);
@@ -658,12 +658,12 @@ button { -webkit-tap-highlight-color: transparent; }
   color: color-mix(in srgb, var(--bioaz-agent-accent) 78%, var(--bioaz-text-primary));
 }
 
-.tumor-reportModuleShell .motionLogo {
+.dmpkShell .motionLogo {
   overflow: hidden;
   isolation: isolate;
 }
 /* 思考动效由 design-system.css 统一提供；扫光层（mask + 遮罩渐变）撤除 */
-.tumor-reportModuleShell .motionLogo.running > span {
+.dmpkShell .motionLogo.running > span {
   display: none;
 }
 
@@ -671,12 +671,12 @@ button { -webkit-tap-highlight-color: transparent; }
   .dmpkShell .sidebarCollapseButton svg {
     transition: none;
   }
-  .tumor-reportModuleShell .motionLogo.running img,
-  .tumor-reportModuleShell .motionLogo.running > span,
-  .tumor-reportModuleShell .timelineItem.active .timelineDot {
+  .dmpkShell .motionLogo.running img,
+  .dmpkShell .motionLogo.running > span,
+  .dmpkShell .timelineItem.active .timelineDot {
     animation: none;
   }
-  .tumor-reportModuleShell .motionLogo.running img {
+  .dmpkShell .motionLogo.running img {
     opacity: 1;
     transform: none;
   }
@@ -815,13 +815,15 @@ button { -webkit-tap-highlight-color: transparent; }
   }
 }
 
-/* Tumor Chatflow uses the Agent accent; brand blue stays on the Logo only. */
-.tumor-reportModuleShell {
+/* Chatflow uses the Agent accent; brand blue stays on the Logo only.
+   Defined on .dmpkShell so DMPK and tumor report resolve to the same values —
+   scoping it to the tumor shell is what let DMPK drift to the brand blue. */
+.dmpkShell {
   --tumor-process-accent: var(--bioaz-agent-accent);
   --tumor-process-soft: var(--bioaz-agent-accent-soft);
   --tumor-process-border: var(--bioaz-agent-accent-border);
 }
-.tumor-reportModuleShell :is(.inlineTextLink, .textButton, .artifactHover, .traceRef, .expertName) {
+.dmpkShell :is(.inlineTextLink, .textButton, .artifactHover, .traceRef, .expertName) {
   color: var(--tumor-process-accent);
 }
 .tumor-reportModuleShell :is(.agentRun, .activityChain, .thinkingCard) {
@@ -1016,7 +1018,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tumor-reportModuleShell .motionLogo.running > span,
+  .dmpkShell .motionLogo.running > span,
   .tumor-reportModuleShell .gateDecision,
   .tumor-reportModuleShell .gateDecision :is(.warningDecisionList, .warningActions, .responsibilityNote) {
     transition: none;
@@ -1050,7 +1052,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fff;
 }
 
-.tumor-reportModuleShell .agentRun.collapsed {
+.dmpkShell .agentRun.collapsed {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -1062,7 +1064,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: var(--bioaz-radius-control);
   background: var(--tumor-process-soft);
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader {
+.dmpkShell .agentRun.collapsed .runHeader {
   box-sizing: border-box;
   width: 100%;
   height: 38px;
@@ -1074,7 +1076,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: inherit;
   padding: 0 var(--bioaz-space-3);
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader strong {
+.dmpkShell .agentRun.collapsed .runHeader strong {
   min-width: 0;
   overflow: hidden;
   color: var(--bioaz-text-secondary);
@@ -1084,7 +1086,7 @@ button { -webkit-tap-highlight-color: transparent; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader small {
+.dmpkShell .agentRun.collapsed .runHeader small {
   flex: none;
   line-height: 1;
   white-space: nowrap;
@@ -1092,7 +1094,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell .phaseBlock {
   gap: var(--bioaz-space-4);
 }
-.tumor-reportModuleShell .agentRun.collapsed + .agentReply {
+.dmpkShell .agentRun.collapsed + .agentReply {
   margin-top: 0;
 }
 
@@ -1210,7 +1212,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .tumor-reportModuleShell .agentRun.running,
 .tumor-reportModuleShell .agentRun.settled,
-.tumor-reportModuleShell .agentRun.collapsed {
+.dmpkShell .agentRun.collapsed {
   width: 100%;
   max-width: 100%;
 }
@@ -5348,22 +5350,8 @@ button { -webkit-tap-highlight-color: transparent; }
   border-color: #e5e7eb;
   background: #fff;
 }
-/* 折叠态在两个模块里必须是同一条 40px 的紧凑行，取肿瘤报告那一套值。
-   此前 40px 那条只写给了 .tumor-reportModuleShell，DMPK 没有，
-   折叠后卡片就撑成一个高高的空盒子。 */
-.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard).collapsed {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  height: 40px;
-  min-height: 40px;
-  max-height: 40px;
-  overflow: hidden;
-  border: 1px solid var(--tumor-process-border);
-  border-radius: var(--bioaz-radius-control);
-  background: var(--tumor-process-soft);
-  box-shadow: none;
-}
+/* 折叠态的几何与外框由 .dmpkShell .agentRun.collapsed 统一提供，
+   两个模块共用同一条 40px 紧凑行，这里不再另写一份。 */
 
 /* 5) chatflow 卡片同宽 */
 .dmpkChatScroller :is(.agentRun, .thinkingCard, .agentReply, .parameterTaskCard, .artifactCard) {
@@ -5597,11 +5585,8 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
 }
 
-/* 思考链与折叠态：与肿瘤报告同一套中性外观。
-   折叠态要跟肿瘤报告一样退成无框透明的一行，所以排除 .collapsed。 */
-.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain):not(.collapsed) {
-  border: 1px solid #e5e7eb;
-}
+/* 思考卡外框由上面 .dmpkShell 的那条统一提供，两个模块同色同粗细，
+   这里不再重复声明，否则又会分叉出两套值。 */
 
 
 /* Chatflow 卡片圆角统一为 8px（附录 A.1），气泡保留 12px 以区分对话与内容 */
@@ -6425,4 +6410,38 @@ button { -webkit-tap-highlight-color: transparent; }
     border-radius: 0;
     box-shadow: -18px 0 48px rgba(17, 19, 24, 0.14);
   }
+}
+
+/* ===================================================================
+   DMPK 与肿瘤报告的蓝取同一个饱和度
+   -------------------------------------------------------------------
+   DMPK 沿用的是品牌电光蓝 #2900ff（--blue），肿瘤报告用的是
+   agent accent #5c60b8。两个模块并排看时前者刺眼得多。
+   这里把 DMPK chatflow 与参数卡里的强调蓝统一到 agent accent。
+   =================================================================== */
+.dmpk-quotationModuleShell .optionGrid button:hover,
+.dmpk-quotationModuleShell .optionGrid button.selected,
+.dmpk-quotationModuleShell .customOptionInput:focus {
+  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 30%, transparent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+.dmpk-quotationModuleShell .parameterTaskCard .decisionIndex {
+  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 24%, transparent);
+  color: var(--bioaz-agent-accent);
+}
+
+/* 面板里的进度条与分组点同样降饱和 */
+.dmpk-quotationModuleShell .paramCollectProgress > i {
+  background: color-mix(in srgb, var(--bioaz-agent-accent) 62%, transparent);
+}
+
+.dmpk-quotationModuleShell .inspectorParameterGroup.isComplete .paramGroupDot {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent);
+}
+
+.workbenchPanelTabDot {
+  background: var(--bioaz-agent-accent);
 }
