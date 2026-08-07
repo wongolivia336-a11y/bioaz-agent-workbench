@@ -621,49 +621,49 @@ button { -webkit-tap-highlight-color: transparent; }
   display: none;
 }
 
-.tumor-reportModuleShell .agentRun {
+.dmpkShell .agentRun {
   border-color: var(--bioaz-agent-accent-border);
   border-radius: var(--bioaz-radius-container);
   box-shadow: none;
 }
-.tumor-reportModuleShell .agentRun .runHeader {
+.dmpkShell .agentRun .runHeader {
   border-radius: var(--bioaz-radius-container) var(--bioaz-radius-container) 0 0;
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader {
+.dmpkShell .agentRun.collapsed .runHeader {
   border-radius: var(--bioaz-radius-control);
 }
-.tumor-reportModuleShell .timelineItem.done .timelineDot {
+.dmpkShell .timelineItem.done .timelineDot {
   border-color: color-mix(in srgb, var(--bioaz-agent-accent) 20%, transparent);
   background: var(--bioaz-agent-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--bioaz-agent-accent) 8%, transparent);
 }
-.tumor-reportModuleShell .timelineItem.active .timelineDot {
+.dmpkShell .timelineItem.active .timelineDot {
   border-color: var(--bioaz-agent-accent);
   background: var(--bioaz-surface);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--bioaz-agent-accent) 9%, transparent);
 }
-.tumor-reportModuleShell .timelineLine {
+.dmpkShell .timelineLine {
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--bioaz-agent-accent) 28%, transparent),
     var(--bioaz-border)
   );
 }
-.tumor-reportModuleShell .timelineTitle span {
+.dmpkShell .timelineTitle span {
   background: var(--bioaz-agent-accent-soft);
   color: var(--bioaz-agent-accent);
 }
-.tumor-reportModuleShell .inlineTextLink {
+.dmpkShell .inlineTextLink {
   border-bottom-color: color-mix(in srgb, var(--bioaz-agent-accent) 34%, transparent);
   color: color-mix(in srgb, var(--bioaz-agent-accent) 78%, var(--bioaz-text-primary));
 }
 
-.tumor-reportModuleShell .motionLogo {
+.dmpkShell .motionLogo {
   overflow: hidden;
   isolation: isolate;
 }
 /* 思考动效由 design-system.css 统一提供；扫光层（mask + 遮罩渐变）撤除 */
-.tumor-reportModuleShell .motionLogo.running > span {
+.dmpkShell .motionLogo.running > span {
   display: none;
 }
 
@@ -671,12 +671,12 @@ button { -webkit-tap-highlight-color: transparent; }
   .dmpkShell .sidebarCollapseButton svg {
     transition: none;
   }
-  .tumor-reportModuleShell .motionLogo.running img,
-  .tumor-reportModuleShell .motionLogo.running > span,
-  .tumor-reportModuleShell .timelineItem.active .timelineDot {
+  .dmpkShell .motionLogo.running img,
+  .dmpkShell .motionLogo.running > span,
+  .dmpkShell .timelineItem.active .timelineDot {
     animation: none;
   }
-  .tumor-reportModuleShell .motionLogo.running img {
+  .dmpkShell .motionLogo.running img {
     opacity: 1;
     transform: none;
   }
@@ -815,20 +815,22 @@ button { -webkit-tap-highlight-color: transparent; }
   }
 }
 
-/* Tumor Chatflow uses the Agent accent; brand blue stays on the Logo only. */
-.tumor-reportModuleShell {
+/* Chatflow uses the Agent accent; brand blue stays on the Logo only.
+   Defined on .dmpkShell so DMPK and tumor report resolve to the same values —
+   scoping it to the tumor shell is what let DMPK drift to the brand blue. */
+.dmpkShell {
   --tumor-process-accent: var(--bioaz-agent-accent);
   --tumor-process-soft: var(--bioaz-agent-accent-soft);
   --tumor-process-border: var(--bioaz-agent-accent-border);
 }
-.tumor-reportModuleShell :is(.inlineTextLink, .textButton, .artifactHover, .traceRef, .expertName) {
+.dmpkShell :is(.inlineTextLink, .textButton, .artifactHover, .traceRef, .expertName) {
   color: var(--tumor-process-accent);
 }
-.tumor-reportModuleShell :is(.agentRun, .activityChain, .thinkingCard) {
+.dmpkShell :is(.agentRun, .activityChain, .thinkingCard) {
   border-color: var(--tumor-process-border);
   box-shadow: none;
 }
-.tumor-reportModuleShell :is(.timelineTitle span, .statusChip.info, .agentStatus) {
+.dmpkShell :is(.timelineTitle span, .statusChip.info, .agentStatus) {
   background: var(--tumor-process-soft);
   color: var(--tumor-process-accent);
 }
@@ -1016,7 +1018,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tumor-reportModuleShell .motionLogo.running > span,
+  .dmpkShell .motionLogo.running > span,
   .tumor-reportModuleShell .gateDecision,
   .tumor-reportModuleShell .gateDecision :is(.warningDecisionList, .warningActions, .responsibilityNote) {
     transition: none;
@@ -1050,7 +1052,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fff;
 }
 
-.tumor-reportModuleShell .agentRun.collapsed {
+.dmpkShell .agentRun.collapsed {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -1062,7 +1064,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: var(--bioaz-radius-control);
   background: var(--tumor-process-soft);
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader {
+.dmpkShell .agentRun.collapsed .runHeader {
   box-sizing: border-box;
   width: 100%;
   height: 38px;
@@ -1074,7 +1076,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: inherit;
   padding: 0 var(--bioaz-space-3);
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader strong {
+.dmpkShell .agentRun.collapsed .runHeader strong {
   min-width: 0;
   overflow: hidden;
   color: var(--bioaz-text-secondary);
@@ -1084,7 +1086,7 @@ button { -webkit-tap-highlight-color: transparent; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tumor-reportModuleShell .agentRun.collapsed .runHeader small {
+.dmpkShell .agentRun.collapsed .runHeader small {
   flex: none;
   line-height: 1;
   white-space: nowrap;
@@ -1092,7 +1094,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell .phaseBlock {
   gap: var(--bioaz-space-4);
 }
-.tumor-reportModuleShell .agentRun.collapsed + .agentReply {
+.dmpkShell .agentRun.collapsed + .agentReply {
   margin-top: 0;
 }
 
@@ -1210,7 +1212,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .tumor-reportModuleShell .agentRun.running,
 .tumor-reportModuleShell .agentRun.settled,
-.tumor-reportModuleShell .agentRun.collapsed {
+.dmpkShell .agentRun.collapsed {
   width: 100%;
   max-width: 100%;
 }
@@ -4278,7 +4280,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #ffffff;
   box-shadow: none;
 }
-.tumor-reportModuleShell .agentRun.settled .agentRunHeader strong,
+.dmpkShell .agentRun.settled .agentRunHeader strong,
 .agentRun.settled.collapsed strong {
   color: var(--bioaz-text-secondary);
 }
@@ -5348,22 +5350,8 @@ button { -webkit-tap-highlight-color: transparent; }
   border-color: #e5e7eb;
   background: #fff;
 }
-/* 折叠态在两个模块里必须是同一条 40px 的紧凑行，取肿瘤报告那一套值。
-   此前 40px 那条只写给了 .tumor-reportModuleShell，DMPK 没有，
-   折叠后卡片就撑成一个高高的空盒子。 */
-.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard).collapsed {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  height: 40px;
-  min-height: 40px;
-  max-height: 40px;
-  overflow: hidden;
-  border: 1px solid var(--tumor-process-border);
-  border-radius: var(--bioaz-radius-control);
-  background: var(--tumor-process-soft);
-  box-shadow: none;
-}
+/* 折叠态的几何与外框由 .dmpkShell .agentRun.collapsed 统一提供，
+   两个模块共用同一条 40px 紧凑行，这里不再另写一份。 */
 
 /* 5) chatflow 卡片同宽 */
 .dmpkChatScroller :is(.agentRun, .thinkingCard, .agentReply, .parameterTaskCard, .artifactCard) {
@@ -5597,11 +5585,8 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
 }
 
-/* 思考链与折叠态：与肿瘤报告同一套中性外观。
-   折叠态要跟肿瘤报告一样退成无框透明的一行，所以排除 .collapsed。 */
-.dmpk-quotationModuleShell :is(.agentRun, .thinkingCard, .activityChain):not(.collapsed) {
-  border: 1px solid #e5e7eb;
-}
+/* 思考卡外框由上面 .dmpkShell 的那条统一提供，两个模块同色同粗细，
+   这里不再重复声明，否则又会分叉出两套值。 */
 
 
 /* Chatflow 卡片圆角统一为 8px（附录 A.1），气泡保留 12px 以区分对话与内容 */
@@ -6425,4 +6410,280 @@ button { -webkit-tap-highlight-color: transparent; }
     border-radius: 0;
     box-shadow: -18px 0 48px rgba(17, 19, 24, 0.14);
   }
+}
+
+/* ===================================================================
+   DMPK 与肿瘤报告的蓝取同一个饱和度
+   -------------------------------------------------------------------
+   DMPK 沿用的是品牌电光蓝 #2900ff（--blue），肿瘤报告用的是
+   agent accent #5c60b8。两个模块并排看时前者刺眼得多。
+   这里把 DMPK chatflow 与参数卡里的强调蓝统一到 agent accent。
+   =================================================================== */
+.dmpk-quotationModuleShell .optionGrid button:hover,
+.dmpk-quotationModuleShell .optionGrid button.selected,
+.dmpk-quotationModuleShell .customOptionInput:focus {
+  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 30%, transparent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+.dmpk-quotationModuleShell .parameterTaskCard .decisionIndex {
+  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 24%, transparent);
+  color: var(--bioaz-agent-accent);
+}
+
+/* 面板里的进度条与分组点同样降饱和 */
+.dmpk-quotationModuleShell .paramCollectProgress > i {
+  background: color-mix(in srgb, var(--bioaz-agent-accent) 62%, transparent);
+}
+
+.dmpk-quotationModuleShell .inspectorParameterGroup.isComplete .paramGroupDot {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent);
+}
+
+.workbenchPanelTabDot {
+  background: var(--bioaz-agent-accent);
+}
+
+/* ===================================================================
+   风险确认卡：禁止一切指针驱动的视觉变化
+   -------------------------------------------------------------------
+   这张卡是阻断式决策，指针只是路过就不该让它动。历史上这里的 hover
+   规则被反复"锁成同值"来压制，但只要有一条没锁住就会重新抖起来。
+   这里改成正面禁令：卡片及其后代在任何指针状态下都不做 transform、
+   不跑 transition/animation，滚动条位置固定，不因 hover 改变布局。
+   =================================================================== */
+.tumor-reportModuleShell .gateDecision,
+.tumor-reportModuleShell .gateDecision:hover,
+.tumor-reportModuleShell .gateDecision:focus-within,
+.tumor-reportModuleShell .gateDecision *,
+.tumor-reportModuleShell .gateDecision *:hover,
+.tumor-reportModuleShell .gateDecision *:focus-within {
+  transform: none;
+  transition: none;
+  animation: none;
+}
+
+/* 滚动条常驻占位：否则内容区一旦可滚，滚动条出现会把内容挤窄，
+   看起来就像卡片在 hover 时跳了一下。 */
+.tumor-reportModuleShell .gateDecision .warningDecisionList {
+  scrollbar-gutter: stable;
+  overflow-anchor: none;
+}
+
+/* 行只保留最轻的边框反馈，底色与阴影一律不变 */
+.tumor-reportModuleShell .gateDecision .decisionRow,
+.tumor-reportModuleShell .gateDecision .decisionRow:hover,
+.tumor-reportModuleShell .gateDecision .decisionRow:focus-within {
+  background: #fff;
+  box-shadow: none;
+}
+
+/* 把这张卡的布局值在所有指针状态下钉成同一组，来源取最后一次生效的基础值。
+   前面那些 "X, X:hover" 的成对写法只保证同一条规则内相等，挡不住更早的
+   规则给基础态一个不同的值——那正是 hover 时高度和行距一起变的来源。 */
+.tumor-reportModuleShell .gateDecision,
+.tumor-reportModuleShell .gateDecision:hover,
+.tumor-reportModuleShell .gateDecision:focus-within,
+.tumor-reportModuleShell .gateDecision.isExpanded,
+.tumor-reportModuleShell .gateDecision.isExpanded:hover {
+  max-height: min(540px, calc(100dvh - 180px));
+  gap: var(--bioaz-space-3);
+  padding: var(--bioaz-space-4);
+}
+
+.tumor-reportModuleShell .gateDecision .warningDecisionList,
+.tumor-reportModuleShell .gateDecision:hover .warningDecisionList,
+.tumor-reportModuleShell .gateDecision:focus-within .warningDecisionList {
+  gap: var(--bioaz-space-3);
+  padding-right: 0;
+}
+
+.tumor-reportModuleShell .gateDecision .decisionRow,
+.tumor-reportModuleShell .gateDecision:hover .decisionRow,
+.tumor-reportModuleShell .gateDecision .decisionRow:hover,
+.tumor-reportModuleShell .gateDecision .decisionRow:focus-within {
+  min-height: 0;
+  gap: var(--bioaz-space-4);
+  padding: var(--bioaz-space-4);
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+}
+
+.tumor-reportModuleShell .gateDecision .warningDecisionHeader,
+.tumor-reportModuleShell .gateDecision:hover .warningDecisionHeader {
+  gap: 10px;
+  padding: 0;
+}
+
+/* ===================================================================
+   参数卡分页 tab —— 与右侧面板 tab 同一套语言
+   -------------------------------------------------------------------
+   原来是四颗描边药丸，选中态只靠边框深一档，既看不出选中也和
+   面板 tab 完全两种语汇。改成一条标签栏：无边框、无底色，
+   选中态用底部一条 accent 短条，与 .workbenchPanelTab 一致。
+   =================================================================== */
+.parameterTaskCard .parameterPages {
+  position: relative;
+  gap: 2px;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: 0;
+}
+
+.parameterTaskCard .parameterPages button {
+  position: relative;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  padding: 0 10px 8px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.parameterTaskCard .parameterPages button:hover {
+  background: transparent;
+  color: var(--bioaz-text-primary);
+}
+
+.parameterTaskCard .parameterPages button.active {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+/* 选中指示条压在分隔线上，与面板 tab 的底部灰条同款 */
+.parameterTaskCard .parameterPages button.active::after {
+  position: absolute;
+  right: 6px;
+  bottom: -1px;
+  left: 6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--bioaz-agent-accent);
+  content: "";
+}
+
+/* ===================================================================
+   面板顶部 tab 栏 —— 与参数卡分页 tab 统一为同一套标签语言
+   -------------------------------------------------------------------
+   原来选中态是一整块灰底药丸，在纯白面板顶部显得很重，且与刚改完的
+   参数卡分页 tab 是两种语汇。改成：无底色、底部一条 accent 短条，
+   整条 tab 栏坐在一条 hairline 上，短条压在这条线上。
+   =================================================================== */
+.workbenchPanelTabs {
+  align-items: flex-end;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 0 8px 0 12px;
+}
+
+.workbenchPanelTabScroll {
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.workbenchPanelTab {
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+}
+
+.workbenchPanelTab > button:first-child {
+  padding: 0 4px 9px 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.workbenchPanelTab:hover {
+  background: transparent;
+  color: var(--bioaz-text-primary);
+}
+
+.workbenchPanelTab.isActive {
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+}
+
+/* 选中指示条压在 hairline 上，与 .parameterPages button.active::after 同款 */
+.workbenchPanelTab.isActive::after {
+  right: 4px;
+  bottom: -1px;
+  left: 4px;
+  height: 2px;
+  background: var(--bioaz-agent-accent);
+}
+
+/* 叉号跟着基线走，不再垂直居中于整条栏 */
+.workbenchPanelTabClose {
+  margin-right: 4px;
+  margin-bottom: 9px;
+}
+
+/* 加号与 tab 基线对齐，并稍微收窄，让 tab 成为这条栏的主角 */
+.workbenchPanelAdd {
+  align-self: center;
+}
+
+.workbenchPanelTabDot {
+  background: var(--bioaz-agent-accent);
+}
+
+/* ===================================================================
+   顶栏基线对齐
+   -------------------------------------------------------------------
+   .topbar 高 54px，而 workspace 的第一行是 58px，面板 tab 栏填满
+   这 58px，于是左右两条 hairline 差 4px，看起来就是没对齐。
+   这里让 topbar 占满整行，并把同一条分界线画到左侧，
+   整张卡顶部就是一条连续的水平线。
+   =================================================================== */
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > .topbar {
+  box-sizing: border-box;
+  height: 100%;
+  border-bottom: 1px solid var(--bioaz-border);
+}
+
+.workbenchPanel.isOpen .workbenchPanelTabs {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+/* tab 撑满整条栏，选中条才会正好落在 hairline 上，
+   而不是落在 tab 自身内容盒的底部。 */
+.workbenchPanelTab {
+  height: 100%;
+  align-items: center;
+}
+
+.workbenchPanelTab > button:first-child {
+  height: 100%;
+  padding: 0 4px 0 8px;
+}
+
+.workbenchPanelTabClose {
+  margin-bottom: 0;
+}
+
+/* tab 文字抬离分界线：tab 仍然满高（选中条要压在 hairline 上），
+   但标签内容盒底部留出 14px，文字整体上移，不再贴着线。 */
+.workbenchPanelTab > button:first-child {
+  align-items: center;
+  padding: 0 6px 14px 10px;
+}
+
+.workbenchPanelTab {
+  align-items: center;
+}
+
+.workbenchPanelTabClose {
+  margin-bottom: 14px;
+}
+
+/* 选中条也随之收短一点，视觉上和文字宽度更贴合 */
+.workbenchPanelTab.isActive::after {
+  right: 6px;
+  left: 6px;
 }
