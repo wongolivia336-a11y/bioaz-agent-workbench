@@ -281,8 +281,18 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     editingFieldId,
     onPreviewArtifact: setArtifactPreview,
     onPreviewQuotation: () => setPreviewOpen(true),
+    /* 面板里的「改这条」把现成的话填进 composer 并聚焦，
+       真正的修改交给对话流既有的确认路径。 */
+    onDraftMessage: (text: string) => {
+      setConversationEditing(true);
+      setComposerText(text);
+      setComposerAttention(false);
+      window.requestAnimationFrame(() => setComposerAttention(true));
+      window.setTimeout(() => setComposerAttention(false), 720);
+    },
   });
-  /* 参数面板顶部保留「对话编辑」入口——它原本挂在浮层头上，浮层撤掉后跟着参数进 tab */
+  /* 参数面板只负责改「参数的值」——逐项点编辑图标即可。
+     改规则不属于这里，「对话编辑」已经移到报价规则面板。 */
   const railPanels = inspectorPanels.map((panel) => panel.id !== "parameters" ? panel : {
     ...panel,
     content: (
@@ -292,9 +302,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             <strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
             {identifiedAssayType ? <em>{completedCount}/{totalRequired}</em> : null}
           </span>
-          <button className="parameterConversationEdit" type="button" aria-pressed={conversationEditing} title="通过对话修改" onClick={startConversationEdit}>
-            <WandSparkles size={15} /><span>对话编辑</span>
-          </button>
         </div>
         {panel.content}
       </>
