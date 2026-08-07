@@ -6567,3 +6567,67 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--bioaz-agent-accent);
   content: "";
 }
+
+/* ===================================================================
+   面板顶部 tab 栏 —— 与参数卡分页 tab 统一为同一套标签语言
+   -------------------------------------------------------------------
+   原来选中态是一整块灰底药丸，在纯白面板顶部显得很重，且与刚改完的
+   参数卡分页 tab 是两种语汇。改成：无底色、底部一条 accent 短条，
+   整条 tab 栏坐在一条 hairline 上，短条压在这条线上。
+   =================================================================== */
+.workbenchPanelTabs {
+  align-items: flex-end;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 0 8px 0 12px;
+}
+
+.workbenchPanelTabScroll {
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.workbenchPanelTab {
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+}
+
+.workbenchPanelTab > button:first-child {
+  padding: 0 4px 9px 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.workbenchPanelTab:hover {
+  background: transparent;
+  color: var(--bioaz-text-primary);
+}
+
+.workbenchPanelTab.isActive {
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+}
+
+/* 选中指示条压在 hairline 上，与 .parameterPages button.active::after 同款 */
+.workbenchPanelTab.isActive::after {
+  right: 4px;
+  bottom: -1px;
+  left: 4px;
+  height: 2px;
+  background: var(--bioaz-agent-accent);
+}
+
+/* 叉号跟着基线走，不再垂直居中于整条栏 */
+.workbenchPanelTabClose {
+  margin-right: 4px;
+  margin-bottom: 9px;
+}
+
+/* 加号与 tab 基线对齐，并稍微收窄，让 tab 成为这条栏的主角 */
+.workbenchPanelAdd {
+  align-self: center;
+}
+
+.workbenchPanelTabDot {
+  background: var(--bioaz-agent-accent);
+}
