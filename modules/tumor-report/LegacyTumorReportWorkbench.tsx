@@ -80,11 +80,15 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const [reviews, setReviews] = useState<ReviewItem[]>(initialReviews);
   // 右侧面板：与 DMPK 同一个 WorkbenchPanel，但这里保持事件驱动——默认折叠，产物生成时自动展开一次
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [inspectorTopic, setInspectorTopic] = useState<InspectorTopic>("files");
-  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["files", "process", "artifacts"]);
+  const [inspectorTopic, setInspectorTopic] = useState<InspectorTopic>("warnings");
+  /* tab 栏只放三个主面板；上传的文件、处理过程、生成过程收在加号菜单里，
+     系统永远不会自己把它们加回来。 */
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["warnings", "artifacts", "review"]);
   /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
   const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
   const [panelHintIds, setPanelHintIds] = useState<string[]>([]);
+  const visiblePanelIdsRef = useRef(visiblePanelIds);
+  visiblePanelIdsRef.current = visiblePanelIds;
   /** 阶段推进时的建议切换：用户没自己点过 tab 才真的切，否则只打点提示 */
   const suggestTopic = (topic: InspectorTopic) => {
     setVisiblePanelIds((ids) => ids.includes(topic) ? ids : [...ids, topic]);
@@ -2261,8 +2265,8 @@ function TumorPanelBody({ activeTopic, context }: { activeTopic: InspectorTopic;
       {activeTopic === "warnings" ? (
         <div className="inspectorSection">
           <div className="panelIntro">
-            <strong>风险回看</strong>
-            <p>确认后的风险项保留在这里，可在最终放行前回看来源证据和影响范围。</p>
+            <strong>风险确认</strong>
+            <p>每条风险的来源证据与影响范围。确认操作在对话中的风险卡上完成，这里只负责回看。</p>
           </div>
           {warnings.map((item) => {
             const detail = warningEvidence(item.id);
@@ -2431,8 +2435,10 @@ const tumorPanelRegistry: InspectorPanelRegistry<TumorPanelContext> = [
   },
   {
     id: "warnings",
-    label: "风险回看",
+    /* 确认动作在对话流的阻断卡上，这里只给进度与依据 */
+    label: (context) => `风险确认 ${context.warnings.filter((item) => item.accepted).length}/${context.warnings.length}`,
     icon: SearchCheck,
+    primary: true,
     available: (context) => context.stage !== "empty" && context.stage !== "uploaded" && context.stage !== "validating",
     render: (context) => <TumorPanelBody activeTopic="warnings" context={context} />,
   },
@@ -2440,13 +2446,15 @@ const tumorPanelRegistry: InspectorPanelRegistry<TumorPanelContext> = [
     id: "artifacts",
     label: "产物",
     icon: FileCheck,
+    primary: true,
     available: (context) => ["generated", "reviewing", "review", "exported"].includes(context.stage),
     render: (context) => <TumorPanelBody activeTopic="artifacts" context={context} />,
   },
   {
     id: "review",
-    label: "审核建议",
+    label: (context) => `专家建议 ${context.reviews.filter((item) => item.status === "confirmed").length}/${context.reviews.length}`,
     icon: MessageSquare,
+    primary: true,
     available: (context) => ["reviewing", "review", "exported"].includes(context.stage),
     render: (context) => <TumorPanelBody activeTopic="review" context={context} />,
   },

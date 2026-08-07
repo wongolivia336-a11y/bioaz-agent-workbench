@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight, WandSparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
@@ -57,14 +57,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [stage, setStage] = useState<DmpkStage>("idle");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
-  // 右侧是常驻面板：默认显示这三个 tab，其余通过 tab 栏的加号自行加回来
-  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "process", "artifacts"]);
+  /* tab 栏只放三个主面板；处理过程、输入材料、缺失项、计算依据、审核记录
+     一律收在加号菜单里，系统永远不会自己把它们加回来。 */
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "artifacts", "rules"]);
   // DMPK 的参数收集是主工作面，右侧默认就展开；肿瘤报告那边是事件驱动的
   const [panelOpen, setPanelOpen] = useState(true);
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("parameters");
   /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
   const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
   const [panelHintIds, setPanelHintIds] = useState<string[]>([]);
+  const visiblePanelIdsRef = useRef(visiblePanelIds);
+  visiblePanelIdsRef.current = visiblePanelIds;
   const [parametersExpanded, setParametersExpanded] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [conversationEditing, setConversationEditing] = useState(false);
@@ -236,11 +239,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     }, 1800);
   };
 
-  /** 阶段推进时的建议切换：用户没自己点过 tab 才真的切，否则只打点提示 */
+  /**
+   * 阶段推进时的建议切换。只在已经显示的 tab 之间起作用——
+   * 不在 tab 栏里的面板一律跳过，否则「三个主 tab」会被系统自己撑长。
+   * 用户自己点过 tab 之后，连切换也降级成打点提示。
+   */
   const suggestPanel = (panelId: DmpkInspectorPanelId) => {
-    setVisiblePanelIds((ids) => ids.includes(panelId) ? ids : [...ids, panelId]);
+    // 用 ref 读当前可见集：suggestPanel 常在 setTimeout 里调用，闭包里的值可能是旧的
+    if (!visiblePanelIdsRef.current.includes(panelId)) return;
     if (tabPinnedByUser) {
-      setPanelHintIds((ids) => ids.includes(panelId) ? ids : [...ids, panelId]);
+      setPanelHintIds((hints) => hints.includes(panelId) ? hints : [...hints, panelId]);
       return;
     }
     setInspectorPanelId(panelId);

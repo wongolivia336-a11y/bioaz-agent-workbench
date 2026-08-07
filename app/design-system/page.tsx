@@ -35,7 +35,7 @@ const components = [
   { name: "Drawer", status: "stable", props: "title, eyebrow, onClose, className", use: "保持当前上下文的右侧详情", avoid: "完整工作流和高密度编辑不塞进抽屉" },
   { name: "EmptyState", status: "stable", props: "icon, title, description, action, variant", use: "空列表、首次进入和无结果状态", avoid: "不要堆多段解释或多个主行动" },
   { name: "WorkbenchComposer", status: "candidate", props: "attachments, activeCoworkerId, project, menu, globalDrop", use: "任务输入、附件与能力入口", avoid: "窄 Drawer 不启用二级菜单；同屏仅一个 globalDrop" },
-  { name: "WorkbenchPanelBody / PanelToggle", status: "candidate", props: "panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds, open", use: "Agent 会话右侧工作面板。Body 占白卡右侧整列（含顶栏行），左侧一条顶天立地的淡分界线；PanelToggle 留在 topbar 负责展开收起", avoid: "分界线只用一条且要比常规边框淡；tab 的叉号必须恒定占位，只切可见性；最后一个 tab 不可关闭" },
+  { name: "WorkbenchPanelBody / PanelToggle", status: "candidate", props: "panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds, open", use: "Agent 会话右侧工作面板。tab 栏只放 registry 里 primary 的三个面板，其余在加号菜单「更多」分组；Body 占白卡右侧整列，左侧一条顶天立地的淡分界线", avoid: "阶段推进不得把次要面板拉回 tab 栏；分界线只用一条且比常规边框淡；tab 叉号恒定占位只切可见性；最后一个 tab 不可关闭" },
   { name: "SquadStatusCard", status: "candidate", props: "steps, elapsed, running", use: "多成员并行处理时的进度感知（专家小队审核）", avoid: "不要与同一份步骤数据的过程卡同时展开" },
 ];
 

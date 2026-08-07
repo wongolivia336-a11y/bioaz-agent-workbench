@@ -6267,7 +6267,19 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 16px 40px rgba(17, 19, 24, 0.12);
 }
 
+.workbenchPanelAddGroup {
+  display: grid;
+  gap: 1px;
+}
+
+.workbenchPanelAddGroup + .workbenchPanelAddGroup {
+  margin-top: 4px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 4px;
+}
+
 .workbenchPanelAddMenuLabel {
+  display: block;
   padding: 6px 8px 4px;
   color: var(--bioaz-text-tertiary);
   font-size: 11px;

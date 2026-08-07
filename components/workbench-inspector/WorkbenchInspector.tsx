@@ -29,6 +29,8 @@ export type InspectorPanelDefinition<TContext> = {
   icon: LucideIcon;
   available?: (context: TContext) => boolean;
   defaultWhen?: (context: TContext) => boolean;
+  /** 主面板常驻 tab 栏；其余只出现在加号菜单的「更多」分组里 */
+  primary?: boolean;
   state?: (context: TContext) => InspectorContentState;
   emptyMessage?: string;
   errorMessage?: string;
@@ -44,6 +46,7 @@ export type ResolvedInspectorPanel = {
   content: ReactNode;
   state: InspectorContentState;
   isDefault: boolean;
+  primary: boolean;
   emptyMessage?: string;
   errorMessage?: string;
 };
@@ -61,6 +64,7 @@ export function resolveInspectorPanels<TContext>(
       content: panel.render(context),
       state: panel.state?.(context) ?? "populated",
       isDefault: panel.defaultWhen?.(context) ?? false,
+      primary: panel.primary ?? false,
       emptyMessage: panel.emptyMessage,
       errorMessage: panel.errorMessage,
     }));
