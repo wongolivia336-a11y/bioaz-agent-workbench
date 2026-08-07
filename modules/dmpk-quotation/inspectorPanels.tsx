@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowUpRight,
   Calculator,
   ChevronDown,
   CircleAlert,
@@ -52,6 +53,8 @@ export type DmpkInspectorContext = {
   editingFieldId?: string | null;
   onPreviewArtifact: (kind: "word" | "excel") => void;
   onPreviewQuotation: () => void;
+  /** 面板只负责说清楚：要改什么就把现成的话填进 composer，由对话完成修改 */
+  onDraftMessage: (text: string) => void;
 };
 
 const groupLabels: Record<DmpkInspectorGroup, string> = {
@@ -199,46 +202,96 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
  * 边界与既有的 DmpkEditProposalCard 一致——本次报价级可改，全局规则只读并深链到后台。
  */
 function RulesPanel({ context }: { context: DmpkInspectorContext }) {
-  const [dialog, setDialog] = useState<"basis" | "adjust" | "suggest" | null>(null);
-  const [adjustmentRequest, setAdjustmentRequest] = useState("");
-  const [showAdjustmentPreview, setShowAdjustmentPreview] = useState(false);
-  const [adjustmentApplied, setAdjustmentApplied] = useState(false);
-  const [reason, setReason] = useState("");
-  const [ruleSuggestion, setRuleSuggestion] = useState("以后 SD 大鼠超过 30 只时，动物使用费按 85 折计算");
-  const goToRuleManagement = (draft?: string) => {
-    const params = new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", ...(draft ? { draft } : {}) });
+  const [costOpen, setCostOpen] = useState(false);
+  const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
+
+  const goToBackOffice = (tab: "prices" | "rules" | "parameters" | "templates") => {
+    const params = new URLSearchParams({ view: "quotation-management", business: "dmpk", tab });
     window.location.href = `/?${params.toString()}`;
   };
-  const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
 
   return (
     <div className="dmpkInspectorList ruleDisclosure">
-      <PanelIntro title="本次命中的计价规则" meta={hasQuoteDraft ? "已按当前参数完成匹配" : "参数补齐后开始匹配"} />
-      <section className="strategyMatchedRules">
-        <strong>本次计算使用</strong>
-        <span>SD 大鼠标准价格</span>
-        <span>国内报价区域</span>
-        <span>PK 报价模板 v8</span>
+      <PanelIntro title="本次报价" meta={hasQuoteDraft ? "以下规则只作用于这一份报价" : "参数补齐后开始匹配"} />
+
+      {/* 可改的一段有实体：卡片、边框、按钮 */}
+      <section className="ruleScopeCard">
+        <header>
+          <strong>本次命中的规则</strong>
+          <small>仅影响这份报价</small>
+        </header>
+        {matchedRules.map((rule) => (
+          <div className="ruleScopeRow" key={rule.id}>
+            <div>
+              <strong>{rule.label}</strong>
+              <small>{rule.meta}</small>
+            </div>
+            <button type="button" disabled={!hasQuoteDraft} onClick={() => context.onDraftMessage(rule.draft)}>
+              <Edit3 size={13} />改这条
+            </button>
+          </div>
+        ))}
+        <div className="ruleScopeActions">
+          <button type="button" disabled={!hasQuoteDraft} onClick={() => setCostOpen(true)}>
+            <Calculator size={14} />查看费用明细
+          </button>
+          <button className="primary" type="button" disabled={!hasQuoteDraft} onClick={() => context.onDraftMessage("我想调整本次报价：")}>
+            <Sparkles size={14} />对话编辑
+          </button>
+        </div>
+        <p className="ruleScopeNote">改动以对话形式提交，确认后只作用于当前报价并保留记录。</p>
       </section>
-      <div className="ruleDisclosureActions">
-        <button type="button" disabled={!hasQuoteDraft} onClick={() => setDialog("basis")}><Calculator size={14} />查看费用明细</button>
-        <button type="button" disabled={!hasQuoteDraft} onClick={() => setDialog("adjust")}><Edit3 size={14} />调整本次报价</button>
-      </div>
-      {adjustmentApplied ? <p className="ruleDisclosureApplied"><ShieldCheck size={14} />本次报价已调整，仅对当前项目生效</p> : null}
 
       <div className="ruleDisclosureDivider" />
-      <PanelIntro title="全局规则" meta="只读 · 影响后续所有 PK 报价" />
-      <InspectorInfoRow icon={FileCheck2} title="DMPK_报价规则_2026" meta="已发布 · 6月28日" />
-      <InspectorInfoRow icon={FileSpreadsheet} title="DMPK_报价参数字典" meta="已发布 · 7月8日" />
-      <InspectorInfoRow icon={Clock3} title="最低样品数规则" meta="单次检测不少于 24 个样品" />
-      <button className="dmpkInspectorTextAction" type="button" onClick={() => goToRuleManagement()}>去后台修改全局规则</button>
 
-      {dialog === "basis" ? <StrategyDialog title="费用明细" onClose={() => setDialog(null)}><div className="strategyCostList"><div><span>动物使用费<small>36 × ¥120</small></span><strong>¥4,320</strong></div><div><span>方法开发费<small>1 × ¥6,000</small></span><strong>¥6,000</strong></div><div><span>样品检测费<small>216 × ¥180</small></span><strong>¥38,880</strong></div><div><span>报告费<small>1 × ¥3,000</small></span><strong>¥3,000</strong></div>{adjustmentApplied ? <div className="isOverride"><span>本次报价调整<small>报告费调整 · {reason || "长期合作项目"}</small></span><strong>−¥500</strong></div> : null}</div><section className="strategyMatchedRules"><strong>本次计算使用</strong><span>SD 大鼠标准价格</span><span>国内报价区域</span><span>PK 报价模板 v8</span></section></StrategyDialog> : null}
-      {dialog === "adjust" ? <StrategyDrawer title="调整本次报价" onClose={() => setDialog(null)}><div className="strategyAssistantIntro"><span><Sparkles size={15} /></span><div><strong>DMPK 报价同事</strong><small>告诉我这次报价需要怎么调整</small></div></div><label className="strategyDialogField">调整要求<textarea rows={4} value={adjustmentRequest} onChange={(event) => { setAdjustmentRequest(event.target.value); setShowAdjustmentPreview(false); }} placeholder="例如：报告费改为 2,500 元，增加 1,200 元加急处理费，原因是长期合作项目" /></label><button className="strategyParseButton" type="button" disabled={!adjustmentRequest.trim()} onClick={() => { setShowAdjustmentPreview(true); setReason(adjustmentRequest.includes("原因") ? "长期合作项目" : "负责人本次调整"); }}><Sparkles size={14} />生成调整预览</button>{showAdjustmentPreview ? <section className="strategyAdjustmentPreview"><header><strong>请确认调整内容</strong><span>仅当前报价</span></header><div><span>报告费<small>¥3,000 → ¥2,500</small></span><strong>−¥500</strong></div><div><span><Plus size={13} /> 加急处理费<small>临时费用</small></span><strong>+¥1,200</strong></div><footer><span>报价总额</span><strong>¥52,200 → ¥52,900</strong></footer><p>调整原因：{reason}</p></section> : null}<p className="strategyScopeNote">确认后只修改当前报价草稿，并保留调整记录。</p><div className="strategyDialogActions"><button type="button" onClick={() => setDialog("suggest")}>希望以后都这样计算？</button><button className="primary" type="button" disabled={!showAdjustmentPreview} onClick={() => { setAdjustmentApplied(true); setDialog(null); }}>确认调整</button></div></StrategyDrawer> : null}
-      {dialog === "suggest" ? <StrategyDialog title="建议更新全局规则" onClose={() => setDialog(null)}><label className="strategyDialogField">你希望以后如何计算？<textarea rows={4} value={ruleSuggestion} onChange={(event) => setRuleSuggestion(event.target.value)} /></label><p className="strategyScopeNote">AI 会结合当前报价生成规则草稿。全局规则仍需在报价管理中试算并发布。</p><div className="strategyDialogActions"><button type="button" onClick={() => setDialog(null)}>取消</button><button className="primary" type="button" onClick={() => goToRuleManagement(ruleSuggestion)}>生成并前往规则管理</button></div></StrategyDialog> : null}
+      {/* 只读的一段没实体：素文本行，只提供去后台的路径 */}
+      <PanelIntro title="全局规则" meta="只读 · 影响后续所有 PK 报价" />
+      <div className="ruleGlobalList">
+        {globalRuleSources.map((source) => (
+          <button type="button" className="ruleGlobalRow" key={source.tab} onClick={() => goToBackOffice(source.tab)}>
+            <span>
+              <strong>{source.label}</strong>
+              <small>{source.meta}</small>
+            </span>
+            <ArrowUpRight size={14} />
+          </button>
+        ))}
+      </div>
+      <p className="ruleGlobalNote">全局规则需要在报价管理后台试算并发布，前台不提供直接修改。</p>
+
+      {costOpen ? (
+        <StrategyDialog title="费用明细" onClose={() => setCostOpen(false)}>
+          <div className="strategyCostList">
+            <div><span>动物使用费<small>36 × ¥120</small></span><strong>¥4,320</strong></div>
+            <div><span>方法开发费<small>1 × ¥6,000</small></span><strong>¥6,000</strong></div>
+            <div><span>样品检测费<small>216 × ¥180</small></span><strong>¥38,880</strong></div>
+            <div><span>报告费<small>1 × ¥3,000</small></span><strong>¥3,000</strong></div>
+          </div>
+          <section className="strategyMatchedRules">
+            <strong>本次计算使用</strong>
+            {matchedRules.map((rule) => <span key={rule.id}>{rule.label}</span>)}
+          </section>
+        </StrategyDialog>
+      ) : null}
     </div>
   );
 }
+
+/** 本次命中的规则。draft 是点「改这条」时填进 composer 的现成句子。 */
+const matchedRules = [
+  { id: "animal-price", label: "SD 大鼠标准价格", meta: "动物使用费 ¥120 / 只", draft: "把本次报价的动物使用费改为 " },
+  { id: "region", label: "国内报价区域", meta: "不含跨境与加急附加", draft: "本次报价改用欧美区域计价" },
+  { id: "template", label: "PK 报价模板 v8", meta: "Word 30% · Excel 15% 管理费", draft: "把本次报价的管理费比例改为 " },
+  { id: "report-fee", label: "报告费", meta: "¥3,000 / 份", draft: "把本次报价的报告费改为 " },
+];
+
+/** 与后台四个配置页一一对应，点哪一行就跳到哪一页 */
+const globalRuleSources = [
+  { tab: "prices" as const, label: "标准价格", meta: "当前发布版本 v1.0.13" },
+  { tab: "rules" as const, label: "计价规则", meta: "已发布 · 6月28日" },
+  { tab: "parameters" as const, label: "报价字段", meta: "参数字典 · 7月8日" },
+  { tab: "templates" as const, label: "报价模板", meta: "PK 报价模板 v8" },
+];
 
 function StrategyDialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return <div className="strategyDialogBackdrop" role="dialog" aria-modal="true"><section className="strategyDialog"><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;

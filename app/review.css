@@ -6166,15 +6166,17 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* 叉号始终占住 16px，只切换可见性。
    之前用 width 0→16px 展开，hover 时整条 tab 栏会跟着变宽抖动。 */
+/* 叉号的唯一出处。此前它被分成五段重复声明，margin 与尺寸互相覆盖，
+   于是灰底和图标不同心、上下也不在一条线上。全部合并到这里。 */
 .workbenchPanelTabClose {
   display: grid;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex: none;
   place-items: center;
-  margin-right: 6px;
+  margin: 0 6px 0 0;
   border: 0;
-  border-radius: 5px;
+  border-radius: 999px;
   background: transparent;
   color: var(--bioaz-text-tertiary);
   visibility: hidden;
@@ -6378,11 +6380,13 @@ button { -webkit-tap-highlight-color: transparent; }
   border-left: 1px solid rgba(17, 19, 24, 0.06);
 }
 
-/* composer 是 position:absolute / left:0 / right:0，不吃 grid-column，
-   所以要显式把右边界收到面板左侧，它才会和上方对话列共用一条居中轴。
-   用同一个 --panel-width，面板变窄时 composer 的右边界跟着走。 */
+/* composer 是 position:absolute，不吃 grid-column，所以要自己算边界。
+   它原本是 left:36px / right:36px，我上一版只改了 right，左右就不对称了，
+   中轴比对话列偏右 18px。这里两边一起给：左贴对话列左缘，右收到面板左侧，
+   于是它和对话列共用同一个盒子、同一条居中轴。 */
 :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) > :is(.dmpkComposerWrap, .legacyComposerStack) {
   right: var(--panel-width, 400px);
+  left: 0;
 }
 
 /* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列 */
@@ -6580,7 +6584,6 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .workbenchPanelTab > button:first-child {
-  padding: 0 4px 9px 8px;
   font-size: 12.5px;
   font-weight: 500;
 }
@@ -6606,11 +6609,6 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* 叉号跟着基线走，不再垂直居中于整条栏 */
-.workbenchPanelTabClose {
-  margin-right: 4px;
-  margin-bottom: 9px;
-}
-
 /* 加号与 tab 基线对齐，并稍微收窄，让 tab 成为这条栏的主角 */
 .workbenchPanelAdd {
   align-self: center;
@@ -6641,33 +6639,18 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* tab 撑满整条栏，选中条才会正好落在 hairline 上，
    而不是落在 tab 自身内容盒的底部。 */
+/* tab 满高（选中条要压在 hairline 上），14px 的下留白放在 tab 自身，
+   标签与叉号都在同一个内容盒里居中，天然对齐。 */
 .workbenchPanelTab {
   height: 100%;
   align-items: center;
+  padding-bottom: 14px;
 }
 
 .workbenchPanelTab > button:first-child {
-  height: 100%;
-  padding: 0 4px 0 8px;
-}
-
-.workbenchPanelTabClose {
-  margin-bottom: 0;
-}
-
-/* tab 文字抬离分界线：tab 仍然满高（选中条要压在 hairline 上），
-   但标签内容盒底部留出 14px，文字整体上移，不再贴着线。 */
-.workbenchPanelTab > button:first-child {
+  height: auto;
   align-items: center;
-  padding: 0 6px 14px 10px;
-}
-
-.workbenchPanelTab {
-  align-items: center;
-}
-
-.workbenchPanelTabClose {
-  margin-bottom: 14px;
+  padding: 0 4px 0 10px;
 }
 
 /* 选中条也随之收短一点，视觉上和文字宽度更贴合 */
@@ -6789,23 +6772,6 @@ button { -webkit-tap-highlight-color: transparent; }
    两个数字一旦不同就错位。改成把 14px 的下留白提到 tab 自身，
    两个子元素都在同一个内容盒里居中，天然对齐。
    =================================================================== */
-.workbenchPanelTab {
-  align-items: center;
-  padding-bottom: 14px;
-}
-
-.workbenchPanelTab > button:first-child {
-  height: auto;
-  align-items: center;
-  padding: 0 4px 0 10px;
-}
-
-.workbenchPanelTabClose {
-  width: 18px;
-  height: 18px;
-  margin: 0 6px 0 0;
-  border-radius: 999px;
-}
 
 /* ===================================================================
    对话列：单一宽度来源 + 响应式收敛
@@ -6839,6 +6805,14 @@ button { -webkit-tap-highlight-color: transparent; }
   width: min(var(--dmpk-column), 100%);
   max-width: min(var(--dmpk-column), 100%);
   margin-inline: auto;
+  padding-inline: 0;
+}
+
+/* 面板收起时 composer 也要和对话列同一个盒子，否则 36px 的左右内缩
+   会让它比对话列窄 72px。 */
+.dmpk-quotationModuleShell > .dmpkWorkspace > .dmpkComposerWrap {
+  right: 0;
+  left: 0;
 }
 
 .dmpk-quotationModuleShell .dmpkConversation > *,
@@ -6863,4 +6837,195 @@ button { -webkit-tap-highlight-color: transparent; }
   .dmpk-quotationModuleShell .dmpkComposerWrap {
     padding-inline: var(--bioaz-space-4);
   }
+}
+
+/* ===================================================================
+   报价规则面板 —— 按作用范围分两段
+   -------------------------------------------------------------------
+   上半段「本次报价」可改，所以给足实体：卡片、边框、分隔线、按钮。
+   下半段「全局规则」只读，所以退成素文本行，只保留一个跳转箭头。
+   视觉权重直接映射可交互性，不靠文字解释。
+   =================================================================== */
+.ruleScopeCard {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: #fff;
+}
+
+.ruleScopeCard > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--bioaz-border);
+  background: var(--bioaz-surface-subtle);
+  padding: 10px 12px;
+}
+
+.ruleScopeCard > header strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ruleScopeCard > header small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11.5px;
+}
+
+.ruleScopeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.ruleScopeRow + .ruleScopeRow {
+  border-top: 1px solid var(--bioaz-border);
+}
+
+.ruleScopeRow > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ruleScopeRow strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ruleScopeRow small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11.5px;
+}
+
+/* 「改这条」平时低调，悬停才显出来，避免四行按钮抢掉规则本身 */
+.ruleScopeRow > button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  padding: 4px 8px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ruleScopeRow:hover > button:not(:disabled),
+.ruleScopeRow > button:focus-visible {
+  border-color: var(--bioaz-border);
+  color: var(--bioaz-agent-accent);
+}
+
+.ruleScopeRow > button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ruleScopeActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  border-top: 1px solid var(--bioaz-border);
+  padding: 10px 12px 0;
+}
+
+.ruleScopeActions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+  color: var(--bioaz-text-primary);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ruleScopeActions button.primary {
+  border-color: transparent;
+  background: var(--bioaz-agent-accent);
+  color: #fff;
+}
+
+.ruleScopeActions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ruleScopeNote {
+  margin: 0;
+  padding: 8px 12px 12px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+/* 只读段：没有卡、没有边框、没有底色，只有行与行之间的分隔 */
+.ruleGlobalList {
+  display: grid;
+}
+
+.ruleGlobalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  padding: 9px 6px;
+  color: var(--bioaz-text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ruleGlobalRow + .ruleGlobalRow {
+  border-top: 1px solid var(--bioaz-border);
+  border-radius: 0;
+}
+
+.ruleGlobalRow > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ruleGlobalRow strong {
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ruleGlobalRow small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11.5px;
+}
+
+.ruleGlobalRow > svg {
+  flex: none;
+  color: var(--bioaz-text-tertiary);
+}
+
+.ruleGlobalRow:hover {
+  background: var(--bioaz-surface-subtle);
+}
+
+.ruleGlobalNote {
+  margin: 6px 0 0;
+  padding: 0 6px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11.5px;
+  line-height: 1.55;
 }
