@@ -6687,3 +6687,41 @@ button { -webkit-tap-highlight-color: transparent; }
   right: 6px;
   left: 6px;
 }
+
+/* ===================================================================
+   DMPK 参数补全卡：同样禁止一切指针驱动的视觉变化
+   -------------------------------------------------------------------
+   之前那道护栏只钉了 padding 和 transform，没管 transition / animation /
+   box-shadow，也没覆盖后代，所以卡内仍有元素能在 hover 时动起来。
+   这里按风险确认卡的同一套办法下正面禁令。
+   =================================================================== */
+.parameterTaskCard,
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within,
+.parameterTaskCard *,
+.parameterTaskCard *:hover,
+.parameterTaskCard *:focus-within {
+  transform: none;
+  animation: none;
+  transition: none;
+}
+
+.parameterTaskCard,
+.parameterTaskCard:hover,
+.parameterTaskCard:focus-within {
+  box-shadow: none;
+}
+
+.parameterTaskCard .decisionRow,
+.parameterTaskCard .decisionRow:hover,
+.parameterTaskCard .decisionRow:focus-within {
+  box-shadow: none;
+  background: var(--bioaz-surface);
+}
+
+/* 唯一保留的指针反馈：可点选项的颜色过渡。它不产生位移，
+   是必要的可点性提示，所以在禁令之后重新声明回来。 */
+.parameterTaskCard .optionGrid button,
+.parameterTaskCard .parameterPages button {
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
