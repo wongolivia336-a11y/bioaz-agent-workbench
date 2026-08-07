@@ -6666,3 +6666,24 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanelTabClose {
   margin-bottom: 0;
 }
+
+/* tab 文字抬离分界线：tab 仍然满高（选中条要压在 hairline 上），
+   但标签内容盒底部留出 14px，文字整体上移，不再贴着线。 */
+.workbenchPanelTab > button:first-child {
+  align-items: center;
+  padding: 0 6px 14px 10px;
+}
+
+.workbenchPanelTab {
+  align-items: center;
+}
+
+.workbenchPanelTabClose {
+  margin-bottom: 14px;
+}
+
+/* 选中条也随之收短一点，视觉上和文字宽度更贴合 */
+.workbenchPanelTab.isActive::after {
+  right: 6px;
+  left: 6px;
+}
