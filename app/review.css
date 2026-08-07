@@ -519,8 +519,8 @@ button { -webkit-tap-highlight-color: transparent; }
 @media (min-width: 1200px) and (max-width: 1439px) {
   .dmpkShell.dmpk-quotationModuleShell { grid-template-columns: 240px minmax(0, 1fr); }
   .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed { grid-template-columns: 72px minmax(0, 1fr); }
-  .dmpkShell.dmpk-quotationModuleShell:has(> .workbenchPanel.isOpen) { grid-template-columns: 240px minmax(0, 1fr) 320px; }
-  .dmpkShell.dmpk-quotationModuleShell.sidebarCollapsed:has(> .workbenchPanel.isOpen) { grid-template-columns: 72px minmax(0, 1fr) 320px; }
+  .dmpkShell.dmpk-quotationModuleShell { --panel-width: 320px; }
+  
   .dmpkShell.tumor-reportModuleShell:has(.inspector.pinned) { grid-template-columns: 240px minmax(0, 1fr) 400px; }
   .dmpkShell.tumor-reportModuleShell.sidebarCollapsed:has(.inspector.pinned) { grid-template-columns: 72px minmax(0, 1fr) 400px; }
 }
@@ -6358,27 +6358,14 @@ button { -webkit-tap-highlight-color: transparent; }
 .ruleDisclosureDivider { height: 1px; margin: 6px 0; background: var(--bioaz-border); }
 
 /* 对话列、参数卡、composer 共用同一条居中轴与同一个宽度。
-   之前三者各算各的（对话 920 左靠、composer 900 居中），基准线差了 148px。 */
-.dmpk-quotationModuleShell {
-  --dmpk-column: 900px;
-}
-
+   变量的取值与断点统一放在文件末尾那一段，这里只负责取用。 */
 .dmpkChatScroller { justify-items: center; }
-
-.dmpk-quotationModuleShell .dmpkConversation,
-.dmpk-quotationModuleShell .dmpkComposerWrap,
-.dmpk-quotationModuleShell .dmpkComposerWrap > .parameterTaskCard,
-.dmpk-quotationModuleShell .dmpkComposer {
-  width: min(var(--dmpk-column), 100%);
-  max-width: min(var(--dmpk-column), 100%);
-  margin-inline: auto;
-}
 
 /* 面板住在 workspace 内部，占满右侧一整列（含顶栏那一行），
    左侧一条顶天立地的淡分界线把这张白卡分成「对话」与「面板」两半。
    分界线只用一条，且比常规边框更淡——它是卡内分区，不是两张卡的边。 */
 :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) {
-  grid-template-columns: minmax(0, 1fr) 400px;
+  grid-template-columns: minmax(0, 1fr) var(--panel-width, 400px);
 }
 
 :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace) > :not(.workbenchPanel) {
@@ -6392,9 +6379,10 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* composer 是 position:absolute / left:0 / right:0，不吃 grid-column，
-   所以要显式把右边界收到面板左侧，它才会和上方对话列共用一条居中轴。 */
+   所以要显式把右边界收到面板左侧，它才会和上方对话列共用一条居中轴。
+   用同一个 --panel-width，面板变窄时 composer 的右边界跟着走。 */
 :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) > :is(.dmpkComposerWrap, .legacyComposerStack) {
-  right: 400px;
+  right: var(--panel-width, 400px);
 }
 
 /* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列 */
@@ -6773,4 +6761,104 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 12px;
   font-weight: 600;
   box-shadow: none;
+}
+
+/* ===================================================================
+   进度条：加高成胶囊长条
+   -------------------------------------------------------------------
+   4px 的细线在 400px 宽的面板里几乎读不出进度，加高到 8px 并保持
+   全圆角，填充部分也走同一圆角，空槽与填充都是完整的胶囊。
+   =================================================================== */
+.paramCollectProgress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bioaz-surface-subtle);
+  margin: var(--bioaz-space-3) 0 var(--bioaz-space-2);
+}
+
+.paramCollectProgress > i {
+  min-width: 8px;
+  border-radius: 999px;
+  transition: none;
+}
+
+/* ===================================================================
+   面板 tab 的叉号：与标签共用同一条垂直基准
+   -------------------------------------------------------------------
+   之前是给标签加 padding-bottom、给叉号加 margin-bottom 各自往上顶，
+   两个数字一旦不同就错位。改成把 14px 的下留白提到 tab 自身，
+   两个子元素都在同一个内容盒里居中，天然对齐。
+   =================================================================== */
+.workbenchPanelTab {
+  align-items: center;
+  padding-bottom: 14px;
+}
+
+.workbenchPanelTab > button:first-child {
+  height: auto;
+  align-items: center;
+  padding: 0 4px 0 10px;
+}
+
+.workbenchPanelTabClose {
+  width: 18px;
+  height: 18px;
+  margin: 0 6px 0 0;
+  border-radius: 999px;
+}
+
+/* ===================================================================
+   对话列：单一宽度来源 + 响应式收敛
+   -------------------------------------------------------------------
+   此前对话列、参数卡、composer 各自算宽度，窄屏下三者收缩速度不同，
+   左右边就对不齐。这里把宽度收敛成一个变量，所有参与者都读它，
+   并按断点整体收缩——要窄一起窄，边永远对齐。
+   =================================================================== */
+.dmpk-quotationModuleShell {
+  --dmpk-column: 900px;
+}
+
+@media (max-width: 1439px) {
+  .dmpk-quotationModuleShell { --dmpk-column: 820px; }
+}
+
+@media (max-width: 1199px) {
+  .dmpk-quotationModuleShell { --dmpk-column: 760px; }
+}
+
+@media (max-width: 900px) {
+  .dmpk-quotationModuleShell { --dmpk-column: 100%; }
+}
+
+/* chatflow 里的每一张卡都以对话列为准，不再各自限宽 */
+.dmpk-quotationModuleShell .dmpkConversation > *,
+.dmpk-quotationModuleShell .dmpkChatScroller > .dmpkConversation,
+.dmpk-quotationModuleShell .dmpkComposerWrap,
+.dmpk-quotationModuleShell .dmpkComposerWrap > *,
+.dmpk-quotationModuleShell .dmpkComposer {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.dmpk-quotationModuleShell .dmpkConversation,
+.dmpk-quotationModuleShell .dmpkComposerWrap {
+  width: min(var(--dmpk-column), 100%);
+  max-width: min(var(--dmpk-column), 100%);
+}
+
+/* 用户气泡按内容宽度靠右，但右边界不能超出对话列 */
+.dmpk-quotationModuleShell .dmpkConversation > .userBubble {
+  width: auto;
+  max-width: min(78%, 100%);
+  margin-inline: auto 0;
+}
+
+/* 窄屏下对话列两侧留出与卡片一致的内边距，避免贴边 */
+@media (max-width: 900px) {
+  .dmpk-quotationModuleShell .dmpkChatScroller,
+  .dmpk-quotationModuleShell .dmpkComposerWrap {
+    padding-inline: var(--bioaz-space-4);
+  }
 }
