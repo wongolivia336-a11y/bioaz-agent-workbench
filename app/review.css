@@ -6725,3 +6725,52 @@ button { -webkit-tap-highlight-color: transparent; }
 .parameterTaskCard .parameterPages button {
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
+
+/* 分页 tab 与选项芯片：连颜色过渡也一并去掉，hover 只做瞬时换色，
+   不再有任何时间维度上的变化；同时把盒模型在三种状态下钉死，
+   避免 hover 改变字重或内边距把相邻 tab 推着走。 */
+.parameterTaskCard .optionGrid button,
+.parameterTaskCard .optionGrid button:hover,
+.parameterTaskCard .parameterPages button,
+.parameterTaskCard .parameterPages button:hover,
+.parameterTaskCard .parameterPages button.active,
+.parameterTaskCard .parameterPages button.active:hover {
+  transition: none;
+  animation: none;
+  transform: none;
+}
+
+.parameterTaskCard .parameterPages button,
+.parameterTaskCard .parameterPages button:hover,
+.parameterTaskCard .parameterPages button:focus-visible {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 10px 8px;
+  border: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.parameterTaskCard .parameterPages button.active,
+.parameterTaskCard .parameterPages button.active:hover {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 10px 8px;
+  border: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.parameterTaskCard .optionGrid button,
+.parameterTaskCard .optionGrid button:hover,
+.parameterTaskCard .optionGrid button.selected,
+.parameterTaskCard .optionGrid button.selected:hover {
+  min-height: 28px;
+  height: 28px;
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: none;
+}
