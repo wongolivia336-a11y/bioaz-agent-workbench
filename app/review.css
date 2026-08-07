@@ -6479,3 +6479,91 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fff;
   box-shadow: none;
 }
+
+/* 把这张卡的布局值在所有指针状态下钉成同一组，来源取最后一次生效的基础值。
+   前面那些 "X, X:hover" 的成对写法只保证同一条规则内相等，挡不住更早的
+   规则给基础态一个不同的值——那正是 hover 时高度和行距一起变的来源。 */
+.tumor-reportModuleShell .gateDecision,
+.tumor-reportModuleShell .gateDecision:hover,
+.tumor-reportModuleShell .gateDecision:focus-within,
+.tumor-reportModuleShell .gateDecision.isExpanded,
+.tumor-reportModuleShell .gateDecision.isExpanded:hover {
+  max-height: min(540px, calc(100dvh - 180px));
+  gap: var(--bioaz-space-3);
+  padding: var(--bioaz-space-4);
+}
+
+.tumor-reportModuleShell .gateDecision .warningDecisionList,
+.tumor-reportModuleShell .gateDecision:hover .warningDecisionList,
+.tumor-reportModuleShell .gateDecision:focus-within .warningDecisionList {
+  gap: var(--bioaz-space-3);
+  padding-right: 0;
+}
+
+.tumor-reportModuleShell .gateDecision .decisionRow,
+.tumor-reportModuleShell .gateDecision:hover .decisionRow,
+.tumor-reportModuleShell .gateDecision .decisionRow:hover,
+.tumor-reportModuleShell .gateDecision .decisionRow:focus-within {
+  min-height: 0;
+  gap: var(--bioaz-space-4);
+  padding: var(--bioaz-space-4);
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+}
+
+.tumor-reportModuleShell .gateDecision .warningDecisionHeader,
+.tumor-reportModuleShell .gateDecision:hover .warningDecisionHeader {
+  gap: 10px;
+  padding: 0;
+}
+
+/* ===================================================================
+   参数卡分页 tab —— 与右侧面板 tab 同一套语言
+   -------------------------------------------------------------------
+   原来是四颗描边药丸，选中态只靠边框深一档，既看不出选中也和
+   面板 tab 完全两种语汇。改成一条标签栏：无边框、无底色，
+   选中态用底部一条 accent 短条，与 .workbenchPanelTab 一致。
+   =================================================================== */
+.parameterTaskCard .parameterPages {
+  position: relative;
+  gap: 2px;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding-bottom: 0;
+}
+
+.parameterTaskCard .parameterPages button {
+  position: relative;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  padding: 0 10px 8px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.parameterTaskCard .parameterPages button:hover {
+  background: transparent;
+  color: var(--bioaz-text-primary);
+}
+
+.parameterTaskCard .parameterPages button.active {
+  border: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+/* 选中指示条压在分隔线上，与面板 tab 的底部灰条同款 */
+.parameterTaskCard .parameterPages button.active::after {
+  position: absolute;
+  right: 6px;
+  bottom: -1px;
+  left: 6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--bioaz-agent-accent);
+  content: "";
+}
