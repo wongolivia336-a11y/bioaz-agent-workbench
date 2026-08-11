@@ -1666,7 +1666,6 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 15px;
   height: 15px;
   flex: none;
-  stroke-width: 1.8;
 }
 .knowledgeBaseView .secondaryButton.compact {
   border-color: var(--bioaz-border);
@@ -1727,7 +1726,6 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 15px;
   height: 15px;
   flex: none;
-  stroke-width: 1.8;
 }
 .topbarActions .primaryButton.compact,
 .topbarActions .primaryButton.compact:hover {
@@ -7090,3 +7088,361 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 10px !important;
   padding: 0 !important;
 }
+
+/* ===================================================================
+   面板全屏（focus）与悬浮对话坞
+   -------------------------------------------------------------------
+   全屏只吃对话列：topbar 与左侧任务栏保留，用户不会在审核到一半时
+   丢掉面包屑和任务切换。面板改为 absolute 铺满 topbar 以下的区域，
+   对话与 composer 原地淡出，底部中央换成一颗悬浮药丸。
+
+   这里刻意不做「宽度形变」：面板里有表格，逐帧改宽度会让列宽反复
+   重算，抖得比不动还难看。连续感交给 composer → 药丸 那一层——
+   两者是同一套形状语言，看起来就是同一个东西收小了。
+   =================================================================== */
+/* grid-column/grid-row 必须一起清掉：绝对定位的 grid 子项若有确定的网格位置，
+   包含块就是那个网格区，inset:0 只会把它钉死在原来那 400px 的列里。 */
+.workbenchPanel.isFocus {
+  position: absolute;
+  z-index: 40;
+  inset: 58px 0 0 0;
+  grid-row: auto;
+  grid-column: auto;
+  border-left: 0;
+  animation: workbenchPanelFocusIn 240ms cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+
+@keyframes workbenchPanelFocusIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 全屏下面板自己就是一整张卡，tab 栏左缘对齐内容而不是贴边 */
+.workbenchPanel.isFocus .workbenchPanelTabs {
+  padding: 0 16px 0 20px;
+}
+
+/* 给底部的悬浮药丸让出落脚点，滚到底时最后一条内容不会被压住 */
+.workbenchPanel.isFocus .workbenchPanelBody {
+  padding: 18px clamp(20px, 4vw, 64px) 108px;
+}
+
+/* topbar 原来只占左列，右边那 320px 是面板自己的 tab 栏顶着的。
+   面板下移到 topbar 以下之后，那一块会空出来，所以让 topbar 横过整行。 */
+.dmpkWorkspace.isPanelFocus > .topbar {
+  grid-column: 1 / -1;
+}
+
+/* 对话列与 composer 先走一步（140ms），面板才进场，两者不会打架 */
+.dmpkWorkspace.isPanelFocus > .dmpkChatScroller,
+.dmpkWorkspace.isPanelFocus > .dmpkComposerWrap {
+  opacity: 0;
+  transform: translateX(-12px);
+  pointer-events: none;
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+
+/* ---- tab 栏右端的视图操作组：[ + ] │ [ ⤢ ] ---- */
+.workbenchPanelViewActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  align-self: center;
+  gap: 2px;
+}
+
+.workbenchPanelActionDivider {
+  width: 1px;
+  height: 12px;
+  flex: none;
+  margin: 0 4px;
+  background: var(--bioaz-border);
+}
+
+.workbenchPanelFocus {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.workbenchPanelFocus:hover:not(:disabled) {
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-primary);
+}
+
+.workbenchPanelFocus.isActive {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+/* 不支持全屏的 tab 只置灰、不移除——移除的话加号会跟着 tab 切换横跳 */
+.workbenchPanelFocus:disabled {
+  color: var(--bioaz-text-disabled);
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ---- 悬浮对话坞 ---- */
+.floatingChatDock {
+  position: absolute;
+  z-index: 60;
+  bottom: 24px;
+  left: 50%;
+  display: grid;
+  width: min(560px, calc(100% - 48px));
+  justify-items: stretch;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.floatingChatPill {
+  display: grid;
+  align-items: end;
+  gap: 6px;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(17, 19, 24, 0.12), 0 1px 2px rgba(17, 19, 24, 0.06);
+  backdrop-filter: blur(14px) saturate(1.6);
+  animation: floatingChatPillIn 180ms cubic-bezier(0.32, 0.72, 0, 1) 120ms backwards;
+}
+
+@keyframes floatingChatPillIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+
+.floatingChatPill textarea {
+  min-height: 30px;
+  max-height: 116px;
+  align-self: center;
+  border: 0;
+  background: transparent;
+  padding: 6px 2px;
+  color: var(--bioaz-text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+}
+
+.floatingChatPill textarea::placeholder {
+  color: var(--bioaz-text-tertiary);
+}
+
+.floatingChatPillToggle,
+.floatingChatSend {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.floatingChatPillToggle {
+  position: relative;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+}
+
+.floatingChatPillToggle:hover {
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-primary);
+}
+
+/* 播报淡出后留下的那颗点：agent 说过话，但你还没看 */
+.floatingChatPillToggle.hasUnread::after {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bioaz-agent-accent, var(--bioaz-brand-primary));
+  content: "";
+}
+
+.floatingChatSend {
+  background: var(--bioaz-brand-primary);
+  color: #fff;
+}
+
+.floatingChatSend:hover:not(:disabled) {
+  background: var(--bioaz-brand-primary-hover);
+}
+
+.floatingChatSend:disabled {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-disabled);
+  cursor: default;
+}
+
+/* 播报：贴在药丸上方，3.5s 后由组件自己撤掉 */
+.floatingChatBroadcast {
+  display: grid;
+  gap: 6px;
+  justify-self: center;
+  width: 100%;
+  animation: floatingChatBroadcastIn 200ms cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+
+@keyframes floatingChatBroadcastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.floatingChatBroadcast button {
+  display: -webkit-box;
+  overflow: hidden;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 9px 14px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(17, 19, 24, 0.1);
+  backdrop-filter: blur(14px) saturate(1.6);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.floatingChatBroadcast button:hover {
+  color: var(--bioaz-text-primary);
+}
+
+/* 展开态：从药丸向上生长，不推挤画布 */
+.floatingChatSheet {
+  display: grid;
+  height: 420px;
+  grid-template-rows: 40px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 48px rgba(17, 19, 24, 0.16);
+  backdrop-filter: blur(16px) saturate(1.6);
+  transform-origin: bottom center;
+  animation: floatingChatSheetIn 200ms cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+
+@keyframes floatingChatSheetIn {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.floatingChatSheet > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 0 8px 0 14px;
+  color: var(--bioaz-text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.floatingChatSheet > header button {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+}
+
+.floatingChatSheet > header button:hover {
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-primary);
+}
+
+.floatingChatList {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 12px 14px 16px;
+}
+
+.floatingChatList p {
+  max-width: 82%;
+  margin: 0;
+  border-radius: 12px;
+  padding: 8px 11px;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.floatingChatList p.isAgent {
+  justify-self: start;
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-primary);
+}
+
+.floatingChatList p.isUser {
+  justify-self: end;
+  background: var(--bioaz-brand-primary);
+  color: #fff;
+}
+
+/* 窄屏：面板本来就是盖在对话上的抽屉，全屏没有额外意义 */
+@media (max-width: 1199px) {
+  .workbenchPanel.isFocus {
+    position: fixed;
+    inset: 0 0 0 auto;
+  }
+
+  .workbenchPanelViewActions {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workbenchPanel.isFocus,
+  .floatingChatPill,
+  .floatingChatSheet,
+  .floatingChatBroadcast {
+    animation-duration: 1ms;
+  }
+
+  .dmpkWorkspace.isPanelFocus > .dmpkChatScroller,
+  .dmpkWorkspace.isPanelFocus > .dmpkComposerWrap {
+    transform: none;
+    transition: opacity 1ms linear;
+  }
+}
+
+/* ---- 全局规则草稿卡上的作用域预告 ---- */
+/* 「你正在离开这一单」这个信号以前只由跳转那一下承担，跳完就没了；写成常驻文字它才一直在 */
+.dmpkRuleScopePreview{display:grid;gap:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px}
+.dmpkRuleScopeHit{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px;margin:0;font-size:13px}
+.dmpkRuleScopeHit span{color:var(--muted);font-size:11px}
+.dmpkRuleScopeHit strong{color:var(--ink);font-weight:600}
+.dmpkRuleScopeHit b{color:var(--body);font-weight:500}
+.dmpkRuleScopeTags{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0}
+.dmpkRuleScopeTags span{color:var(--muted);font-size:11px}
+.dmpkRuleScopeTags i{border:1px solid var(--line);border-radius:99px;background:#fff;padding:2px 8px;color:var(--body);font-size:11px;font-style:normal}
+.dmpkRuleScopePreview small{display:flex;align-items:flex-start;gap:6px;color:var(--amber);font-size:11px;line-height:1.6}
+.dmpkRuleScopePreview small svg{flex-shrink:0;margin-top:2px}
+
+/* 置灰的全屏按钮把提示挂在外层 span 上，这层不能吃掉布局 */
+.workbenchPanelFocusWrap{display:inline-flex}

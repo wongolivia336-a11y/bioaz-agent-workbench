@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Send, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
@@ -8,6 +8,7 @@ import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-s
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition } from "../types";
+import { priceCatalog, scenarioShortLabels } from "../quotation-management/dmpk/catalog";
 import {
   dmpkFieldOptions,
   dmpkGroups,
@@ -29,8 +30,32 @@ export function DmpkEditProposalCard({ proposal, onConfirmCurrentPrice, onOpenRu
   return <section className="dmpkEditProposalCard">
     <header><span>{isCurrentPrice ? <CircleDollarSign size={16} /> : <Sparkles size={16} />}</span><div><strong>{isCurrentPrice ? "调整本次报价" : "全局规则草稿"}</strong><small>{isCurrentPrice ? "仅影响当前项目" : "影响后续 PK 报价，发布前需验证"}</small></div></header>
     {isCurrentPrice ? <div className="dmpkPriceChange"><span>报告费</span><small>¥{proposal.previousPrice.toLocaleString()} → ¥{proposal.nextPrice.toLocaleString()}</small></div> : <div className="dmpkRuleSentencePreview"><span>PK 检测</span><b>样品数少于 {proposal.minimumSamples} 个</b><strong>按 {proposal.minimumSamples} 个计费</strong></div>}
+    {!isCurrentPrice ? <RuleScopePreview /> : null}
     <footer><small>{isCurrentPrice ? "确认后保留本次调整记录" : "规则不会在前台直接生效"}</small><button type="button" onClick={isCurrentPrice ? onConfirmCurrentPrice : onOpenRuleManagement}>{isCurrentPrice ? "确认调整" : "前往规则管理"}{!isCurrentPrice ? <ArrowRight size={14} /> : null}</button></footer>
   </section>;
+}
+
+/**
+ * 全局规则草稿的作用域预告。
+ *
+ * 「你正在离开这一单」这个信号，以前只由跳转那一下承担——跳完就没了。
+ * 这里把它写成常驻文字：这条规则命中哪个费用项、那一项适用于哪几类。
+ * 只读，作用域仍然只能在后台定；前台负责的是让人看见，不是让人拍板。
+ */
+function RuleScopePreview() {
+  // 「PK 样品少于 N 个按 N 个收费」落在样品检测这一项上，取自后台同一份目录
+  const target = priceCatalog.find((item) => item.id === "bio-plasma");
+  if (!target) return null;
+  return (
+    <div className="dmpkRuleScopePreview">
+      <p className="dmpkRuleScopeHit"><span>命中</span><strong>{target.name}</strong><b>{target.price} / {target.unit}</b></p>
+      <p className="dmpkRuleScopeTags">
+        <span>该项适用于</span>
+        {target.appliesTo.map((scenario) => <i key={scenario}>{scenarioShortLabels[scenario]}</i>)}
+      </p>
+      <small><TriangleAlert size={13} />在后台改主值，这 {target.appliesTo.length} 类会同时生效；只改一类要在后台设为例外。</small>
+    </div>
+  );
 }
 
 export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {

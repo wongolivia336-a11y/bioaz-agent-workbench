@@ -100,6 +100,15 @@ export type AgentModuleSessionProps = {
   handoffNotice?: string;
   priorSessionSnapshots?: AgentSessionSnapshot[];
   onSessionSnapshotChange?: (snapshot: AgentSessionSnapshot) => void;
+  /* 去报价后台走应用内跳转，不走 window.location——整页刷新会把当前这单报价冲掉，
+     草稿也会卡在「读参数」和「抹参数」的竞态里。 */
+  onOpenQuotationManagement?: (options?: QuotationManagementTarget) => void;
+};
+
+export type QuotationManagementTarget = {
+  business?: "root" | "dmpk";
+  tab?: "prices" | "rules" | "parameters" | "templates";
+  draft?: string;
 };
 
 export type AgentModuleDefinition = {

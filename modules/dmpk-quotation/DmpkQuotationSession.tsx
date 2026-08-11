@@ -2,6 +2,7 @@
 
 import { ChevronRight, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
@@ -27,7 +28,7 @@ import {
   type DmpkInspectorPanelId,
 } from "./views";
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
   const openingMessage = "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。";
   const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
@@ -62,6 +63,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "artifacts", "rules"]);
   // DMPK 的参数收集是主工作面，右侧默认就展开；肿瘤报告那边是事件驱动的
   const [panelOpen, setPanelOpen] = useState(true);
+  /** 面板铺满工作区：只吃对话列，topbar 与左侧任务栏保留 */
+  const [panelFocus, setPanelFocus] = useState(false);
   const [inspectorPanelId, setInspectorPanelId] = useState<DmpkInspectorPanelId>("parameters");
   /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
   const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
@@ -200,14 +203,18 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   const submitComposer = () => {
     const text = composerText.trim();
-    if (draftTabs.length) {
+    /* 只有「没打字」的时候才走草稿分支。以前不管有没有打字都走这儿，
+       撞上参数卡还没填完就直接 return——全屏胶囊里打的字会一声不吭地消失，
+       而那个待发草稿正躲在淡出的 composer 里，用户根本看不见。 */
+    if (draftTabs.length && !text) {
       if (stage === "collecting" && composerFields.length) return;
       sendDraft();
       return;
     }
     if (!text || stage === "thinking" || stage === "generating") return;
     const reportFeeMatch = text.match(/(?:这次|本次)?.*报告费.*?(\d[\d,]*)\s*元?/);
-    const minimumSampleMatch = text.match(/以后.*?PK.*?样品.*?少于\s*(\d+)\s*个?.*?按\s*(\d+)\s*个?.*?收费/i);
+    // 放宽句式：以前必须原样说出「以后…PK…样品…少于…按…收费」，换个说法就掉进兜底文案
+    const minimumSampleMatch = text.match(/(?:样品|样本).*?(?:少于|低于|不足|不到)\s*(\d+)\s*个?.*?(?:按|以)\s*(\d+)\s*个?.*?(?:收费|计费|计价)/i);
     if (reportFeeMatch) {
       appendMessage("user", text, consumeAttachments());
       setComposerText("");
@@ -308,15 +315,39 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     ),
   });
 
+  /* 全屏只对「放宽了才好读」的面板成立。切到参数收集这类表单面板、
+     或者干脆把面板收起来，就自动落回 dock，不留一个空的全屏壳。 */
+  const activePanelExpandable = inspectorPanels.find((panel) => panel.id === inspectorPanelId)?.expandable ?? false;
+  useEffect(() => {
+    if (panelFocus && (!panelOpen || !activePanelExpandable)) setPanelFocus(false);
+  }, [activePanelExpandable, panelFocus, panelOpen]);
+
+  /* 调价/建规则的确认卡挂在 composer 上，全屏时它被藏起来了。
+     这类决定本来也需要完整上下文，所以直接落回 dock，而不是把卡搬进药丸。 */
+  useEffect(() => {
+    if (editProposal && panelFocus) setPanelFocus(false);
+  }, [editProposal, panelFocus]);
+
+  useEffect(() => {
+    if (!panelFocus) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      // 画布里的预览弹窗自己吃 Esc，它没关掉之前不轮到全屏退出
+      if (event.key !== "Escape" || previewOpen || artifactPreview) return;
+      setPanelFocus(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [artifactPreview, panelFocus, previewOpen]);
+
   return (
     <>
-      <section className="dmpkWorkspace">
+      <section className={`dmpkWorkspace ${panelFocus ? "isPanelFocus" : ""}`}>
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
           <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </header>
         <div className="dmpkChatScroller"><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") window.location.href = `/?${new URLSearchParams({ view: "quotation-management", business: "dmpk", tab: "rules", draft: editProposal.request }).toString()}`; }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
+        <DmpkComposer editProposal={editProposal} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0) || (!draftTabs.length && !composerText.trim())} />
         <WorkbenchPanelBody
           panels={railPanels}
           visibleIds={visiblePanelIds}
@@ -324,12 +355,23 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           activePanelId={inspectorPanelId}
           hintIds={panelHintIds}
           open={panelOpen}
+          focus={panelFocus}
+          onFocusChange={setPanelFocus}
           onPanelChange={(panelId) => {
             setTabPinnedByUser(true);
             setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
             setInspectorPanelId(panelId as DmpkInspectorPanelId);
           }}
         />
+        {panelFocus ? (
+          <FloatingChatDock
+            messages={messages}
+            text={composerText}
+            onTextChange={setComposerText}
+            onSend={submitComposer}
+            disabled={stage === "thinking" || stage === "generating"}
+          />
+        ) : null}
       </section>
       {previewOpen ? <DmpkQuotationPreviewModal fields={fields} onClose={() => setPreviewOpen(false)} /> : null}
       {artifactPreview ? <DmpkArtifactPreviewModal kind={artifactPreview} onClose={() => setArtifactPreview(null)} /> : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, PanelRight, Plus, X } from "lucide-react";
+import { Check, CircleAlert, Maximize2, Minimize2, PanelRight, Plus, X } from "lucide-react";
 import { useState } from "react";
 import type { ResolvedInspectorPanel } from "../workbench-inspector/WorkbenchInspector";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
@@ -14,6 +14,9 @@ type PanelState = {
   onPanelChange: (panelId: string) => void;
   /** 阶段推进过但用户没在看的 tab，打一个小圆点，不抢视图 */
   hintIds?: string[];
+  /** 面板铺满工作区（只吃对话列，topbar 与左侧任务栏保留）。不传 onFocusChange 就没有这颗按钮 */
+  focus?: boolean;
+  onFocusChange?: (focus: boolean) => void;
 };
 
 /**
@@ -32,7 +35,7 @@ export function PanelToggle({ open, onToggle }: { open: boolean; onToggle: () =>
       onClick={() => { if (open) setSuppressHover(true); onToggle(); }}
       onMouseLeave={() => setSuppressHover(false)}
     >
-      <PanelRight size={17} />
+      <PanelRight size={16} />
     </button>
   );
 }
@@ -41,7 +44,7 @@ export function PanelToggle({ open, onToggle }: { open: boolean; onToggle: () =>
  * 面板本体，占满白卡右侧一整列（含顶栏那一行），左侧一条顶天立地的分界线。
  * tab 栏是它自己的头部，所以分界线两侧一眼能分出「对话」与「面板」。
  */
-export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds = [], open = true }: PanelState & { open?: boolean }) {
+export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds = [], open = true, focus = false, onFocusChange }: PanelState & { open?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useDismissableLayer<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
 
@@ -66,7 +69,7 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
   };
 
   return (
-    <aside className={`workbenchPanel ${open ? "isOpen" : ""}`} aria-hidden={!open}>
+    <aside className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""}`} aria-hidden={!open}>
       <div className="workbenchPanelTabs">
         <div className="workbenchPanelTabScroll" role="tablist" aria-label="工作面板">
           {visiblePanels.map((panel) => {
@@ -75,7 +78,7 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
             return (
               <span className={`workbenchPanelTab ${selected ? "isActive" : ""}`} key={panel.id}>
                 <button type="button" role="tab" aria-selected={selected} onClick={() => onPanelChange(panel.id)}>
-                  <Icon size={14} strokeWidth={1.9} />
+                  <Icon size={14} />
                   <span>{panel.label}</span>
                   {!selected && hintIds.includes(panel.id) ? <i className="workbenchPanelTabDot" aria-label="有更新" /> : null}
                 </button>
@@ -88,7 +91,7 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
                   disabled={visiblePanels.length === 1}
                   onClick={() => hide(panel.id)}
                 >
-                  <X size={11} strokeWidth={2.4} />
+                  <X size={12} />
                 </button>
               </span>
             );
@@ -96,7 +99,7 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
         </div>
         <div ref={menuRef} className={`workbenchPanelAdd ${menuOpen ? "isOpen" : ""}`}>
           <button type="button" aria-haspopup="menu" aria-expanded={menuOpen} aria-label="添加面板" onClick={() => setMenuOpen((value) => !value)}>
-            <Plus size={16} strokeWidth={2} />
+            <Plus size={16} />
           </button>
           {menuOpen ? (
             <div className="workbenchPanelAddMenu" role="menu">
@@ -120,7 +123,7 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
                           className={checked ? "isChecked" : ""}
                           onClick={() => toggleVisible(panel.id)}
                         >
-                          <Icon size={15} strokeWidth={1.9} />
+                          <Icon size={14} />
                           <span>{panel.label}</span>
                           {checked ? <Check size={14} /> : null}
                         </button>
@@ -132,6 +135,31 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
             </div>
           ) : null}
         </div>
+        {/* 「加内容」与「改视图」是两组语义，中间一条淡竖线隔开。
+            按钮常驻占位——当前 tab 不支持全屏时只置灰，不移除，
+            否则加号会跟着 tab 切换左右横跳。 */}
+        {onFocusChange ? (
+          <div className="workbenchPanelViewActions">
+            <span className="workbenchPanelActionDivider" aria-hidden="true" />
+            {/* title 挂在外层的 span 上：disabled 的按钮在 Chrome 里不派发鼠标事件，
+                提示挂在按钮自己身上就永远弹不出来，用户只看到一个没反应的灰按钮。 */}
+            <span
+              className="workbenchPanelFocusWrap"
+              title={focus ? "退出全屏（Esc）" : active?.expandable ? "面板全屏" : "该面板放宽后没有更多内容"}
+            >
+              <button
+                type="button"
+                className={`workbenchPanelFocus ${focus ? "isActive" : ""}`}
+                disabled={!focus && !active?.expandable}
+                aria-pressed={focus}
+                aria-label={focus ? "退出全屏" : "面板全屏"}
+                onClick={() => onFocusChange(!focus)}
+              >
+                {focus ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              </button>
+            </span>
+          </div>
+        ) : null}
       </div>
       <div className="workbenchPanelBody" role="tabpanel">
         {active ? <PanelContent panel={active} /> : null}
@@ -142,7 +170,7 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
 
 function PanelContent({ panel }: { panel: ResolvedInspectorPanel }) {
   if (panel.state === "error") {
-    return <p className="workbenchPanelNotice isError"><CircleAlert size={15} />{panel.errorMessage ?? "内容暂时不可用"}</p>;
+    return <p className="workbenchPanelNotice isError"><CircleAlert size={14} />{panel.errorMessage ?? "内容暂时不可用"}</p>;
   }
   if (panel.state === "loading") {
     return <p className="workbenchPanelNotice">正在整理…</p>;

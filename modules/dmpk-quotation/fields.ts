@@ -73,14 +73,20 @@ export function parseDmpkRequest(text: string): Record<string, string> {
   else if (/tox|毒理/i.test(text)) patch.assayType = "TOX";
   else if (/dmpk|pk/i.test(text)) patch.assayType = "PK";
   if (/小分子/.test(text)) patch.molecule = "小分子";
+  /* 种属按选项表逐个认，别只认大鼠——「Balb/c nude 小鼠」这种最常见的写法
+     以前会整条掉地上，识别结果里种属仍是空的，看着像系统没读懂用户。 */
   if (/sd\s*大鼠|大鼠/i.test(text)) patch.species = "SD 大鼠";
+  else if (/小鼠|balb\s*\/?\s*c|nude|c57/i.test(text)) patch.species = "小鼠";
+  else if (/beagle|比格|犬|狗/i.test(text)) patch.species = "Beagle 犬";
+  else if (/食蟹猴|猕猴|猴/i.test(text)) patch.species = "食蟹猴";
   const animalMatch = text.match(/每组\s*(\d+)\s*只/);
   if (animalMatch) patch.animalsPerGroup = animalMatch[1];
   const groupMatch = text.match(/(?:共|，|,|\s)(\d+)\s*组/);
   if (groupMatch) patch.groupCount = groupMatch[1];
   const cycleMatch = text.match(/(?:周期|试验周期)\s*(\d+)\s*周/);
   if (cycleMatch) patch.cycle = `${cycleMatch[1]} 周`;
-  const bloodMatch = text.match(/(\d+)\s*个?(?:非加班)?采血点/);
+  // 「时间点」「采样点」和「采血点」在客户嘴里是一个意思，输入框自己的例句用的还是「时间点」
+  const bloodMatch = text.match(/(\d+)\s*个?(?:非加班)?(?:采血点|采样点|时间点)/);
   if (bloodMatch) patch.bloodPoints = bloodMatch[1];
   return patch;
 }
