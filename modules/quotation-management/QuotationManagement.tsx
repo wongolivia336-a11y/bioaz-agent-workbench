@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ChevronRight, ChevronUp, LogOut, Settings, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NavTabs } from "../../components/ui";
+import { NavTabs, SegmentedControl } from "../../components/ui";
 import BusinessPicker from "./components/BusinessPicker";
 import DmpkRuleAssistant from "./components/DmpkRuleAssistant";
 import ManagementDialog from "./components/ManagementDialog";
@@ -28,7 +28,7 @@ const tabs: Array<{ id: DmpkTab; label: string }> = [
 const listTabs: DmpkTab[] = ["prices", "parameters"];
 
 const tabDescriptions: Record<DmpkTab, string> = {
-  prices: "同一个费用项只存一份，检测类型是它的适用范围，不是它的归属。",
+  prices: "同一费用项只存一份，检测类型是它的适用范围。",
   rules: "管理不同检测条件下，费用如何计算。",
   parameters: "配置报价任务需要确认的信息与常用选项。",
   templates: "管理客户最终收到的 Excel 与 Word 版式。",
@@ -60,6 +60,11 @@ export function QuotationManagement({
 
   const activeScenario: DetectionScenario = scenarioFilter === "all" ? "pk" : scenarioFilter;
   const currentTab = tabs.find((item) => item.id === tab);
+  const scenarioFilterItems: Array<{ id: ScenarioFilter; label: string }> = [
+    ...(allowsAll ? [{ id: "all" as ScenarioFilter, label: "全部" }] : []),
+    // 用简称，三个「XX 检测」并排会把分段控件撑得比 tab 栏还宽
+    ...detectionScenarios.map((scenario) => ({ id: scenario.id as ScenarioFilter, label: scenario.short })),
+  ];
 
   return (
     <main className="quotationManagementShell">
@@ -124,23 +129,19 @@ export function QuotationManagement({
               ) : null}
             </header>
 
-            <div className="quotationScopeBar">
-              <NavTabs items={tabs} value={tab} onChange={setTab} label="报价后台" />
-              <label className="quotationScopeFilter">
-                <span>检测类型</span>
-                <select
-                  value={scenarioFilter}
-                  onChange={(event) => setScenarioFilter(event.target.value as ScenarioFilter)}
-                  aria-label="按检测类型筛选"
-                >
-                  <option value="all" disabled={!allowsAll}>全部</option>
-                  {detectionScenarios.map((scenario) => (
-                    <option key={scenario.id} value={scenario.id}>{scenario.label}</option>
-                  ))}
-                </select>
-                {allowsAll ? null : <small>此页一次只能看一类</small>}
-              </label>
-            </div>
+            {/* 检测类型是整页的作用域，所以挂在 tab 栏右侧（NavTabs 的 children 位就是留给它的），
+                不另起一行——两条工具栏叠在一起会让人分不清哪个管哪个。
+                画布类 tab 上「全部」不是省略成禁用项，而是根本不出现：给一个点不动的选项
+                比不给更让人困惑。 */}
+            <NavTabs items={tabs} value={tab} onChange={setTab} label="报价后台">
+              <SegmentedControl
+                className="quotationScopeSegment"
+                items={scenarioFilterItems}
+                value={scenarioFilter}
+                onChange={setScenarioFilter}
+                label="按检测类型筛选"
+              />
+            </NavTabs>
 
             {tab === "prices" ? (
               <PriceConfig filter={scenarioFilter} />
