@@ -2,6 +2,7 @@
 
 import { CornerDownRight, GripVertical, Plus, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
+import { StatusChip } from "../../../components/ui";
 import {
   fieldCatalog,
   fieldGroups,
@@ -173,7 +174,7 @@ function FieldRows({
             <small>盖住了 {overriddenKeys(override).map((key) => fieldOverrideLabels[key]).join("、")}</small>
           </span>
           <span className="quotationScopeTags"><i className="isActive">{scenarioShortLabels[override.scenario]}</i></span>
-          <em>例外</em>
+          <StatusChip tone="warning">例外</StatusChip>
         </button>
       ))}
     </>

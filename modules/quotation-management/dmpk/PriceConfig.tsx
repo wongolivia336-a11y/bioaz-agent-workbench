@@ -1,7 +1,8 @@
 "use client";
 
-import { CornerDownRight, Search } from "lucide-react";
+import { CornerDownRight, ListFilter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Menu, MenuGroup, MenuItem, StatusChip } from "../../../components/ui";
 import PriceDrawer from "../components/PriceDrawer";
 import {
   matchesScenario,
@@ -62,16 +63,21 @@ export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
     <>
       <div className="quotationToolbar">
         <label>
-          <Search size={15} />
+          <Search size={14} />
           <input placeholder="搜索费用项目" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
         </label>
-        <select aria-label="费用分类" value={category} onChange={(event) => setCategory(event.target.value)}>
-          <option value="all">全部费用</option>
-          {priceCategories.map((item) => (
-            <option key={item} value={item}>{item}</option>
-          ))}
-        </select>
+        {/* 沿用全站的 Menu，不再放一个原生 select——原生控件不吃字号也不吃圆角，
+            跟旁边的搜索框永远差着几个像素高 */}
+        <Menu icon={<ListFilter size={16} />} label="费用分类" active={category !== "all"}>
+          <MenuGroup label="费用分类">
+            <MenuItem active={category === "all"} onSelect={() => setCategory("all")}>全部费用</MenuItem>
+            {priceCategories.map((item) => (
+              <MenuItem active={category === item} onSelect={() => setCategory(item)} key={item}>{item}</MenuItem>
+            ))}
+          </MenuGroup>
+        </Menu>
         <span>
+          {category === "all" ? null : <em>{category} · </em>}
           {visible.length} 项价格
           {exceptionCount ? <em className="quotationScopeCount"> · {exceptionCount} 条例外</em> : null}
         </span>
@@ -131,7 +137,9 @@ function ItemRows({
         <ScopeTags item={item} filter={filter} />
         <b>{item.price}</b>
         <span>{item.unit}</span>
-        <em className={item.status === "draft" ? "isDraft" : ""}><i />{item.status === "published" ? "已发布" : "草稿"}</em>
+        <StatusChip tone={item.status === "published" ? "success" : "warning"} dot>
+          {item.status === "published" ? "已发布" : "草稿"}
+        </StatusChip>
       </button>
       {exceptions.map((exception) => (
         <button className="isException" type="button" key={exception.scenario} onClick={() => onEditException(exception.scenario)}>
@@ -145,7 +153,7 @@ function ItemRows({
           </span>
           <b>{exception.price}</b>
           <span>{item.unit}</span>
-          <em className="isDraft"><i />草稿</em>
+          <StatusChip tone="warning" dot>草稿</StatusChip>
         </button>
       ))}
     </>
