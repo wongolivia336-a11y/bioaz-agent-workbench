@@ -3,7 +3,7 @@
 import { CornerDownRight, ListFilter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Menu, MenuGroup, MenuItem, StatusChip } from "../../../components/ui";
-import PriceDrawer from "../components/PriceDrawer";
+import PriceDrawer, { type PriceItemPatch } from "../components/PriceDrawer";
 import {
   matchesScenario,
   priceCatalog,
@@ -37,8 +37,16 @@ export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
 
   const exceptionCount = visible.reduce((total, item) => total + item.exceptions.length, 0);
 
-  const saveMainValue = (id: string, price: string) => {
-    setItems((list) => list.map((item) => (item.id === id ? { ...item, price } : item)));
+  /* 适用范围收窄时，落在范围外的例外一起清掉——留着会变成一条谁都读不到的价，
+     抽屉里保存前已经把这句话说给用户了。 */
+  const saveMainValue = (id: string, patch: PriceItemPatch) => {
+    setItems((list) =>
+      list.map((item) => {
+        if (item.id !== id) return item;
+        const next = { ...item, ...patch };
+        return { ...next, exceptions: next.exceptions.filter((exception) => next.appliesTo.includes(exception.scenario)) };
+      }),
+    );
   };
 
   const saveException = (id: string, scenario: DetectionScenario, price: string, note: string) => {
@@ -105,10 +113,10 @@ export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
         <PriceDrawer
           item={items.find((item) => item.id === editing.item.id) ?? editing.item}
           scenario={editing.scenario}
-          onSaveMain={(price) => { saveMainValue(editing.item.id, price); setEditing(null); }}
+          onSaveMain={(patch) => { saveMainValue(editing.item.id, patch); setEditing(null); }}
           onSaveException={(scenario, price, note) => { saveException(editing.item.id, scenario, price, note); setEditing(null); }}
           onRemoveException={(scenario) => { removeException(editing.item.id, scenario); setEditing(null); }}
-          onSwitchToException={(scenario) => setEditing({ item: editing.item, scenario })}
+          onOpenException={(scenario) => setEditing({ item: editing.item, scenario })}
           onClose={() => setEditing(null)}
         />
       ) : null}
