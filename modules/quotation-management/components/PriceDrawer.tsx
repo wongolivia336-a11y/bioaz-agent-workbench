@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CornerDownRight, TriangleAlert } from "lucide-react";
+import { CornerDownRight, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Drawer, StatusChip } from "../../../components/ui";
 import {
@@ -11,6 +11,7 @@ import {
   type DetectionScenario,
   type PriceItem,
 } from "../dmpk/catalog";
+import { ScenarioPicker } from "./ScenarioPicker";
 
 export type PriceItemPatch = Partial<Pick<PriceItem, "name" | "category" | "unit" | "price" | "appliesTo">>;
 
@@ -67,17 +68,6 @@ function MainDrawer({
   const [price, setPrice] = useState(item.price);
   const [appliesTo, setAppliesTo] = useState<DetectionScenario[]>(item.appliesTo);
 
-  /* 适用范围至少留一类：一个谁都不适用的费用项等于被删了，
-     但用户按的是「取消勾选」，不该拿它当删除用。
-     另外恒定按 PK / BA Only / TOX 排序——不然列表上那排标签的顺序
-     会取决于当初勾选的先后，同一张表里读起来忽左忽右。 */
-  const toggleScenario = (id: DetectionScenario) => {
-    setAppliesTo((list) => {
-      const next = list.includes(id) ? (list.length > 1 ? list.filter((item) => item !== id) : list) : [...list, id];
-      return detectionScenarios.map((option) => option.id).filter((option) => next.includes(option));
-    });
-  };
-
   // 取消勾选某一类时，它下面挂的例外会跟着失效，得先说清楚再让人按保存
   const droppedExceptions = item.exceptions.filter((exception) => !appliesTo.includes(exception.scenario));
 
@@ -109,25 +99,14 @@ function MainDrawer({
           <strong>适用范围</strong>
           <span className="quotationSectionHint">{appliesTo.length} / {detectionScenarios.length}</span>
         </div>
-        {detectionScenarios.map((option) => {
-          const on = appliesTo.includes(option.id);
-          const hasException = item.exceptions.some((exception) => exception.scenario === option.id);
-          const locked = on && appliesTo.length === 1;
-          return (
-            <button
-              className={`kbScopeOption ${on ? "active" : ""}`}
-              type="button"
-              key={option.id}
-              disabled={locked}
-              title={locked ? "至少要保留一个适用类型" : undefined}
-              onClick={() => toggleScenario(option.id)}
-            >
-              {option.label}
-              {hasException ? <StatusChip tone="warning">有例外</StatusChip> : null}
-              {on ? <Check size={15} /> : null}
-            </button>
-          );
-        })}
+        <ScenarioPicker
+          variant="list"
+          value={appliesTo}
+          onChange={setAppliesTo}
+          renderMeta={(id) =>
+            item.exceptions.some((exception) => exception.scenario === id) ? <StatusChip tone="warning">有例外</StatusChip> : null
+          }
+        />
         <p className="quotationSectionNote">
           在上面改单价，勾选的这 {appliesTo.length} 类会同时生效。要让其中某一类不一样，去下面加一条例外。
         </p>

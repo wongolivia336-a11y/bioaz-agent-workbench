@@ -1,8 +1,18 @@
 "use client";
 
+import { X } from "lucide-react";
+import { useState } from "react";
+import type { DetectionScenario } from "../dmpk/catalog";
+import { ScenarioPicker } from "./ScenarioPicker";
+
 type ManagementDialog = "import" | "new-price" | "parameter-preview" | "new-parameter" | "upload-template" | "view-template";
 
 export default function ManagementDialogView({ dialog, onClose }: { dialog: ManagementDialog; onClose: () => void }) {
+  /* 适用范围是多选：一个费用项、一份模板本来就可能同时服务几类检测。
+     以前这里是单选下拉，等于逼着人为同一件东西建三份——正是这轮在拆的那个问题。 */
+  const [priceScope, setPriceScope] = useState<DetectionScenario[]>(["pk"]);
+  const [templateScope, setTemplateScope] = useState<DetectionScenario[]>(["pk"]);
+
   const content: Record<ManagementDialog, { title: string; body: React.ReactNode }> = {
     import: {
       title: "导入标准价格",
@@ -26,7 +36,10 @@ export default function ManagementDialogView({ dialog, onClose }: { dialog: Mana
       body: (
         <div className="managementDialogForm">
           <label>费用项目<input placeholder="例如：SD 大鼠" /></label>
-          <label>适用场景<select><option>PK 检测</option><option>BA Only 检测</option><option>TOX 检测</option></select></label>
+          <div className="managementDialogField">
+            <span>适用范围<em>可多选</em></span>
+            <ScenarioPicker value={priceScope} onChange={setPriceScope} />
+          </div>
           <div>
             <label>标准单价<input type="number" placeholder="0" /></label>
             <label>计价单位<select><option>只</option><option>项</option><option>样品</option><option>份</option></select></label>
@@ -73,7 +86,10 @@ export default function ManagementDialogView({ dialog, onClose }: { dialog: Mana
             <input type="file" accept=".xlsx,.xls,.docx" />
           </label>
           <div className="managementDialogForm">
-            <label>适用业务<select><option>PK 检测</option><option>BA Only 检测</option><option>TOX 检测</option></select></label>
+            <div className="managementDialogField">
+              <span>适用范围<em>可多选</em></span>
+              <ScenarioPicker value={templateScope} onChange={setTemplateScope} />
+            </div>
           </div>
         </>
       ),
@@ -101,7 +117,8 @@ export default function ManagementDialogView({ dialog, onClose }: { dialog: Mana
   return (
     <div className="managementDialogBackdrop" role="dialog" aria-modal="true">
       <section className="managementDialog">
-        <header><h2>{current.title}</h2><button type="button" onClick={onClose} aria-label="关闭">×</button></header>
+        {/* 关闭键用 lucide 的 X，跟 Dialog / Drawer 一致——手打的 × 字号和字重都跟图标对不上 */}
+        <header><h2>{current.title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>
         {current.body}
         <footer>
           <button type="button" onClick={onClose}>取消</button>
