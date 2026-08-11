@@ -1558,7 +1558,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .libraryAssistant .assistantSuggestions { grid-template-columns: repeat(3, minmax(0,1fr)); }
 .libraryAssistant .assistantSuggestions button { min-height: 128px; align-content: center; justify-items: center; gap: 16px; text-align: center; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
 .libraryAssistant .assistantSuggestions button span { line-height: 1.45; }
-.libraryAssistant .assistantSuggestions button svg { width: 25px; height: 25px; color: var(--brand); }
+.libraryAssistant .assistantSuggestions button svg { width: 24px; height: 24px; color: var(--brand); }
 .libraryAssistant .assistantSuggestions button:hover { border-color: rgba(41,67,255,0.28); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(17,19,24,0.08), 0 0 0 4px rgba(41,67,255,0.06), 0 0 24px rgba(41,67,255,0.09); }
 .assistantReferences { display: grid; gap: 8px; }
 .assistantReferences button { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 11px 12px; text-align: left; }
@@ -1574,7 +1574,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .knowledgeFileCell.hasSelection { grid-template-columns: 18px minmax(0, 1fr); gap: 7px; }
 .deliveryToggle { display: grid; box-sizing: border-box; width: 16px; min-width: 16px; height: 16px; place-items: center; border: 1px solid var(--line-strong); border-radius: 4px; background: #fff; color: #fff; padding: 0; line-height: 0; }
 .deliveryToggle[aria-pressed="true"] { border-color: var(--ink-soft); background: var(--ink-soft); }
-.deliveryToggle svg { display: block; width: 11px; height: 11px; margin: 0; }
+.deliveryToggle svg { display: block; width: 12px; height: 12px; margin: 0; }
 .projectFileLanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; }
 .projectFileLanes { width: min(1240px, 100%); margin-inline: auto; }
 .projectFileLane { display: grid; min-width: 0; gap: 10px; border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 16px; }
@@ -2044,7 +2044,7 @@ body > main.dmpkShell::after { content: none; }
 .dmpkShell.workbenchShell .chatRowMain { position: relative; min-width: 0; }
 .dmpkShell.workbenchShell .workspaceViewRow svg,
 .dmpkShell.workbenchShell .projectRow svg,
-.dmpkShell.workbenchShell .chatRow svg { width: 18px; height: 18px; stroke-width: 1.5; }
+.dmpkShell.workbenchShell .chatRow { --icon-stroke: 1.5; }
 .dmpkShell.workbenchShell .workspaceViewRow.active::before,
 .dmpkShell.workbenchShell .chatRow.active::before { position: absolute; top: 8px; bottom: 8px; left: 0; width: 2px; border-radius: 999px; background: #2900ff; content: ""; }
 .dmpkShell.workbenchShell .workspaceViewRow.active,
@@ -2088,7 +2088,7 @@ body > main.dmpkShell::after { content: none; }
 .taskExampleGrid button:focus-visible { border-color: rgba(41,0,255,.28); box-shadow: 0 8px 24px rgba(15,23,42,.055); transform: translateY(-2px); }
 .taskExampleGrid button:disabled { border-color: #e8edf3; background: rgba(248,250,252,.78); color: #64748b; opacity: .68; }
 .taskExampleIcon { width: 32px; height: 32px; border-radius: 10px; background: rgba(41,0,255,.055); color: var(--home-brand); }
-.taskExampleIcon svg { width: 18px; height: 18px; stroke-width: 1.5; }
+.taskExampleIcon { --icon-stroke: 1.5; }
 .taskExampleGrid strong { color: var(--home-ink); font-size: 15px; font-weight: 600; }
 .taskExampleGrid small { color: var(--home-muted); font-size: 12px; }
 
@@ -2329,7 +2329,8 @@ body > main.dmpkShell::after { content: none; }
   transition: opacity 120ms ease, transform 240ms var(--ambient-ease);
 }
 
-.ambientAssistantEntry svg { color: #334155; stroke-width: 1.6; }
+.ambientAssistantEntry { --icon-stroke: 1.6; }
+.ambientAssistantEntry svg { color: #334155; }
 .ambientFileAssistant[data-expanded="true"] .ambientAssistantEntry { opacity: 0; transform: translateY(5px); pointer-events: none; }
 
 .ambientAssistantComposer {
@@ -2396,7 +2397,8 @@ body > main.dmpkShell::after { content: none; }
   font-size: 11px;
   cursor: pointer;
 }
-.ambientAssistantSuggestions button svg { width: 14px; height: 14px; flex: 0 0 auto; color: #4338ca; stroke-width: 1.6; }
+.ambientAssistantSuggestions button { --icon-stroke: 1.6; }
+.ambientAssistantSuggestions button svg { width: 14px; height: 14px; flex: 0 0 auto; color: #4338ca; }
 .ambientAssistantSuggestions button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ambientAssistantSuggestions button:hover { background: rgba(255, 255, 255, .94); color: #0f172a; }
 

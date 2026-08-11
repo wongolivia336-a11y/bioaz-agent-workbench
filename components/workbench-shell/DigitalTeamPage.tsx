@@ -84,14 +84,14 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
         <header className="digitalCoworkerDetailHeader">
           <div className="breadcrumb digitalTeamBreadcrumb">
             <button type="button" onClick={() => { setView("gallery"); setUseOpen(false); setSelectedNodeId(null); }}>数字团队</button>
-            <ChevronRight size={15} />
+            <ChevronRight size={14} />
             <button type="button" onClick={() => setSelectedNodeId(null)}>{selected.displayName}</button>
-            <ChevronRight size={15} />
+            <ChevronRight size={14} />
             <strong>{selectedNode?.title ?? "能力画布"}</strong>
           </div>
           <div className="digitalCoworkerTitleRow">
             <button type="button" onClick={() => { setView("gallery"); setUseOpen(false); setSelectedNodeId(null); }} aria-label="返回数字团队">
-              <ArrowLeft size={17} />
+              <ArrowLeft size={16} />
             </button>
             <span><Bot size={24} /></span>
             <div>
@@ -155,7 +155,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
             <h2>{selectedNode?.title ?? selected.displayName}</h2>
             <p>{selectedNode?.description ?? selected.description}</p>
             <div className="subagentNotice">
-              <Network size={15} />
+              <Network size={14} />
               <span>一个数字同事由多个 SubAgent 协作构成，当前有 {selected.subAgents.length} 个 SubAgent、{selected.skills.length} 个 Skill。</span>
             </div>
             <div>
@@ -174,7 +174,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
       {topbarHost ? createPortal(
         <div className="libraryToolLayer">
           <label className="knowledgeSearch libraryToolSearch">
-            <Search size={15} />
+            <Search size={14} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={searchPlaceholder[activeTab]} aria-label={searchPlaceholder[activeTab]} />
           </label>
         </div>,
@@ -238,7 +238,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
                 onClick={() => openCoworker(coworker.id)}
               >
                 <header>
-                  <span><Bot size={18} /></span>
+                  <span><Bot size={16} /></span>
                   <em>{coworker.status === "active" ? "已启用" : "规划中"}</em>
                 </header>
                 <strong>{coworker.displayName}</strong>
@@ -247,7 +247,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
                 <footer>
                   <span>{coworker.skills.length} Skills</span>
                   <span>{coworker.subAgents.length} SubAgents</span>
-                  <ChevronRight size={15} />
+                  <ChevronRight size={14} />
                 </footer>
               </button>
             ))}

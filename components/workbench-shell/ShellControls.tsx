@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ArrowLeft, ChevronDown, FileSearch, Lightbulb, ListChecks, MessageSquare, Plus, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -9,7 +9,7 @@ import { useDismissableLayer } from "./useDismissableLayer";
 export function CompactSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return <div ref={ref} className={`compactSelect ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>{value}<ChevronDown size={13} /></button>{open ? <div className="compactSelectMenu">{options.map((option) => <button type="button" className={option === value ? "active" : ""} aria-current={option === value ? "true" : undefined} key={option} onClick={() => { onChange(option); setOpen(false); }}><span>{option}</span></button>)}</div> : null}</div>;
+  return <div ref={ref} className={`compactSelect ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>{value}<ChevronDown size={12} /></button>{open ? <div className="compactSelectMenu">{options.map((option) => <button type="button" className={option === value ? "active" : ""} aria-current={option === value ? "true" : undefined} key={option} onClick={() => { onChange(option); setOpen(false); }}><span>{option}</span></button>)}</div> : null}</div>;
 }
 
 type LibraryAssistantContext = {
@@ -111,7 +111,7 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext, scope
         <section className={`workspaceAssistantPanel ${ambient ? "libraryAssistantWorkspace" : ""}`} aria-label={ambient ? copy.name : "BioAZ Helper"}>
           <header>
             <div>
-              {ambient ? <button className="assistantBackButton" type="button" aria-label={`收起${copy.name}`} onClick={() => setOpen(false)}><ArrowLeft size={17} /></button> : <span className="assistantMark"><Sparkles size={15} /></span>}
+              {ambient ? <button className="assistantBackButton" type="button" aria-label={`收起${copy.name}`} onClick={() => setOpen(false)}><ArrowLeft size={16} /></button> : <span className="assistantMark"><Sparkles size={14} /></span>}
               <strong>{ambient ? copy.name : "BioAZ Helper"}</strong>
             </div>
             <button type="button" aria-label="关闭" onClick={() => setOpen(false)}><X size={16} /></button>
@@ -137,16 +137,16 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext, scope
             {suggestions.map((item, index) => <button type="button" tabIndex={ambientExpanded ? 0 : -1} key={item} onClick={() => { setOpen(true); submit(item); }}>{[<FileSearch key="search" />, <ListChecks key="summary" />, <Lightbulb key="ideas" />][index]}<span>{item}</span></button>)}
           </div>
           <div className="ambientComposerFrame">
-            <button className="ambientAssistantEntry" type="button" aria-label={ambientExpanded ? `收起${copy.name}` : `展开${copy.name}`} aria-expanded={ambientExpanded} onClick={() => setAmbientLocked((value) => !value)}><Sparkles size={17} /><span>问问{copy.name}<i>·</i>{scopeLabel}</span></button>
+            <button className="ambientAssistantEntry" type="button" aria-label={ambientExpanded ? `收起${copy.name}` : `展开${copy.name}`} aria-expanded={ambientExpanded} onClick={() => setAmbientLocked((value) => !value)}><Sparkles size={16} /><span>问问{copy.name}<i>·</i>{scopeLabel}</span></button>
             <form className="ambientAssistantComposer" onSubmit={(event) => { event.preventDefault(); if (!text.trim()) return; setOpen(true); submit(text); }}>
-              <label className="ambientComposerAdd" aria-label="添加文件"><Plus size={18} /><input type="file" multiple /></label>
+              <label className="ambientComposerAdd" aria-label="添加文件"><Plus size={16} /><input type="file" multiple /></label>
               <input value={text} onChange={(event) => { setText(event.target.value); setAmbientLocked(true); }} placeholder={copy.placeholder} aria-label={`给 ${copy.name} 发消息`} />
-              <button className="ambientComposerSend" type="submit" aria-label="发送" disabled={!text.trim()}><Send size={17} /></button>
+              <button className="ambientComposerSend" type="submit" aria-label="发送" disabled={!text.trim()}><Send size={16} /></button>
             </form>
           </div>
         </div>
       ) : null}
-      {!open && !ambient ? <button className="workspaceAssistantLauncher" type="button" aria-label="打开 BioAZ Helper" onClick={() => setOpen(true)}><MessageSquare size={18} /></button> : null}
+      {!open && !ambient ? <button className="workspaceAssistantLauncher" type="button" aria-label="打开 BioAZ Helper" onClick={() => setOpen(true)}><MessageSquare size={16} /></button> : null}
     </div>
   );
 }

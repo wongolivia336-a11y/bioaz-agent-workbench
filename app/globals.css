@@ -4866,11 +4866,11 @@ button {
 }
 
 .projectRow svg,
-.chatRow svg,
-.workspaceViewRow svg,
-.newChatMenu svg,
-.roleSelector svg {
-  stroke-width: 1.8;
+.chatRow,
+.workspaceViewRow,
+.newChatMenu,
+.roleSelector {
+  --icon-stroke: 1.8;
 }
 
 .projectRow strong,
@@ -5152,7 +5152,6 @@ button {
 .roleSelector svg {
   width: 16px;
   height: 16px;
-  stroke-width: 1.8;
 }
 
 .chatRow,

@@ -1485,3 +1485,23 @@ body:has(.bioazDesignSystemPage) {
 .digitalTeamTab.active::after {
   bottom: 0;
 }
+
+/* ===================================================================
+   图标描边统一
+   -------------------------------------------------------------------
+   lucide 每个图标都带 class="lucide lucide-x"，所以这条规则只命中图标，
+   碰不到 BioAZ logo 那几个手写 SVG。stroke-width 作为 CSS 属性会盖过
+   lucide 写在元素上的 presentation attribute，于是 JSX 里的
+   strokeWidth 从此不再生效——需要加重的地方改写 --icon-stroke。
+   =================================================================== */
+.lucide {
+  stroke-width: var(--icon-stroke, 1.75);
+}
+
+/* 11~12px 的叉号、实心按钮里的小箭头：太细会糊掉，单独加重 */
+.workbenchPanelTabClose,
+.floatingChatSend,
+.composerChip > button,
+.dmpkDraftTab > button {
+  --icon-stroke: 2.3;
+}

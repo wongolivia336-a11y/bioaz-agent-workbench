@@ -256,14 +256,14 @@ export function FileManager({
         {topbarActionHost ? createPortal(
           <div className="libraryToolLayer">
             <LibrarySearch value={query} onChange={setQuery} placeholder="搜索项目与文件..." />
-            <button className="primaryButton compact topbarCreateProjectButton" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={15} />新建项目</button>
+            <button className="primaryButton compact topbarCreateProjectButton" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={14} />新建项目</button>
           </div>,
           topbarActionHost,
         ) : null}
 
         {projectCreateOpen ? (
           <div className="libraryProjectCreateRow">
-            <Folder size={15} />
+            <Folder size={14} />
             <input
               autoFocus
               value={projectDraft}
@@ -273,7 +273,7 @@ export function FileManager({
               aria-label="项目名称"
             />
             <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建项目"><Check size={14} /></button>
-            <button type="button" onClick={cancelProjectCreate} aria-label="取消"><X size={13} /></button>
+            <button type="button" onClick={cancelProjectCreate} aria-label="取消"><X size={12} /></button>
           </div>
         ) : null}
 
@@ -291,7 +291,7 @@ export function FileManager({
           <EmptyState
             title="暂无项目"
             description="创建项目来开始组织你的工作"
-            action={<button className="primaryButton compact" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={15} />新建项目</button>}
+            action={<button className="primaryButton compact" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={14} />新建项目</button>}
           />
         )}
 
@@ -382,7 +382,7 @@ export function FileManager({
             <Trash2 size={16} />
             {trashFiles.length ? <span className="toolBadge">{trashFiles.length}</span> : null}
           </button>
-          {inTrash ? null : <label className="primaryButton compact topbarFileAction" htmlFor="project-file-upload"><Upload size={15} />上传文件</label>}
+          {inTrash ? null : <label className="primaryButton compact topbarFileAction" htmlFor="project-file-upload"><Upload size={14} />上传文件</label>}
         </div>,
         topbarActionHost,
       ) : null}
@@ -422,14 +422,14 @@ export function FileManager({
               ) : null}
               {projectFiles.length ? (
                 <div className="projectFileLanes projectOverviewLanes">
-                  <OverviewLane title="项目资料" icon={<FolderInput size={18} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} total={projectInputs.length} files={projectInputs.slice(0, 10)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
-                  <OverviewLane title="任务产物" icon={<FolderOutput size={18} />} description={`由项目任务生成 · ${projectOutputs.length} 项`} total={projectOutputs.length} files={projectOutputs.slice(0, 10)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="项目资料" icon={<FolderInput size={16} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} total={projectInputs.length} files={projectInputs.slice(0, 10)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  <OverviewLane title="任务产物" icon={<FolderOutput size={16} />} description={`由项目任务生成 · ${projectOutputs.length} 项`} total={projectOutputs.length} files={projectOutputs.slice(0, 10)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
                 </div>
               ) : (
                 <EmptyState
                   title="暂无文件"
                   description="上传项目资料或发起任务生成产物"
-                  action={<label className="primaryButton compact" htmlFor="project-file-upload"><Upload size={15} />上传文件</label>}
+                  action={<label className="primaryButton compact" htmlFor="project-file-upload"><Upload size={14} />上传文件</label>}
                 />
               )}
             </>
@@ -472,7 +472,7 @@ export function FileManager({
                   description={query || activeFilters.length ? "试试调整搜索词或清除筛选条件" : "上传项目资料或发起任务生成产物"}
                   action={query || activeFilters.length
                     ? <button className="secondaryButton compact" type="button" onClick={() => { setQuery(""); resetFilters(); }}>清除筛选</button>
-                    : <label className="primaryButton compact" htmlFor="project-file-upload"><Upload size={15} />上传文件</label>}
+                    : <label className="primaryButton compact" htmlFor="project-file-upload"><Upload size={14} />上传文件</label>}
                 />
               )}
             </section>
@@ -484,14 +484,14 @@ export function FileManager({
               onClear={() => setSelectedIds([])}
               actions={inTrash ? (
                 <>
-                  <button className="primaryButton compact" type="button" onClick={() => restore(activeSelection)}><RotateCcw size={15} />恢复</button>
-                  <button className="secondaryButton compact" type="button" onClick={() => deleteForever(activeSelection)}><Trash2 size={15} />永久删除</button>
+                  <button className="primaryButton compact" type="button" onClick={() => restore(activeSelection)}><RotateCcw size={14} />恢复</button>
+                  <button className="secondaryButton compact" type="button" onClick={() => deleteForever(activeSelection)}><Trash2 size={14} />永久删除</button>
                 </>
               ) : (
                 <>
-                  {view === "outputs" ? <button className="primaryButton compact" type="button"><PackageCheck size={15} />创建交付包</button> : null}
-                  <button className="secondaryButton compact" type="button"><Download size={15} />导出</button>
-                  <button className="secondaryButton compact" type="button" onClick={() => { activeSelection.forEach((id) => { const file = selectionScope.find((item) => item.id === id); if (file) softDelete(file); }); }}><Trash2 size={15} />删除</button>
+                  {view === "outputs" ? <button className="primaryButton compact" type="button"><PackageCheck size={14} />创建交付包</button> : null}
+                  <button className="secondaryButton compact" type="button"><Download size={14} />导出</button>
+                  <button className="secondaryButton compact" type="button" onClick={() => { activeSelection.forEach((id) => { const file = selectionScope.find((item) => item.id === id); if (file) softDelete(file); }); }}><Trash2 size={14} />删除</button>
                 </>
               )}
             />
@@ -521,9 +521,9 @@ type Props = {
 function LibrarySearch({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
   return (
     <div className="knowledgeSearch libraryToolSearch">
-      <Search size={15} />
+      <Search size={14} />
       <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
-      {value ? <button type="button" onClick={() => onChange("")} aria-label="清除搜索"><X size={13} /></button> : null}
+      {value ? <button type="button" onClick={() => onChange("")} aria-label="清除搜索"><X size={12} /></button> : null}
     </div>
   );
 }
@@ -533,7 +533,7 @@ function BatchActionBar({ count, actions, onClear }: { count: number; actions: R
     <div className="batchActionBar" role="region" aria-label="批量操作">
       <span className="batchCount">已选 {count} 项</span>
       <div className="batchActions">{actions}</div>
-      <button className="iconButton" type="button" onClick={onClear} aria-label="取消选择"><X size={15} /></button>
+      <button className="iconButton" type="button" onClick={onClear} aria-label="取消选择"><X size={14} /></button>
     </div>
   );
 }
@@ -541,7 +541,7 @@ function BatchActionBar({ count, actions, onClear }: { count: number; actions: R
 function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
     <div className="libraryEmptyState">
-      <span className="libraryEmptyIcon" aria-hidden="true"><Folder size={22} /></span>
+      <span className="libraryEmptyIcon" aria-hidden="true"><Folder size={20} /></span>
       <strong>{title}</strong>
       <span>{description}</span>
       {action}
@@ -628,8 +628,8 @@ function FileRow({ file, selectable, selected, onToggle, onPreview, onDetail, on
       <span>{sourceOf(file)}</span>
       <span>{file.updated}</span>
       <div className="rowActions">
-        <button className="rowActionButton" type="button" aria-label={`预览${file.title}`} onClick={onPreview}><Eye size={15} /></button>
-        <button className="rowMoreButton" type="button" aria-label={`${file.title}更多操作`} onClick={() => setOpen((value) => !value)}><MoreHorizontal size={15} /></button>
+        <button className="rowActionButton" type="button" aria-label={`预览${file.title}`} onClick={onPreview}><Eye size={14} /></button>
+        <button className="rowMoreButton" type="button" aria-label={`${file.title}更多操作`} onClick={() => setOpen((value) => !value)}><MoreHorizontal size={14} /></button>
       </div>
       {open ? (
         <div className="rowActionMenu knowledgeRowMenu">
@@ -679,7 +679,7 @@ function TrashTable({ files, selectedIds, onToggle, onToggleAll, onRestore, onDe
 
 function FilePreview({ file, onClose }: { file: KnowledgeFile; onClose: () => void }) {
   useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; document.addEventListener("keydown", close); return () => document.removeEventListener("keydown", close); }, [onClose]);
-  return <div className="modalBackdrop knowledgePreviewBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="knowledgePreviewDialog" role="dialog" aria-modal="true" aria-labelledby="knowledge-preview-title"><header><div><span>{file.kind}</span><h2 id="knowledge-preview-title">{file.title}</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={17} /></button></header><div className="knowledgeDocumentPreview"><div className="documentPreviewMark">{file.title.endsWith(".xlsx") ? <FileSpreadsheet size={24} /> : <FileText size={24} />}</div><h3>{file.title.replace(/\.[^.]+$/, "")}</h3><p>文件预览区域。当前原型保留现有 Modal 结构，并为后续真实文档渲染预留空间。</p></div><footer><span className="previewContextChip">当前文件：{file.title}</span><button className="secondaryButton compact" type="button">询问此文件</button><button className="primaryButton compact" type="button" onClick={onClose}>完成</button></footer></section></div>;
+  return <div className="modalBackdrop knowledgePreviewBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="knowledgePreviewDialog" role="dialog" aria-modal="true" aria-labelledby="knowledge-preview-title"><header><div><span>{file.kind}</span><h2 id="knowledge-preview-title">{file.title}</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header><div className="knowledgeDocumentPreview"><div className="documentPreviewMark">{file.title.endsWith(".xlsx") ? <FileSpreadsheet size={24} /> : <FileText size={24} />}</div><h3>{file.title.replace(/\.[^.]+$/, "")}</h3><p>文件预览区域。当前原型保留现有 Modal 结构，并为后续真实文档渲染预留空间。</p></div><footer><span className="previewContextChip">当前文件：{file.title}</span><button className="secondaryButton compact" type="button">询问此文件</button><button className="primaryButton compact" type="button" onClick={onClose}>完成</button></footer></section></div>;
 }
 
 function FileDetails({ file, onClose }: { file: KnowledgeFile; onClose: () => void }) {

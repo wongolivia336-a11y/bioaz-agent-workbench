@@ -91,7 +91,7 @@ export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles,
         disabled={disabled}
         onClick={() => { setOpen((value) => !value); setSection(null); setQuery(""); }}
       >
-        <Plus size={18} />
+        <Plus size={16} />
       </button>
       <input
         ref={fileInputRef}
@@ -115,15 +115,15 @@ export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles,
             return (
               <div className={`composerAttachRow ${expanded ? "isOpen" : ""}`} key={item.id} onMouseEnter={() => { setSection(item.id); setQuery(""); }}>
                 <button type="button" role="menuitem" aria-haspopup="menu" aria-expanded={expanded} onClick={() => openSection(item.id)}>
-                  <Icon size={16} strokeWidth={1.9} />
+                  <Icon size={16} />
                   <span>{item.label}</span>
-                  <ChevronRight size={14} strokeWidth={1.8} />
+                  <ChevronRight size={14} />
                 </button>
                 {expanded ? (
                   <div className="composerAttachSubmenu">
                     {item.id === "file" ? (
                       <button type="button" className="composerAttachUpload" onClick={() => fileInputRef.current?.click()}>
-                        <Upload size={15} strokeWidth={1.9} />
+                        <Upload size={14} />
                         <span>本地文件</span>
                         <small>也可以直接把文件拖进来</small>
                       </button>

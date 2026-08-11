@@ -1423,7 +1423,7 @@ function SquadStatusCard({
     <article className={`agentRun squadStatus ${running ? "running" : "settled collapsed"}`}>
       <div className="runHeader squadStatusHeader">
         <span className="squadStatusMark">
-          <Users size={15} strokeWidth={1.9} />
+          <Users size={15} />
         </span>
         <strong>{running ? "专家小队审核中" : "专家小队检查完成"}</strong>
         <small>

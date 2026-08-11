@@ -63,7 +63,7 @@ export function NewTaskHome(props: Props) {
         <p>描述目标或从常用流程开始。任务会保留在所属项目中，过程与产物均可追溯。</p>
       </div>
       <div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => <ActionCard density="default" data-ability={item.id} disabled={item.availability === "placeholder"} key={item.id} onClick={() => props.onQuickStart(item.id)}>
-        <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{item.availability !== "placeholder" ? <ArrowUpRight size={15} /> : null}</span>
+        <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{item.availability !== "placeholder" ? <ArrowUpRight size={14} /> : null}</span>
         <span className="taskExampleCopy"><strong>{item.label}</strong><small>{item.availability === "placeholder" ? "即将接入" : "启动标准流程"}</small></span>
       </ActionCard>)}</div>
     </div> : <div className="helperConversationCanvas" aria-live="polite">
@@ -87,7 +87,7 @@ export function NewTaskHome(props: Props) {
         globalDrop
       >
         <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(); } }} placeholder="描述你要完成的任务..." rows={1} />
-        <button className="sendIconButton" type="button" onClick={submit} disabled={!props.text.trim()} aria-label="发送"><Send size={18} /></button>
+        <button className="sendIconButton" type="button" onClick={submit} disabled={!props.text.trim()} aria-label="发送"><Send size={16} /></button>
       </WorkbenchComposer>
     </div>
   </section>;
@@ -96,5 +96,5 @@ export function NewTaskHome(props: Props) {
 function ProjectSelector({ project, options, invalid, onChange }: { project: string | null; options: string[]; invalid: boolean; onChange: (project: string) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""} ${invalid ? "hasError" : ""}`}><button type="button" aria-expanded={open} aria-invalid={invalid} onClick={() => setOpen((value) => !value)}><Folder size={15} /><span>{project ?? "选择项目"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{options.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span><Folder size={15} />{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
+  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""} ${invalid ? "hasError" : ""}`}><button type="button" aria-expanded={open} aria-invalid={invalid} onClick={() => setOpen((value) => !value)}><Folder size={14} /><span>{project ?? "选择项目"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{options.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span><Folder size={14} />{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
 }
