@@ -1,8 +1,18 @@
 "use client";
 
-import { TriangleAlert, X } from "lucide-react";
+import { Check, CornerDownRight, TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { describeScope, scenarioLabels, type DetectionScenario, type PriceItem } from "../dmpk/catalog";
+import { Drawer, StatusChip } from "../../../components/ui";
+import {
+  detectionScenarios,
+  priceCategories,
+  scenarioLabels,
+  scenarioShortLabels,
+  type DetectionScenario,
+  type PriceItem,
+} from "../dmpk/catalog";
+
+export type PriceItemPatch = Partial<Pick<PriceItem, "name" | "category" | "unit" | "price" | "appliesTo">>;
 
 export default function PriceDrawer({
   item,
@@ -10,90 +20,207 @@ export default function PriceDrawer({
   onSaveMain,
   onSaveException,
   onRemoveException,
-  onSwitchToException,
+  onOpenException,
   onClose,
 }: {
   item: PriceItem;
   /** null = 改主值（所有适用类型一起变）；否则 = 改这一类的例外 */
   scenario: DetectionScenario | null;
-  onSaveMain: (price: string) => void;
+  onSaveMain: (patch: PriceItemPatch) => void;
   onSaveException: (scenario: DetectionScenario, price: string, note: string) => void;
   onRemoveException: (scenario: DetectionScenario) => void;
-  onSwitchToException: (scenario: DetectionScenario) => void;
+  onOpenException: (scenario: DetectionScenario) => void;
   onClose: () => void;
 }) {
-  const existing = scenario ? item.exceptions.find((exception) => exception.scenario === scenario) : null;
-  const [price, setPrice] = useState(existing?.price ?? item.price);
-  const [note, setNote] = useState(existing?.note ?? "");
-  const [pickingScope, setPickingScope] = useState(false);
+  return (
+    <>
+      <div className="quotationDrawerBackdrop" onClick={onClose} role="presentation" />
+      {scenario ? (
+        <ExceptionDrawer
+          item={item}
+          scenario={scenario}
+          onSave={onSaveException}
+          onRemove={onRemoveException}
+          onClose={onClose}
+        />
+      ) : (
+        <MainDrawer item={item} onSave={onSaveMain} onOpenException={onOpenException} onClose={onClose} />
+      )}
+    </>
+  );
+}
 
-  /* 只适用于一类的费用项没有「例外」可言——那就是它本来的样子 */
-  const canHaveException = item.appliesTo.length > 1;
+function MainDrawer({
+  item,
+  onSave,
+  onOpenException,
+  onClose,
+}: {
+  item: PriceItem;
+  onSave: (patch: PriceItemPatch) => void;
+  onOpenException: (scenario: DetectionScenario) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(item.name);
+  const [category, setCategory] = useState(item.category);
+  const [unit, setUnit] = useState(item.unit);
+  const [price, setPrice] = useState(item.price);
+  const [appliesTo, setAppliesTo] = useState<DetectionScenario[]>(item.appliesTo);
+
+  /* 适用范围至少留一类：一个谁都不适用的费用项等于被删了，
+     但用户按的是「取消勾选」，不该拿它当删除用。
+     另外恒定按 PK / BA Only / TOX 排序——不然列表上那排标签的顺序
+     会取决于当初勾选的先后，同一张表里读起来忽左忽右。 */
+  const toggleScenario = (id: DetectionScenario) => {
+    setAppliesTo((list) => {
+      const next = list.includes(id) ? (list.length > 1 ? list.filter((item) => item !== id) : list) : [...list, id];
+      return detectionScenarios.map((option) => option.id).filter((option) => next.includes(option));
+    });
+  };
+
+  // 取消勾选某一类时，它下面挂的例外会跟着失效，得先说清楚再让人按保存
+  const droppedExceptions = item.exceptions.filter((exception) => !appliesTo.includes(exception.scenario));
 
   return (
-    <div className="quotationDrawerBackdrop" role="dialog" aria-modal="true">
-      <aside className="quotationDrawer">
-        <header>
-          <div>
-            <span>{scenario ? `${scenarioLabels[scenario]} · 例外` : "标准价格 · 主值"}</span>
-            <h2>{scenario ? `仅为 ${scenarioLabels[scenario]} 设置` : `修改「${item.name}」单价`}</h2>
-          </div>
-          <button type="button" onClick={onClose} aria-label="关闭"><X size={17} /></button>
-        </header>
-
-        {scenario ? (
-          <p className="quotationDrawerScope isException">
-            <span>主值</span>
-            <strong>{item.price} / {item.unit}</strong>
-            <small>其余属性继续跟随主值，改主值时这里只有单价不受影响。</small>
-          </p>
-        ) : (
-          <p className="quotationDrawerScope">
-            <TriangleAlert size={15} />
-            <span>此项适用于 <strong>{describeScope(item.appliesTo)}</strong>，修改后同时生效。</span>
-          </p>
-        )}
-
-        <label>
-          {scenario ? "例外单价" : "标准单价"}
-          <div><input value={price} onChange={(event) => setPrice(event.target.value)} /><span>/ {item.unit}</span></div>
+    <Drawer className="quotationPriceDrawer" eyebrow="标准价格 · 主值" title={`修改「${item.name}」`} onClose={onClose}>
+      <section className="kbDetailSection">
+        <div className="kbDetailSectionHead"><strong>基本信息</strong></div>
+        <label className="quotationField">费用项目<input value={name} onChange={(event) => setName(event.target.value)} /></label>
+        <label className="quotationField">
+          费用分类
+          <select value={category} onChange={(event) => setCategory(event.target.value)}>
+            {priceCategories.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
         </label>
-        <label>
-          {scenario ? "例外理由" : "调整说明（可选）"}
-          <textarea rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder={scenario ? "为什么这一类要跟其他类不一样？" : "为什么调整这项价格？"} />
-        </label>
-
-        {!scenario && canHaveException ? (
-          pickingScope ? (
-            <div className="quotationScopePicker">
-              <small>为哪一类设置例外？</small>
-              <div>
-                {item.appliesTo.map((id) => (
-                  <button type="button" key={id} onClick={() => onSwitchToException(id)}>{scenarioLabels[id]}</button>
-                ))}
-              </div>
+        <div className="quotationFieldRow">
+          <label className="quotationField">
+            标准单价
+            <div className="quotationFieldSuffix">
+              <input value={price} onChange={(event) => setPrice(event.target.value)} />
+              <span>/ {unit || "单位"}</span>
             </div>
-          ) : (
-            <button className="quotationDrawerSecondary" type="button" onClick={() => setPickingScope(true)}>
-              仅为某一类设为例外
-            </button>
-          )
-        ) : null}
+          </label>
+          <label className="quotationField">计价单位<input value={unit} onChange={(event) => setUnit(event.target.value)} /></label>
+        </div>
+      </section>
 
-        <footer>
-          {scenario && existing ? (
-            <button className="quotationDrawerDanger" type="button" onClick={() => onRemoveException(scenario)}>恢复跟随主值</button>
-          ) : null}
-          <button type="button" onClick={onClose}>取消</button>
-          <button
-            className="primary"
-            type="button"
-            onClick={() => (scenario ? onSaveException(scenario, price, note) : onSaveMain(price))}
-          >
-            保存为草稿
-          </button>
-        </footer>
-      </aside>
-    </div>
+      <section className="kbDetailSection">
+        <div className="kbDetailSectionHead">
+          <strong>适用范围</strong>
+          <span className="quotationSectionHint">{appliesTo.length} / {detectionScenarios.length}</span>
+        </div>
+        {detectionScenarios.map((option) => {
+          const on = appliesTo.includes(option.id);
+          const hasException = item.exceptions.some((exception) => exception.scenario === option.id);
+          const locked = on && appliesTo.length === 1;
+          return (
+            <button
+              className={`kbScopeOption ${on ? "active" : ""}`}
+              type="button"
+              key={option.id}
+              disabled={locked}
+              title={locked ? "至少要保留一个适用类型" : undefined}
+              onClick={() => toggleScenario(option.id)}
+            >
+              {option.label}
+              {hasException ? <StatusChip tone="warning">有例外</StatusChip> : null}
+              {on ? <Check size={15} /> : null}
+            </button>
+          );
+        })}
+        <p className="quotationSectionNote">
+          在上面改单价，勾选的这 {appliesTo.length} 类会同时生效。要让其中某一类不一样，去下面加一条例外。
+        </p>
+        {droppedExceptions.length ? (
+          <p className="quotationSectionWarning">
+            <TriangleAlert size={14} />
+            <span>保存后 {droppedExceptions.map((exception) => scenarioShortLabels[exception.scenario]).join("、")} 的例外会一并移除——它已经不在适用范围里了。</span>
+          </p>
+        ) : null}
+      </section>
+
+      <section className="kbDetailSection">
+        <div className="kbDetailSectionHead"><strong>例外</strong></div>
+        {item.exceptions.length ? (
+          item.exceptions.map((exception) => (
+            <button className="quotationExceptionRow" type="button" key={exception.scenario} onClick={() => onOpenException(exception.scenario)}>
+              <CornerDownRight size={14} />
+              <span>
+                <strong>{scenarioShortLabels[exception.scenario]}</strong>
+                {exception.note ? <small>{exception.note}</small> : null}
+              </span>
+              <b>{exception.price}</b>
+            </button>
+          ))
+        ) : (
+          <p className="quotationSectionNote">还没有例外，这 {appliesTo.length} 类目前用的是同一个价。</p>
+        )}
+        <div className="quotationScopePicker">
+          <small>为哪一类单独设价？</small>
+          <div>
+            {appliesTo
+              .filter((id) => !item.exceptions.some((exception) => exception.scenario === id))
+              .map((id) => (
+                <button type="button" key={id} onClick={() => onOpenException(id)}>{scenarioLabels[id]}</button>
+              ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="quotationDrawerFooter">
+        <button type="button" onClick={onClose}>取消</button>
+        <button className="primary" type="button" onClick={() => onSave({ name, category, unit, price, appliesTo })}>保存为草稿</button>
+      </footer>
+    </Drawer>
+  );
+}
+
+function ExceptionDrawer({
+  item,
+  scenario,
+  onSave,
+  onRemove,
+  onClose,
+}: {
+  item: PriceItem;
+  scenario: DetectionScenario;
+  onSave: (scenario: DetectionScenario, price: string, note: string) => void;
+  onRemove: (scenario: DetectionScenario) => void;
+  onClose: () => void;
+}) {
+  const existing = item.exceptions.find((exception) => exception.scenario === scenario);
+  const [price, setPrice] = useState(existing?.price ?? item.price);
+  const [note, setNote] = useState(existing?.note ?? "");
+
+  return (
+    <Drawer className="quotationPriceDrawer" eyebrow={`${scenarioLabels[scenario]} · 例外`} title={item.name} onClose={onClose}>
+      <section className="kbDetailSection">
+        <dl>
+          <div><dt>主值</dt><dd>{item.price} / {item.unit}</dd></div>
+          <div><dt>适用于</dt><dd>{item.appliesTo.map((id) => scenarioShortLabels[id]).join("、")}</dd></div>
+        </dl>
+        <p className="quotationSectionNote">只有单价走例外，名称、分类、单位仍然跟随主值。</p>
+      </section>
+
+      <section className="kbDetailSection">
+        <div className="kbDetailSectionHead"><strong>例外单价</strong></div>
+        <div className="quotationField">
+          <div className="quotationFieldSuffix">
+            <input aria-label={`${scenarioShortLabels[scenario]} 例外单价`} value={price} onChange={(event) => setPrice(event.target.value)} />
+            <span>/ {item.unit}</span>
+          </div>
+        </div>
+        <label className="quotationField">
+          例外理由
+          <textarea rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder="为什么这一类要跟其他类不一样？" />
+        </label>
+      </section>
+
+      <footer className="quotationDrawerFooter">
+        {existing ? <button className="quotationDrawerDanger" type="button" onClick={() => onRemove(scenario)}>恢复跟随主值</button> : null}
+        <button type="button" onClick={onClose}>取消</button>
+        <button className="primary" type="button" onClick={() => onSave(scenario, price, note)}>保存为草稿</button>
+      </footer>
+    </Drawer>
   );
 }
