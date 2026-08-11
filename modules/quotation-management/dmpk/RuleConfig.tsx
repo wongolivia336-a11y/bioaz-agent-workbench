@@ -2,7 +2,7 @@
 
 import { Bot, Check, GitBranch, Plus, Sparkles, X } from "lucide-react";
 import { useState } from "react";
-import type { DetectionScenario } from "../components/ScenarioSelector";
+import type { DetectionScenario } from "./catalog";
 
 interface WorkflowNode {
   id: string;

@@ -2,7 +2,7 @@
 
 import { Check, ChevronRight, FileSpreadsheet } from "lucide-react";
 import { useState } from "react";
-import type { DetectionScenario } from "../components/ScenarioSelector";
+import type { DetectionScenario } from "./catalog";
 
 interface TemplateItem {
   id: string;

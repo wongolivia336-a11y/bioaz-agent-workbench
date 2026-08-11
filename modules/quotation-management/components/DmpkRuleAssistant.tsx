@@ -4,7 +4,7 @@ import { ArrowLeft, FileText, GitBranch, ListChecks, Plus, Send, Sparkles, X } f
 import { useEffect, useRef, useState } from "react";
 import { MessageAttachments, WorkbenchComposer } from "../../../components/workbench-shell/WorkbenchComposer";
 import type { ComposerAttachment } from "../../../lib/workbench/composerAttachments";
-import type { DetectionScenario } from "./ScenarioSelector";
+import type { DetectionScenario } from "../dmpk/catalog";
 
 type Tab = "prices" | "rules" | "parameters" | "templates";
 
@@ -100,13 +100,13 @@ export default function DmpkRuleAssistant({ onTabChange, onRuleDraft }: Props) {
       >
           <div className="ambientAssistantSuggestions" aria-hidden={!expanded || open}>
           <button type="button" tabIndex={expanded && !open ? 0 : -1} onClick={() => submit("以后 PK 样品少于 40 个都按 40 个收费")}>
-            <GitBranch size={14} strokeWidth={1.6} /><span>改规则</span>
+            <GitBranch size={14} /><span>改规则</span>
           </button>
           <button type="button" tabIndex={expanded && !open ? 0 : -1} onClick={() => submit("给 PK 检测增加一个自定义采血时间点字段")}>
-            <ListChecks size={14} strokeWidth={1.6} /><span>改字段</span>
+            <ListChecks size={14} /><span>改字段</span>
           </button>
           <button type="button" tabIndex={expanded && !open ? 0 : -1} onClick={() => submit("调整 PK 报价单模板里的费用明细顺序")}>
-            <FileText size={14} strokeWidth={1.6} /><span>改模板</span>
+            <FileText size={14} /><span>改模板</span>
           </button>
         </div>
         <div className="ambientComposerFrame">
