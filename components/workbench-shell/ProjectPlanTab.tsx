@@ -68,7 +68,7 @@ export function ProjectPlanTab({ project }: { project: string }) {
               <MenuItem key={priority} active={priorityFilter === priority} onSelect={() => setPriorityFilter(priority)}>{planPriorityLabel[priority]}</MenuItem>
             ))}
           </Menu>
-          <button className="primaryButton compact" type="button"><Plus size={15} />新建工作项</button>
+          <button className="primaryButton compact" type="button"><Plus size={14} />新建工作项</button>
         </div>,
         host,
       ) : null}
@@ -189,7 +189,7 @@ function StatusSelect({ value, onChange }: { value: PlanStatus; onChange: (value
       {(close) => planStatusOrder.map((status) => (
         <button className={`toolMenuItem ${status === value ? "active" : ""}`} type="button" key={status} onClick={() => { onChange(status); close(); }}>
           <span><StatusDot status={status} />{planStatusLabel[status]}</span>
-          {status === value ? <Check size={13} /> : null}
+          {status === value ? <Check size={12} /> : null}
         </button>
       ))}
     </InlineSelect>
@@ -206,7 +206,7 @@ function PrioritySelect({ value, onChange }: { value: PlanPriority; onChange: (v
       {(close) => planPriorityOrder.map((priority) => (
         <button className={`toolMenuItem ${priority === value ? "active" : ""}`} type="button" key={priority} onClick={() => { onChange(priority); close(); }}>
           <span>{planPriorityLabel[priority]}</span>
-          {priority === value ? <Check size={13} /> : null}
+          {priority === value ? <Check size={12} /> : null}
         </button>
       ))}
     </InlineSelect>
@@ -219,7 +219,7 @@ function AssigneeSelect({ value, onChange, compact }: { value: string; onChange:
     <InlineSelect
       label="负责人"
       trigger={<>
-        <span className={`planAvatar ${member?.kind === "agent" ? "isAgent" : ""}`}>{member?.kind === "agent" ? <Bot size={11} /> : member?.name.slice(0, 1)}</span>
+        <span className={`planAvatar ${member?.kind === "agent" ? "isAgent" : ""}`}>{member?.kind === "agent" ? <Bot size={12} /> : member?.name.slice(0, 1)}</span>
         {compact ? null : <span>{member?.name ?? "未指派"}</span>}
       </>}
       triggerClassName="planAssigneeTrigger"
@@ -227,10 +227,10 @@ function AssigneeSelect({ value, onChange, compact }: { value: string; onChange:
       {(close) => projectMembers.map((item) => (
         <button className={`toolMenuItem ${item.id === value ? "active" : ""}`} type="button" key={item.id} onClick={() => { onChange(item.id); close(); }}>
           <span>
-            <span className={`planAvatar ${item.kind === "agent" ? "isAgent" : ""}`}>{item.kind === "agent" ? <Bot size={11} /> : item.name.slice(0, 1)}</span>
+            <span className={`planAvatar ${item.kind === "agent" ? "isAgent" : ""}`}>{item.kind === "agent" ? <Bot size={12} /> : item.name.slice(0, 1)}</span>
             {item.name}
           </span>
-          {item.id === value ? <Check size={13} /> : null}
+          {item.id === value ? <Check size={12} /> : null}
         </button>
       ))}
     </InlineSelect>

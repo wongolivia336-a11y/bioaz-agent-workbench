@@ -29,7 +29,7 @@ export function ActivityChain({ title, steps, running, onOpen }: { title: string
         <span>{running ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}</span>
         <strong>{title}</strong>
         <small>{running ? "处理中" : "已完成"}</small>
-        <ChevronDown size={15} />
+        <ChevronDown size={14} />
       </button>
       <div className="activityChainBody">
         {steps.map((step, index) => <div className="activityStep" key={step}><span>{index < steps.length - 1 || !running ? <Check size={12} /> : <Clock3 size={12} />}</span><p>{step}</p></div>)}

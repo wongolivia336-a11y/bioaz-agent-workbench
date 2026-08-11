@@ -124,7 +124,7 @@ export function WorkbenchComposer({
         />
       ) : (
         <label className="composerAddButton" aria-label="上传文件">
-          <Plus size={18} />
+          <Plus size={16} />
           <input type="file" multiple className="composerFileInput" onChange={(event) => { const files = Array.from(event.target.files ?? []); event.target.value = ""; addFiles(files); }} />
         </label>
       )}
@@ -143,7 +143,7 @@ function ComposerChipRow({ items, onRemove }: { items: ComposerAttachment[]; onR
         const Icon = kindIcon[item.kind];
         return (
           <span className={`composerChip ${item.borrowed ? "isBorrowed" : ""}`} key={item.id}>
-            <Icon size={13} strokeWidth={1.9} />
+            <Icon size={12} />
             <span className="composerChipLabel">{item.label}</span>
             {item.borrowed ? <em>本次临时启用</em> : null}
             <button type="button" aria-label={`移除 ${item.label}`} onClick={() => onRemove(item.id)}><X size={12} /></button>
@@ -166,7 +166,7 @@ export function MessageAttachments({ items }: { items?: ComposerAttachment[] }) 
         const Icon = kindIcon[item.kind];
         return (
           <span className="messageAttachment" key={item.id}>
-            <Icon size={12} strokeWidth={1.9} />
+            <Icon size={12} />
             <span>{item.label}</span>
             {item.borrowed ? <em>临时启用</em> : null}
           </span>

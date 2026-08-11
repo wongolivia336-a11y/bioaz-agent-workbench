@@ -1,348 +1,314 @@
 "use client";
 
-import { GripVertical, Plus, X, AlertTriangle } from "lucide-react";
-import { useState } from "react";
-import type { DetectionScenario } from "../components/ScenarioSelector";
+import { CornerDownRight, GripVertical, Plus, TriangleAlert } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  fieldCatalog,
+  fieldGroups,
+  fieldOverrideLabels,
+  matchesScenario,
+  overriddenKeys,
+  resolveField,
+  scenarioLabels,
+  scenarioShortLabels,
+  type DetectionScenario,
+  type FieldDef,
+  type FieldOverride,
+  type FieldOverrideKey,
+} from "./catalog";
 
-type FieldType = "single" | "multiple" | "number" | "text";
+type ScenarioFilter = DetectionScenario | "all";
+type Selection = { key: string; scenario: DetectionScenario | null };
 
-interface FieldOption {
-  value: string;
-  label: string;
-}
-
-interface FieldDef {
-  key: string;           // 系统标识
-  label: string;         // 用户看到的中文名
-  type: FieldType;
-  options: FieldOption[];  // 选项列表
-  required: boolean;
-  allowCustom: boolean;
-  group: string;
-}
-
-interface FieldGroup {
-  id: string;
-  label: string;
-}
-
-// PK 检测字段定义
-const pkFields: FieldDef[] = [
-  { key: "assayType", label: "检测类型", type: "single", options: [
-    { value: "pk", label: "PK" },
-    { value: "ba-only", label: "BA Only" },
-    { value: "tox", label: "TOX" },
-  ], required: true, allowCustom: false, group: "assay" },
-  { key: "compoundType", label: "化合物类别", type: "single", options: [
-    { value: "small", label: "小分子" },
-    { value: "large", label: "大分子" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "assay" },
-  { key: "animalSpecies", label: "动物种属", type: "single", options: [
-    { value: "sd_rat", label: "SD 大鼠" },
-    { value: "beagle", label: "Beagle 犬" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "animalCountPerGroup", label: "每组动物数", type: "number", options: [
-    { value: "3", label: "3" },
-    { value: "6", label: "6" },
-    { value: "10", label: "10" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "groupCount", label: "组数", type: "number", options: [
-    { value: "3", label: "3" },
-    { value: "4", label: "4" },
-    { value: "6", label: "6" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "trialDuration", label: "试验周期", type: "number", options: [
-    { value: "1", label: "1 周" },
-    { value: "2", label: "2 周" },
-    { value: "4", label: "4 周" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "analysisMethod", label: "分析方法", type: "single", options: [
-    { value: "lcms", label: "LC-MS/MS" },
-    { value: "ligand", label: "配体结合法" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "sampleType", label: "样本类型", type: "multiple", options: [
-    { value: "plasma", label: "血浆" },
-    { value: "serum", label: "血清" },
-    { value: "tissue", label: "组织" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "sampleCount", label: "样本数量", type: "number", options: [
-    { value: "60", label: "60" },
-    { value: "120", label: "120" },
-    { value: "240", label: "240" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "analyteCount", label: "待测物数量", type: "number", options: [
-    { value: "1", label: "1" },
-    { value: "2", label: "2" },
-    { value: "3", label: "3" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "methodDev", label: "是否需要方法开发", type: "single", options: [
-    { value: "yes", label: "是" },
-    { value: "no", label: "否" },
-  ], required: true, allowCustom: false, group: "analysis" },
-  { key: "reportLanguage", label: "报告语言", type: "single", options: [
-    { value: "cn", label: "中文" },
-    { value: "en", label: "英文" },
-    { value: "both", label: "中英双语" },
-  ], required: true, allowCustom: false, group: "delivery" },
-  { key: "currency", label: "报价币种", type: "single", options: [
-    { value: "cny", label: "CNY" },
-    { value: "usd", label: "USD" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "delivery" },
-  { key: "deliverFormat", label: "交付格式", type: "multiple", options: [
-    { value: "word", label: "Word" },
-    { value: "excel", label: "Excel" },
-    { value: "pdf", label: "PDF" },
-  ], required: true, allowCustom: false, group: "delivery" },
-];
-
-// BA Only 字段定义（无动物实验分组）
-const baFields: FieldDef[] = [
-  { key: "assayType", label: "检测类型", type: "single", options: [
-    { value: "pk", label: "PK" },
-    { value: "ba-only", label: "BA Only" },
-    { value: "tox", label: "TOX" },
-  ], required: true, allowCustom: false, group: "assay" },
-  { key: "compoundType", label: "化合物类别", type: "single", options: [
-    { value: "small", label: "小分子" },
-    { value: "large", label: "大分子" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "assay" },
-  { key: "analysisMethod", label: "分析方法", type: "single", options: [
-    { value: "lcms", label: "LC-MS/MS" },
-    { value: "ligand", label: "配体结合法" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "sampleType", label: "样本类型", type: "multiple", options: [
-    { value: "plasma", label: "血浆" },
-    { value: "serum", label: "血清" },
-    { value: "tissue", label: "组织" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "sampleCount", label: "样本数量", type: "number", options: [
-    { value: "60", label: "60" },
-    { value: "120", label: "120" },
-    { value: "240", label: "240" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "methodDev", label: "是否需要方法开发", type: "single", options: [
-    { value: "yes", label: "是" },
-    { value: "no", label: "否" },
-  ], required: true, allowCustom: false, group: "analysis" },
-  { key: "reportLanguage", label: "报告语言", type: "single", options: [
-    { value: "cn", label: "中文" },
-    { value: "en", label: "英文" },
-    { value: "both", label: "中英双语" },
-  ], required: true, allowCustom: false, group: "delivery" },
-  { key: "currency", label: "报价币种", type: "single", options: [
-    { value: "cny", label: "CNY" },
-    { value: "usd", label: "USD" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "delivery" },
-  { key: "deliverFormat", label: "交付格式", type: "multiple", options: [
-    { value: "word", label: "Word" },
-    { value: "excel", label: "Excel" },
-    { value: "pdf", label: "PDF" },
-  ], required: true, allowCustom: false, group: "delivery" },
-];
-
-// TOX 检测字段定义
-const toxFields: FieldDef[] = [
-  { key: "assayType", label: "检测类型", type: "single", options: [
-    { value: "pk", label: "PK" },
-    { value: "ba-only", label: "BA Only" },
-    { value: "tox", label: "TOX" },
-  ], required: true, allowCustom: false, group: "assay" },
-  { key: "compoundType", label: "化合物类别", type: "single", options: [
-    { value: "small", label: "小分子" },
-    { value: "large", label: "大分子" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "assay" },
-  { key: "animalSpecies", label: "动物种属", type: "single", options: [
-    { value: "sd_rat", label: "SD 大鼠" },
-    { value: "beagle", label: "Beagle 犬" },
-    { value: "hamster", label: "仓鼠" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "animalCountPerGroup", label: "每组动物数", type: "number", options: [
-    { value: "3", label: "3" },
-    { value: "6", label: "6" },
-    { value: "10", label: "10" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "groupCount", label: "组数", type: "number", options: [
-    { value: "3", label: "3" },
-    { value: "4", label: "4" },
-    { value: "6", label: "6" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "trialDuration", label: "试验周期", type: "number", options: [
-    { value: "1", label: "1 周" },
-    { value: "2", label: "2 周" },
-    { value: "4", label: "4 周" },
-    { value: "8", label: "8 周" },
-    { value: "13", label: "13 周" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "toxicityEndpoint", label: "毒性终点", type: "multiple", options: [
-    { value: "acute", label: "急性" },
-    { value: "subacute", label: "亚急性" },
-    { value: "chronic", label: "慢性" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "animal" },
-  { key: "analysisMethod", label: "分析方法", type: "single", options: [
-    { value: "lcms", label: "LC-MS/MS" },
-    { value: "ligand", label: "配体结合法" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "sampleType", label: "样本类型", type: "multiple", options: [
-    { value: "plasma", label: "血浆" },
-    { value: "serum", label: "血清" },
-    { value: "tissue", label: "组织" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "sampleCount", label: "样本数量", type: "number", options: [
-    { value: "60", label: "60" },
-    { value: "120", label: "120" },
-    { value: "240", label: "240" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "analyteCount", label: "待测物数量", type: "number", options: [
-    { value: "1", label: "1" },
-    { value: "2", label: "2" },
-    { value: "3", label: "3" },
-  ], required: true, allowCustom: true, group: "analysis" },
-  { key: "reportLanguage", label: "报告语言", type: "single", options: [
-    { value: "cn", label: "中文" },
-    { value: "en", label: "英文" },
-    { value: "both", label: "中英双语" },
-  ], required: true, allowCustom: false, group: "delivery" },
-  { key: "currency", label: "报价币种", type: "single", options: [
-    { value: "cny", label: "CNY" },
-    { value: "usd", label: "USD" },
-    { value: "custom", label: "自定义" },
-  ], required: true, allowCustom: true, group: "delivery" },
-  { key: "deliverFormat", label: "交付格式", type: "multiple", options: [
-    { value: "word", label: "Word" },
-    { value: "excel", label: "Excel" },
-    { value: "pdf", label: "PDF" },
-  ], required: true, allowCustom: false, group: "delivery" },
-];
-
-const scenarioFieldMap: Record<DetectionScenario, FieldDef[]> = {
-  pk: pkFields,
-  "ba-only": baFields,
-  tox: toxFields,
+const typeLabels: Record<FieldDef["type"], string> = {
+  single: "单选",
+  multiple: "多选",
+  number: "数字",
+  text: "文本",
 };
 
-const groups: Record<string, FieldGroup> = {
-  assay: { id: "assay", label: "检测类型" },
-  animal: { id: "animal", label: "动物实验" },
-  analysis: { id: "analysis", label: "生物分析" },
-  delivery: { id: "delivery", label: "报告与报价" },
-};
+export default function FieldConfig({ filter, onAdd }: { filter: ScenarioFilter; onAdd: () => void }) {
+  const [fields, setFields] = useState<FieldDef[]>(fieldCatalog);
+  const [activeGroup, setActiveGroup] = useState("assay");
+  const [selection, setSelection] = useState<Selection | null>({ key: "assayType", scenario: null });
 
-export default function FieldConfig({
-  scenario,
-  activeGroup,
-  onActiveGroupChange,
-  activeField,
-  onActiveFieldChange,
-  onAdd,
-}: {
-  scenario: DetectionScenario;
-  activeGroup: string;
-  onActiveGroupChange: (group: string) => void;
-  activeField: number;
-  onActiveFieldChange: (index: number) => void;
-  onAdd: () => void;
-}) {
-  const allFields = scenarioFieldMap[scenario] ?? pkFields;
-  const groupIds = Array.from(new Set(allFields.map((f) => f.group)));
-  const groupList = groupIds.map((id) => groups[id]).filter(Boolean);
-  const fieldsInGroup = allFields.filter((f) => f.group === activeGroup);
-  const selectedField = fieldsInGroup[activeField] ?? fieldsInGroup[0];
+  const visible = useMemo(() => fields.filter((field) => matchesScenario(field.appliesTo, filter)), [fields, filter]);
+  const groupList = fieldGroups.filter((group) => visible.some((field) => field.group === group.id));
+  const currentGroup = groupList.some((group) => group.id === activeGroup) ? activeGroup : groupList[0]?.id ?? "assay";
+  const fieldsInGroup = visible.filter((field) => field.group === currentGroup);
+
+  const selected = selection ? fields.find((field) => field.key === selection.key) ?? null : null;
+  const overrideCount = visible.reduce((total, field) => total + field.overrides.length, 0);
+
+  const updateOverride = (key: string, scenario: DetectionScenario, next: FieldOverride | null) => {
+    setFields((list) =>
+      list.map((field) => {
+        if (field.key !== key) return field;
+        const rest = field.overrides.filter((item) => item.scenario !== scenario);
+        return { ...field, overrides: next ? [...rest, next] : rest };
+      }),
+    );
+  };
+
+  /* 盖住一条属性 = 把主值当前的值抄进例外；恢复跟随 = 把这条键删掉。
+     整条例外没有任何键了就整个删除，不留空壳。 */
+  const toggleOverrideKey = (field: FieldDef, scenario: DetectionScenario, key: FieldOverrideKey, on: boolean) => {
+    const current = field.overrides.find((item) => item.scenario === scenario);
+    const next: FieldOverride = { ...(current ?? { scenario }) };
+    if (on) {
+      const resolved = resolveField(field, scenario);
+      if (key === "options") next.options = resolved.options.map((option) => ({ ...option }));
+      else if (key === "label") next.label = resolved.label;
+      else if (key === "type") next.type = resolved.type;
+      else if (key === "required") next.required = resolved.required;
+      else next.allowCustom = resolved.allowCustom;
+    } else {
+      delete next[key];
+    }
+    updateOverride(field.key, scenario, overriddenKeys(next).length ? next : null);
+  };
 
   return (
     <div className="quotationParameterBuilder">
       <aside>
         <h2>参数分组</h2>
-        {groupList.map((item) => (
-          <button
-            className={item.id === activeGroup ? "active" : ""}
-            type="button"
-            key={item.id}
-            onClick={() => onActiveGroupChange(item.id)}
-          >
-            <span>{item.label}</span>
-            <small>{allFields.filter((f) => f.group === item.id).length}</small>
+        {groupList.map((group) => (
+          <button className={group.id === currentGroup ? "active" : ""} type="button" key={group.id} onClick={() => setActiveGroup(group.id)}>
+            <span>{group.label}</span>
+            <small>{visible.filter((field) => field.group === group.id).length}</small>
           </button>
         ))}
         <button className="add" type="button"><Plus size={14} />添加分组</button>
       </aside>
+
       <section>
-        <h2>{groups[activeGroup]?.label ?? "参数"}</h2>
-        <p>这里的顺序会同步到报价任务右侧参数面板。</p>
-        {fieldsInGroup.map((field, index) => (
-          <button
-            className={activeField === index ? "active" : ""}
-            type="button"
+        <h2>{fieldGroups.find((group) => group.id === currentGroup)?.label ?? "参数"}</h2>
+        <p>
+          这里的顺序会同步到报价任务右侧参数面板。
+          {overrideCount ? <em className="quotationScopeCount"> 当前范围内有 {overrideCount} 条例外。</em> : null}
+        </p>
+        {fieldsInGroup.map((field) => (
+          <FieldRows
             key={field.key}
-            onClick={() => onActiveFieldChange(index)}
-          >
-            <GripVertical size={15} />
-            <span>
-              <strong>{field.label}</strong>
-              <small><code>{field.key}</code> · {field.type === "single" ? "单选" : field.type === "multiple" ? "多选" : field.type === "number" ? "数字" : "文本"}</small>
-            </span>
-            <em>{field.required ? "必填" : "可选"}</em>
-          </button>
+            field={field}
+            filter={filter}
+            selection={selection}
+            onSelect={setSelection}
+          />
         ))}
         <footer>
           <button type="button" onClick={onAdd}><Plus size={14} />添加参数</button>
           <button className="primary" type="button">保存为草稿</button>
         </footer>
       </section>
-      {selectedField ? (
-        <aside className="quotationFieldSettings">
-          <h2>{selectedField.label}</h2>
-          <div className="fieldKeyRow">
-            <code className="fieldKey">{selectedField.key}</code>
-            <span className="fieldKeyHint">系统标识</span>
-          </div>
-          <label>参数名称<input defaultValue={selectedField.label} key={`${activeGroup}-${selectedField.key}-label`} /></label>
-          <label>字段类型
-            <select defaultValue={selectedField.type} key={`${activeGroup}-${selectedField.key}-type`}>
-              <option value="single">单选</option>
-              <option value="multiple">多选</option>
-              <option value="number">数字选项</option>
-              <option value="text">文本输入</option>
-            </select>
-          </label>
-          <label>选项列表
-            <div className="quotationOptionList">
-              {selectedField.options.map((opt) => (
-                <span key={opt.value}>{opt.label}<X size={12} /></span>
-              ))}
-            </div>
-          </label>
-          <ToggleRow label="设为必填" defaultOn={selectedField.required} />
-          <ToggleRow label="允许自定义输入" defaultOn={selectedField.allowCustom} />
-          <div className="fieldRuleWarning">
-            <AlertTriangle size={14} />
-            <small>新增 key 时请在计价规则中配置对应逻辑，否则可能影响报价计算</small>
-          </div>
-        </aside>
+
+      {selected && selection ? (
+        selection.scenario ? (
+          <ExceptionSettings
+            field={selected}
+            scenario={selection.scenario}
+            onToggle={(key, on) => toggleOverrideKey(selected, selection.scenario as DetectionScenario, key, on)}
+            onRemoveAll={() => { updateOverride(selected.key, selection.scenario as DetectionScenario, null); setSelection({ key: selected.key, scenario: null }); }}
+          />
+        ) : (
+          <MainSettings
+            field={selected}
+            onCreateException={(scenario) => {
+              const resolved = resolveField(selected, scenario);
+              updateOverride(selected.key, scenario, { scenario, options: resolved.options.map((option) => ({ ...option })) });
+              setSelection({ key: selected.key, scenario });
+            }}
+          />
+        )
       ) : null}
     </div>
   );
 }
 
-function ToggleRow({ label, defaultOn }: { label: string; defaultOn?: boolean }) {
-  const [on, setOn] = useState(defaultOn ?? false);
+function FieldRows({
+  field,
+  filter,
+  selection,
+  onSelect,
+}: {
+  field: FieldDef;
+  filter: ScenarioFilter;
+  selection: Selection | null;
+  onSelect: (selection: Selection) => void;
+}) {
+  const overrides = field.overrides.filter((item) => filter === "all" || item.scenario === filter);
+  const isActive = selection?.key === field.key && selection.scenario === null;
+
   return (
-    <div className="quotationToggleRow" onClick={() => setOn(!on)} style={{ cursor: "pointer" }}>
+    <>
+      <button className={isActive ? "active" : ""} type="button" onClick={() => onSelect({ key: field.key, scenario: null })}>
+        <GripVertical size={15} />
+        <span>
+          <strong>{field.label}</strong>
+          <small><code>{field.key}</code> · {typeLabels[field.type]}</small>
+        </span>
+        <span className="quotationScopeTags">
+          {field.appliesTo.map((scenario) => (
+            <i
+              className={filter !== "all" && filter === scenario ? "isActive" : ""}
+              key={scenario}
+              data-overridden={field.overrides.some((item) => item.scenario === scenario) ? "true" : undefined}
+            >
+              {scenarioShortLabels[scenario]}
+            </i>
+          ))}
+        </span>
+        <em>{field.required ? "必填" : "可选"}</em>
+      </button>
+      {overrides.map((override) => (
+        <button
+          className={`isException ${selection?.key === field.key && selection.scenario === override.scenario ? "active" : ""}`}
+          type="button"
+          key={override.scenario}
+          onClick={() => onSelect({ key: field.key, scenario: override.scenario })}
+        >
+          <CornerDownRight size={14} />
+          <span>
+            <strong>{scenarioShortLabels[override.scenario]} 例外</strong>
+            <small>盖住了 {overriddenKeys(override).map((key) => fieldOverrideLabels[key]).join("、")}</small>
+          </span>
+          <span className="quotationScopeTags"><i className="isActive">{scenarioShortLabels[override.scenario]}</i></span>
+          <em>例外</em>
+        </button>
+      ))}
+    </>
+  );
+}
+
+function MainSettings({ field, onCreateException }: { field: FieldDef; onCreateException: (scenario: DetectionScenario) => void }) {
+  const [picking, setPicking] = useState(false);
+  const available = field.appliesTo.filter((scenario) => !field.overrides.some((item) => item.scenario === scenario));
+
+  return (
+    <aside className="quotationFieldSettings">
+      <h2>{field.label}</h2>
+      <div className="fieldKeyRow">
+        <code className="fieldKey">{field.key}</code>
+        <span className="fieldKeyHint">系统标识</span>
+      </div>
+
+      <p className="quotationFieldScope">
+        <TriangleAlert size={14} />
+        <span>此字段适用于 <strong>{field.appliesTo.map((id) => scenarioShortLabels[id]).join("、")}</strong>，在这里修改会同时生效。</span>
+      </p>
+
+      <label>参数名称<input defaultValue={field.label} key={`${field.key}-label`} /></label>
+      <label>字段类型
+        <select defaultValue={field.type} key={`${field.key}-type`}>
+          <option value="single">单选</option>
+          <option value="multiple">多选</option>
+          <option value="number">数字选项</option>
+          <option value="text">文本输入</option>
+        </select>
+      </label>
+      <label>选项列表
+        <div className="quotationOptionList">
+          {field.options.map((option) => <span key={option.value}>{option.label}</span>)}
+        </div>
+      </label>
+      <ToggleRow label="设为必填" on={field.required} />
+      <ToggleRow label="允许自定义输入" on={field.allowCustom} />
+
+      {available.length ? (
+        picking ? (
+          <div className="quotationScopePicker">
+            <small>为哪一类设置例外？</small>
+            <div>
+              {available.map((scenario) => (
+                <button type="button" key={scenario} onClick={() => { setPicking(false); onCreateException(scenario); }}>{scenarioLabels[scenario]}</button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <button className="quotationDrawerSecondary" type="button" onClick={() => setPicking(true)}>仅为某一类设为例外</button>
+        )
+      ) : null}
+
+      <div className="fieldRuleWarning">
+        <TriangleAlert size={14} />
+        <small>新增 key 时请在计价规则中配置对应逻辑，否则可能影响报价计算</small>
+      </div>
+    </aside>
+  );
+}
+
+function ExceptionSettings({
+  field,
+  scenario,
+  onToggle,
+  onRemoveAll,
+}: {
+  field: FieldDef;
+  scenario: DetectionScenario;
+  onToggle: (key: FieldOverrideKey, on: boolean) => void;
+  onRemoveAll: () => void;
+}) {
+  const override = field.overrides.find((item) => item.scenario === scenario);
+  const resolved = resolveField(field, scenario);
+  const keys = Object.keys(fieldOverrideLabels) as FieldOverrideKey[];
+
+  const describe = (key: FieldOverrideKey, source: FieldDef) => {
+    if (key === "label") return source.label;
+    if (key === "type") return typeLabels[source.type];
+    if (key === "required") return source.required ? "必填" : "可选";
+    if (key === "allowCustom") return source.allowCustom ? "允许" : "不允许";
+    return source.options.map((option) => option.label).join(" / ");
+  };
+
+  return (
+    <aside className="quotationFieldSettings">
+      <h2>{field.label} · {scenarioShortLabels[scenario]} 例外</h2>
+      <div className="fieldKeyRow">
+        <code className="fieldKey">{field.key}</code>
+        <span className="fieldKeyHint">与主值同一个字段</span>
+      </div>
+
+      <p className="quotationFieldScope isException">
+        <span>没有盖住的属性继续跟随主值——主值改了，这里跟着变。</span>
+      </p>
+
+      <div className="quotationOverrideList">
+        {keys.map((key) => {
+          const isOverridden = override?.[key] !== undefined;
+          return (
+            <div className={`quotationOverrideRow ${isOverridden ? "isOverridden" : ""}`} key={key}>
+              <header>
+                <strong>{fieldOverrideLabels[key]}</strong>
+                <button type="button" onClick={() => onToggle(key, !isOverridden)}>
+                  {isOverridden ? "恢复跟随" : "盖住"}
+                </button>
+              </header>
+              {isOverridden ? (
+                <>
+                  <p className="quotationOverrideBase"><span>主值</span>{describe(key, field)}</p>
+                  <p className="quotationOverrideValue"><span>{scenarioShortLabels[scenario]}</span>{describe(key, resolved)}</p>
+                </>
+              ) : (
+                <p className="quotationOverrideBase"><span>跟随主值</span>{describe(key, field)}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {override?.note ? <p className="quotationOverrideNote">{override.note}</p> : null}
+
+      <button className="quotationDrawerDanger" type="button" onClick={onRemoveAll}>整条例外恢复跟随主值</button>
+    </aside>
+  );
+}
+
+function ToggleRow({ label, on }: { label: string; on: boolean }) {
+  const [value, setValue] = useState(on);
+  return (
+    <div className="quotationToggleRow" onClick={() => setValue(!value)} style={{ cursor: "pointer" }}>
       <span>{label}</span>
-      <i className={on ? "on" : ""}><b /></i>
+      <i className={value ? "on" : ""}><b /></i>
     </div>
   );
 }

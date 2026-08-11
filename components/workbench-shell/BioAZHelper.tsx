@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, HelpCircle } from "lucide-react";
+import { Check, ChevronDown, CircleHelp } from "lucide-react";
 import { useState } from "react";
 import type { CoworkerDefinition } from "../../modules/types";
 import type { AgentSessionSnapshot } from "../../modules/types";
@@ -11,7 +11,7 @@ export function DispatchConfirmCard({ taskType, coworker, coworkers, onCoworkerC
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
   return <section className="dispatchConfirmCard">
     <div><span>识别结果</span><strong>{taskType}</strong><p>推荐：{coworker.name}</p></div>
-    <div ref={ref} className={`dispatchCoworkerSelect ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>更换 <ChevronDown size={13} /></button>{open ? <div className="dispatchCoworkerMenu">{coworkers.map((item) => <button type="button" key={item.id} onClick={() => { onCoworkerChange(item.id); setOpen(false); }}><span>{item.name}</span>{item.id === coworker.id ? <Check size={14} /> : null}</button>)}</div> : null}</div>
+    <div ref={ref} className={`dispatchCoworkerSelect ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>更换 <ChevronDown size={12} /></button>{open ? <div className="dispatchCoworkerMenu">{coworkers.map((item) => <button type="button" key={item.id} onClick={() => { onCoworkerChange(item.id); setOpen(false); }}><span>{item.name}</span>{item.id === coworker.id ? <Check size={14} /> : null}</button>)}</div> : null}</div>
     <button type="button" onClick={onCancel}>取消</button><button className="primaryButton compact" type="button" onClick={onConfirm}>确认分派</button>
   </section>;
 }
@@ -21,7 +21,7 @@ export function CoworkerSwitchCard({ from, to, endingCurrentFlow = false, onConf
 }
 
 export function ContextDivider({ children }: { children: string }) {
-  return <div className="contextDivider"><span>{children}</span><span className="contextSummaryHelp"><button type="button" aria-label="查看交接上下文摘要"><HelpCircle size={14} /></button><span className="contextSummaryCard" role="tooltip"><strong>交接上下文摘要</strong><p>已保留上一位数字同事确认过的任务目标、关键参数、材料与产物状态；未发送草稿和未确认推断不会带入新会话。</p><small>{children}</small></span></span></div>;
+  return <div className="contextDivider"><span>{children}</span><span className="contextSummaryHelp"><button type="button" aria-label="查看交接上下文摘要"><CircleHelp size={14} /></button><span className="contextSummaryCard" role="tooltip"><strong>交接上下文摘要</strong><p>已保留上一位数字同事确认过的任务目标、关键参数、材料与产物状态；未发送草稿和未确认推断不会带入新会话。</p><small>{children}</small></span></span></div>;
 }
 
 export function PriorSessionHistory({ snapshots }: { snapshots?: AgentSessionSnapshot[] }) {

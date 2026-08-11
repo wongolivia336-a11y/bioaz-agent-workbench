@@ -31,6 +31,8 @@ export type InspectorPanelDefinition<TContext> = {
   defaultWhen?: (context: TContext) => boolean;
   /** 主面板常驻 tab 栏；其余只出现在加号菜单的「更多」分组里 */
   primary?: boolean;
+  /** 内容是表格/文档一类、放宽了才好读的面板才给全屏；纯表单面板全屏只是把留白拉长 */
+  expandable?: boolean;
   state?: (context: TContext) => InspectorContentState;
   emptyMessage?: string;
   errorMessage?: string;
@@ -47,6 +49,7 @@ export type ResolvedInspectorPanel = {
   state: InspectorContentState;
   isDefault: boolean;
   primary: boolean;
+  expandable: boolean;
   emptyMessage?: string;
   errorMessage?: string;
 };
@@ -65,6 +68,7 @@ export function resolveInspectorPanels<TContext>(
       state: panel.state?.(context) ?? "populated",
       isDefault: panel.defaultWhen?.(context) ?? false,
       primary: panel.primary ?? false,
+      expandable: panel.expandable ?? false,
       emptyMessage: panel.emptyMessage,
       errorMessage: panel.errorMessage,
     }));
@@ -212,7 +216,7 @@ export function WorkbenchInspector({
             >
               <ActiveIcon size={16} />
               <span>{activePanel?.label ?? "暂无可用面板"}</span>
-              <ChevronRight className={selectorOpen ? "isOpen" : ""} size={15} />
+              <ChevronRight className={selectorOpen ? "isOpen" : ""} size={14} />
             </button>
             {selectorOpen ? (
               <div className="workbenchPanelSelectorMenu" role="menu" aria-label="选择详情面板">

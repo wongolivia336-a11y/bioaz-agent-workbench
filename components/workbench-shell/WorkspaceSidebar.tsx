@@ -77,13 +77,13 @@ export function WorkspaceSidebar(props: Props) {
       <div className="brand">
         <img src="/logo/bioaz-logo.svg" alt="" />
         <span>BioAZ</span>
-        <button className="sidebarCollapseButton" type="button" onClick={props.onToggleCollapsed} aria-label={props.collapsed ? "展开侧边栏" : "折叠侧边栏"}><PanelRight size={17} /></button>
+        <button className="sidebarCollapseButton" type="button" onClick={props.onToggleCollapsed} aria-label={props.collapsed ? "展开侧边栏" : "折叠侧边栏"}><PanelRight size={16} /></button>
       </div>
 
       <div className="sidebarActions">
         {searchOpen ? (
           <div className="sidebarSearch">
-            <Search size={15} />
+            <Search size={14} />
             <input autoFocus placeholder="搜索任务、项目" />
             <button type="button" onClick={() => setSearchOpen(false)} aria-label="关闭搜索"><X size={14} /></button>
           </div>
@@ -107,15 +107,15 @@ export function WorkspaceSidebar(props: Props) {
                 </>
               ) : null}
             </div>
-            <button className="sidebarSearchButton" type="button" onClick={() => setSearchOpen(true)} aria-label="搜索"><Search size={17} /></button>
+            <button className="sidebarSearchButton" type="button" onClick={() => setSearchOpen(true)} aria-label="搜索"><Search size={16} /></button>
           </>
         )}
       </div>
 
       <nav className="navBlock workspaceViews" aria-label="工作区">
-        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={15} strokeWidth={1.8} /><span>项目中枢</span></button>
-        <button className={`workspaceViewRow ${props.activeRoute === "knowledgeBase" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("knowledgeBase")}><FileSearch size={15} strokeWidth={1.8} /><span>知识库</span></button>
-        <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={15} strokeWidth={1.8} /><span>数字团队</span></button>
+        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>项目中枢</span></button>
+        <button className={`workspaceViewRow ${props.activeRoute === "knowledgeBase" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("knowledgeBase")}><FileSearch size={14} /><span>知识库</span></button>
+        <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
       </nav>
 
       {pinnedItems.length ? (
@@ -146,7 +146,7 @@ export function WorkspaceSidebar(props: Props) {
             <Folder size={14} />
             <input autoFocus value={projectDraft} onChange={(event) => setProjectDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") commitProject(); if (event.key === "Escape") { setProjectCreateOpen(false); setProjectDraft(""); } }} placeholder="项目名称" aria-label="项目名称" />
             <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建项目"><Check size={14} /></button>
-            <button type="button" onClick={() => { setProjectCreateOpen(false); setProjectDraft(""); }} aria-label="取消"><X size={13} /></button>
+            <button type="button" onClick={() => { setProjectCreateOpen(false); setProjectDraft(""); }} aria-label="取消"><X size={12} /></button>
           </div>
         ) : null}
         {visibleProjects.map((project) => (
@@ -186,14 +186,14 @@ export function WorkspaceSidebar(props: Props) {
         <button type="button" onClick={() => setAccountMenuOpen((value) => !value)} aria-expanded={accountMenuOpen}>
           <span className="avatar">A</span>
           <span><strong>Admin</strong><small>admin@example.com</small></span>
-          <ChevronUp size={15} />
+          <ChevronUp size={14} />
         </button>
         {accountMenuOpen ? (
           <div className="accountMenu">
             <div><span className="avatar">A</span><span><strong>Admin</strong><small>admin@example.com</small></span></div>
-            <button type="button"><Settings size={15} />账户设置</button>
-            <button className="quotationManagementEntry" type="button" onClick={() => { setAccountMenuOpen(false); props.onOpenQuotationManagement(); }}><BadgeDollarSign size={15} />报价管理</button>
-            <button type="button"><LogOut size={15} />退出登录</button>
+            <button type="button"><Settings size={14} />账户设置</button>
+            <button className="quotationManagementEntry" type="button" onClick={() => { setAccountMenuOpen(false); props.onOpenQuotationManagement(); }}><BadgeDollarSign size={14} />报价管理</button>
+            <button type="button"><LogOut size={14} />退出登录</button>
           </div>
         ) : null}
       </div>
@@ -235,9 +235,9 @@ function SidebarProject({ title, highlighted = false, open, onToggle, onRename, 
         ) : (
           <>
             <button className="projectRow" type="button" onClick={onToggle}>
-              <Folder size={15} strokeWidth={1.8} />
+              <Folder size={14} />
               <strong>{title}</strong>
-              <ChevronRight className={open ? "isOpen" : ""} size={14} strokeWidth={1.8} />
+              <ChevronRight className={open ? "isOpen" : ""} size={14} />
             </button>
             <div className="projectHoverActions isActionOnly">
               <button type="button" aria-label={`${title}更多操作`} onClick={(event) => { event.stopPropagation(); setMenuOpen((value) => !value); }}><MoreHorizontal size={14} /></button>
@@ -278,7 +278,7 @@ function SidebarTask({ item, active = false, pinned = false, onClick, onPinToggl
       ) : (
         <>
           <button className="chatRowMain" type="button" onClick={onClick}>
-            <FileText className="sidebarIcon" size={15} strokeWidth={1.8} />
+            <FileText className="sidebarIcon" size={14} />
             <strong>{item.title}</strong>
             <small>{item.time}</small>
           </button>

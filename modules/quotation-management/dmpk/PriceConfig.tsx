@@ -1,89 +1,170 @@
 "use client";
 
-import { Search } from "lucide-react";
-import type { DetectionScenario } from "../components/ScenarioSelector";
+import { CornerDownRight, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import PriceDrawer from "../components/PriceDrawer";
+import {
+  matchesScenario,
+  priceCatalog,
+  priceCategories,
+  scenarioShortLabels,
+  type DetectionScenario,
+  type PriceItem,
+} from "./catalog";
 
-interface PriceItem {
-  id: string;
-  name: string;
-  category: string;
-  price: string;
-  unit: string;
-  status: "published" | "draft";
-}
+type ScenarioFilter = DetectionScenario | "all";
 
-const pkPrices: PriceItem[] = [
-  { id: "p1", name: "SD 大鼠", category: "动物实验", price: "¥120", unit: "只", status: "published" },
-  { id: "p2", name: "Beagle 犬", category: "动物实验", price: "¥850", unit: "只", status: "published" },
-  { id: "p3", name: "仓鼠", category: "动物实验", price: "¥95", unit: "只", status: "published" },
-  { id: "p4", name: "动物饲养", category: "动物实验", price: "¥15", unit: "只/天", status: "published" },
-  { id: "p5", name: "血浆样品检测", category: "生物分析", price: "¥180", unit: "样品", status: "published" },
-  { id: "p6", name: "LC-MS/MS 方法开发", category: "生物分析", price: "¥6,000", unit: "项", status: "published" },
-  { id: "p7", name: "配体结合法", category: "生物分析", price: "¥8,000", unit: "项", status: "published" },
-  { id: "p8", name: "中文报告", category: "报告交付", price: "¥3,000", unit: "份", status: "published" },
-  { id: "p9", name: "英文报告", category: "报告交付", price: "¥4,500", unit: "份", status: "published" },
-];
+/** 打开抽屉时要说清楚改的是主值还是某一类的例外——这两件事后果完全不同 */
+type EditTarget = { item: PriceItem; scenario: DetectionScenario | null };
 
-const baPrices: PriceItem[] = [
-  { id: "b1", name: "血浆样品检测", category: "生物分析", price: "¥180", unit: "样品", status: "published" },
-  { id: "b2", name: "LC-MS/MS 方法开发", category: "生物分析", price: "¥6,000", unit: "项", status: "published" },
-  { id: "b3", name: "配体结合法", category: "生物分析", price: "¥8,000", unit: "项", status: "published" },
-  { id: "b4", name: "中文报告", category: "报告交付", price: "¥3,000", unit: "份", status: "published" },
-  { id: "b5", name: "英文报告", category: "报告交付", price: "¥4,500", unit: "份", status: "published" },
-  { id: "b6", name: "BA 专用分析方法", category: "生物分析", price: "¥7,500", unit: "项", status: "draft" },
-];
+export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
+  const [items, setItems] = useState<PriceItem[]>(priceCatalog);
+  const [category, setCategory] = useState("all");
+  const [keyword, setKeyword] = useState("");
+  const [editing, setEditing] = useState<EditTarget | null>(null);
 
-const toxPrices: PriceItem[] = [
-  { id: "t1", name: "SD 大鼠", category: "动物实验", price: "¥120", unit: "只", status: "published" },
-  { id: "t2", name: "Beagle 犬", category: "动物实验", price: "¥850", unit: "只", status: "published" },
-  { id: "t3", name: "仓鼠", category: "动物实验", price: "¥95", unit: "只", status: "published" },
-  { id: "t4", name: "动物饲养", category: "动物实验", price: "¥15", unit: "只/天", status: "published" },
-  { id: "t5", name: "血浆样品检测", category: "生物分析", price: "¥180", unit: "样品", status: "published" },
-  { id: "t6", name: "LC-MS/MS 方法开发", category: "生物分析", price: "¥6,000", unit: "项", status: "published" },
-  { id: "t7", name: "毒性终点分析", category: "生物分析", price: "¥12,000", unit: "项", status: "draft" },
-  { id: "t8", name: "中文报告", category: "报告交付", price: "¥3,000", unit: "份", status: "published" },
-  { id: "t9", name: "英文报告", category: "报告交付", price: "¥4,500", unit: "份", status: "published" },
-];
+  const visible = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          matchesScenario(item.appliesTo, filter) &&
+          (category === "all" || item.category === category) &&
+          (!keyword.trim() || item.name.includes(keyword.trim())),
+      ),
+    [category, filter, items, keyword],
+  );
 
-const scenarioPrices: Record<DetectionScenario, PriceItem[]> = {
-  pk: pkPrices,
-  "ba-only": baPrices,
-  tox: toxPrices,
-};
+  const exceptionCount = visible.reduce((total, item) => total + item.exceptions.length, 0);
 
-export default function PriceConfig({ scenario, onEdit }: { scenario: DetectionScenario; onEdit: () => void }) {
-  const prices = scenarioPrices[scenario] ?? pkPrices;
+  const saveMainValue = (id: string, price: string) => {
+    setItems((list) => list.map((item) => (item.id === id ? { ...item, price } : item)));
+  };
+
+  const saveException = (id: string, scenario: DetectionScenario, price: string, note: string) => {
+    setItems((list) =>
+      list.map((item) => {
+        if (item.id !== id) return item;
+        const rest = item.exceptions.filter((exception) => exception.scenario !== scenario);
+        return { ...item, exceptions: [...rest, { scenario, price, note: note || undefined }] };
+      }),
+    );
+  };
+
+  const removeException = (id: string, scenario: DetectionScenario) => {
+    setItems((list) =>
+      list.map((item) =>
+        item.id === id ? { ...item, exceptions: item.exceptions.filter((exception) => exception.scenario !== scenario) } : item,
+      ),
+    );
+  };
 
   return (
     <>
       <div className="quotationToolbar">
-        <label><Search size={15} /><input placeholder="搜索费用项目" /></label>
-        <select aria-label="费用分类">
-          <option>全部费用</option>
-          <option>动物实验</option>
-          <option>生物分析</option>
-          <option>报告交付</option>
+        <label>
+          <Search size={15} />
+          <input placeholder="搜索费用项目" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
+        </label>
+        <select aria-label="费用分类" value={category} onChange={(event) => setCategory(event.target.value)}>
+          <option value="all">全部费用</option>
+          {priceCategories.map((item) => (
+            <option key={item} value={item}>{item}</option>
+          ))}
         </select>
-        <span>{prices.length} 项价格</span>
+        <span>
+          {visible.length} 项价格
+          {exceptionCount ? <em className="quotationScopeCount"> · {exceptionCount} 条例外</em> : null}
+        </span>
       </div>
       <div className="quotationTable">
         <div className="quotationTableHead">
           <span>费用项目</span>
-          <span>分类</span>
+          <span>适用于</span>
           <span>标准单价</span>
           <span>单位</span>
           <span>状态</span>
         </div>
-        {prices.map((item, index) => (
-          <button type="button" key={item.id} onClick={index < 2 ? onEdit : undefined}>
-            <strong>{item.name}</strong>
-            <span>{item.category}</span>
-            <b>{item.price}</b>
-            <span>{item.unit}</span>
-            <em><i />{item.status === "published" ? "已发布" : "草稿"}</em>
-          </button>
+        {visible.map((item) => (
+          <ItemRows
+            key={item.id}
+            item={item}
+            filter={filter}
+            onEditMain={() => setEditing({ item, scenario: null })}
+            onEditException={(scenario) => setEditing({ item, scenario })}
+          />
         ))}
+        {visible.length === 0 ? <p className="quotationTableEmpty">没有符合条件的费用项目。</p> : null}
       </div>
+      {editing ? (
+        <PriceDrawer
+          item={items.find((item) => item.id === editing.item.id) ?? editing.item}
+          scenario={editing.scenario}
+          onSaveMain={(price) => { saveMainValue(editing.item.id, price); setEditing(null); }}
+          onSaveException={(scenario, price, note) => { saveException(editing.item.id, scenario, price, note); setEditing(null); }}
+          onRemoveException={(scenario) => { removeException(editing.item.id, scenario); setEditing(null); }}
+          onSwitchToException={(scenario) => setEditing({ item: editing.item, scenario })}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
     </>
+  );
+}
+
+function ItemRows({
+  item,
+  filter,
+  onEditMain,
+  onEditException,
+}: {
+  item: PriceItem;
+  filter: ScenarioFilter;
+  onEditMain: () => void;
+  onEditException: (scenario: DetectionScenario) => void;
+}) {
+  /* 筛到某一类时，只有那一类的例外值得占一行；筛「全部」时全都列出来 */
+  const exceptions = item.exceptions.filter((exception) => filter === "all" || exception.scenario === filter);
+
+  return (
+    <>
+      <button type="button" onClick={onEditMain}>
+        <strong>{item.name}</strong>
+        <ScopeTags item={item} filter={filter} />
+        <b>{item.price}</b>
+        <span>{item.unit}</span>
+        <em className={item.status === "draft" ? "isDraft" : ""}><i />{item.status === "published" ? "已发布" : "草稿"}</em>
+      </button>
+      {exceptions.map((exception) => (
+        <button className="isException" type="button" key={exception.scenario} onClick={() => onEditException(exception.scenario)}>
+          <strong>
+            <CornerDownRight size={14} />
+            {scenarioShortLabels[exception.scenario]} 例外
+            {exception.note ? <small>{exception.note}</small> : null}
+          </strong>
+          <span className="quotationScopeTags">
+            <i className="isActive">{scenarioShortLabels[exception.scenario]}</i>
+          </span>
+          <b>{exception.price}</b>
+          <span>{item.unit}</span>
+          <em className="isDraft"><i />草稿</em>
+        </button>
+      ))}
+    </>
+  );
+}
+
+function ScopeTags({ item, filter }: { item: PriceItem; filter: ScenarioFilter }) {
+  return (
+    <span className="quotationScopeTags">
+      {item.appliesTo.map((scenario) => (
+        <i
+          className={filter !== "all" && filter === scenario ? "isActive" : ""}
+          key={scenario}
+          /* 已经有例外的那一类单独标出来，否则主值那一行会显得「我管着它」，其实不管 */
+          data-overridden={item.exceptions.some((exception) => exception.scenario === scenario) ? "true" : undefined}
+        >
+          {scenarioShortLabels[scenario]}
+        </i>
+      ))}
+    </span>
   );
 }

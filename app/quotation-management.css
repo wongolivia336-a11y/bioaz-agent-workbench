@@ -37,3 +37,68 @@
 .quotationBreadcrumb button:hover{color:var(--ink)}
 .quotationBreadcrumb svg{color:var(--muted)}
 .quotationBreadcrumb strong{font-size:14px}
+
+
+/* ---- 适用范围标签：检测类型是属性，不是目录 ---- */
+.quotationScopeTags{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.quotationScopeTags i{border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--body);padding:2px 7px;font-size:11px;font-style:normal;line-height:1.5;white-space:nowrap}
+.quotationScopeTags i.isActive{border-color:var(--brand);background:var(--brand-soft,#eef1ff);color:var(--brand)}
+.quotationScopeTags i[data-overridden]{border-style:dashed;color:var(--amber);border-color:var(--amber)}
+.quotationScopeCount{color:var(--amber);font-style:normal}
+
+/* ---- 例外行：缩进一格，跟主值挂在一起而不是另起炉灶 ---- */
+.quotationTable>button.isException{background:var(--surface)}
+.quotationTable>button.isException:hover{background:#f3f3f8}
+.quotationTable>button.isException>strong{display:flex;align-items:center;gap:6px;padding-left:16px;color:var(--amber);font-size:13px}
+.quotationTable>button.isException>strong small{color:var(--muted);font-weight:400;font-size:11px}
+.quotationTable>button.isException b{color:var(--amber)}
+.quotationTable>button em.isDraft{color:var(--amber)}
+.quotationTableEmpty{border-top:1px solid var(--line);margin:0;padding:28px 16px;color:var(--muted);text-align:center;font-size:13px}
+
+/* ---- tab 栏右边的检测类型筛选器 ---- */
+.quotationScopeBar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.quotationScopeFilter{display:flex;align-items:center;gap:8px;color:var(--body);font-size:12px}
+.quotationScopeFilter select{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;color:var(--ink);font-size:13px}
+.quotationScopeFilter small{color:var(--muted);font-size:11px}
+
+/* ---- 抽屉里的作用域提示与例外入口 ---- */
+.quotationDrawerScope{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--amber);border-radius:10px;background:var(--amber-soft);padding:11px 12px;margin:0 0 4px;color:var(--amber);font-size:12px;line-height:1.6}
+.quotationDrawerScope svg{flex-shrink:0;margin-top:2px}
+.quotationDrawerScope strong{font-weight:600}
+.quotationDrawerScope.isException{flex-direction:column;gap:3px;border-color:var(--line);background:var(--surface);color:var(--body)}
+.quotationDrawerScope.isException>span{color:var(--muted);font-size:11px}
+.quotationDrawerScope.isException strong{color:var(--ink);font-size:15px}
+.quotationDrawerScope.isException small{color:var(--muted);font-size:11px}
+.quotationDrawerSecondary{width:100%;border:1px dashed var(--line);border-radius:10px;background:#fff;padding:10px;color:var(--body);cursor:pointer;font-size:13px}
+.quotationDrawerSecondary:hover{border-color:var(--brand);color:var(--brand)}
+.quotationDrawerDanger{border:0;background:none;margin-right:auto;padding:8px 0;color:var(--amber);cursor:pointer;font-size:13px}
+.quotationScopePicker{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:11px 12px}
+.quotationScopePicker>small{display:block;margin-bottom:8px;color:var(--muted);font-size:11px}
+.quotationScopePicker>div{display:flex;flex-wrap:wrap;gap:6px}
+.quotationScopePicker button{border:1px solid var(--line);border-radius:99px;background:#fff;padding:6px 12px;color:var(--ink);cursor:pointer;font-size:12px}
+.quotationScopePicker button:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ---- 报价字段：主值提示与逐属性的跟随/盖住 ---- */
+.quotationFieldScope{display:flex;align-items:flex-start;gap:7px;border-radius:9px;background:var(--amber-soft);padding:10px 12px;margin:0 0 14px;color:var(--amber);font-size:12px;line-height:1.6}
+.quotationFieldScope svg{flex-shrink:0;margin-top:2px}
+.quotationFieldScope.isException{background:var(--surface);color:var(--body)}
+.quotationOverrideList{display:flex;flex-direction:column;gap:9px}
+.quotationOverrideRow{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.quotationOverrideRow.isOverridden{border-color:var(--amber);background:var(--amber-soft)}
+.quotationOverrideRow header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.quotationOverrideRow header strong{font-size:13px}
+.quotationOverrideRow header button{border:1px solid var(--line);border-radius:99px;background:#fff;padding:3px 10px;color:var(--body);cursor:pointer;font-size:11px}
+.quotationOverrideRow header button:hover{border-color:var(--brand);color:var(--brand)}
+.quotationOverrideRow p{display:flex;flex-wrap:wrap;gap:6px;margin:0;color:var(--ink);font-size:12px;line-height:1.6}
+.quotationOverrideRow p span{color:var(--muted);font-size:11px}
+.quotationOverrideBase{color:var(--body)!important}
+.quotationOverrideValue{color:var(--amber)!important;font-weight:500}
+.quotationOverrideNote{margin:12px 0 0;color:var(--muted);font-size:11px}
+
+/* 字段行多了一列「适用于」，网格跟着从三列变四列 */
+.quotationParameterBuilder>section>button{grid-template-columns:20px minmax(0,1fr) auto auto;gap:10px}
+.quotationParameterBuilder>section>button>span.quotationScopeTags{display:flex;align-self:center;gap:4px}
+.quotationParameterBuilder>section>button.isException{border-color:var(--amber);background:var(--amber-soft);margin-left:18px}
+.quotationParameterBuilder>section>button.isException>span>strong{color:var(--amber);font-size:13px}
+.quotationParameterBuilder>section>button.isException>svg{color:var(--amber);align-self:center}
+.quotationParameterBuilder>section>button.isException em{background:#fff}

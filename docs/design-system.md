@@ -47,6 +47,24 @@ modules/                 ← 业务模块
 
 `--bioaz-status-*` 与 `--bioaz-success/warning/danger` 是**两组不同的东西**：后者是低饱和的语义文字色，前者是 chip 的底色/前景对，对比度按 chip 尺寸单独调过。不要混用。
 
+### 图标
+
+尺寸只有五档，写在 `size` 属性里，**不要用 CSS 改 `svg { width }`**：
+
+| 尺寸 | 用在哪 |
+|---|---|
+| `12` | 内联标记、tab 叉号、状态点 |
+| `14` | **默认**——按钮、列表项、菜单项 |
+| `16` | 区块标题、主操作、卡片图标 |
+| `20` | 空状态、头像位 |
+| `24` | 预览大图、数字同事头像 |
+
+例外只有一种：**同一个组件在不同容器里要不同尺寸**（如 `.assistantSuggestions` 的图标在 library 里 24px、在 ambient 里 14px）。这种才允许写 CSS，且取值必须落在上表里。
+
+描边统一由 `--icon-stroke`（默认 `1.75`）控制，`styles/design-system.css` 里一条 `.lucide { stroke-width: var(--icon-stroke) }` 全局生效。**不要在 JSX 里写 `strokeWidth`——写了也不生效**，CSS 属性会盖过 lucide 的 presentation attribute。需要加重或减轻的地方，在那个元素自己的 CSS 规则里覆写 `--icon-stroke`。
+
+图标名用 lucide 的**规范名**，不要用旧别名：`CircleHelp` 不是 `HelpCircle`，`TriangleAlert` 不是 `AlertTriangle`，`Ellipsis` 不是 `MoreHorizontal`。别名和规范名混用会让同一个字形在代码里有两个名字，grep 不到。
+
 ### 其他
 
 圆角 `--bioaz-radius-tool` 8px（工具/chip）、`-control` 12px（按钮/输入）、`-container` 16px（卡片）、`-full`。

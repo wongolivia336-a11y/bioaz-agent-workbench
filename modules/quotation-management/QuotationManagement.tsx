@@ -1,21 +1,20 @@
 "use client";
 
 import { ArrowLeft, ChevronRight, ChevronUp, LogOut, Settings, Settings2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavTabs } from "../../components/ui";
 import BusinessPicker from "./components/BusinessPicker";
 import DmpkRuleAssistant from "./components/DmpkRuleAssistant";
 import ManagementDialog from "./components/ManagementDialog";
-import PriceDrawer from "./components/PriceDrawer";
-import ScenarioSelector from "./components/ScenarioSelector";
-import type { DetectionScenario } from "./components/ScenarioSelector";
 import FieldConfig from "./dmpk/FieldConfig";
 import PriceConfig from "./dmpk/PriceConfig";
 import RuleConfig from "./dmpk/RuleConfig";
 import TemplateConfig from "./dmpk/TemplateConfig";
+import { detectionScenarios, type DetectionScenario } from "./dmpk/catalog";
 
-type DmpkTab = "prices" | "rules" | "parameters" | "templates";
+export type DmpkTab = "prices" | "rules" | "parameters" | "templates";
 type ManagementDialogType = "import" | "new-price" | "parameter-preview" | "new-parameter" | "upload-template" | "view-template" | null;
+type ScenarioFilter = DetectionScenario | "all";
 
 const tabs: Array<{ id: DmpkTab; label: string }> = [
   { id: "prices", label: "标准价格" },
@@ -24,22 +23,43 @@ const tabs: Array<{ id: DmpkTab; label: string }> = [
   { id: "templates", label: "报价模板" },
 ];
 
-const scenarioLabels: Record<DetectionScenario, string> = {
-  pk: "PK 检测",
-  "ba-only": "BA Only 检测",
-  tox: "TOX 检测",
+/* 价格和字段是列表，可以「全部罗列」；计价规则是一张画布、报价模板每份只属于一类，
+   这两个 tab 上「全部」没有意义，筛选器收敛成必须选一类。 */
+const listTabs: DmpkTab[] = ["prices", "parameters"];
+
+const tabDescriptions: Record<DmpkTab, string> = {
+  prices: "同一个费用项只存一份，检测类型是它的适用范围，不是它的归属。",
+  rules: "管理不同检测条件下，费用如何计算。",
+  parameters: "配置报价任务需要确认的信息与常用选项。",
+  templates: "管理客户最终收到的 Excel 与 Word 版式。",
 };
 
-export function QuotationManagement({ onBack }: { onBack: () => void }) {
-  const [business, setBusiness] = useState<"root" | "dmpk">(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("business") === "dmpk" ? "dmpk" : "root");
-  const [scenario, setScenario] = useState<DetectionScenario | null>(null);
-  const [tab, setTab] = useState<DmpkTab>(() => { const value = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null; return tabs.some((item) => item.id === value) ? value as DmpkTab : "prices"; });
-  const [editingPrice, setEditingPrice] = useState(false);
+export function QuotationManagement({
+  onBack,
+  initialBusiness,
+  initialTab,
+  initialDraft,
+}: {
+  onBack: () => void;
+  initialBusiness?: "root" | "dmpk";
+  initialTab?: DmpkTab;
+  initialDraft?: string | null;
+}) {
+  const [business, setBusiness] = useState<"root" | "dmpk">(initialBusiness ?? "root");
+  const [tab, setTab] = useState<DmpkTab>(initialTab ?? "prices");
+  const [scenarioFilter, setScenarioFilter] = useState<ScenarioFilter>("all");
   const [dialog, setDialog] = useState<ManagementDialogType>(null);
-  const [activeField, setActiveField] = useState(0);
-  const [activeParameterGroup, setActiveParameterGroup] = useState("animal");
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-  const [ruleDraft, setRuleDraft] = useState<string | null>(null);
+  const [ruleDraft, setRuleDraft] = useState<string | null>(initialDraft ?? null);
+
+  const allowsAll = listTabs.includes(tab);
+  /* 画布类 tab 一次只能看一类，落到具体那一类上，不留「全部」这个假状态 */
+  useEffect(() => {
+    if (!allowsAll && scenarioFilter === "all") setScenarioFilter("pk");
+  }, [allowsAll, scenarioFilter]);
+
+  const activeScenario: DetectionScenario = scenarioFilter === "all" ? "pk" : scenarioFilter;
+  const currentTab = tabs.find((item) => item.id === tab);
 
   return (
     <main className="quotationManagementShell">
@@ -63,6 +83,7 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
           ) : null}
         </div>
       </aside>
+
       <section className="quotationManagementMain">
         <header className="quotationManagementTopbar topbar">
           <div className="breadcrumb quotationBreadcrumb">
@@ -70,35 +91,26 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
               <strong>报价规则</strong>
             ) : (
               <>
-                <button type="button" onClick={() => { setBusiness("root"); setScenario(null); }}>报价规则</button>
+                <button type="button" onClick={() => setBusiness("root")}>报价规则</button>
                 <ChevronRight size={15} />
-                {scenario ? (
-                  <>
-                    <button type="button" onClick={() => setScenario(null)}>DMPK 报价</button>
-                    <ChevronRight size={15} />
-                    <button type="button" onClick={() => setScenario(null)}>{scenarioLabels[scenario]}</button>
-                    <ChevronRight size={15} />
-                    <strong>{tabs.find((item) => item.id === tab)?.label}</strong>
-                  </>
-                ) : (
-                  <strong>DMPK 报价</strong>
-                )}
+                <button type="button" onClick={() => setTab("prices")}>DMPK 报价</button>
+                <ChevronRight size={15} />
+                <strong>{currentTab?.label}</strong>
               </>
             )}
           </div>
           <span className="quotationTopbarStatus">{business === "root" ? "管理员模式" : "草稿 2"}</span>
         </header>
+
         {business === "root" ? (
           <BusinessPicker onOpenDmpk={() => setBusiness("dmpk")} />
-        ) : !scenario ? (
-          <ScenarioSelector onSelect={(selected) => { setScenario(selected); setTab("prices"); }} />
         ) : (
           <section className="quotationManagementPage">
             <header className="quotationPageHeader">
               <div>
-                <span>{scenarioLabels[scenario].toUpperCase()}</span>
-                <h1>{tabs.find((item) => item.id === tab)?.label}</h1>
-                <p>{tab === "prices" ? "当前发布版本 v1.0.13" : tab === "rules" ? "管理不同检测条件下，费用如何计算。" : tab === "parameters" ? "配置报价任务需要确认的信息与常用选项。" : "管理客户最终收到的 Excel 与 Word 版式。"}</p>
+                <span>DMPK QUOTATION</span>
+                <h1>{currentTab?.label}</h1>
+                <p>{tab === "prices" ? `当前发布版本 v1.0.13 · ${tabDescriptions.prices}` : tabDescriptions[tab]}</p>
               </div>
               {tab === "prices" ? (
                 <div>
@@ -111,35 +123,46 @@ export function QuotationManagement({ onBack }: { onBack: () => void }) {
                 <button className="primary" type="button" onClick={() => setDialog("upload-template")}>上传新模板</button>
               ) : null}
             </header>
-            <NavTabs items={tabs} value={tab} onChange={setTab} label="报价后台" />
+
+            <div className="quotationScopeBar">
+              <NavTabs items={tabs} value={tab} onChange={setTab} label="报价后台" />
+              <label className="quotationScopeFilter">
+                <span>检测类型</span>
+                <select
+                  value={scenarioFilter}
+                  onChange={(event) => setScenarioFilter(event.target.value as ScenarioFilter)}
+                  aria-label="按检测类型筛选"
+                >
+                  <option value="all" disabled={!allowsAll}>全部</option>
+                  {detectionScenarios.map((scenario) => (
+                    <option key={scenario.id} value={scenario.id}>{scenario.label}</option>
+                  ))}
+                </select>
+                {allowsAll ? null : <small>此页一次只能看一类</small>}
+              </label>
+            </div>
+
             {tab === "prices" ? (
-              <PriceConfig scenario={scenario} onEdit={() => setEditingPrice(true)} />
+              <PriceConfig filter={scenarioFilter} />
             ) : tab === "rules" ? (
-              <RuleConfig scenario={scenario} draftRequest={ruleDraft} />
+              <RuleConfig scenario={activeScenario} draftRequest={ruleDraft} />
             ) : tab === "parameters" ? (
-              <FieldConfig
-                scenario={scenario}
-                activeGroup={activeParameterGroup}
-                onActiveGroupChange={(group) => { setActiveParameterGroup(group); setActiveField(0); }}
-                activeField={activeField}
-                onActiveFieldChange={setActiveField}
-                onAdd={() => setDialog("new-parameter")}
-              />
+              <FieldConfig filter={scenarioFilter} onAdd={() => setDialog("new-parameter")} />
             ) : (
-              <TemplateConfig scenario={scenario} onView={() => setDialog("view-template")} />
+              <TemplateConfig scenario={activeScenario} onView={() => setDialog("view-template")} />
             )}
           </section>
         )}
       </section>
-      {business === "dmpk" && scenario ? (
+
+      {business === "dmpk" ? (
         <DmpkRuleAssistant
-          scenario={scenario}
+          scenario={activeScenario}
           activeTab={tab}
           onTabChange={setTab}
           onRuleDraft={(draft) => { setRuleDraft(draft); setTab("rules"); }}
         />
       ) : null}
-      {editingPrice ? <PriceDrawer onClose={() => setEditingPrice(false)} /> : null}
       {dialog ? <ManagementDialog dialog={dialog} onClose={() => setDialog(null)} /> : null}
     </main>
   );
