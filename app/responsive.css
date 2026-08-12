@@ -21,6 +21,41 @@
   }
 }
 
+/* ===================================================================
+   1024–1199：模块会话壳的两处塌陷
+   -------------------------------------------------------------------
+   ① 断点表里这一段只写了「侧栏收起」那一态（review.css 的 900–1199 段），
+      展开态没有规则，于是掉回 .dmpkShell 的三列老布局，凭空多出一列
+      400px 留给旧版 .dmpkPanel —— 而模块会话壳里根本没有那个元素。
+   ② 同一段里面板已经变成 position:fixed 的浮层，但 workspace 仍然按
+      grid-template-columns: 1fr var(--panel-width) 给它留着一整列，
+      composer 也还在 right: var(--panel-width)。同一块空间被订了两次。
+
+   两笔叠加：458px 的工作区先被扣掉 400px，对话列只剩 56px，文字就成了
+   一列一个字往下掉。
+   =================================================================== */
+@media (max-width: 1199px) {
+  .dmpkShell.moduleSessionShell {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .dmpkShell.moduleSessionShell.sidebarCollapsed {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  /* 面板浮起来之后，工作区收回那一列 */
+  :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell)
+    > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell)
+    > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen)
+    > :is(.dmpkComposerWrap, .legacyComposerStack) {
+    right: 0;
+  }
+}
+
 @media (max-width: 1023px) {
   .dmpkShell.workbenchShell,
   .dmpkShell.workbenchShell.sidebarCollapsed,

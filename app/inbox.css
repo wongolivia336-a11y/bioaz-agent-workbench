@@ -18,10 +18,12 @@
   line-height: var(--bioaz-type-small-line);
 }
 
+/* 索引列先让位。窄屏下它曾经比右边的决策卡还宽——左边只回答「什么事找我」，
+   右边才是要读要动手的地方，两者抢宽度时该缩的是左边。 */
 .inboxBody {
   display: grid;
   min-height: 0;
-  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
   gap: 20px;
 }
 
