@@ -1,7 +1,8 @@
 "use client";
 
-import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileSearch, FileText, Folder, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
+import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileSearch, FileText, Folder, Inbox, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { inboxAccounts, type InboxAccount } from "../../lib/workbench/mockInbox";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, PinItem } from "../../lib/workbench/shellTypes";
 import type { WorkbenchProject, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
@@ -21,6 +22,9 @@ type Props = {
   libraryFolders: LibraryFolder[];
   activeLibraryFolderId: string | null;
   highlightedProjectId: string | null;
+  account: InboxAccount;
+  inboxCount: number;
+  onAccountChange: (accountId: string) => void;
   onOpenLibraryFolder: (project: string, folderId: string | null) => void;
   onCreateProject: (name: string) => WorkbenchProject | null;
   onRenameProject: (projectId: string, name: string) => void;
@@ -113,6 +117,12 @@ export function WorkspaceSidebar(props: Props) {
       </div>
 
       <nav className="navBlock workspaceViews" aria-label="工作区">
+        {/* 收件箱排在第一位：它是「今天要干什么」的入口，不是「可以不看」的通知，
+            所以不做右上角铃铛。徽标数是未处理数，不是未读数。 */}
+        <button className={`workspaceViewRow inboxViewRow ${props.activeRoute === "inbox" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("inbox")}>
+          <Inbox size={14} /><span>收件箱</span>
+          {props.inboxCount ? <i className="inboxBadge">{props.inboxCount}</i> : null}
+        </button>
         <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>项目中枢</span></button>
         <button className={`workspaceViewRow ${props.activeRoute === "knowledgeBase" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("knowledgeBase")}><FileSearch size={14} /><span>知识库</span></button>
         <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
@@ -184,13 +194,22 @@ export function WorkspaceSidebar(props: Props) {
 
       <div ref={accountRef} className={`account accountMenuTrigger ${accountMenuOpen ? "menuOpen" : ""}`}>
         <button type="button" onClick={() => setAccountMenuOpen((value) => !value)} aria-expanded={accountMenuOpen}>
-          <span className="avatar">A</span>
-          <span><strong>Admin</strong><small>admin@example.com</small></span>
+          <span className="avatar">{props.account.name.slice(0, 1)}</span>
+          <span><strong>{props.account.name}</strong><small>{props.account.roleLabel} · {props.account.email}</small></span>
           <ChevronUp size={14} />
         </button>
         {accountMenuOpen ? (
           <div className="accountMenu">
-            <div><span className="avatar">A</span><span><strong>Admin</strong><small>admin@example.com</small></span></div>
+            <div><span className="avatar">{props.account.name.slice(0, 1)}</span><span><strong>{props.account.name}</strong><small>{props.account.roleLabel} · {props.account.email}</small></span></div>
+            {/* 角色权限本应由登录账号决定，原型里给一个切换器把三个岗位的队列都演示出来 */}
+            <p className="accountMenuLabel">切换账号（演示）</p>
+            {inboxAccounts.map((item) => (
+              <button className={`accountSwitchRow ${item.id === props.account.id ? "isCurrent" : ""}`} type="button" key={item.id} onClick={() => { props.onAccountChange(item.id); setAccountMenuOpen(false); }}>
+                <span className="avatar">{item.name.slice(0, 1)}</span>
+                <span><strong>{item.name}</strong><small>{item.roleLabel}</small></span>
+                {item.id === props.account.id ? <Check size={14} /> : null}
+              </button>
+            ))}
             <button type="button"><Settings size={14} />账户设置</button>
             <button className="quotationManagementEntry" type="button" onClick={() => { setAccountMenuOpen(false); props.onOpenQuotationManagement(); }}><BadgeDollarSign size={14} />报价管理</button>
             <button type="button"><LogOut size={14} />退出登录</button>

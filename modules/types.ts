@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
-export type WorkbenchRoute = "newTask" | "tasks" | "library" | "knowledgeBase" | "module" | "digitalTeam";
+export type WorkbenchRoute = "newTask" | "tasks" | "library" | "knowledgeBase" | "module" | "digitalTeam" | "inbox";
 
 export type WorkbenchProject = {
   id: string;
@@ -103,6 +103,9 @@ export type AgentModuleSessionProps = {
   /* 去报价后台走应用内跳转，不走 window.location——整页刷新会把当前这单报价冲掉，
      草稿也会卡在「读参数」和「抹参数」的竞态里。 */
   onOpenQuotationManagement?: (options?: QuotationManagementTarget) => void;
+  /* 当前登录账号的岗位。QA 审核用它决定谁能落笔——撰写人端与审批人端是
+     同一个 Session 的两种渲染，不是两个页面。其余 module 忽略即可。 */
+  viewerRole?: "author" | "approver" | "owner";
 };
 
 export type QuotationManagementTarget = {

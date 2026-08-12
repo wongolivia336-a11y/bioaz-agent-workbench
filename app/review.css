@@ -6174,6 +6174,9 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: center;
   margin: 0 6px 0 0;
   border: 0;
+  /* 按钮的 UA 默认 padding 是 1px 6px，18px 的盒子里只剩 6px 内容宽，
+     12px 的叉号顶到右边缘，于是图标和圆形 hover 底不同心。必须归零。 */
+  padding: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--bioaz-text-tertiary);

@@ -1,0 +1,479 @@
+/* ===================================================================
+   收件箱
+   -------------------------------------------------------------------
+   左「索引」右「原件摘要」，不是聊天双栏。左列只回答"什么事找我"，
+   右列给出决策所需的全部事实与可做的动作。
+   =================================================================== */
+
+.inboxPage {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  padding: 24px 32px 28px;
+}
+
+.inboxLaneTabs {
+  justify-content: flex-start;
+}
+
+.inboxFilters {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.inboxLaneHint {
+  margin: 10px 0 16px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-small-size);
+  line-height: var(--bioaz-type-small-line);
+}
+
+.inboxBody {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: 20px;
+}
+
+/* ---- 左列：索引 ---- */
+
+.inboxList {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.inboxRow {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-control);
+  background: transparent;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--bioaz-motion-fast) var(--bioaz-ease-standard), border-color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+
+.inboxRow:hover { background: var(--bioaz-surface-hover); }
+
+.inboxRow.isActive {
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+}
+
+/* 只有「动态」栏会褪色。待办栏永远不褪——看过不等于处理完。 */
+.inboxRow.isRead:not(.isActive) { opacity: 0.55; }
+
+.inboxRowAvatar {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-secondary);
+}
+
+.inboxRowAvatar.isAgent {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+.inboxRowMain {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.inboxRowTop {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.inboxRowTop strong {
+  overflow: hidden;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inboxRowMeta {
+  overflow: hidden;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inboxRowSide {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.inboxRowSide small {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  white-space: nowrap;
+}
+
+.inboxRowPriority {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-status-danger-soft);
+  padding: 1px 6px;
+  color: var(--bioaz-status-danger);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ---- 右列：决策摘要卡 ---- */
+
+.inboxDetail {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.inboxCard {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  padding: 20px 22px;
+  box-shadow: var(--bioaz-shadow-subtle);
+}
+
+.inboxCardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inboxCardTitle {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--bioaz-text-secondary);
+}
+
+.inboxCardTitle > div { display: grid; min-width: 0; gap: 2px; }
+
+.inboxCardTitle strong {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-section-size);
+  line-height: var(--bioaz-type-section-line);
+}
+
+.inboxCardTitle small {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.inboxCardChips {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 流转方向：谁 → 你的哪个岗位。岗位收件必须写清楚，否则看不出为什么是我收到 */
+.inboxCardFlow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bioaz-text-tertiary);
+}
+
+.inboxCardFlow > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 4px 10px;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 600;
+}
+
+.inboxCardFlow > span em {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.inboxCardFlow > span.isAgent { background: var(--bioaz-agent-accent-soft); }
+
+.inboxCardFlow > span.isMe {
+  background: var(--bioaz-action-primary);
+  color: #fff;
+}
+
+.inboxCardFlow > span.isMe em { color: rgba(255, 255, 255, 0.66); }
+
+.inboxCardSummary {
+  margin: 0;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-body-size);
+  line-height: var(--bioaz-type-body-line);
+}
+
+.inboxCardFindings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inboxFinding {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  padding: 4px 10px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.inboxFinding b {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+  padding: 0 6px;
+  color: var(--bioaz-text-primary);
+}
+
+.inboxFinding.tone-danger { border-color: #f0d9d9; background: var(--bioaz-status-danger-soft); color: var(--bioaz-status-danger); }
+.inboxFinding.tone-danger b { background: rgba(153, 27, 27, 0.12); color: var(--bioaz-status-danger); }
+.inboxFinding.tone-warning { border-color: #f0e2c4; background: var(--bioaz-status-warning-soft); color: var(--bioaz-status-warning); }
+.inboxFinding.tone-warning b { background: rgba(146, 64, 14, 0.12); color: var(--bioaz-status-warning); }
+.inboxFinding.tone-info { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+.inboxFinding.tone-info b { background: rgba(92, 96, 184, 0.12); color: var(--bioaz-agent-accent); }
+
+.inboxCardClaim {
+  margin: 0;
+  border-left: 2px solid var(--bioaz-status-warning);
+  background: var(--bioaz-status-warning-soft);
+  padding: 8px 12px;
+  color: var(--bioaz-status-warning);
+  font-size: var(--bioaz-type-small-size);
+}
+
+.inboxCardMeta {
+  display: grid;
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px 20px;
+  border-top: 1px solid var(--bioaz-border);
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 14px 0;
+}
+
+.inboxCardMeta > div { display: grid; min-width: 0; gap: 3px; }
+
+.inboxCardMeta dt {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.inboxCardMeta dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inboxCardTimeline h4 {
+  margin: 0 0 10px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  font-weight: 600;
+}
+
+.inboxCardTimeline ol {
+  display: grid;
+  margin: 0;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.inboxCardTimeline li {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.inboxTimelineDot {
+  width: 7px;
+  height: 7px;
+  margin: 6px 0 0 3px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-border-strong);
+}
+
+.inboxTimelineDot.isAgent { background: var(--bioaz-agent-accent); }
+
+.inboxCardTimeline li strong {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+}
+
+.inboxCardTimeline li small {
+  margin-left: 8px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.inboxCardTimeline li p {
+  margin: 2px 0 0;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+}
+
+.inboxRejectDraft {
+  display: grid;
+  gap: 6px;
+}
+
+.inboxRejectDraft label {
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.inboxRejectDraft textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 10px 12px;
+  color: var(--bioaz-text-primary);
+  font-family: inherit;
+  font-size: var(--bioaz-type-small-size);
+  line-height: var(--bioaz-type-small-line);
+}
+
+.inboxRejectDraft textarea:focus-visible {
+  outline: 0;
+  border-color: var(--bioaz-agent-accent);
+  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
+}
+
+.inboxCardActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 16px;
+}
+
+.inboxCardActionsRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===================================================================
+   侧栏入口与账号切换器
+   =================================================================== */
+
+.inboxViewRow { position: relative; }
+
+.inboxBadge {
+  min-width: 18px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-action-primary);
+  padding: 0 5px;
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* 收起态没有横向空间放数字，退化成一个角标圆点 */
+.dmpkShell.sidebarCollapsed .inboxBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 8px;
+  height: 8px;
+  padding: 0;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+}
+
+.accountMenuLabel {
+  margin: 2px 0 4px;
+  padding: 0 10px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.accountMenu > button.accountSwitchRow {
+  display: grid;
+  height: auto;
+  grid-template-columns: 26px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+}
+
+.accountMenu > button.accountSwitchRow > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+}
+
+.accountMenu > button.accountSwitchRow .avatar {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.accountMenu > button.accountSwitchRow strong { font-size: 13px; }
+
+.accountMenu > button.accountSwitchRow small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.accountMenu > button.accountSwitchRow.isCurrent { background: var(--bioaz-surface-hover); }
+
+@media (max-width: 900px) {
+  .inboxPage { padding: 18px 16px 24px; }
+  .inboxBody { grid-template-columns: minmax(0, 1fr); }
+  .inboxList { max-height: 320px; }
+}
