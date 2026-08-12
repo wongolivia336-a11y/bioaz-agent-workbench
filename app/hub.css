@@ -70,6 +70,15 @@
   font-weight: 600;
 }
 
+.hubScopeCreate {
+  margin-top: 4px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 8px;
+  color: var(--bioaz-text-secondary);
+}
+
+.hubScopeCreate:hover { color: var(--bioaz-text-primary); }
+
 /* 动态栏的「只看与我有关」——收件箱那条动态栏合并进来之后的落点 */
 .activityMineToggle {
   flex: none;
@@ -141,6 +150,8 @@
 
 /* ---- 解析状态：只在偏离预期时出声 ---- */
 
+/* white-space 不能少：文件名那格是 flex，标签被挤到没宽度时中文会一个字
+   一行竖着排下去，把整行撑高。 */
 .fileParseChip {
   display: inline-flex;
   flex: none;
@@ -152,6 +163,7 @@
   font-size: 10px;
   font-style: normal;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .fileParseChip.isParsing {
@@ -166,12 +178,47 @@
   color: var(--bioaz-status-danger);
 }
 
-.fileParseChip.isFailed i {
+.fileParseChip.isFailed button {
+  border: 0;
   border-bottom: 1px solid currentColor;
-  font-style: normal;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: pointer;
 }
 
+/* 文件名那一格本身也是网格，标签作为兄弟节点进去会独占一整行被拉到满宽。
+   有标签时改成一行 flex：文件名吃掉剩余宽度，标签贴在它右边。 */
+.knowledgeFileCell:has(> .fileParseChip) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.knowledgeFileCell:has(> .fileParseChip) > .knowledgeFileMain {
+  min-width: 0;
+  flex: 1;
+}
+
+.knowledgeFileCell > .fileParseChip { flex: none; }
+
 @keyframes hubSpin { to { transform: rotate(360deg); } }
+
+/* 跨项目视角多一列「所属」。原来靠一条项目卡片带回答这件事，那条带子
+   跟顶栏的筛选器是同一个动作的两个入口，删掉之后由这一列接手。 */
+.knowledgeTable.hasOwnerScope .knowledgeTableHeader,
+.knowledgeTable.hasOwnerScope .knowledgeFileRow {
+  grid-template-columns: minmax(220px, 1.4fr) minmax(120px, 0.8fr) minmax(120px, 0.8fr) 110px 84px 32px;
+}
+
+.knowledgeScopeCell {
+  overflow: hidden;
+  color: var(--bioaz-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .fileParseChip.isParsing svg { animation: none; }

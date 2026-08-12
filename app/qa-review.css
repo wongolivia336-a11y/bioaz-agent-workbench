@@ -14,6 +14,19 @@
 
 .qaReviewWorkspace > .topbar { grid-column: 1 / -1; }
 
+/* 面板那一列原来是 auto，于是它按内容宽度撑到 696px，把原件挤成 200px，
+   顶栏又横跨两列，两边直接叠在一起。给它跟 DMPK 会话同一套：定宽一列，
+   其余内容全部锁在第一列。1023 以下面板是浮层，不参与布局，这里不管。 */
+@media (min-width: 1024px) {
+  .qaReviewWorkspace:has(.workbenchPanel.isOpen) {
+    grid-template-columns: minmax(0, 1fr) var(--panel-width, 400px);
+  }
+
+  .qaReviewWorkspace:has(.workbenchPanel.isOpen) > :not(.workbenchPanel) {
+    grid-column: 1;
+  }
+}
+
 .qaRoleBadge {
   margin-left: 8px;
   border-radius: var(--bioaz-radius-full);
@@ -45,10 +58,13 @@
 
 /* ---- 原件视图 ---- */
 
+/* 列必须显式写死一列。不写的话隐式列是 auto，会按内容的 max-content 撑开——
+   而内容里那张纸是定宽的，于是整个 viewer 的子元素比 viewer 本身还宽。 */
 .qaViewer {
   display: grid;
   min-width: 0;
   min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
 }
 
@@ -118,6 +134,7 @@
 
 .qaViewerStage {
   display: grid;
+  min-width: 0;
   min-height: 0;
   grid-template-columns: 84px minmax(0, 1fr);
   background: var(--bioaz-canvas);
@@ -166,10 +183,16 @@
 
 .qaThumb.isActive small { color: var(--bioaz-text-primary); font-weight: 600; }
 
+/* min-width: 0 是必须的：网格项的最小宽度默认是 min-content，而页面那张纸
+   是定宽的（跟着缩放走），没有这一行它会把整列撑宽、顶到面板底下去，
+   overflow: auto 也就永远不会触发。 */
 .qaPageScroll {
   display: flex;
+  min-width: 0;
   min-height: 0;
-  justify-content: center;
+  /* safe：纸比容器窄时居中，宽时退回左对齐。普通 center 在溢出时会把
+     左半边推出可滚动区域，那部分永远够不着。 */
+  justify-content: safe center;
   overflow: auto;
   padding: 24px;
 }

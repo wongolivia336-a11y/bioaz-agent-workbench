@@ -6,17 +6,38 @@
    改成「收起=一行 + 报总数」「展开=向上膨胀并按组铺开」。
    =================================================================== */
 
+/* 收起态就一行：chips 占满，计数贴在行尾。原来切换按钮自己独占一行、
+   那一行几乎全是空的——composer 白白高出一截，左边的「+」和右边的发送键
+   也跟着飘到中间去，跟输入框不在一条线上。 */
 .composerChipTray {
-  display: grid;
+  display: flex;
   min-width: 0;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   padding: 0 2px 7px;
+}
+
+.composerChipTray.isExpanded {
+  display: grid;
+  gap: 6px;
 }
 
 .composerChipTrayHead {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* 参数托盘会把 composer 撑高。这时左边的「+」不能再相对整个盒子居中——
+   它会飘到 chips 中间去，跟右边的发送键错开一截。带附件区的输入框都是
+   同一个规矩：上面的区域可以长高，下面那排按钮永远跟输入框一条线。 */
+.dmpkComposer:has(.composerChipTray) {
+  align-items: end;
+}
+
+.dmpkComposer:has(.composerChipTray) .composerAttachMenu,
+.dmpkComposer:has(.composerChipTray) .sendIconButton {
+  align-self: end;
 }
 
 .composerChipCount {
@@ -26,20 +47,29 @@
 
 .composerChipToggle {
   display: inline-flex;
+  flex: none;
   margin-left: auto;
   align-items: center;
-  gap: 4px;
-  border: 0;
-  border-radius: var(--bioaz-radius-tool);
-  background: transparent;
-  padding: 2px 4px;
+  gap: 3px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 0 8px;
   color: var(--bioaz-text-tertiary);
   font-size: var(--bioaz-type-label-size);
+  line-height: 26px;
   white-space: nowrap;
   cursor: pointer;
 }
 
-.composerChipToggle:hover { color: var(--bioaz-text-primary); }
+.composerChipToggle:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+/* 展开态那颗回到文字链形态：它此刻是「收起」，不该再长得像一个 chip */
+.composerChipTray.isExpanded .composerChipToggle {
+  border-color: transparent;
+  background: transparent;
+  padding: 2px 4px;
+}
 
 .composerChipToggle svg { transition: transform var(--bioaz-motion-fast) var(--bioaz-ease-standard); }
 .composerChipToggle svg.isOpen { transform: rotate(180deg); }
@@ -48,7 +78,9 @@
    不去算"能放几个"——chip 宽度差得远，写死个数总会在某个组合下露馅；
    裁剪交给 CSS，按钮上报的是总数，就不需要知道露出了几个。 */
 .composerChipStrip {
-  max-height: 34px;
+  min-width: 0;
+  flex: 1;
+  max-height: 28px;
   overflow: hidden;
   /* 右边缘渐隐：明确告诉人"这行还没完"，而不是让 chip 硬生生断在半路 */
   mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%);

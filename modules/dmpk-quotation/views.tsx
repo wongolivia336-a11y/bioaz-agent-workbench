@@ -232,33 +232,45 @@ function ComposerChipTray({ tabs, onRemove }: { tabs: DmpkDraftTab[]; onRemove: 
     </button>
   );
 
-  return (
-    <div className={`composerChipTray ${expanded ? "isExpanded" : ""}`}>
-      <div className="composerChipTrayHead">
-        {expanded ? <span className="composerChipCount">已选 {tabs.length} 项参数</span> : null}
-        <button className="composerChipToggle" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
-          {expanded ? <>收起<ChevronDown size={12} className="isOpen" /></> : <>查看全部 {tabs.length} 项<ChevronDown size={12} /></>}
-        </button>
-      </div>
+  const toggle = (
+    <button className="composerChipToggle" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+      {/* 报的是总数不是隐藏数——没测量就不知道露出了几个，写「+4」会骗人。
+          「4 项 ˅」在任何数量下都成立：已选这么多，点开看全部。 */}
+      {expanded ? <>收起<ChevronDown size={12} className="isOpen" /></> : <>{tabs.length} 项<ChevronDown size={12} /></>}
+    </button>
+  );
 
-      {expanded ? (
-        <div className="composerChipGroups">
-          {grouped.map((entry) => (
-            <section key={entry.group.id}>
-              <h5>{entry.group.title}<i>{entry.items.length}</i></h5>
-              <div className="draftTabs">{entry.items.map(chip)}</div>
-            </section>
-          ))}
-          {ungrouped.length ? (
-            <section>
-              <h5>其他<i>{ungrouped.length}</i></h5>
-              <div className="draftTabs">{ungrouped.map(chip)}</div>
-            </section>
-          ) : null}
-        </div>
-      ) : (
+  if (!expanded) {
+    // 收起态就一行：chips 裁到头渐隐，计数紧跟在断口后面——
+    // 内容在哪儿断的，「还有更多」就出现在哪儿。
+    return (
+      <div className="composerChipTray">
         <div className="draftTabs composerChipStrip">{tabs.map(chip)}</div>
-      )}
+        {toggle}
+      </div>
+    );
+  }
+
+  return (
+    <div className="composerChipTray isExpanded">
+      <div className="composerChipTrayHead">
+        <span className="composerChipCount">已选 {tabs.length} 项参数</span>
+        {toggle}
+      </div>
+      <div className="composerChipGroups">
+        {grouped.map((entry) => (
+          <section key={entry.group.id}>
+            <h5>{entry.group.title}<i>{entry.items.length}</i></h5>
+            <div className="draftTabs">{entry.items.map(chip)}</div>
+          </section>
+        ))}
+        {ungrouped.length ? (
+          <section>
+            <h5>其他<i>{ungrouped.length}</i></h5>
+            <div className="draftTabs">{ungrouped.map(chip)}</div>
+          </section>
+        ) : null}
+      </div>
     </div>
   );
 }

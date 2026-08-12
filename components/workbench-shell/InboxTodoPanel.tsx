@@ -63,13 +63,11 @@ export function InboxTodoPanel({ account, projectFilter, resolved, onResolve, on
     setSelectedId(null);
   };
 
+  /* 顶上原来有一句「以审批人岗位收件 · 全部项目。做出动作后条目才会消失…」，
+     已删。左下角写着你是审批人、顶栏筛选器写着全部项目，这句话一个新信息都
+     没有；剩下半句是教学，用户看一次就够，之后天天占一行。 */
   return (
     <section className="projectTabPanel inboxTodoPanel">
-      <p className="inboxLaneHint">
-        以「{account.roleLabel}」岗位收件{projectFilter ? ` · 已收窄到 ${projectFilter}` : " · 全部项目"}。
-        做出动作后条目才会消失，只是点开看过不算处理完。
-      </p>
-
       <div className="inboxBody">
         <div className="inboxList" role="list">
           {items.length ? items.map((item) => (
@@ -115,14 +113,17 @@ export function InboxTodoPanel({ account, projectFilter, resolved, onResolve, on
                     <small>{selected.docId} · {selected.version}</small>
                   </div>
                 </div>
-                <div className="inboxCardChips">
-                  <StatusChip tone={kindTone[selected.kind]} dot>{inboxKindLabel[selected.kind]}</StatusChip>
-                  <StatusChip tone={selected.priority === "high" ? "danger" : "neutral"}>{priorityLabel[selected.priority]}</StatusChip>
-                </div>
+                {/* 状态与优先级降成灰字：你都点进来了才看到它，列表里已经说过一遍。
+                    这张卡里的彩色额度全部留给 AI 批注——那才是要你做判断的东西。 */}
+                <p className="inboxCardStatus">
+                  {inboxKindLabel[selected.kind]}
+                  <span aria-hidden="true">·</span>
+                  {priorityLabel[selected.priority]}
+                </p>
               </header>
 
               <p className="inboxCardFlow">
-                <span className={selected.agent ? "isAgent" : ""}>{selected.actorName}<em>{selected.actorRole}</em></span>
+                <span>{selected.actorName}<em>{selected.actorRole}</em></span>
                 <CornerUpRight size={14} />
                 <span className="isMe">你<em>{inboxRoleLabel[selected.audienceRole]}岗位</em></span>
               </p>

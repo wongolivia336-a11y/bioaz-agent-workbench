@@ -42,8 +42,12 @@
   .dmpkShell.moduleSessionShell.sidebarCollapsed {
     grid-template-columns: 72px minmax(0, 1fr);
   }
+}
 
-  /* 面板浮起来之后，工作区收回那一列 */
+/* 面板浮起来之后，工作区才收回那一列。这一段必须跟上面那条分开：
+   1024–1199 面板仍然占一列（见 review.css 的浮层断点），此时列不能收，
+   收了对话列就会跑到面板底下去。 */
+@media (max-width: 1023px) {
   :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell)
     > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) {
     grid-template-columns: minmax(0, 1fr);
