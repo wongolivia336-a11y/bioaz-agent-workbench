@@ -1,11 +1,11 @@
 "use client";
 
-import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileSearch, FileText, Folder, Inbox, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
+import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { inboxAccounts, type InboxAccount } from "../../lib/workbench/mockInbox";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, PinItem } from "../../lib/workbench/shellTypes";
-import type { WorkbenchProject, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
+import type { ProjectType, WorkbenchProject, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 type Props = {
@@ -21,12 +21,15 @@ type Props = {
   renamedTaskTitles: Record<string, string>;
   libraryFolders: LibraryFolder[];
   activeLibraryFolderId: string | null;
+  /** 当前打开的资料空间名，用来给侧栏那一行上高亮 */
+  activeLibrarySpace: string | null;
   highlightedProjectId: string | null;
   account: InboxAccount;
   inboxCount: number;
   onAccountChange: (accountId: string) => void;
   onOpenLibraryFolder: (project: string, folderId: string | null) => void;
-  onCreateProject: (name: string) => WorkbenchProject | null;
+  onCreateProject: (name: string, type: ProjectType) => WorkbenchProject | null;
+  onOpenInbox: () => void;
   onRenameProject: (projectId: string, name: string) => void;
   onDeleteProject: (projectId: string) => void;
   onRenameTask: (taskId: string, title: string) => void;
@@ -45,6 +48,7 @@ export function WorkspaceSidebar(props: Props) {
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
   const [projectDraft, setProjectDraft] = useState("");
+  const [projectDraftType, setProjectDraftType] = useState<ProjectType>("client");
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountRef = useDismissableLayer<HTMLDivElement>(accountMenuOpen, () => setAccountMenuOpen(false));
   const activeProject = props.activeTaskId ? props.currentProject : null;
@@ -69,12 +73,14 @@ export function WorkspaceSidebar(props: Props) {
     props.onStartTask(project);
   };
   const commitProject = () => {
-    const created = props.onCreateProject(projectDraft);
+    const created = props.onCreateProject(projectDraft, projectDraftType);
     if (!created) return;
     setOpenProjects((current) => ({ ...current, [created.id]: true }));
     setProjectDraft("");
+    setProjectDraftType("client");
     setProjectCreateOpen(false);
   };
+  const closeProjectCreate = () => { setProjectCreateOpen(false); setProjectDraft(""); setProjectDraftType("client"); };
 
   return (
     <aside className="sidebar">
@@ -102,7 +108,8 @@ export function WorkspaceSidebar(props: Props) {
                   <span className="newChatHoverBridge" aria-hidden="true" />
                   <div className="newChatMenu isOpen">
                     <span className="newChatMenuLabel">挂靠到</span>
-                    {visibleProjects.map((project) => (
+                    {/* 只列客户委托项目：资料空间没有任务流转，挂过去是条死路 */}
+                    {visibleProjects.filter((project) => project.type === "client").map((project) => (
                       <button type="button" key={project.id} onClick={() => startTask(project.name)}>
                         <Folder size={16} />{project.name}
                       </button>
@@ -111,20 +118,19 @@ export function WorkspaceSidebar(props: Props) {
                 </>
               ) : null}
             </div>
+            {/* 收件箱是图标级入口而不是一级导航行：它是"跳过去"的动作，
+                跟搜索同类。但徽标带数字——未处理数比一个红点更有用。 */}
+            <button className="sidebarInboxButton" type="button" onClick={props.onOpenInbox} aria-label={`收件箱，${props.inboxCount} 条待处理`} title={`收件箱 · ${props.inboxCount} 条待处理`}>
+              <Inbox size={16} />
+              {props.inboxCount ? <i className="sidebarInboxBadge">{props.inboxCount}</i> : null}
+            </button>
             <button className="sidebarSearchButton" type="button" onClick={() => setSearchOpen(true)} aria-label="搜索"><Search size={16} /></button>
           </>
         )}
       </div>
 
       <nav className="navBlock workspaceViews" aria-label="工作区">
-        {/* 收件箱排在第一位：它是「今天要干什么」的入口，不是「可以不看」的通知，
-            所以不做右上角铃铛。徽标数是未处理数，不是未读数。 */}
-        <button className={`workspaceViewRow inboxViewRow ${props.activeRoute === "inbox" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("inbox")}>
-          <Inbox size={14} /><span>收件箱</span>
-          {props.inboxCount ? <i className="inboxBadge">{props.inboxCount}</i> : null}
-        </button>
         <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>项目中枢</span></button>
-        <button className={`workspaceViewRow ${props.activeRoute === "knowledgeBase" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("knowledgeBase")}><FileSearch size={14} /><span>知识库</span></button>
         <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
       </nav>
 
@@ -149,17 +155,31 @@ export function WorkspaceSidebar(props: Props) {
       <nav className="navBlock projectTree" aria-label="项目">
         <div className="navSectionHeader">
           <span>项目</span>
-          <button type="button" aria-label="新建项目" title="新建项目" onClick={() => setProjectCreateOpen(true)}><Plus size={14} /></button>
+          <button type="button" aria-label="新建" title="新建项目或资料空间" onClick={() => setProjectCreateOpen(true)}><Plus size={14} /></button>
         </div>
         {projectCreateOpen ? (
-          <div className="projectCreateRow">
-            <Folder size={14} />
-            <input autoFocus value={projectDraft} onChange={(event) => setProjectDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") commitProject(); if (event.key === "Escape") { setProjectCreateOpen(false); setProjectDraft(""); } }} placeholder="项目名称" aria-label="项目名称" />
-            <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建项目"><Check size={14} /></button>
-            <button type="button" onClick={() => { setProjectCreateOpen(false); setProjectDraft(""); }} aria-label="取消"><X size={12} /></button>
+          <div className="projectCreateBlock">
+            {/* 二级选择：先定类型再起名。类型决定它长出哪些 tab、默认给谁看，
+                所以必须在建之前问，不能建完再改。 */}
+            <div className="projectTypeChoice" role="radiogroup" aria-label="新建类型">
+              <button type="button" role="radio" aria-checked={projectDraftType === "client"} className={projectDraftType === "client" ? "isOn" : ""} onClick={() => setProjectDraftType("client")}>
+                <Folder size={13} />
+                <span><strong>项目</strong><small>一单客户委托，仅成员可见</small></span>
+              </button>
+              <button type="button" role="radio" aria-checked={projectDraftType === "library"} className={projectDraftType === "library" ? "isOn" : ""} onClick={() => setProjectDraftType("library")}>
+                <Library size={13} />
+                <span><strong>资料空间</strong><small>不挂客户，全员可见</small></span>
+              </button>
+            </div>
+            <div className="projectCreateRow">
+              {projectDraftType === "client" ? <Folder size={14} /> : <Library size={14} />}
+              <input autoFocus value={projectDraft} onChange={(event) => setProjectDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") commitProject(); if (event.key === "Escape") closeProjectCreate(); }} placeholder={projectDraftType === "client" ? "项目名称" : "资料空间名称"} aria-label="名称" />
+              <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建"><Check size={14} /></button>
+              <button type="button" onClick={closeProjectCreate} aria-label="取消"><X size={12} /></button>
+            </div>
           </div>
         ) : null}
-        {visibleProjects.map((project) => (
+        {visibleProjects.filter((project) => project.type === "client").map((project) => (
           <SidebarProject
             key={project.id}
             title={project.name}
@@ -191,6 +211,24 @@ export function WorkspaceSidebar(props: Props) {
           </SidebarProject>
         ))}
       </nav>
+
+      {/* 资料空间独立成组：它跟项目共用实现，但不是项目——混进项目列表就
+          又变回"假项目"了，而且往后项目要挂委托方/合同号，它一列都填不上。 */}
+      {visibleProjects.some((project) => project.type === "library") ? (
+        <nav className="navBlock projectTree librarySpaceTree" aria-label="资料空间">
+          <div className="navSectionHeader"><span>资料空间</span></div>
+          {visibleProjects.filter((project) => project.type === "library").map((project) => (
+            <button
+              className={`sidebarFolderShortcut librarySpaceRow ${props.activeLibrarySpace === project.name ? "active" : ""}`}
+              type="button"
+              key={project.id}
+              onClick={() => props.onOpenLibraryFolder(project.name, null)}
+            >
+              <Library size={14} /><span>{project.name}</span>
+            </button>
+          ))}
+        </nav>
+      ) : null}
 
       <div ref={accountRef} className={`account accountMenuTrigger ${accountMenuOpen ? "menuOpen" : ""}`}>
         <button type="button" onClick={() => setAccountMenuOpen((value) => !value)} aria-expanded={accountMenuOpen}>

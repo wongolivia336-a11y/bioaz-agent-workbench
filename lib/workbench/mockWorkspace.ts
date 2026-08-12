@@ -1,10 +1,17 @@
 import type { WorkbenchProject } from "../../modules/types";
 import type { KnowledgeFile, PinItem, TaskCollection } from "./shellTypes";
 
+/* client = 一单客户委托的工作；library = 不挂客户的资料空间。
+   资料空间用的是同一套容器实现，只是不显示动态/计划，且默认全员可见——
+   项目里的文件默认仅成员可见，因为 CRO 同时服务竞对，客户隔离是底线。 */
 export const workspaceProjects: WorkbenchProject[] = [
-  { id: "project-xx", name: "XX药业-PD1临床前评价" },
-  { id: "project-yy", name: "YY药业-Balb/c nude评价" },
-  { id: "project-zz", name: "ZZ药业-CT26模型评价" },
+  { id: "project-xx", name: "XX药业-PD1临床前评价", type: "client" },
+  { id: "project-yy", name: "YY药业-Balb/c nude评价", type: "client" },
+  { id: "project-zz", name: "ZZ药业-CT26模型评价", type: "client" },
+  // 在「资料」总库里直接上传的文件落这里——上传的位置决定归属，用户一次都不用选
+  { id: "space-public", name: "公共资料", type: "library" },
+  { id: "space-reg", name: "法规与SOP", type: "library" },
+  { id: "space-method", name: "PK方法学", type: "library" },
 ];
 
 export const projectOptions = workspaceProjects.map((project) => project.name);
@@ -41,4 +48,9 @@ export const initialKnowledgeFiles: KnowledgeFile[] = [
   { id: "file-template", title: "肿瘤药效报告模板.docx", project: "组织规则", space: "rules", kind: "报告模板", business: "药效报告", owner: "规则管理员", updated: "7月5日", status: "已发布", agentReady: true },
   { id: "file-stat-rule", title: "肿瘤药效统计口径_v4.xlsx", project: "组织规则", space: "rules", kind: "统计规则", business: "药效报告", owner: "规则管理员", updated: "7月9日", status: "已发布", agentReady: true },
   { id: "file-qa-rule", title: "报告交付前_QA检查清单.xlsx", project: "组织规则", space: "rules", kind: "审核清单", business: "药效报告", owner: "规则管理员", updated: "7月10日", status: "已发布", agentReady: true },
+  { id: "file-gcp", title: "GLP合规操作规范_2026版.pdf", project: "法规与SOP", space: "projects", kind: "法规文本", business: "未分类", owner: "Admin", updated: "5天前", status: "已发布", agentReady: true },
+  { id: "file-sop-sampling", title: "SOP_血浆采样与保存.docx", project: "法规与SOP", space: "projects", kind: "标准操作", business: "未分类", owner: "Admin", updated: "12天前", status: "已发布", agentReady: true },
+  { id: "file-sop-archive", title: "SOP_原始记录归档.docx", project: "法规与SOP", space: "projects", kind: "标准操作", business: "未分类", owner: "Admin", updated: "1天前", status: "已发布", agentReady: true, parseState: "parsing" },
+  { id: "file-pk-method", title: "LC-MS_血药浓度测定方法学验证.pdf", project: "PK方法学", space: "projects", kind: "方法学", business: "DMPK报价", owner: "Admin", updated: "8天前", status: "已发布", agentReady: true },
+  { id: "file-pk-scan", title: "PK参数计算_历史手稿扫描件.pdf", project: "PK方法学", space: "projects", kind: "方法学", business: "DMPK报价", owner: "Admin", updated: "昨天", status: "待处理", agentReady: false, parseState: "failed" },
 ];

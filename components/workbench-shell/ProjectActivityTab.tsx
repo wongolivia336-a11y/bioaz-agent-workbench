@@ -1,8 +1,9 @@
 "use client";
 
-import { Check, Clock3, Filter, FileText, MessageSquare, ShieldCheck, TriangleAlert, Upload, Users } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { Bot, Check, Clock3, Filter, FileText, MessageSquare, ShieldCheck, TriangleAlert, Upload, Users } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { inboxItems, type InboxAccount } from "../../lib/workbench/mockInbox";
 import { useDismissableLayer } from "./useDismissableLayer";
 import { EmptyState } from "../ui";
 
@@ -15,6 +16,10 @@ type ActivityEntry = {
   title: string;
   detail: string;
   icon: ReactNode;
+  /** 项目归属。跨项目视角要靠它筛，项目内视角要靠它过滤 */
+  project?: string;
+  /** 这条是不是"冲着我来的"——收件箱动态栏并进来之后才有的区分 */
+  mine?: boolean;
 };
 
 const activityFeed: ActivityEntry[] = [
@@ -30,23 +35,65 @@ const activityFeed: ActivityEntry[] = [
 
 const activityGroups = ["今天", "本周", "更早"];
 
-const actors = ["全部参与者", ...activityFeed.map((entry) => entry.actor).filter((actor, index, list) => list.indexOf(actor) === index)];
-const kinds = ["全部类型", ...activityFeed.map((entry) => entry.kind).filter((kind, index, list) => list.indexOf(kind) === index)];
+// 相对文案归档到分组，跟 FileManager 的时间桶同一套判据
+function groupOf(time: string): string {
+  if (/刚刚|分钟前|小时前/.test(time)) return "今天";
+  if (/昨天|^[1-7]\s*天前/.test(time)) return "本周";
+  return "更早";
+}
 
-export function ProjectActivityTab({ project }: { project: string }) {
+/* 收件箱原来那条「动态」栏并到这里。
+   两个「动态」是上一轮我自己做出来的重复——同一个词摆在两个地方，用户不知道
+   该看哪个。合并之后只留一条流，用「只看与我有关」把原来收件箱那栏的语义
+   保住：那些冲着我岗位来的流转，勾上开关就只剩它们。 */
+function inboxFeedEntries(account: InboxAccount): ActivityEntry[] {
+  return inboxItems
+    .filter((item) => item.lane === "feed")
+    .map((item) => ({
+      id: `feed-${item.id}`,
+      group: groupOf(item.time),
+      time: item.time,
+      actor: item.actorName,
+      kind: "流转",
+      title: `${item.docTitle} · ${item.summary.replace(/。.*$/, "")}`,
+      detail: item.summary,
+      icon: item.agent ? <Bot size={14} /> : <FileText size={14} />,
+      project: item.project,
+      mine: item.audienceRole === account.role,
+    }));
+}
+
+export function ProjectActivityTab({ project, account }: { project: string; account: InboxAccount }) {
   const [actor, setActor] = useState("全部参与者");
   const [kind, setKind] = useState("全部类型");
+  const [mineOnly, setMineOnly] = useState(false);
   const [host, setHost] = useState<HTMLElement | null>(null);
   useEffect(() => { setHost(document.getElementById("workbench-topbar-actions")); }, []);
-  const visible = activityFeed.filter((entry) => (
+
+  const feed = useMemo(() => [...activityFeed, ...inboxFeedEntries(account)], [account]);
+  const actors = useMemo(() => ["全部参与者", ...feed.map((entry) => entry.actor).filter((value, index, list) => list.indexOf(value) === index)], [feed]);
+  const kinds = useMemo(() => ["全部类型", ...feed.map((entry) => entry.kind).filter((value, index, list) => list.indexOf(value) === index)], [feed]);
+
+  const visible = feed.filter((entry) => (
     (actor === "全部参与者" || entry.actor === actor)
     && (kind === "全部类型" || entry.kind === kind)
+    && (!mineOnly || entry.mine)
+    // 项目筛选器选中某个项目时，没有归属的老 mock 条目仍然显示——它们本来就是项目内动态
+    && (project === "全部项目" || !entry.project || entry.project === project)
   ));
 
   return (
     <section className="projectTabPanel projectActivityPanel">
       {host ? createPortal(
         <div className="libraryToolLayer">
+          <button
+            className={`activityMineToggle ${mineOnly ? "isOn" : ""}`}
+            type="button"
+            aria-pressed={mineOnly}
+            onClick={() => setMineOnly((value) => !value)}
+          >
+            只看与我有关
+          </button>
           <ActivityFilter icon={<Users size={16} />} label="筛选参与者" value={actor} options={actors} onChange={setActor} />
           <ActivityFilter icon={<Filter size={16} />} label="筛选事件类型" value={kind} options={kinds} onChange={setKind} />
         </div>,
@@ -85,7 +132,7 @@ export function ProjectActivityTab({ project }: { project: string }) {
         );
       })}
       {!visible.length ? (
-        <EmptyState title="没有匹配的动态" description="换一个参与者，或清除筛选条件。" />
+        <EmptyState title="没有匹配的动态" description={mineOnly ? "关掉「只看与我有关」看全部动态。" : "换一个参与者，或清除筛选条件。"} />
       ) : null}
     </section>
   );

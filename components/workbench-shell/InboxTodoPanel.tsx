@@ -1,7 +1,7 @@
 "use client";
 
 import { Bot, Check, CornerUpRight, FileText, Inbox, Sparkles, Undo2, User } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   inboxActionLabel,
   inboxItems,
@@ -10,36 +10,29 @@ import {
   type InboxAccount,
   type InboxAction,
   type InboxItem,
-  type InboxLane,
 } from "../../lib/workbench/mockInbox";
-import { Button, EmptyState, NavTabs, StatusChip, type StatusTone } from "../ui";
-import { InlineSelect } from "./InlineSelect";
+import { Button, EmptyState, StatusChip, type StatusTone } from "../ui";
 
 /**
- * 收件箱 —— shell 层能力，不是 module。
+ * 「待我处理」——项目中枢的第一个 tab。
  *
- * 它只消费 InboxItem[] 这一个契约，不认识任何具体 module；反过来 module
- * 也不认识收件箱，只往事件流里投递状态迁移。这样 DMPK 报价以后要走审批，
- * 投同样的事件即可，这里一行都不用改。
+ * 它跟「动态」的生命周期不同，这是把两者分开的全部理由：这里的条目只有在
+ * 你**落了动作**（通过 / 驳回 / 去修订）之后才消失，点开看过一百次都还在，
+ * 侧栏徽标数就是这里的条数。动态那边看过即褪，且永远不进徽标。
  *
- * 左右两栏是「索引 + 原件摘要」，不是聊天双栏：右侧放的是决策所需的全部
- * 事实与动作，看细节才跳进任务本体。审批结论必须落在文档版本上、可追溯，
- * 所以这里不提供自由对话入口。
+ * 它只消费 InboxItem[]，不认识任何 module；module 往事件流里投递状态迁移，
+ * 也不认识这个面板。收件人是岗位不是人。
  */
 
 type Props = {
   account: InboxAccount;
-  /** 已处理条目提升到 shell 持有，否则侧栏徽标和这里的计数会各算各的 */
+  /** 跟着项目中枢的项目筛选器走。null = 全部项目，这就是"跨项目"的实现方式 */
+  projectFilter: string | null;
   resolved: Record<string, string>;
   onResolve: (itemId: string, note: string) => void;
-  /** 收件箱不认识 module，只喊「把这份文件的审阅台打开」，由 shell 决定落点 */
+  /** 只喊「把这份文件的审阅台打开」，由 shell 决定落到哪个 module */
   onOpenReview: (docTitle: string, project: string) => void;
 };
-
-const laneTabs: Array<{ id: InboxLane; label: string }> = [
-  { id: "todo", label: "待我处理" },
-  { id: "feed", label: "动态" },
-];
 
 const kindTone: Record<string, StatusTone> = {
   submit: "running",
@@ -52,39 +45,18 @@ const kindTone: Record<string, StatusTone> = {
 
 const priorityLabel = { high: "高优先级", medium: "中优先级", low: "低优先级" } as const;
 
-export function InboxPage({ account, resolved, onResolve, onOpenReview }: Props) {
-  const [lane, setLane] = useState<InboxLane>("todo");
-  const [projectFilter, setProjectFilter] = useState("全部项目");
-  const [priorityFilter, setPriorityFilter] = useState("全部优先级");
-  /** 看过即褪：仅作用于「动态」栏，不影响徽标 */
-  const [read, setRead] = useState<string[]>([]);
+export function InboxTodoPanel({ account, projectFilter, resolved, onResolve, onOpenReview }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [rejectDraft, setRejectDraft] = useState<string | null>(null);
 
-  const mine = useMemo(
-    () => inboxItems.filter((item) => item.audienceRole === account.role),
-    [account.role],
-  );
-  const projects = useMemo(
-    () => ["全部项目", ...Array.from(new Set(mine.map((item) => item.project)))],
-    [mine],
-  );
-
-  const laneItems = mine.filter((item) => (
-    item.lane === lane
+  const items = inboxItems.filter((item) => (
+    item.lane === "todo"
+    && item.audienceRole === account.role
     && !resolved[item.id]
-    && (projectFilter === "全部项目" || item.project === projectFilter)
-    && (priorityFilter === "全部优先级" || priorityLabel[item.priority] === priorityFilter)
+    && (!projectFilter || item.project === projectFilter)
   ));
-  const todoCount = mine.filter((item) => item.lane === "todo" && !resolved[item.id]).length;
-  const feedCount = mine.filter((item) => item.lane === "feed" && !resolved[item.id]).length;
-  const selected = laneItems.find((item) => item.id === selectedId) ?? laneItems[0] ?? null;
+  const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
 
-  const select = (item: InboxItem) => {
-    setSelectedId(item.id);
-    setRejectDraft(null);
-    if (item.lane === "feed" && !read.includes(item.id)) setRead((current) => [...current, item.id]);
-  };
   const resolve = (item: InboxItem, action: InboxAction, note?: string) => {
     onResolve(item.id, note ? `${inboxActionLabel[action]}：${note}` : inboxActionLabel[action]);
     setRejectDraft(null);
@@ -92,46 +64,21 @@ export function InboxPage({ account, resolved, onResolve, onOpenReview }: Props)
   };
 
   return (
-    <section className="inboxPage">
-      <NavTabs
-        items={[
-          { id: "todo" as InboxLane, label: laneTabs[0].label, count: todoCount },
-          { id: "feed" as InboxLane, label: laneTabs[1].label, count: feedCount },
-        ]}
-        value={lane}
-        onChange={(next) => { setLane(next); setSelectedId(null); setRejectDraft(null); }}
-        label="收件箱分栏"
-        className="inboxLaneTabs"
-      >
-        <div className="inboxFilters">
-          <InlineSelect label="按项目筛选" trigger={<span>{projectFilter}</span>}>
-            {(close) => projects.map((name) => (
-              <button type="button" key={name} onClick={() => { setProjectFilter(name); close(); }}>{name}</button>
-            ))}
-          </InlineSelect>
-          <InlineSelect label="按优先级筛选" trigger={<span>{priorityFilter}</span>} align="end">
-            {(close) => ["全部优先级", ...Object.values(priorityLabel)].map((name) => (
-              <button type="button" key={name} onClick={() => { setPriorityFilter(name); close(); }}>{name}</button>
-            ))}
-          </InlineSelect>
-        </div>
-      </NavTabs>
-
+    <section className="projectTabPanel inboxTodoPanel">
       <p className="inboxLaneHint">
-        {lane === "todo"
-          ? `以「${account.roleLabel}」岗位收件。做出动作后条目才会消失，只是点开看过不算处理完。`
-          : "与你相关的流转记录。看过即褪为灰色，不计入待办，随时可回溯。"}
+        以「{account.roleLabel}」岗位收件{projectFilter ? ` · 已收窄到 ${projectFilter}` : " · 全部项目"}。
+        做出动作后条目才会消失，只是点开看过不算处理完。
       </p>
 
       <div className="inboxBody">
         <div className="inboxList" role="list">
-          {laneItems.length ? laneItems.map((item) => (
+          {items.length ? items.map((item) => (
             <button
-              className={`inboxRow ${selected?.id === item.id ? "isActive" : ""} ${item.lane === "feed" && read.includes(item.id) ? "isRead" : ""}`}
+              className={`inboxRow ${selected?.id === item.id ? "isActive" : ""}`}
               type="button"
               role="listitem"
               key={item.id}
-              onClick={() => select(item)}
+              onClick={() => { setSelectedId(item.id); setRejectDraft(null); }}
             >
               <span className={`inboxRowAvatar ${item.agent ? "isAgent" : ""}`} aria-hidden="true">
                 {item.agent ? <Bot size={14} /> : <User size={14} />}
@@ -141,9 +88,7 @@ export function InboxPage({ account, resolved, onResolve, onOpenReview }: Props)
                   <StatusChip tone={kindTone[item.kind]} dot>{inboxKindLabel[item.kind]}</StatusChip>
                   <strong>{item.docTitle}</strong>
                 </span>
-                <span className="inboxRowMeta">
-                  {item.actorName} · {item.actorRole} · {item.project}
-                </span>
+                <span className="inboxRowMeta">{item.actorName} · {item.actorRole} · {item.project}</span>
               </span>
               <span className="inboxRowSide">
                 <small>{item.time}</small>
@@ -153,8 +98,8 @@ export function InboxPage({ account, resolved, onResolve, onOpenReview }: Props)
           )) : (
             <EmptyState
               icon={<Inbox size={20} />}
-              title={lane === "todo" ? "没有待你处理的事项" : "暂无相关动态"}
-              description={lane === "todo" ? `当前以「${account.roleLabel}」岗位收件，换个账号可以看到别的队列。` : undefined}
+              title="没有待你处理的事项"
+              description={projectFilter ? "换成「全部项目」看看其他项目里的队列。" : `当前以「${account.roleLabel}」岗位收件，换个账号可以看到别的队列。`}
             />
           )}
         </div>

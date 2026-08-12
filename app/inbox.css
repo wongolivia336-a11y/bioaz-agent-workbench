@@ -5,22 +5,10 @@
    右列给出决策所需的全部事实与可做的动作。
    =================================================================== */
 
-.inboxPage {
+.inboxTodoPanel {
   display: grid;
   min-height: 0;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  padding: 24px 32px 28px;
-}
-
-.inboxLaneTabs {
-  justify-content: flex-start;
-}
-
-.inboxFilters {
-  display: flex;
-  margin-left: auto;
-  align-items: center;
-  gap: 8px;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .inboxLaneHint {
@@ -399,32 +387,45 @@
    侧栏入口与账号切换器
    =================================================================== */
 
-.inboxViewRow { position: relative; }
+/* 收件箱做成图标级入口，跟搜索并排——它是"跳过去"的动作，不是一级导航行。
+   但徽标带数字：未处理数比一个光秃秃的红点有用得多。 */
+.sidebarInboxButton {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  transition: background var(--bioaz-motion-fast) var(--bioaz-ease-standard), color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
 
-.inboxBadge {
-  min-width: 18px;
+.sidebarInboxButton:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
+
+.sidebarInboxBadge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
   border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-action-primary);
   padding: 0 5px;
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 600;
-  line-height: 18px;
+  line-height: 17px;
   text-align: center;
 }
 
-/* 收起态没有横向空间放数字，退化成一个角标圆点 */
-.dmpkShell.sidebarCollapsed .inboxBadge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  min-width: 8px;
-  height: 8px;
-  padding: 0;
-  color: transparent;
-  font-size: 0;
-  line-height: 0;
+/* 收起侧栏时这颗图标必须留着，否则收起的人永远收不到通知 */
+.dmpkShell.sidebarCollapsed .sidebarInboxButton {
+  width: 42px;
+  height: 42px;
 }
 
 .accountMenuLabel {

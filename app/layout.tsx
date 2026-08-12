@@ -14,6 +14,7 @@ import "./dmpk-rule-assistant.css";
 import "./digital-team.css";
 import "./composer-attach.css";
 import "./inbox.css";
+import "./hub.css";
 import "./qa-review.css";
 import "../styles/design-system.css";
 import "./responsive.css";
