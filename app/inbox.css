@@ -396,7 +396,8 @@
   height: 38px;
   flex: none;
   place-items: center;
-  border: 1px solid var(--bioaz-border);
+  /* 跟搜索按钮同一条视觉规格：并排的两颗图标不能一深一浅 */
+  border: 1px solid var(--line-strong, var(--bioaz-border-strong));
   border-radius: var(--bioaz-radius-control);
   background: var(--bioaz-surface);
   color: var(--bioaz-text-secondary);
