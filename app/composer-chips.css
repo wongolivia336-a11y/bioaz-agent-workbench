@@ -1,0 +1,116 @@
+/* ===================================================================
+   Composer 已选参数托盘
+   -------------------------------------------------------------------
+   真实报价单的参数远多于演示里的 14 条。原来横排一行溢出成横向滚动条：
+   看不出总量、找一个要来回拖，还挤掉了输入框的位置。
+   改成「收起=一行 + 报总数」「展开=向上膨胀并按组铺开」。
+   =================================================================== */
+
+.composerChipTray {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  padding: 0 2px 7px;
+}
+
+.composerChipTrayHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.composerChipCount {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.composerChipToggle {
+  display: inline-flex;
+  margin-left: auto;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  padding: 2px 4px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.composerChipToggle:hover { color: var(--bioaz-text-primary); }
+
+.composerChipToggle svg { transition: transform var(--bioaz-motion-fast) var(--bioaz-ease-standard); }
+.composerChipToggle svg.isOpen { transform: rotate(180deg); }
+
+/* 收起态：只留一行，多出来的裁掉。
+   不去算"能放几个"——chip 宽度差得远，写死个数总会在某个组合下露馅；
+   裁剪交给 CSS，按钮上报的是总数，就不需要知道露出了几个。 */
+.composerChipStrip {
+  max-height: 34px;
+  overflow: hidden;
+  /* 右边缘渐隐：明确告诉人"这行还没完"，而不是让 chip 硬生生断在半路 */
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%);
+}
+
+/* 展开态：向上膨胀，按参数组铺开。封顶后内部滚动——
+   参数再多，输入框也必须留在屏幕上。 */
+.composerChipTray.isExpanded .composerChipGroups {
+  display: grid;
+  max-height: min(34vh, 300px);
+  gap: 12px;
+  overflow-y: auto;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 10px;
+}
+
+.composerChipGroups section { display: grid; gap: 6px; }
+
+.composerChipGroups h5 {
+  display: flex;
+  margin: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.composerChipGroups h5 i {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+  padding: 0 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 15px;
+}
+
+/* chip 本体：标签超长时截断，别把一整行撑爆 */
+.composerChipTray .draftTabs { padding: 0; }
+
+.composerChipTray .draftTabs button {
+  min-height: 28px;
+  max-width: 220px;
+  gap: 6px;
+  padding: 0 9px;
+  font-weight: 600;
+}
+
+.composerChipTray .draftTabs button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composerChipTray .draftTabs button:hover {
+  border-color: var(--bioaz-border-strong);
+  color: var(--bioaz-text-primary);
+}
+
+@media (max-width: 900px) {
+  .composerChipTray.isExpanded .composerChipGroups { max-height: 40vh; }
+  .composerChipTray .draftTabs button { max-width: 160px; }
+}
