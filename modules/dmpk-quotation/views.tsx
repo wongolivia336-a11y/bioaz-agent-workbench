@@ -13,6 +13,7 @@ import {
   dmpkFieldOptions,
   dmpkGroups,
   getDmpkGroupTitle,
+  initialDmpkFields,
   type DmpkDraftTab,
   type DmpkField,
   type DmpkGroupId,
@@ -173,12 +174,104 @@ export function DmpkComposer({ editProposal, onConfirmCurrentPrice, onOpenRuleMa
         globalDrop
       >
         <div className="composerInputStack">
-          {draftTabs.length ? <div className="draftTabs">{draftTabs.map((tab) => <button type="button" key={tab.fieldId} onClick={() => onRemove(tab.fieldId)}>{tab.label}：{tab.value}<X size={13} /></button>)}</div> : null}
-          <input ref={inputRef} value={text} onChange={(event) => setText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") onSend(); }} placeholder={draftTabs.length ? "" : conversationEditing ? "说出要修改的参数、价格或规则…" : stage === "idle" ? "例如：PK小分子，SD大鼠，每组2只，2组，试验周期1周，周期内3个非加班时间点" : ""} />
+          <ComposerChipTray tabs={draftTabs} onRemove={onRemove} />
+          <input
+            ref={inputRef}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSend();
+              // 光标在空输入框上按退格，删掉最后一个 chip——chip 多到要折叠时，
+              // 逐个去点那个叉号是最烦的一件事
+              if (event.key === "Backspace" && !text && draftTabs.length) {
+                event.preventDefault();
+                onRemove(draftTabs[draftTabs.length - 1].fieldId);
+              }
+            }}
+            placeholder={draftTabs.length ? "" : conversationEditing ? "说出要修改的参数、价格或规则…" : stage === "idle" ? "例如：PK小分子，SD大鼠，每组2只，2组，试验周期1周，周期内3个非加班时间点" : ""}
+          />
         </div>
         <button className="sendIconButton" type="button" onClick={onSend} disabled={disabled} aria-label="发送"><Send size={18} /></button>
       </WorkbenchComposer>
     </footer>
+  );
+}
+
+const draftGroupById = new Map(initialDmpkFields.map((field) => [field.id, field.group]));
+
+/**
+ * Composer 里的已选参数托盘。
+ *
+ * 演示只有 14 个参数，真实报价单的参数远不止，横着摆一排就溢出成一条横向
+ * 滚动条——横向滚动看不出总量、找一个要来回拖，是最差的一种"装不下"。
+ *
+ * 收起态：chips 只占**一行**，多出来的直接裁掉，右侧一道渐隐提示还有更多，
+ * 旁边一颗按钮报总数。这里刻意用 CSS 裁剪而不是算"能放几个"——chip 宽度
+ * 差得远（「分子类型：小分子」vs「组数：2」），任何写死的个数都会在某个
+ * 组合下露馅，而按钮上写总数就不需要知道露出了几个。
+ *
+ * 展开态：composer 向上膨胀，chips 按参数组分栏换行铺开。分组不是装饰——
+ * 二十几个 chip 平铺就是一堵墙，按组分开才扫得动。高度封顶后内部滚动，
+ * 保证输入框任何时候都还在屏幕上。
+ */
+function ComposerChipTray({ tabs, onRemove }: { tabs: DmpkDraftTab[]; onRemove: (fieldId: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  // chips 被清空后（发送完一轮）自动回到收起态，否则下次进来是个空的大盒子
+  useEffect(() => { if (!tabs.length) setExpanded(false); }, [tabs.length]);
+  if (!tabs.length) return null;
+
+  const grouped = dmpkGroups
+    .map((group) => ({ group, items: tabs.filter((tab) => draftGroupById.get(tab.fieldId) === group.id) }))
+    .filter((entry) => entry.items.length);
+  const ungrouped = tabs.filter((tab) => !draftGroupById.has(tab.fieldId));
+
+  const chip = (tab: DmpkDraftTab) => (
+    <button type="button" key={tab.fieldId} onClick={() => onRemove(tab.fieldId)} aria-label={`移除 ${tab.label}`}>
+      <span>{tab.label}：{tab.value}</span>
+      <X size={13} />
+    </button>
+  );
+
+  const toggle = (
+    <button className="composerChipToggle" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+      {/* 报的是总数不是隐藏数——没测量就不知道露出了几个，写「+4」会骗人。
+          「4 项 ˅」在任何数量下都成立：已选这么多，点开看全部。 */}
+      {expanded ? <>收起<ChevronDown size={12} className="isOpen" /></> : <>{tabs.length} 项<ChevronDown size={12} /></>}
+    </button>
+  );
+
+  if (!expanded) {
+    // 收起态就一行：chips 裁到头渐隐，计数紧跟在断口后面——
+    // 内容在哪儿断的，「还有更多」就出现在哪儿。
+    return (
+      <div className="composerChipTray">
+        <div className="draftTabs composerChipStrip">{tabs.map(chip)}</div>
+        {toggle}
+      </div>
+    );
+  }
+
+  return (
+    <div className="composerChipTray isExpanded">
+      <div className="composerChipTrayHead">
+        <span className="composerChipCount">已选 {tabs.length} 项参数</span>
+        {toggle}
+      </div>
+      <div className="composerChipGroups">
+        {grouped.map((entry) => (
+          <section key={entry.group.id}>
+            <h5>{entry.group.title}<i>{entry.items.length}</i></h5>
+            <div className="draftTabs">{entry.items.map(chip)}</div>
+          </section>
+        ))}
+        {ungrouped.length ? (
+          <section>
+            <h5>其他<i>{ungrouped.length}</i></h5>
+            <div className="draftTabs">{ungrouped.map(chip)}</div>
+          </section>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

@@ -184,10 +184,12 @@ button {
   box-shadow: 0 10px 26px rgba(41, 0, 255, 0.06);
 }
 
+/* 新建任务 + 收件箱 + 搜索 三个并排。收件箱是后加的第三列——
+   忘了改列数会让它换行，整条操作区就散成两排。 */
 .sidebarActions {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 38px;
+  grid-template-columns: minmax(0, 1fr) 38px 38px;
   gap: 8px;
   margin-bottom: 22px;
 }

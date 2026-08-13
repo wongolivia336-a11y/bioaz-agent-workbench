@@ -3,11 +3,20 @@ import type { LucideIcon } from "lucide-react";
 
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
+/* 收件箱不再是独立路由——它是项目中枢的「待我处理」tab。侧栏那颗图标只是
+   带徽标的快捷跳转，不是第二个地方，否则决策中心又被拆成两半。 */
 export type WorkbenchRoute = "newTask" | "tasks" | "library" | "knowledgeBase" | "module" | "digitalTeam";
+
+/* 容器类型。两者共用同一套实现（文件 + 助手 + 成员），只在「显示哪些 tab」
+   和「默认可见性」上分叉。分成两类而不是共用「项目」一个词，是因为项目在
+   CRO 对应一单客户委托，往后会长出委托方、合同号这些字段；资料空间没有
+   这些，混在一起会留下一列永远为空的脏数据。 */
+export type ProjectType = "client" | "library";
 
 export type WorkbenchProject = {
   id: string;
   name: string;
+  type: ProjectType;
 };
 
 export type WorkbenchTask = {
@@ -103,6 +112,9 @@ export type AgentModuleSessionProps = {
   /* 去报价后台走应用内跳转，不走 window.location——整页刷新会把当前这单报价冲掉，
      草稿也会卡在「读参数」和「抹参数」的竞态里。 */
   onOpenQuotationManagement?: (options?: QuotationManagementTarget) => void;
+  /* 当前登录账号的岗位。QA 审核用它决定谁能落笔——撰写人端与审批人端是
+     同一个 Session 的两种渲染，不是两个页面。其余 module 忽略即可。 */
+  viewerRole?: "author" | "approver" | "owner";
 };
 
 export type QuotationManagementTarget = {

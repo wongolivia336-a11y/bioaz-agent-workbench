@@ -6174,6 +6174,9 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: center;
   margin: 0 6px 0 0;
   border: 0;
+  /* 按钮的 UA 默认 padding 是 1px 6px，18px 的盒子里只剩 6px 内容宽，
+     12px 的叉号顶到右边缘，于是图标和圆形 hover 底不同心。必须归零。 */
+  padding: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--bioaz-text-tertiary);
@@ -6385,10 +6388,19 @@ button { -webkit-tap-highlight-color: transparent; }
 :is(.dmpk-quotationModuleShell, .tumor-reportModuleShell) > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen) > :is(.dmpkComposerWrap, .legacyComposerStack) {
   right: var(--panel-width, 400px);
   left: 0;
+  /* 上限必须扣掉面板那一列。它原来是 min(760px, 100%)，而绝对定位元素的
+     100% 量的是包含块整宽（含面板），于是在窄一点的屏幕上 760 大过左右
+     内缩之后的可用宽，浏览器用负的 margin-right 兜底，composer 就直接
+     压到面板底下去了。 */
+  max-width: min(760px, calc(100% - var(--panel-width, 400px)));
 }
 
-/* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列 */
-@media (max-width: 1199px) {
+/* 窄屏：面板从右侧滑出、盖在对话上，不再占布局列。
+   断点原来在 1199，但 1024–1199 这一段根本不需要遮：面板占一列 320px，
+   对话列还剩 444–619px，比 1200 以上那 586px 也没差多少。遮罩是最后手段，
+   在还放得下的时候用它，等于白白挡住用户正在读的东西。
+   1023 以下侧栏本来就变浮层了，面板跟着浮才成立。 */
+@media (max-width: 1023px) {
   .workbenchPanel.isOpen {
     position: fixed;
     z-index: 320;

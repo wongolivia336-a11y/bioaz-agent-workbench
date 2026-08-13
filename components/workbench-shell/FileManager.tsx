@@ -13,6 +13,8 @@ import {
   Folder,
   FolderInput,
   FolderOutput,
+  Library,
+  LoaderCircle,
   MoreHorizontal,
   PackageCheck,
   Plus,
@@ -25,23 +27,35 @@ import {
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { initialKnowledgeFiles } from "../../lib/workbench/mockWorkspace";
+import type { InboxAccount } from "../../lib/workbench/mockInbox";
 import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
-import type { WorkbenchProject, WorkbenchTask } from "../../modules/types";
+import type { ProjectType, WorkbenchProject, WorkbenchTask } from "../../modules/types";
+import { InboxTodoPanel } from "./InboxTodoPanel";
 import { ProjectActivityTab } from "./ProjectActivityTab";
 import { ProjectPlanTab } from "./ProjectPlanTab";
+import { KnowledgeAsk } from "./KnowledgeAsk";
 import { Menu, MenuGroup, MenuItem, NavTabs } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-type ProjectTab = "activity" | "plan" | "data";
+/* 项目中枢的四个 tab。层级在这里翻转了：以前必须先选一个项目才能看到
+   动态/计划/资料，所以待办天生跨不了项目。现在 tab 在上、项目在下，
+   项目从"必经路径"降级成"一个筛选维度"，默认全部项目。 */
+export type HubTab = "todo" | "activity" | "plan" | "data";
+
 type SortKey = "updated" | "kind" | "name" | "source";
 type TimeBucket = "all" | "today" | "week" | "month" | "earlier";
 
-const projectTabs: Array<{ id: ProjectTab; label: string }> = [
+const clientHubTabs: Array<{ id: HubTab; label: string }> = [
+  { id: "todo", label: "待我处理" },
   { id: "activity", label: "动态" },
   { id: "plan", label: "计划" },
-  { id: "data", label: "资料与产物" },
+  { id: "data", label: "资料" },
 ];
+
+// 资料空间没有任务、没有流转，动态和计划对它是空的——空 tab 会教用户
+// 怀疑所有 tab，所以按类型直接不给。
+const libraryHubTabs: Array<{ id: HubTab; label: string }> = [{ id: "data", label: "资料" }];
 
 const sortOptions: Array<{ id: SortKey; label: string }> = [
   { id: "updated", label: "按更新时间" },
@@ -82,6 +96,12 @@ export function FileManager({
   selectedFolderId,
   folders,
   view,
+  hubTab,
+  onHubTabChange,
+  account,
+  resolvedInbox,
+  onResolveInbox,
+  onOpenReview,
   onSelectedProjectChange,
   onSelectedFolderChange,
   onViewChange,
@@ -101,14 +121,20 @@ export function FileManager({
   const [rootKind, setRootKind] = useState<string | null>(null);
   const [rootProject, setRootProject] = useState<string | null>(null);
   const [rootSource, setRootSource] = useState<string | null>(null);
-  const [rootStatus, setRootStatus] = useState<string | null>(null);
   const [rootTime, setRootTime] = useState<TimeBucket>("all");
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
   const [projectDraft, setProjectDraft] = useState("");
-  const [activeProjectTab, setActiveProjectTab] = useState<ProjectTab>("data");
+  const [projectDraftType, setProjectDraftType] = useState<ProjectType>("client");
   const [topbarActionHost, setTopbarActionHost] = useState<HTMLElement | null>(null);
   const [topbarTabHost, setTopbarTabHost] = useState<HTMLElement | null>(null);
   const project = selectedProject ?? "全部项目";
+  const selectedType: ProjectType | null = selectedProject
+    ? projects.find((item) => item.name === selectedProject)?.type ?? "client"
+    : null;
+  const isLibrarySpace = selectedType === "library";
+  const hubTabs = isLibrarySpace ? libraryHubTabs : clientHubTabs;
+  // 落到一个不存在的 tab（比如从项目切到资料空间时停在「计划」）就退回资料
+  const activeHubTab: HubTab = hubTabs.some((tab) => tab.id === hubTab) ? hubTab : "data";
 
   useEffect(() => {
     setTopbarActionHost(document.getElementById("workbench-topbar-actions"));
@@ -121,9 +147,6 @@ export function FileManager({
     setSelectedIds([]);
   }, [selectedFolderId, selectedProject, view]);
 
-  useEffect(() => {
-    setActiveProjectTab("data");
-  }, [selectedProject]);
 
   const resetFilters = () => {
     setBusiness("全部业务");
@@ -176,26 +199,28 @@ export function FileManager({
   const rootKindOptions = rootFiles.map((file) => file.kind).filter((kind, index, list) => list.indexOf(kind) === index);
   const rootProjectOptions = rootFiles.map((file) => file.project).filter((name, index, list) => list.indexOf(name) === index);
   const rootSourceOptions = rootFiles.map(sourceOf).filter((source, index, list) => list.indexOf(source) === index);
-  const rootStatusOptions = rootFiles.map((file) => file.status).filter((status, index, list) => list.indexOf(status) === index);
-  const rootFilterActive = Boolean(rootKind || rootProject || rootSource || rootStatus || rootTime !== "all");
+  const rootFilterActive = Boolean(rootKind || rootProject || rootSource || rootTime !== "all");
   const allRootFiles = sortFiles(rootFiles.filter((file) => (
     file.title.toLowerCase().includes(query.toLowerCase())
     && (!rootKind || file.kind === rootKind)
     && (!rootProject || file.project === rootProject)
     && (!rootSource || sourceOf(file) === rootSource)
-    && (!rootStatus || file.status === rootStatus)
     && (rootTime === "all" || timeBucketOf(file.updated) === rootTime)
     && (business === "全部业务" || file.business === business)
   )));
 
+  /* 上传的位置决定归属，用户一次都不用选：在项目里传就带这个项目、仅成员可见；
+     在「资料」总库里传就落公共资料、全员可见。要改再改，但默认必须给对——
+     CRO 同时服务竞对，让用户在上传时做选择题，早晚会有人选错。 */
   const upload = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []);
-    if (!selectedFiles.length || !selectedProject) return;
+    if (!selectedFiles.length) return;
+    const target = selectedProject ?? "公共资料";
     setFiles((items) => [
       ...selectedFiles.map((file, index): KnowledgeFile => ({
         id: `upload-${Date.now()}-${index}`,
         title: file.name,
-        project: selectedProject,
+        project: target,
         space: "projects",
         kind: "项目资料",
         business: business === "全部业务" ? "未分类" : business,
@@ -204,6 +229,9 @@ export function FileManager({
         status: "已添加",
         agentReady: true,
         folderId: selectedFolderId ?? undefined,
+        // 刚传进来一定还在解析，这个状态必须露出来——否则用户传完立刻去问，
+        // 助手说没找到，他的结论会是"这 AI 不行"
+        parseState: "parsing",
       })),
       ...items,
     ]);
@@ -217,13 +245,15 @@ export function FileManager({
   };
 
   const commitProject = () => {
-    if (!onCreateProject(projectDraft)) return;
+    if (!onCreateProject(projectDraft, projectDraftType)) return;
     setProjectDraft("");
+    setProjectDraftType("client");
     setProjectCreateOpen(false);
   };
 
   const cancelProjectCreate = () => {
     setProjectDraft("");
+    setProjectDraftType("client");
     setProjectCreateOpen(false);
   };
 
@@ -247,53 +277,106 @@ export function FileManager({
   const toggleSelected = (id: string) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const toggleAll = (ids: string[]) => setSelectedIds((current) => ids.every((id) => current.includes(id)) ? [] : ids);
 
+  /* tab 栏在所有视角下都渲染——它现在是项目中枢的顶层，不再是"进了某个项目
+     之后才出现的东西"。这是层级翻转的落点。 */
+  const tabsPortal = topbarTabHost ? createPortal(
+    <div className="hubTabLayer">
+      <NavTabs items={hubTabs} value={activeHubTab} onChange={onHubTabChange} label="项目中枢" />
+      {/* 新建收进筛选器菜单：你打开它本来就是在想「我要哪个项目」，
+          「没有我要的？建一个」正好接在这句话末尾。摆到顶栏当常驻按钮的话，
+          它会让人以为「在计划页建的项目」和「在动态页建的」有区别——
+          新建是容器级动作，不属于任何一个 tab。 */}
+      <ProjectScopePicker
+        projects={projects}
+        value={selectedProject}
+        onChange={(name) => { onSelectedProjectChange(name); onSelectedFolderChange(null); onViewChange("overview"); }}
+        onCreate={() => {
+          // 新建表单住在「资料 · 全部项目」那一屏，所以这个动作要把人带过去，
+          // 否则在待我处理页点了新建什么都不会发生
+          onSelectedProjectChange(null);
+          onSelectedFolderChange(null);
+          onViewChange("overview");
+          onHubTabChange("data");
+          setProjectCreateOpen(true);
+        }}
+      />
+    </div>,
+    topbarTabHost,
+  ) : null;
+
+  if (activeHubTab !== "data") {
+    return (
+      <section className="workbenchView hubView">
+        {tabsPortal}
+        {activeHubTab === "todo" ? (
+          <InboxTodoPanel
+            account={account}
+            projectFilter={selectedProject}
+            resolved={resolvedInbox}
+            onResolve={onResolveInbox}
+            onOpenReview={onOpenReview}
+          />
+        ) : null}
+        {activeHubTab === "activity" ? <ProjectActivityTab project={project} account={account} /> : null}
+        {activeHubTab === "plan" ? <ProjectPlanTab project={project} /> : null}
+      </section>
+    );
+  }
+
   if (!selectedProject) {
-    const projectCards = projects
-      .map((item) => ({ name: item.name, count: activeFiles.filter((file) => file.space === "projects" && file.project === item.name).length }))
-      .filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
     return (
       <section className="workbenchView knowledgeBaseView knowledgeRootView">
+        {tabsPortal}
+        <input className="visuallyHidden" id="hub-file-upload" type="file" multiple onChange={upload} />
         {topbarActionHost ? createPortal(
           <div className="libraryToolLayer">
-            <LibrarySearch value={query} onChange={setQuery} placeholder="搜索项目与文件..." />
-            <button className="primaryButton compact topbarCreateProjectButton" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={14} />新建项目</button>
+            <LibrarySearch value={query} onChange={setQuery} placeholder="搜索全部资料..." />
+            <label className="primaryButton compact topbarFileAction" htmlFor="hub-file-upload"><Upload size={14} />上传文件</label>
           </div>,
           topbarActionHost,
         ) : null}
 
         {projectCreateOpen ? (
-          <div className="libraryProjectCreateRow">
-            <Folder size={14} />
-            <input
-              autoFocus
-              value={projectDraft}
-              onChange={(event) => setProjectDraft(event.target.value)}
-              onKeyDown={(event) => { if (event.key === "Enter") commitProject(); if (event.key === "Escape") cancelProjectCreate(); }}
-              placeholder="项目名称，按 Enter 创建"
-              aria-label="项目名称"
-            />
-            <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建项目"><Check size={14} /></button>
-            <button type="button" onClick={cancelProjectCreate} aria-label="取消"><X size={12} /></button>
+          <div className="libraryProjectCreateBlock">
+            <div className="projectTypeChoice" role="radiogroup" aria-label="新建类型">
+              <button type="button" role="radio" aria-checked={projectDraftType === "client"} className={projectDraftType === "client" ? "isOn" : ""} onClick={() => setProjectDraftType("client")}>
+                <Folder size={13} /><span><strong>项目</strong><small>一单客户委托，仅成员可见</small></span>
+              </button>
+              <button type="button" role="radio" aria-checked={projectDraftType === "library"} className={projectDraftType === "library" ? "isOn" : ""} onClick={() => setProjectDraftType("library")}>
+                <Library size={13} /><span><strong>资料空间</strong><small>不挂客户，全员可见</small></span>
+              </button>
+            </div>
+            <div className="libraryProjectCreateRow">
+              {projectDraftType === "client" ? <Folder size={14} /> : <Library size={14} />}
+              <input
+                autoFocus
+                value={projectDraft}
+                onChange={(event) => setProjectDraft(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Enter") commitProject(); if (event.key === "Escape") cancelProjectCreate(); }}
+                placeholder={projectDraftType === "client" ? "项目名称，按 Enter 创建" : "资料空间名称，按 Enter 创建"}
+                aria-label="名称"
+              />
+              <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建"><Check size={14} /></button>
+              <button type="button" onClick={cancelProjectCreate} aria-label="取消"><X size={12} /></button>
+            </div>
           </div>
         ) : null}
 
-        {projectCards.length ? (
-          <div className="projectFolderStrip">
-            {projectCards.map((item) => (
-              <button type="button" key={item.name} onClick={() => openProject(item.name)}>
-                <Folder size={16} /><span>{item.name}</span><small>{item.count} 项</small>
-              </button>
-            ))}
-          </div>
-        ) : projects.length ? (
-          <EmptyState title="没有匹配的项目" description={`未找到与「${query}」相关的项目`} />
-        ) : (
+        {/* 跨项目视角的主角是问答，不是文件列表。用户来这儿是要一个答案，
+            文件列表退到下面当"我在这些资料里问"的范围说明。
+
+            这里原本还有一条项目卡片带（点进某个项目），已删——顶栏那个筛选器
+            干的是同一件事。同一个动作给两个入口，用户就得先判断该点哪个。
+            "哪个项目有多少份"改由下面表格的「所属」列回答。 */}
+        <KnowledgeAsk projects={projects} files={rootFiles} onOpenFile={setPreviewFile} />
+
+        {!projects.length ? (
           <EmptyState
             title="暂无项目"
             description="创建项目来开始组织你的工作"
             action={<button className="primaryButton compact" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={14} />新建项目</button>}
           />
-        )}
+        ) : null}
 
         <section className="rootRecentOutputs rootAllFiles">
           <div className="sectionBar">
@@ -313,10 +396,6 @@ export function FileManager({
                   <MenuItem active={!rootSource} onSelect={() => setRootSource(null)}>全部来源</MenuItem>
                   {rootSourceOptions.map((source) => <MenuItem key={source} active={rootSource === source} onSelect={() => setRootSource(rootSource === source ? null : source)}>{source}</MenuItem>)}
                 </MenuGroup>
-                <MenuGroup label="解析状态">
-                  <MenuItem active={!rootStatus} onSelect={() => setRootStatus(null)}>全部状态</MenuItem>
-                  {rootStatusOptions.map((status) => <MenuItem key={status} active={rootStatus === status} onSelect={() => setRootStatus(rootStatus === status ? null : status)}>{status}</MenuItem>)}
-                </MenuGroup>
                 <MenuGroup label="更新时间">
                   {timeOptions.map((option) => <MenuItem key={option.id} active={rootTime === option.id} onSelect={() => setRootTime(option.id)}>{option.label}</MenuItem>)}
                 </MenuGroup>
@@ -329,10 +408,13 @@ export function FileManager({
               </Menu>
             </div>
           </div>
-          <FileTable files={allRootFiles} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+          {/* 跨项目视角要回答「这份属于谁」，所以多一列所属；项目内不需要，
+              整张表都在同一个项目里。 */}
+          <FileTable files={allRootFiles} showOwnerScope onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
         </section>
 
-        <WorkspaceAssistant context="library" libraryContext={{ project: "全部项目", business: "全部业务" }} />
+        {/* 跨项目视角的问答已经是页面主角（KnowledgeAsk），不再挂角落那颗胶囊，
+            否则同一件事有两个入口 */}
         {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} /> : null}
         {detailFile ? <FileDetails file={detailFile} onClose={() => setDetailFile(null)} /> : null}
       </section>
@@ -347,7 +429,8 @@ export function FileManager({
   return (
     <section className="workbenchView knowledgeBaseView projectLibraryView">
       <input className="visuallyHidden" id="project-file-upload" type="file" multiple onChange={upload} />
-      {topbarActionHost && activeProjectTab === "data" ? createPortal(
+      {tabsPortal}
+      {topbarActionHost ? createPortal(
         <div className="libraryToolLayer">
           <LibrarySearch value={query} onChange={setQuery} placeholder={inTrash ? "搜索回收站文件..." : "搜索当前项目文件..."} />
           {inTrash ? null : (
@@ -387,16 +470,9 @@ export function FileManager({
         topbarActionHost,
       ) : null}
 
-      {topbarTabHost ? createPortal(
-        <NavTabs items={projectTabs} value={activeProjectTab} onChange={setActiveProjectTab} label="项目空间" />,
-        topbarTabHost,
-      ) : null}
-
-      {activeProjectTab === "activity" ? <ProjectActivityTab project={project} /> : null}
-      {activeProjectTab === "plan" ? <ProjectPlanTab project={project} /> : null}
-
-      {activeProjectTab === "data" ? (
-        <>
+      {/* 这里原来有一句「资料空间 · 全员可见。它跟项目共用同一套文件与助手…」，
+          已删。那是讲给设计评审听的，不是讲给每天用它的人听的。 */}
+      <>
           {activeFilters.length && !inTrash ? (
             <div className="filterChips">
               {activeFilters.map((filter) => (
@@ -421,10 +497,19 @@ export function FileManager({
                 </div>
               ) : null}
               {projectFiles.length ? (
+                // 资料空间没有任务，「任务产物」那一栏永远是空的。又一根死柱子——
+                // 用户见过一次"这里永远没东西"，就会开始怀疑别处的空栏是不是也没用。
+                isLibrarySpace ? (
+                  <section className="libraryListSurface">
+                    <div className="libraryListIntro"><strong>全部资料</strong><span>{projectFiles.length} 项</span></div>
+                    <FileTable files={sortFiles(projectFiles.filter(matchesFilters))} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  </section>
+                ) : (
                 <div className="projectFileLanes projectOverviewLanes">
                   <OverviewLane title="项目资料" icon={<FolderInput size={16} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} total={projectInputs.length} files={projectInputs.slice(0, 10)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
                   <OverviewLane title="任务产物" icon={<FolderOutput size={16} />} description={`由项目任务生成 · ${projectOutputs.length} 项`} total={projectOutputs.length} files={projectOutputs.slice(0, 10)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
                 </div>
+                )
               ) : (
                 <EmptyState
                   title="暂无文件"
@@ -496,8 +581,7 @@ export function FileManager({
               )}
             />
           ) : null}
-        </>
-      ) : null}
+      </>
 
       <WorkspaceAssistant context="library" libraryContext={{ project, business }} />
       {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} /> : null}
@@ -512,11 +596,57 @@ type Props = {
   selectedFolderId: string | null;
   folders: LibraryFolder[];
   view: LibraryView;
+  hubTab: HubTab;
+  onHubTabChange: (tab: HubTab) => void;
+  account: InboxAccount;
+  resolvedInbox: Record<string, string>;
+  onResolveInbox: (itemId: string, note: string) => void;
+  onOpenReview: (docTitle: string, project: string) => void;
   onSelectedProjectChange: (project: string | null) => void;
   onSelectedFolderChange: (folderId: string | null) => void;
   onViewChange: (view: LibraryView) => void;
-  onCreateProject: (name: string) => WorkbenchProject | null;
+  onCreateProject: (name: string, type: ProjectType) => WorkbenchProject | null;
 };
+
+/* 项目筛选器。层级翻转之后，项目不再是必须先走的那条路，而是这一个控件——
+   默认「全部项目」，收窄到某个项目时下面的视图退回你熟悉的两列形式。 */
+function ProjectScopePicker({ projects, value, onChange, onCreate }: { projects: WorkbenchProject[]; value: string | null; onChange: (project: string | null) => void; onCreate: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
+  const clients = projects.filter((item) => item.type === "client");
+  const libraries = projects.filter((item) => item.type === "library");
+  return (
+    <div ref={ref} className="hubScopePicker">
+      <button type="button" className={value ? "isNarrowed" : ""} aria-expanded={open} aria-label="切换项目范围" onClick={() => setOpen((current) => !current)}>
+        <Folder size={13} />
+        <span>{value ?? "全部项目"}</span>
+        <ChevronRight size={12} />
+      </button>
+      {open ? (
+        <div className="toolMenu hubScopeMenu" role="menu">
+          <button className={`toolMenuItem ${value ? "" : "active"}`} type="button" onClick={() => { onChange(null); setOpen(false); }}>
+            <span>全部项目</span>{value ? null : <Check size={12} />}
+          </button>
+          {clients.length ? <p className="hubScopeGroup">项目</p> : null}
+          {clients.map((item) => (
+            <button className={`toolMenuItem ${value === item.name ? "active" : ""}`} type="button" key={item.id} onClick={() => { onChange(item.name); setOpen(false); }}>
+              <span>{item.name}</span>{value === item.name ? <Check size={12} /> : null}
+            </button>
+          ))}
+          {libraries.length ? <p className="hubScopeGroup">资料空间</p> : null}
+          {libraries.map((item) => (
+            <button className={`toolMenuItem ${value === item.name ? "active" : ""}`} type="button" key={item.id} onClick={() => { onChange(item.name); setOpen(false); }}>
+              <span>{item.name}</span>{value === item.name ? <Check size={12} /> : null}
+            </button>
+          ))}
+          <button className="toolMenuItem hubScopeCreate" type="button" onClick={() => { onCreate(); setOpen(false); }}>
+            <Plus size={13} /><span>新建项目或资料空间</span>
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function LibrarySearch({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
   return (
@@ -576,15 +706,16 @@ function OverviewLane({ title, icon, description, total, files, onOpenAll, onPre
   );
 }
 
-function FileTable({ files, selectable = false, selectedIds = [], onToggle, onToggleAll, onPreview, onDetail, onDelete }: { files: KnowledgeFile[]; selectable?: boolean; selectedIds?: string[]; onToggle?: (id: string) => void; onToggleAll?: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
+function FileTable({ files, selectable = false, showOwnerScope = false, selectedIds = [], onToggle, onToggleAll, onPreview, onDetail, onDelete }: { files: KnowledgeFile[]; selectable?: boolean; showOwnerScope?: boolean; selectedIds?: string[]; onToggle?: (id: string) => void; onToggleAll?: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
   const allSelected = Boolean(files.length) && files.every((file) => selectedIds.includes(file.id));
   return (
-    <div className={`knowledgeTable ${selectable ? "isSelectable" : ""}`} role="table">
+    <div className={`knowledgeTable ${selectable ? "isSelectable" : ""} ${showOwnerScope ? "hasOwnerScope" : ""}`} role="table">
       <div className="knowledgeTableHeader" role="row">
         <span className="knowledgeHeadName">
           {selectable ? <SelectToggle checked={allSelected} label={allSelected ? "取消全选" : "全选"} onToggle={() => onToggleAll?.()} /> : null}
           文件名称
         </span>
+        {showOwnerScope ? <span>所属</span> : null}
         <span>文件类型</span>
         <span>来源</span>
         <span>更新</span>
@@ -595,6 +726,7 @@ function FileTable({ files, selectable = false, selectedIds = [], onToggle, onTo
           key={file.id}
           file={file}
           selectable={selectable}
+          showOwnerScope={showOwnerScope}
           selected={selectedIds.includes(file.id)}
           onToggle={() => onToggle?.(file.id)}
           onPreview={() => onPreview(file)}
@@ -607,7 +739,7 @@ function FileTable({ files, selectable = false, selectedIds = [], onToggle, onTo
   );
 }
 
-function FileRow({ file, selectable, selected, onToggle, onPreview, onDetail, onDelete }: { file: KnowledgeFile; selectable: boolean; selected: boolean; onToggle: () => void; onPreview: () => void; onDetail: () => void; onDelete: () => void }) {
+function FileRow({ file, selectable, showOwnerScope = false, selected, onToggle, onPreview, onDetail, onDelete }: { file: KnowledgeFile; selectable: boolean; showOwnerScope?: boolean; selected: boolean; onToggle: () => void; onPreview: () => void; onDetail: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLElement>(open, () => setOpen(false));
   return (
@@ -621,9 +753,24 @@ function FileRow({ file, selectable, selected, onToggle, onPreview, onDetail, on
         {selectable ? <SelectToggle checked={selected} label={`${selected ? "取消选择" : "选择"}${file.title}`} onToggle={onToggle} /> : null}
         <button className="knowledgeFileMain" type="button" onClick={onPreview}>
           <span className="knowledgeFileIcon">{file.title.endsWith(".xlsx") ? <FileSpreadsheet size={16} /> : <FileText size={16} />}</span>
-          <span><strong>{file.title}</strong><small>{file.kind}</small></span>
+          <span>
+            <strong>{file.title}</strong>
+            <small>{file.kind}</small>
+          </span>
         </button>
+        {/* 解析成功什么都不显示。只有解析中和失败才占用户注意力——成功是默认
+            预期，报了就是噪音；失败不报，这份文件就是死的。
+
+            标签放在按钮外面：.knowledgeFileMain 是「图标 + 文件名」两列的网格，
+            塞进去只会掉到第三格里被压成 32px；而且「重试」是可点的，
+            按钮里套按钮本身也不成立。 */}
+        {file.parseState === "parsing" ? (
+          <em className="fileParseChip isParsing"><LoaderCircle size={11} />解析中</em>
+        ) : file.parseState === "failed" ? (
+          <em className="fileParseChip isFailed">解析失败<button type="button">重试</button></em>
+        ) : null}
       </div>
+      {showOwnerScope ? <span className="knowledgeScopeCell">{file.project}</span> : null}
       <span>{file.kind}</span>
       <span>{sourceOf(file)}</span>
       <span>{file.updated}</span>

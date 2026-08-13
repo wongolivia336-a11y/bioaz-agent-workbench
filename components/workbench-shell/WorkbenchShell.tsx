@@ -10,9 +10,11 @@ import { TaskList } from "./TaskList";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { DigitalTeamPage } from "./DigitalTeamPage";
 import { KnowledgeBasePage } from "../knowledge-base/KnowledgeBasePage";
+import { inboxAccounts, inboxItems } from "../../lib/workbench/mockInbox";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
-import type { QuotationManagementTarget, WorkbenchProject } from "../../modules/types";
+import type { ProjectType, QuotationManagementTarget, WorkbenchProject } from "../../modules/types";
+import type { HubTab } from "./FileManager";
 import { QuotationManagement } from "../../modules/quotation-management";
 
 export default function WorkbenchShell() {
@@ -41,6 +43,11 @@ export default function WorkbenchShell() {
   const [libraryFolderId, setLibraryFolderId] = useState<string | null>(null);
   const [libraryFolders] = useState<LibraryFolder[]>([]);
   const [libraryView, setLibraryView] = useState<LibraryView>("overview");
+  /* 项目中枢的 tab 提到 shell 持有：侧栏的收件箱图标要能直接把人送到
+     「待我处理」，所以这个状态不能只活在 FileManager 里面。 */
+  const [hubTab, setHubTab] = useState<HubTab>("data");
+  const [accountId, setAccountId] = useState(inboxAccounts[1].id);
+  const [resolvedInboxItems, setResolvedInboxItems] = useState<Record<string, string>>({});
   const [helperConversationStarted, setHelperConversationStarted] = useState(false);
   const [, setModuleRunStatus] = useState<ModuleRunStatus>("active");
   const [sessionSnapshots, setSessionSnapshots] = useState<Record<string, AgentSessionSnapshot[]>>({});
@@ -188,6 +195,26 @@ export default function WorkbenchShell() {
     setRoute("module");
   };
 
+  /* 收件箱里的「打开文件逐条审阅」。收件箱不认识 module，它只喊一句
+     「把这份文件的审阅台打开」，由 shell 决定落到哪个 module。 */
+  const openQaReview = (docTitle: string, projectName: string) => {
+    const module = getAgentModule("qa-review");
+    if (!module) return;
+    const taskId = createRuntimeTask(docTitle, module, projectName);
+    if (!taskId) return;
+    setActiveModule(module);
+    setActiveCoworkerId(module.suggestedCoworker.id);
+    setInitialRequest(undefined);
+    setHandoffNotice(undefined);
+    setText("");
+    setClarification(null);
+    setPendingRequest(null);
+    setPendingModule(null);
+    setHelperConversationStarted(false);
+    setModuleRunStatus("active");
+    setRoute("module");
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const moduleId = params.get("module");
@@ -270,15 +297,17 @@ export default function WorkbenchShell() {
     });
   }, [activeTaskId]);
   const togglePin = (id: string) => setPinnedItemIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [id, ...items]);
-  const createProject = (name: string) => {
+  const createProject = (name: string, type: ProjectType = "client") => {
     const normalized = name.trim();
     if (!normalized || projects.some((item) => item.name === normalized)) return null;
-    const nextProject = { id: `project-runtime-${Date.now()}`, name: normalized };
+    const nextProject: WorkbenchProject = { id: `project-runtime-${Date.now()}`, name: normalized, type };
     setProjects((items) => [...items, nextProject]);
     setHighlightedProjectId(nextProject.id);
     setLibraryProject(nextProject.name);
     setLibraryFolderId(null);
     setLibraryView("overview");
+    // 资料空间没有动态/计划，建完直接落到资料
+    setHubTab("data");
     setRoute("library");
     return nextProject;
   };
@@ -321,7 +350,9 @@ export default function WorkbenchShell() {
   const shellView = route !== "module";
   const Session = activeModule?.Session;
   const visibleProjects = projects.filter((item) => !deletedProjectIds.includes(item.id));
-  const visibleProjectOptions = visibleProjects.map((item) => item.name);
+  // 任务只能挂在客户委托项目下——资料空间没有任务流转，让它出现在选项里
+  // 只会制造一条走不通的路
+  const visibleProjectOptions = visibleProjects.filter((item) => item.type === "client").map((item) => item.name);
   const libraryTasks = useMemo(() => {
     const currentNameByOriginal = new Map(visibleProjects.map((item) => [
       workspaceProjects.find((original) => original.id === item.id)?.name ?? item.name,
@@ -342,6 +373,9 @@ export default function WorkbenchShell() {
       }));
     return [...runtimeTasks, ...staticTasks].filter((task) => !deletedTaskIds.includes(task.id));
   }, [deletedTaskIds, renamedTaskTitles, runtimeTasks, visibleProjects]);
+  const account = inboxAccounts.find((item) => item.id === accountId) ?? inboxAccounts[0];
+  // 徽标数只算「待我处理」里还没落动作的条目——未读和未处理是两件事
+  const inboxCount = inboxItems.filter((item) => item.lane === "todo" && item.audienceRole === account.role && !resolvedInboxItems[item.id]).length;
   const activeLibraryFolder = libraryFolders.find((folder) => folder.id === libraryFolderId) ?? null;
   const librarySectionLabel = libraryView === "inputs"
     ? "项目资料"
@@ -354,9 +388,9 @@ export default function WorkbenchShell() {
           : null;
   if (quotationTarget) return <QuotationManagement onBack={() => setQuotationTarget(null)} initialBusiness={quotationTarget.business} initialTab={quotationTarget.tab} initialDraft={quotationTarget.draft} />;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
-    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} deletedProjectIds={deletedProjectIds} deletedTaskIds={deletedTaskIds} renamedTaskTitles={renamedTaskTitles} libraryFolders={libraryFolders} activeLibraryFolderId={libraryFolderId} highlightedProjectId={highlightedProjectId} onOpenLibraryFolder={(projectName, folderId) => { setLibraryProject(projectName); setLibraryFolderId(folderId); setLibraryView(folderId ? "folder" : "overview"); setRoute("library"); }} onCreateProject={createProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onRenameTask={renameTask} onDeleteTask={deleteTask} onTogglePinnedItem={togglePin} onRouteChange={navigateShellRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationTarget({ business: "root" })} onToggleCollapsed={() => setCollapsed((value) => !value)} />
+    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} deletedProjectIds={deletedProjectIds} deletedTaskIds={deletedTaskIds} renamedTaskTitles={renamedTaskTitles} libraryFolders={libraryFolders} activeLibraryFolderId={libraryFolderId} activeLibrarySpace={route === "library" ? libraryProject : null} highlightedProjectId={highlightedProjectId} account={account} inboxCount={inboxCount} onAccountChange={setAccountId} onOpenInbox={() => { setLibraryProject(null); setLibraryFolderId(null); setLibraryView("overview"); setHubTab("todo"); setRoute("library"); }} onOpenLibraryFolder={(projectName, folderId) => { setLibraryProject(projectName); setLibraryFolderId(folderId); setLibraryView(folderId ? "folder" : "overview"); setHubTab("data"); setRoute("library"); }} onCreateProject={createProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onRenameTask={renameTask} onDeleteTask={deleteTask} onTogglePinnedItem={togglePin} onRouteChange={navigateShellRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationTarget({ business: "root" })} onToggleCollapsed={() => setCollapsed((value) => !value)} />
     <button className="mobileSidebarBackdrop" type="button" aria-label="关闭侧边栏" onClick={() => setCollapsed(true)} />
     {route === "module" ? <button className="mobileModuleSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button> : null}
-    {route === "module" && Session && activeModule ? <Session projectName={project ?? "未归属项目"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} onOpenQuotationManagement={(options) => setQuotationTarget({ business: "dmpk", ...options })} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="topbarPathLayer"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={14} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "未归属项目"}</span><ChevronRight size={14} /><strong>{taskTitle}</strong></> : route === "library" && libraryProject ? <><button type="button" onClick={() => { setLibraryProject(null); setLibraryFolderId(null); setLibraryView("overview"); }}>项目中枢</button><ChevronRight size={14} />{librarySectionLabel ? <><button type="button" onClick={() => { setLibraryFolderId(null); setLibraryView("overview"); }}>{libraryProject}</button><ChevronRight size={14} /><strong>{librarySectionLabel}</strong></> : <strong>{libraryProject}</strong>}</> : <strong>{route === "library" ? "项目中枢" : route === "knowledgeBase" ? "知识库" : route === "digitalTeam" ? "数字团队" : "新建任务"}</strong>}</div><div className="topbarInlineTools" id="workbench-topbar-actions" /></div><div className="topbarSecondRow"><div id="workbench-topbar-tabs" className="topbarTabLayer" /><div className="topbarToolLayer"><div className="topbarActions" /></div></div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager projects={visibleProjects} selectedProject={libraryProject} selectedFolderId={libraryFolderId} folders={libraryFolders} view={libraryView} onSelectedProjectChange={(nextProject) => { setLibraryProject(nextProject); if (!nextProject) { setLibraryFolderId(null); setLibraryView("overview"); } }} onSelectedFolderChange={setLibraryFolderId} onViewChange={setLibraryView} onCreateProject={createProject} /> : route === "digitalTeam" ? <DigitalTeamPage projects={visibleProjects} tasks={runtimeTasks.filter((task) => !deletedTaskIds.includes(task.id))} onStartModule={startModuleDirect} onOpenLibrary={() => navigateShellRoute("library")} /> : route === "knowledgeBase" ? <KnowledgeBasePage /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={quickStarts} projectOptions={visibleProjectOptions} projectNotice={projectNotice} onProjectChange={(nextProject) => { setProject(nextProject); setProjectNotice(null); }} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
+    {route === "module" && Session && activeModule ? <Session projectName={project ?? "未归属项目"} taskTitle={taskTitle} initialRequest={initialRequest} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} onOpenQuotationManagement={(options) => setQuotationTarget({ business: "dmpk", ...options })} viewerRole={account.role} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="topbarPathLayer"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={14} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "未归属项目"}</span><ChevronRight size={14} /><strong>{taskTitle}</strong></> : route === "library" && libraryProject ? <><button type="button" onClick={() => { setLibraryProject(null); setLibraryFolderId(null); setLibraryView("overview"); }}>项目中枢</button><ChevronRight size={14} />{librarySectionLabel ? <><button type="button" onClick={() => { setLibraryFolderId(null); setLibraryView("overview"); }}>{libraryProject}</button><ChevronRight size={14} /><strong>{librarySectionLabel}</strong></> : <strong>{libraryProject}</strong>}</> : <strong>{route === "library" ? "项目中枢" : route === "knowledgeBase" ? "知识库" : route === "digitalTeam" ? "数字团队" : "新建任务"}</strong>}</div><div className="topbarInlineTools" id="workbench-topbar-actions" /></div><div className="topbarSecondRow"><div id="workbench-topbar-tabs" className="topbarTabLayer" /><div className="topbarToolLayer"><div className="topbarActions" /></div></div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "library" ? <FileManager projects={visibleProjects} selectedProject={libraryProject} selectedFolderId={libraryFolderId} folders={libraryFolders} view={libraryView} hubTab={hubTab} onHubTabChange={setHubTab} account={account} resolvedInbox={resolvedInboxItems} onResolveInbox={(itemId, note) => setResolvedInboxItems((current) => ({ ...current, [itemId]: note }))} onOpenReview={openQaReview} onSelectedProjectChange={(nextProject) => { setLibraryProject(nextProject); if (!nextProject) { setLibraryFolderId(null); setLibraryView("overview"); } }} onSelectedFolderChange={setLibraryFolderId} onViewChange={setLibraryView} onCreateProject={createProject} /> : route === "digitalTeam" ? <DigitalTeamPage projects={visibleProjects} tasks={runtimeTasks.filter((task) => !deletedTaskIds.includes(task.id))} onStartModule={startModuleDirect} onOpenLibrary={() => navigateShellRoute("library")} /> : route === "knowledgeBase" ? <KnowledgeBasePage /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={quickStarts} projectOptions={visibleProjectOptions} projectNotice={projectNotice} onProjectChange={(nextProject) => { setProject(nextProject); setProjectNotice(null); }} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }

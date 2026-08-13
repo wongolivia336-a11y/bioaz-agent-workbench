@@ -1,0 +1,448 @@
+/* ===================================================================
+   项目中枢 —— 层级翻转之后的顶层
+   -------------------------------------------------------------------
+   tab 在上、项目在下。以前必须先选一个项目才看得到动态/计划/资料，
+   所以待办天生跨不了项目；现在项目只是 tab 内部的一个筛选维度。
+   =================================================================== */
+
+.hubTabLayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.hubView {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  padding: 20px 32px 24px;
+}
+
+.hubSpaceHint {
+  margin: 0 0 14px;
+  border-left: 2px solid var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent-soft);
+  padding: 8px 12px;
+  color: var(--bioaz-agent-accent);
+  font-size: var(--bioaz-type-label-size);
+}
+
+/* ---- 项目筛选器 ---- */
+
+.hubScopePicker { position: relative; flex: none; }
+
+.hubScopePicker > button {
+  display: inline-flex;
+  max-width: 220px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 4px 10px 4px 9px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  cursor: pointer;
+}
+
+.hubScopePicker > button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hubScopePicker > button:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+.hubScopePicker > button.isNarrowed {
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+.hubScopeMenu { right: auto; left: 0; min-width: 220px; }
+
+.hubScopeGroup {
+  margin: 6px 0 2px;
+  padding: 0 10px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hubScopeCreate {
+  margin-top: 4px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 8px;
+  color: var(--bioaz-text-secondary);
+}
+
+.hubScopeCreate:hover { color: var(--bioaz-text-primary); }
+
+/* 动态栏的「只看与我有关」——收件箱那条动态栏合并进来之后的落点 */
+.activityMineToggle {
+  flex: none;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 5px 12px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.activityMineToggle:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+.activityMineToggle.isOn {
+  border-color: var(--bioaz-action-primary);
+  background: var(--bioaz-action-primary);
+  color: #fff;
+}
+
+/* ---- 新建时的二级类型选择 ---- */
+
+.projectCreateBlock,
+.libraryProjectCreateBlock { display: grid; gap: 6px; }
+
+.libraryProjectCreateBlock { margin-bottom: 16px; }
+
+.projectTypeChoice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 2px 2px 0;
+}
+
+.projectTypeChoice button {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 7px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 8px 9px;
+  color: var(--bioaz-text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.projectTypeChoice button > svg { margin-top: 2px; }
+
+.projectTypeChoice button > span { display: grid; min-width: 0; gap: 1px; }
+
+.projectTypeChoice strong { color: var(--bioaz-text-primary); font-size: 12px; }
+
+.projectTypeChoice small { color: var(--bioaz-text-tertiary); font-size: 10px; line-height: 14px; }
+
+.projectTypeChoice button.isOn {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent-soft);
+}
+
+.projectTypeChoice button.isOn strong { color: var(--bioaz-agent-accent); }
+
+.librarySpaceRow.active {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+/* ---- 解析状态：只在偏离预期时出声 ---- */
+
+/* white-space 不能少：文件名那格是 flex，标签被挤到没宽度时中文会一个字
+   一行竖着排下去，把整行撑高。 */
+.fileParseChip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fileParseChip.isParsing {
+  background: var(--bioaz-status-running-soft);
+  color: var(--bioaz-status-running);
+}
+
+.fileParseChip.isParsing svg { animation: hubSpin 900ms linear infinite; }
+
+.fileParseChip.isFailed {
+  background: var(--bioaz-status-danger-soft);
+  color: var(--bioaz-status-danger);
+}
+
+.fileParseChip.isFailed button {
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+/* 文件名那一格本身也是网格，标签作为兄弟节点进去会独占一整行被拉到满宽。
+   有标签时改成一行 flex：文件名吃掉剩余宽度，标签贴在它右边。 */
+.knowledgeFileCell:has(> .fileParseChip) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.knowledgeFileCell:has(> .fileParseChip) > .knowledgeFileMain {
+  min-width: 0;
+  flex: 1;
+}
+
+.knowledgeFileCell > .fileParseChip { flex: none; }
+
+@keyframes hubSpin { to { transform: rotate(360deg); } }
+
+/* 跨项目视角多一列「所属」。原来靠一条项目卡片带回答这件事，那条带子
+   跟顶栏的筛选器是同一个动作的两个入口，删掉之后由这一列接手。 */
+.knowledgeTable.hasOwnerScope .knowledgeTableHeader,
+.knowledgeTable.hasOwnerScope .knowledgeFileRow {
+  grid-template-columns: minmax(220px, 1.4fr) minmax(120px, 0.8fr) minmax(120px, 0.8fr) 110px 84px 32px;
+}
+
+.knowledgeScopeCell {
+  overflow: hidden;
+  color: var(--bioaz-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fileParseChip.isParsing svg { animation: none; }
+}
+
+/* ===================================================================
+   资料问答场
+   -------------------------------------------------------------------
+   跨项目视角下这里是主角：用户来要一个答案，下面那张文件表只是
+   「我在这些资料里问」的范围说明。
+   =================================================================== */
+
+.knowledgeAsk {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.knowledgeAskBar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  padding: 10px 12px 10px 16px;
+  box-shadow: var(--bioaz-shadow-subtle);
+}
+
+.knowledgeAskBar:focus-within {
+  border-color: var(--bioaz-agent-accent);
+  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
+}
+
+.knowledgeAskSpark { color: var(--bioaz-agent-accent); }
+
+.knowledgeAskBar input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--bioaz-text-primary);
+  font-family: inherit;
+  font-size: var(--bioaz-type-body-size);
+}
+
+.knowledgeAskScope { position: relative; flex: none; }
+
+.knowledgeAskScope > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  padding: 4px 10px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.knowledgeAskScope > button small { color: var(--bioaz-text-tertiary); font-size: 10px; }
+
+.knowledgeAskScope > button:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+.knowledgeAskScopeMenu { right: 0; left: auto; min-width: 200px; max-height: 260px; overflow-y: auto; }
+
+.knowledgeAskSend {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-action-primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.knowledgeAskSend:disabled { opacity: 0.3; cursor: default; }
+
+.knowledgeAnswer {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--bioaz-agent-accent-border);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-agent-accent-soft);
+  padding: 16px 18px;
+}
+
+.knowledgeAnswerQuestion {
+  margin: 0;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.knowledgeAnswerBody {
+  margin: 0;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-body-size);
+  line-height: var(--bioaz-type-body-line);
+}
+
+/* 出处不是装饰：说不出处的答案在 GxP 场景里没人敢用，等于没答 */
+.knowledgeAnswerCitations {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--bioaz-agent-accent-border);
+  padding-top: 10px;
+}
+
+.knowledgeCitationLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+}
+
+.knowledgeCitation {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 3px 8px;
+  color: var(--bioaz-text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.knowledgeCitation:hover { border-color: var(--bioaz-agent-accent); color: var(--bioaz-agent-accent); }
+
+.knowledgeCitation > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.knowledgeCitation em {
+  flex: none;
+  color: var(--bioaz-text-tertiary);
+  font-style: normal;
+}
+
+/* 助手负责答，数字同事负责做。识别到要产物就转交，不硬答一段文字 */
+.knowledgeAnswerHandoff {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 8px 12px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+}
+
+.knowledgeAnswerHandoff strong { color: var(--bioaz-text-primary); }
+
+.knowledgeAnswerHandoff button {
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-action-primary);
+  padding: 4px 12px;
+  color: #fff;
+  font-size: var(--bioaz-type-label-size);
+  cursor: pointer;
+}
+
+/* 问答不是任务，不该占侧栏任务树的位置——留在这儿折叠着 */
+.knowledgeAskHistory > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  cursor: pointer;
+}
+
+.knowledgeAskHistory > button:hover { color: var(--bioaz-text-primary); }
+
+.knowledgeAskHistory > button svg.isOpen { transform: rotate(180deg); }
+
+.knowledgeAskHistory ol {
+  display: grid;
+  margin: 10px 0 0;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.knowledgeAskHistory li {
+  display: grid;
+  gap: 2px;
+  border-left: 2px solid var(--bioaz-border);
+  padding-left: 10px;
+}
+
+.knowledgeAskHistory li strong { color: var(--bioaz-text-primary); font-size: var(--bioaz-type-small-size); }
+
+.knowledgeAskHistory li span {
+  overflow: hidden;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .hubView { padding: 16px; }
+  .hubTabLayer { flex-wrap: wrap; gap: 8px; }
+
+  /* 范围选择器换到第二行，但发送键要跟输入框待在同一行——
+     它被挤到单独一行左对齐时，看着像个孤零零的图标按钮。 */
+  .knowledgeAskBar { grid-template-columns: auto minmax(0, 1fr) auto; row-gap: 8px; }
+  .knowledgeAskSend { grid-row: 1; grid-column: 3; }
+  .knowledgeAskScope { grid-row: 2; grid-column: 1 / -1; }
+
+  .projectTypeChoice { grid-template-columns: minmax(0, 1fr); }
+}

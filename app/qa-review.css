@@ -1,0 +1,567 @@
+/* ===================================================================
+   QA 审核台
+   -------------------------------------------------------------------
+   左原件、右三栏。撰写人端与审批人端共用这一套，角色只决定顶栏出现哪个
+   主操作、批注能不能落处置——所以这里没有任何 role 分支的布局规则。
+   =================================================================== */
+
+.qaReviewWorkspace {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.qaReviewWorkspace > .topbar { grid-column: 1 / -1; }
+
+/* 面板那一列原来是 auto，于是它按内容宽度撑到 696px，把原件挤成 200px，
+   顶栏又横跨两列，两边直接叠在一起。给它跟 DMPK 会话同一套：定宽一列，
+   其余内容全部锁在第一列。1023 以下面板是浮层，不参与布局，这里不管。 */
+@media (min-width: 1024px) {
+  .qaReviewWorkspace:has(.workbenchPanel.isOpen) {
+    grid-template-columns: minmax(0, 1fr) var(--panel-width, 400px);
+  }
+
+  .qaReviewWorkspace:has(.workbenchPanel.isOpen) > :not(.workbenchPanel) {
+    grid-column: 1;
+  }
+}
+
+.qaRoleBadge {
+  margin-left: 8px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  padding: 2px 8px;
+  color: var(--bioaz-agent-accent);
+  font-size: var(--bioaz-type-label-size);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.qaTopbarTools {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.qaTopbarTools .inlineSelectMenu button {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.qaTopbarTools .inlineSelectMenu small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+}
+
+/* ---- 原件视图 ---- */
+
+/* 列必须显式写死一列。不写的话隐式列是 auto，会按内容的 max-content 撑开——
+   而内容里那张纸是定宽的，于是整个 viewer 的子元素比 viewer 本身还宽。 */
+.qaViewer {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.qaViewerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 10px 18px;
+}
+
+.qaViewerTitle {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qaViewerPager,
+.qaViewerZoom {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.qaViewerPager b {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 2px 8px;
+  color: var(--bioaz-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.qaViewerPager i { color: var(--bioaz-text-tertiary); font-style: normal; }
+
+.qaViewerZoom b { min-width: 38px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.qaViewerPager button,
+.qaViewerZoom button {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  padding: 0;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+}
+
+.qaViewerPager button:hover:not(:disabled),
+.qaViewerZoom button:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
+
+.qaViewerPager button:disabled { opacity: 0.36; cursor: default; }
+
+.qaViewerStage {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: 84px minmax(0, 1fr);
+  background: var(--bioaz-canvas);
+}
+
+.qaThumbRail {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  border-right: 1px solid var(--bioaz-border);
+  padding: 14px 10px;
+}
+
+.qaThumb {
+  display: grid;
+  flex: none;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.qaThumb > span {
+  display: block;
+  height: 76px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 4px;
+  background: var(--bioaz-surface);
+}
+
+.qaThumb small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  text-align: center;
+}
+
+.qaThumb:hover > span { border-color: var(--bioaz-border-strong); }
+
+.qaThumb.isActive > span {
+  border-color: var(--bioaz-agent-accent);
+  box-shadow: 0 0 0 2px var(--bioaz-agent-focus-ring);
+}
+
+.qaThumb.isActive small { color: var(--bioaz-text-primary); font-weight: 600; }
+
+/* min-width: 0 是必须的：网格项的最小宽度默认是 min-content，而页面那张纸
+   是定宽的（跟着缩放走），没有这一行它会把整列撑宽、顶到面板底下去，
+   overflow: auto 也就永远不会触发。 */
+.qaPageScroll {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  /* safe：纸比容器窄时居中，宽时退回左对齐。普通 center 在溢出时会把
+     左半边推出可滚动区域，那部分永远够不着。 */
+  justify-content: safe center;
+  overflow: auto;
+  padding: 24px;
+}
+
+.qaPage {
+  align-self: flex-start;
+  flex: none;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 2px;
+  background: #fff;
+  padding: 40px 44px 28px;
+  box-shadow: var(--bioaz-shadow-subtle);
+}
+
+.qaPageNo {
+  margin: 0 0 36px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  text-align: right;
+}
+
+.qaPage h1 {
+  display: grid;
+  margin: 0 0 40px;
+  gap: 4px;
+  color: var(--bioaz-text-primary);
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: 6px;
+  text-align: center;
+}
+
+.qaPage h1 small {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.qaPageFields { display: grid; margin: 0; gap: 18px; }
+
+.qaPageFields > div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 20px;
+}
+
+.qaPageFields dt {
+  display: grid;
+  gap: 2px;
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.qaPageFields dt small { font-size: 10px; letter-spacing: 0; }
+
+.qaPageFields dd {
+  margin: 0;
+  border-bottom: 1px solid var(--bioaz-text-primary);
+  padding-bottom: 3px;
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.qaPageMarker {
+  margin: 28px 0 0;
+  border-left: 2px solid var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent-soft);
+  padding: 8px 12px;
+  color: var(--bioaz-agent-accent);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.qaPageFooter {
+  display: grid;
+  margin-top: 56px;
+  gap: 6px;
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.qaPageFooter span { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+/* ---- 三个面板的公共壳 ---- */
+
+.qaPanel { display: grid; gap: 14px; padding: 16px 18px 24px; }
+
+.qaPanelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.qaPanelHead > div { display: grid; gap: 2px; }
+
+.qaPanelHead strong {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-body-size);
+}
+
+.qaPanelHead small {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.qaPanelHint {
+  margin: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface-subtle);
+  padding: 8px 12px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: 18px;
+}
+
+/* ---- AI 文件审核 ---- */
+
+.qaFindingGroup { display: grid; gap: 8px; }
+
+.qaFindingGroup h4 {
+  margin: 6px 0 2px;
+  color: var(--bioaz-agent-accent);
+  font-size: var(--bioaz-type-small-size);
+  font-weight: 600;
+}
+
+.qaFinding {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: 12px 14px;
+  transition: border-color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+
+.qaFinding.isActive {
+  border-color: var(--bioaz-agent-accent);
+  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
+}
+
+.qaFinding.state-accepted { background: var(--bioaz-status-success-soft); border-color: #b9e7d4; }
+.qaFinding.state-dismissed { opacity: 0.6; }
+
+.qaFindingBody {
+  display: grid;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.qaFindingTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.qaFindingTag {
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.qaFindingTag.tone-error { background: var(--bioaz-status-danger-soft); color: var(--bioaz-status-danger); }
+.qaFindingTag.tone-warning { background: var(--bioaz-status-warning-soft); color: var(--bioaz-status-warning); }
+
+.qaFindingTop small { color: var(--bioaz-text-tertiary); font-size: 11px; white-space: nowrap; }
+
+.qaFindingBody p {
+  margin: 0;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  line-height: 20px;
+}
+
+.qaFindingActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 8px;
+}
+
+.qaFindingState { color: var(--bioaz-text-tertiary); font-size: 11px; }
+.qaFindingState.state-accepted { color: var(--bioaz-status-success); font-weight: 600; }
+.qaFindingState.state-dismissed { color: var(--bioaz-text-disabled); }
+
+.qaFindingButtons { display: inline-flex; gap: 6px; }
+
+.qaFindingButtons button {
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 3px 10px;
+  color: var(--bioaz-text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.qaFindingButtons button:hover { border-color: var(--bioaz-text-tertiary); color: var(--bioaz-text-primary); }
+
+.qaFindingButtons button.isOn {
+  border-color: var(--bioaz-action-primary);
+  background: var(--bioaz-action-primary);
+  color: #fff;
+}
+
+/* ---- AI 文件比对 ---- */
+
+.qaDiffList { display: grid; gap: 10px; }
+
+.qaDiffRow {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: 12px 14px;
+}
+
+.qaDiffRow > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.qaDiffRow > header strong { color: var(--bioaz-text-primary); font-size: var(--bioaz-type-small-size); }
+.qaDiffRow > header small { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+.qaDiffPair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+
+.qaDiffBefore,
+.qaDiffAfter {
+  overflow-wrap: anywhere;
+  border-radius: var(--bioaz-radius-tool);
+  padding: 6px 10px;
+  font-size: var(--bioaz-type-label-size);
+  line-height: 18px;
+}
+
+.qaDiffBefore {
+  background: var(--bioaz-status-danger-soft);
+  color: var(--bioaz-status-danger);
+  text-decoration: line-through;
+}
+
+.qaDiffAfter { background: var(--bioaz-status-success-soft); color: var(--bioaz-status-success); }
+
+.qaDiffRow.kind-added .qaDiffPair { grid-template-columns: minmax(0, 1fr); }
+.qaDiffRow.kind-added .qaDiffBefore { display: none; }
+
+/* ---- 审批备注 ---- */
+
+.qaNotesPanel { align-content: start; }
+
+.qaNoteList { display: grid; gap: 10px; }
+
+.qaNote {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: 12px 14px;
+}
+
+.qaNote.source-ai { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); }
+.qaNote.source-human { border-color: #cfe6da; background: var(--bioaz-status-success-soft); }
+
+.qaNoteAvatar {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-secondary);
+}
+
+.qaNote > div { display: grid; min-width: 0; gap: 4px; }
+
+.qaNote header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.qaNote header em {
+  border-radius: 4px;
+  background: rgba(17, 19, 24, 0.06);
+  padding: 1px 6px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.qaNote header strong { color: var(--bioaz-text-primary); font-size: var(--bioaz-type-label-size); }
+.qaNote header small { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+.qaNote p {
+  margin: 0;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-small-size);
+  line-height: 20px;
+}
+
+.qaNoteComposer {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 14px;
+}
+
+.qaNoteComposerLabel {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.qaNoteComposerLabel em {
+  border-radius: 4px;
+  background: var(--bioaz-status-success-soft);
+  padding: 1px 6px;
+  color: var(--bioaz-status-success);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.qaNoteComposer textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 10px 12px;
+  color: var(--bioaz-text-primary);
+  font-family: inherit;
+  font-size: var(--bioaz-type-small-size);
+  line-height: var(--bioaz-type-small-line);
+}
+
+.qaNoteComposer textarea:focus-visible {
+  outline: 0;
+  border-color: var(--bioaz-agent-accent);
+  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
+}
+
+@media (max-width: 900px) {
+  .qaViewerStage { grid-template-columns: minmax(0, 1fr); }
+  .qaThumbRail { display: none; }
+  .qaPageScroll { padding: 14px; }
+  .qaTopbarTools { flex-wrap: wrap; }
+}
