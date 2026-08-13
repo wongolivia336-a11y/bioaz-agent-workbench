@@ -1,45 +1,57 @@
 /* ===================================================================
-   收件箱
-   -------------------------------------------------------------------
-   左「索引」右「原件摘要」，不是聊天双栏。左列只回答"什么事找我"，
-   右列给出决策所需的全部事实与可做的动作。
+   邮箱 + 侧栏入口
    =================================================================== */
 
-/* 独立邮箱：左文件夹、邮件索引、正文/决策三段式。邮件是容器，待办只是可选属性。 */
-.mailboxPage { display:grid; min-height:0; grid-template-columns:minmax(300px,390px) minmax(0,1fr); background:var(--bioaz-surface); overflow:hidden; }
-.mailboxRail { display:flex; min-height:0; flex-direction:column; gap:18px; border-right:1px solid var(--bioaz-border); background:var(--bioaz-surface-subtle); padding:18px 14px; }
-.mailComposeButton { display:flex; align-items:center; justify-content:center; gap:8px; border:0; border-radius:var(--bioaz-radius-control); background:var(--bioaz-text-primary); padding:10px 14px; color:var(--bioaz-surface); font-weight:600; cursor:pointer; }
-.mailboxRail nav { display:grid; gap:4px; }
-.mailboxRail nav button { display:flex; align-items:center; gap:9px; border:0; border-radius:var(--bioaz-radius-control); background:transparent; padding:8px 10px; color:var(--bioaz-text-secondary); cursor:pointer; }
-.mailboxRail nav button.active { background:var(--bioaz-surface); color:var(--bioaz-text-primary); font-weight:600; box-shadow:var(--bioaz-shadow-subtle); }
-.mailboxRail nav button span { margin-left:auto; border-radius:var(--bioaz-radius-full); background:var(--bioaz-agent-accent-soft); padding:1px 6px; color:var(--bioaz-agent-accent); font-size:11px; }
-.mailboxRail>p { margin:auto 4px 0; color:var(--bioaz-text-tertiary); font-size:11px; line-height:1.55; }
-.mailboxListPane { display:grid; min-height:0; grid-template-rows:auto auto auto minmax(0,1fr); border-right:1px solid var(--bioaz-border); background:var(--bioaz-surface); }
-.mailboxListHead { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 14px 12px; }
-.mailboxLaneTabs { display:flex; align-items:center; gap:2px; border-radius:var(--bioaz-radius-control); background:var(--bioaz-surface-subtle); padding:3px; }
-.mailboxLaneTabs button { display:inline-flex; align-items:center; gap:6px; border:0; border-radius:calc(var(--bioaz-radius-control) - 2px); background:transparent; padding:6px 10px; color:var(--bioaz-text-tertiary); font-size:12px; cursor:pointer; }
-.mailboxLaneTabs button.active { background:var(--bioaz-surface); color:var(--bioaz-text-primary); font-weight:600; box-shadow:var(--bioaz-shadow-subtle); }
-.mailboxLaneTabs button span { display:grid; min-width:17px; height:17px; place-items:center; border-radius:var(--bioaz-radius-full); background:var(--bioaz-agent-accent-soft); color:var(--bioaz-agent-accent); font-size:10px; }
-.mailTopCompose { display:inline-flex; flex:none; align-items:center; gap:5px; border:1px solid var(--bioaz-border); border-radius:var(--bioaz-radius-control); background:var(--bioaz-surface); padding:6px 9px; color:var(--bioaz-text-primary); font-size:12px; font-weight:600; cursor:pointer; }
-.mailTopCompose:hover { background:var(--bioaz-surface-hover); }
-.mailboxListIntro { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:22px 20px 14px; }
-.mailboxListIntro>div { display:grid; gap:3px; }.mailboxListIntro strong { font-size:16px; line-height:1.35; }.mailboxListIntro span,.mailboxListIntro small { color:var(--bioaz-text-tertiary); font-size:11px; }.mailboxListIntro small { border-radius:var(--bioaz-radius-full); background:var(--bioaz-status-warning-soft); padding:3px 8px; color:var(--bioaz-status-warning); }
-.mailboxTopCompose { margin-left:auto; transition:transform 140ms cubic-bezier(.23,1,.32,1), background-color 140ms ease; }.mailboxTopCompose:active { transform:scale(.97); }
-.mailboxListTools { display:flex; gap:7px; padding:0 14px 8px; }
-.mailboxListTools label { display:flex; min-width:0; flex:1; align-items:center; gap:7px; border:1px solid var(--bioaz-border); border-radius:var(--bioaz-radius-control); padding:7px 9px; color:var(--bioaz-text-tertiary); }
-.mailboxListTools input { min-width:0; flex:1; border:0; outline:0; background:transparent; }
-.mailboxListTools>button { display:grid; width:34px; place-items:center; border:1px solid var(--bioaz-border); border-radius:var(--bioaz-radius-control); background:var(--bioaz-surface); }
-.mailboxFilters { display:flex; gap:4px; padding:0 16px 12px; border-bottom:1px solid var(--bioaz-border-subtle, var(--bioaz-border)); }
-.mailboxFilters button { border:0; border-radius:var(--bioaz-radius-full); background:transparent; padding:4px 9px; color:var(--bioaz-text-tertiary); font-size:12px; cursor:pointer; }
-.mailboxFilters button.active { background:var(--bioaz-surface-active); color:var(--bioaz-text-primary); }
-.mailboxRows { min-height:0; overflow:auto; padding:6px 8px 12px; }
+/* 左索引、右正文/决策。邮件是容器，待办只是它的一个属性。
+   -------------------------------------------------------------------
+   索引列**没有标题**。顶栏的 tab 已经写了在哪个信箱、有几件待办，页面标题
+   又写了一次「收件箱」，列头再写第三次就是纯噪音——这条跟当初删掉
+   「以审批人岗位收件 · 全部项目…」那句是同一个判据。
+
+   信箱切换、筛选、标签、按钮全部走 components/ui 原语，本文件只留
+   邮箱独有的排版；原来这里各写了一套，圆角和字号互相对不齐。 */
+.mailboxPage {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--bioaz-surface);
+}
+
+.mailboxListPane {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  border-right: 1px solid var(--bioaz-border);
+  background: var(--bioaz-surface);
+}
+
+.mailboxListTools { display: flex; gap: 7px; padding: 16px 14px 10px; }
+
+.mailboxListTools label {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  padding: 7px 9px;
+  color: var(--bioaz-text-tertiary);
+}
+
+.mailboxListTools input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; }
+
+.mailboxFilterControl { margin: 0 14px 12px; }
+
+.mailboxRows { min-height: 0; overflow: auto; border-top: 1px solid var(--bioaz-border); padding: 6px 8px 12px; }
 .mailboxRow { position:relative; display:grid; width:100%; gap:5px; border:0; border-radius:var(--bioaz-radius-control); background:transparent; padding:13px 12px 13px 14px; text-align:left; cursor:pointer; transition:background-color 140ms ease, transform 140ms cubic-bezier(.23,1,.32,1); }
 .mailboxRow:hover { background:var(--bioaz-surface-hover); }.mailboxRow.active { background:var(--bioaz-agent-accent-soft); }
 .mailboxRow.active::before { position:absolute; top:12px; bottom:12px; left:3px; width:2px; border-radius:var(--bioaz-radius-full); background:var(--bioaz-agent-accent); content:""; }
 .mailboxRow:active { transform:scale(.99); }
 .mailboxRow>div { display:flex; align-items:center; justify-content:space-between; gap:8px; }.mailboxRow>div strong { overflow:hidden; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }.mailboxRow time { flex:none; color:var(--bioaz-text-tertiary); font-size:11px; }
 .mailboxRow>b { overflow:hidden; color:var(--bioaz-text-primary); font-size:13px; text-overflow:ellipsis; white-space:nowrap; }.mailboxRow>p { overflow:hidden; margin:0; color:var(--bioaz-text-tertiary); font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
-.mailboxRow footer { display:flex; min-height:19px; gap:7px; }.mailboxRow footer span { display:inline-flex; align-items:center; gap:3px; color:var(--bioaz-text-tertiary); font-size:11px; }.mailboxRow footer .mailTodoTag { border-radius:var(--bioaz-radius-full); background:var(--bioaz-status-warning-soft); padding:1px 6px; color:var(--bioaz-status-warning); }
+.mailboxRow footer { display:flex; min-height:19px; align-items:center; gap:7px; }.mailboxRow footer > span { display:inline-flex; align-items:center; gap:3px; color:var(--bioaz-text-tertiary); font-size:11px; }
 .mailboxDetailPane { min-width:0; min-height:0; overflow:auto; background:var(--bioaz-surface); }
 .mailReader,.mailComposer { display:grid; max-width:900px; min-height:100%; align-content:start; gap:22px; margin:0 auto; padding:30px 40px; }
 .mailReader>header,.mailComposer>header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; border-bottom:1px solid var(--bioaz-border); padding-bottom:18px; }.mailReader h2 { margin:0 0 9px; font-size:20px; line-height:1.4; }.mailReader header p { margin:0; color:var(--bioaz-text-tertiary); font-size:12px; }.mailReader header p strong { margin-right:6px; color:var(--bioaz-text-primary); }.mailReader header p span { margin-right:10px; }.mailReader header time { flex:none; color:var(--bioaz-text-tertiary); font-size:12px; }
@@ -50,391 +62,14 @@
 .mailField { display:grid; grid-template-columns:64px minmax(0,1fr); align-items:center; border-bottom:1px solid var(--bioaz-border); padding-bottom:10px; color:var(--bioaz-text-tertiary); font-size:12px; }.mailField>input,.mailRecipient input { min-width:0; border:0; outline:0; background:transparent; color:var(--bioaz-text-primary); }.mailRecipient { display:flex; align-items:center; gap:7px; color:var(--bioaz-agent-accent); }
 .mailAiBar { display:flex; flex-wrap:wrap; gap:7px; }.mailAiBar button { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--bioaz-border); border-radius:var(--bioaz-radius-full); background:var(--bioaz-surface); padding:6px 10px; color:var(--bioaz-text-secondary); font-size:12px; }.mailAiBar button:first-child { border-color:var(--bioaz-agent-accent-border); color:var(--bioaz-agent-accent); }
 .mailComposer textarea { min-height:220px; resize:vertical; border:0; outline:0; font:inherit; line-height:1.75; }.mailComposer>footer { display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid var(--bioaz-border); padding-top:14px; }.mailComposer>footer label { display:flex; align-items:center; gap:7px; font-size:12px; }.mailComposer>footer label span { color:var(--bioaz-text-tertiary); }.mailComposer>footer>div { display:flex; gap:8px; }
-.mailboxEmpty { display:grid; min-height:160px; place-items:center; color:var(--bioaz-text-tertiary); font-size:13px; }
 @media (max-width:1050px){.mailboxPage{grid-template-columns:320px minmax(0,1fr)}.mailReader,.mailComposer{padding:24px}.mailDecisionCard{align-items:flex-start;flex-direction:column}}
 @media (max-width:760px){.mailboxPage{grid-template-columns:1fr}.mailboxDetailPane{display:none}}
 
-.inboxTodoPanel {
-  display: grid;
-  min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr);
-}
 
-.inboxLaneHint {
-  margin: 10px 0 16px;
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-small-size);
-  line-height: var(--bioaz-type-small-line);
-}
-
-/* 索引列先让位。窄屏下它曾经比右边的决策卡还宽——左边只回答「什么事找我」，
-   右边才是要读要动手的地方，两者抢宽度时该缩的是左边。 */
-.inboxBody {
-  display: grid;
-  min-height: 0;
-  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
-  gap: 20px;
-}
-
-/* ---- 左列：索引 ---- */
-
-.inboxList {
-  display: flex;
-  min-height: 0;
-  flex-direction: column;
-  gap: 6px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.inboxRow {
-  display: grid;
-  width: 100%;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 10px;
-  border: 1px solid transparent;
-  border-radius: var(--bioaz-radius-control);
-  background: transparent;
-  padding: 10px 12px;
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--bioaz-motion-fast) var(--bioaz-ease-standard), border-color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
-}
-
-.inboxRow:hover { background: var(--bioaz-surface-hover); }
-
-.inboxRow.isActive {
-  border-color: var(--bioaz-agent-accent-border);
-  background: var(--bioaz-agent-accent-soft);
-}
-
-/* 只有「动态」栏会褪色。待办栏永远不褪——看过不等于处理完。 */
-.inboxRow.isRead:not(.isActive) { opacity: 0.55; }
-
-.inboxRowAvatar {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border-radius: var(--bioaz-radius-full);
-  background: var(--bioaz-surface-active);
-  color: var(--bioaz-text-secondary);
-}
-
-.inboxRowAvatar.isAgent {
-  background: var(--bioaz-agent-accent-soft);
-  color: var(--bioaz-agent-accent);
-}
-
-.inboxRowMain {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-}
-
-.inboxRowTop {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 6px;
-}
-
-.inboxRowTop strong {
-  overflow: hidden;
-  color: var(--bioaz-text-primary);
-  font-size: var(--bioaz-type-small-size);
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inboxRowMeta {
-  overflow: hidden;
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inboxRowSide {
-  display: grid;
-  justify-items: end;
-  gap: 4px;
-}
-
-.inboxRowSide small {
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-  white-space: nowrap;
-}
-
-.inboxRowPriority {
-  border-radius: var(--bioaz-radius-full);
-  background: var(--bioaz-status-danger-soft);
-  padding: 1px 6px;
-  color: var(--bioaz-status-danger);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 600;
-}
-
-/* ---- 右列：决策摘要卡 ---- */
-
-.inboxDetail {
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.inboxCard {
-  display: grid;
-  gap: 16px;
-  border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-container);
-  background: var(--bioaz-surface);
-  padding: 20px 22px;
-  box-shadow: var(--bioaz-shadow-subtle);
-}
-
-.inboxCardHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.inboxCardTitle {
-  display: flex;
-  min-width: 0;
-  align-items: flex-start;
-  gap: 10px;
-  color: var(--bioaz-text-secondary);
-}
-
-.inboxCardTitle > div { display: grid; min-width: 0; gap: 2px; }
-
-.inboxCardTitle strong {
-  color: var(--bioaz-text-primary);
-  font-size: var(--bioaz-type-section-size);
-  line-height: var(--bioaz-type-section-line);
-}
-
-.inboxCardTitle small {
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-}
-
-.inboxCardStatus {
-  display: flex;
-  flex: none;
-  margin: 0;
-  align-items: center;
-  gap: 6px;
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-  white-space: nowrap;
-}
-
-/* 流转方向：谁 → 你的哪个岗位。岗位收件必须写清楚，否则看不出为什么是我收到 */
-.inboxCardFlow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--bioaz-text-tertiary);
-}
-
-.inboxCardFlow > span {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  border-radius: var(--bioaz-radius-tool);
-  background: var(--bioaz-surface-subtle);
-  padding: 4px 10px;
-  color: var(--bioaz-text-primary);
-  font-size: var(--bioaz-type-small-size);
-  font-weight: 600;
-}
-
-.inboxCardFlow > span em {
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-  font-style: normal;
-  font-weight: 400;
-}
-
-/* 「你 · 审批人岗位」原来是一颗黑底药丸——一屏里最重的视觉，信息量却最低。
-   改成一道左边线，方向照样读得出来，重量还给 AI 批注。 */
-.inboxCardFlow > span.isMe {
-  border-left: 2px solid var(--bioaz-text-primary);
-  border-radius: 0 var(--bioaz-radius-tool) var(--bioaz-radius-tool) 0;
-  background: var(--bioaz-surface-active);
-}
-
-.inboxCardSummary {
-  margin: 0;
-  color: var(--bioaz-text-primary);
-  font-size: var(--bioaz-type-body-size);
-  line-height: var(--bioaz-type-body-line);
-}
-
-.inboxCardFindings {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.inboxFinding {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-tool);
-  padding: 4px 10px;
-  color: var(--bioaz-text-secondary);
-  font-size: var(--bioaz-type-label-size);
-}
-
-.inboxFinding b {
-  border-radius: var(--bioaz-radius-full);
-  background: var(--bioaz-surface-active);
-  padding: 0 6px;
-  color: var(--bioaz-text-primary);
-}
-
-.inboxFinding.tone-danger { border-color: #f0d9d9; background: var(--bioaz-status-danger-soft); color: var(--bioaz-status-danger); }
-.inboxFinding.tone-danger b { background: rgba(153, 27, 27, 0.12); color: var(--bioaz-status-danger); }
-.inboxFinding.tone-warning { border-color: #f0e2c4; background: var(--bioaz-status-warning-soft); color: var(--bioaz-status-warning); }
-.inboxFinding.tone-warning b { background: rgba(146, 64, 14, 0.12); color: var(--bioaz-status-warning); }
-.inboxFinding.tone-info { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
-.inboxFinding.tone-info b { background: rgba(92, 96, 184, 0.12); color: var(--bioaz-agent-accent); }
-
-/* 认领提示是提醒不是警告，原来那块黄底把它抬到了跟 AI 批注同级 */
-.inboxCardClaim {
-  margin: 0;
-  padding: 0;
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-}
-
-.inboxCardMeta {
-  display: grid;
-  margin: 0;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px 20px;
-  border-top: 1px solid var(--bioaz-border);
-  border-bottom: 1px solid var(--bioaz-border);
-  padding: 14px 0;
-}
-
-.inboxCardMeta > div { display: grid; min-width: 0; gap: 3px; }
-
-.inboxCardMeta dt {
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-}
-
-.inboxCardMeta dd {
-  overflow: hidden;
-  margin: 0;
-  color: var(--bioaz-text-primary);
-  font-size: var(--bioaz-type-small-size);
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inboxCardTimeline h4 {
-  margin: 0 0 10px;
-  color: var(--bioaz-text-secondary);
-  font-size: var(--bioaz-type-label-size);
-  font-weight: 600;
-}
-
-.inboxCardTimeline ol {
-  display: grid;
-  margin: 0;
-  gap: 12px;
-  padding: 0;
-  list-style: none;
-}
-
-.inboxCardTimeline li {
-  display: grid;
-  grid-template-columns: 14px minmax(0, 1fr);
-  align-items: start;
-  gap: 10px;
-}
-
-.inboxTimelineDot {
-  width: 7px;
-  height: 7px;
-  margin: 6px 0 0 3px;
-  border-radius: var(--bioaz-radius-full);
-  background: var(--bioaz-border-strong);
-}
-
-.inboxTimelineDot.isAgent { background: var(--bioaz-agent-accent); }
-
-.inboxCardTimeline li strong {
-  color: var(--bioaz-text-primary);
-  font-size: var(--bioaz-type-small-size);
-}
-
-.inboxCardTimeline li small {
-  margin-left: 8px;
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-}
-
-.inboxCardTimeline li p {
-  margin: 2px 0 0;
-  color: var(--bioaz-text-secondary);
-  font-size: var(--bioaz-type-small-size);
-}
-
-.inboxRejectDraft {
-  display: grid;
-  gap: 6px;
-}
-
-.inboxRejectDraft label {
-  color: var(--bioaz-text-secondary);
-  font-size: var(--bioaz-type-label-size);
-}
-
-.inboxRejectDraft textarea {
-  width: 100%;
-  resize: vertical;
-  border: 1px solid var(--bioaz-border-strong);
-  border-radius: var(--bioaz-radius-tool);
-  background: var(--bioaz-surface);
-  padding: 10px 12px;
-  color: var(--bioaz-text-primary);
-  font-family: inherit;
-  font-size: var(--bioaz-type-small-size);
-  line-height: var(--bioaz-type-small-line);
-}
-
-.inboxRejectDraft textarea:focus-visible {
-  outline: 0;
-  border-color: var(--bioaz-agent-accent);
-  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
-}
-
-.inboxCardActions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid var(--bioaz-border);
-  padding-top: 16px;
-}
-
-.inboxCardActionsRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* 「待我处理」面板（InboxTodoPanel）连同它的样式已删除：邮箱上线后，
+   「待办」不再是一个独立列表，而是邮件的一个属性（action），
+   由 .mailboxFilterControl 那三颗分段按钮筛出来。留着两套并行的待办实现，
+   就会有两个各算各的数字。 */
 
 /* ===================================================================
    侧栏入口与账号切换器

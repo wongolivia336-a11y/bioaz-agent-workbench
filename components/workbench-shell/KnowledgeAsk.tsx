@@ -78,6 +78,11 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
 
   useEffect(() => { setScope(defaultScope ?? scopePresets[0]); }, [defaultScope]);
 
+  /* open 的初值来自 dock，但 dock 是会变的：从「全部项目」收窄到某个项目时，
+     同一个组件实例从 inline 变成 floating，而 useState 只读一次初值——
+     结果浮动态一直是展开的，那颗收起的胶囊永远不出现。 */
+  useEffect(() => { setOpen(dock === "inline"); }, [dock]);
+
   const scopeOptions = [...scopePresets, ...projects.map((project) => project.name)];
   const scopedFiles = scope === "全部资料" ? files : files.filter((file) => file.project === scope);
   const latest = turns[turns.length - 1] ?? null;
@@ -102,11 +107,17 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
 
   return (
     <section className={`knowledgeAsk dock-${dock}`} aria-label="资料问答">
-      {dock === "floating" ? (
-        <button className="knowledgeAskClose" type="button" onClick={() => setOpen(false)} aria-label="收起助手"><ChevronDown size={14} /></button>
-      ) : null}
       <div className="knowledgeAskBar">
-        <Sparkles size={16} className="knowledgeAskSpark" />
+        {/* 浮动态的首格是收起键，不是一颗绝对定位盖在右上角的叉。
+            展开与收起共用同一颗胶囊，答案浮在它上方——同一个东西变大变小，
+            而不是把胶囊塞进一张更大的卡里再套一层。 */}
+        {dock === "floating" ? (
+          <button className="knowledgeAskCollapse" type="button" onClick={() => setOpen(false)} aria-label="收起助手">
+            <ChevronDown size={14} />
+          </button>
+        ) : (
+          <Sparkles size={16} className="knowledgeAskSpark" />
+        )}
         <input
           value={text}
           onChange={(event) => setText(event.target.value)}

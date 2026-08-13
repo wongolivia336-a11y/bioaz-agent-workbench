@@ -2,9 +2,34 @@
 
 ## Purpose
 
-This repository contains a clickable front-end prototype for the DMPK quotation agent workspace.
+This repository contains a clickable front-end prototype for the BioAZ agent workbench.
 
-It is derived from the tumor report workbench design language, but the business flow is quotation-specific.
+DMPK quotation was the first business flow and still carries the most detail, but the
+shell now hosts several: quotation, QA review, the data hub, and the mailbox. The design
+language is derived from the tumor report workbench.
+
+## Shell Map
+
+| Route | Surface | Owning code |
+|---|---|---|
+| `newTask` | Intent capture, hands off to a module | `NewTaskHome.tsx` |
+| `module` | A running task session | `modules/<module-id>/` |
+| `library` | 数据中枢 — files and products across projects, plus the ask assistant | `FileManager.tsx`, `KnowledgeAsk.tsx` |
+| `inbox` | 邮箱 — document hand-off between people | `MailboxPage.tsx` |
+| `digitalTeam` | Coworkers, skills, connectors | `DigitalTeamPage.tsx` |
+
+Two container types share one implementation (`ProjectType`): `client` is one customer
+engagement, `library` is a shared reference space with no tasks and no client fields.
+
+## Mailbox Model
+
+Mail is the container; a to-do is one of its attributes (`action: open | done | none`),
+not a second list. `lib/workbench/mailboxData.ts` is the single source — the sidebar badge
+and the mailbox tab count both read `mailboxTodoCount()`. There is deliberately no
+parallel "todo" collection; the earlier `InboxTodoPanel` was removed for that reason.
+
+`lib/workbench/mockInbox.ts` still exists but now only backs the project activity feed and
+the account switcher. It is **not** the mailbox model — do not extend it for mail.
 
 ## Current Scope
 
@@ -13,6 +38,9 @@ It is derived from the tumor report workbench design language, but the business 
 - No real quotation calculation.
 - No real Word / Excel generation.
 - No persistence, auth, or permission service.
+- **No ownership model.** Tasks read as personal chats inside a shared project, but
+  `WorkbenchTask` has no owner field and the sidebar does not filter by account —
+  switching accounts changes the mailbox, not the task tree.
 
 ## Preserved Design Rules
 
@@ -22,6 +50,11 @@ It is derived from the tumor report workbench design language, but the business 
 - Right panel uses hairline borders, restrained color, and compact repeated rows.
 - Modal previews reuse the tumor report preview layout.
 - BioAZ Blue is reserved for primary actions, focus, links, and traceable affordances.
+- One action, one door. A label that already appears in the topbar or a tab is not
+  repeated in the content area.
+- Floating assistants keep one silhouette. Collapsed and expanded are the same pill at
+  two widths, with any answer floating above it — never a card wrapped around the pill.
+  `FloatingChatDock` (DMPK) and `KnowledgeAsk dock="floating"` (数据中枢) follow this.
 
 ## DMPK Flow
 

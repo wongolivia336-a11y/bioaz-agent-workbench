@@ -334,40 +334,61 @@
   font-style: normal;
 }
 
+/* 展开态曾经是「一张圆角卡里再套一颗圆角输入条」：外层 16px 圆角 + overlay
+   阴影，内层 12px 圆角 + 自己的边框，中间隔 17px，右上角还压着一颗绝对定位的
+   叉。收起态却是一颗全圆角胶囊。同一个东西三种形状、两种阴影，边也对不齐。
+
+   改成跟 DMPK 全屏时 composer 收成药丸同一套形状语言（review.css 里那句
+   「连续感交给 composer → 药丸 那一层」）：**胶囊永远是胶囊**，展开只是在它
+   上方浮出答案。外层退化成一个只管定位的透明网格，不再是一张卡。 */
 .knowledgeAsk.dock-floating {
   position: absolute;
   z-index: 40;
   right: 24px;
   bottom: 20px;
   left: 24px;
+  display: grid;
   width: min(760px, calc(100% - 48px));
+  gap: 8px;
   margin: 0 auto;
-  border: 1px solid var(--bioaz-border-strong);
+}
+
+/* 答案与历史浮在胶囊上方。用 order 而不是改 JSX 顺序：inline 停靠是
+   「搜索框在上、结果在下」，那边的顺序是对的。 */
+.knowledgeAsk.dock-floating .knowledgeAskHistory { order: 0; }
+.knowledgeAsk.dock-floating .knowledgeAnswer { order: 1; margin: 0; }
+.knowledgeAsk.dock-floating .knowledgeAskBar { order: 2; }
+
+/* 胶囊：跟 .knowledgeAskLauncher 同一副轮廓——全圆角、同一层阴影。
+   收起和展开之间只有宽度在变，形状不变。 */
+.knowledgeAsk.dock-floating .knowledgeAskBar {
+  border-radius: var(--bioaz-radius-full);
+  padding: 8px 10px 8px 12px;
+  box-shadow: var(--bioaz-shadow-floating);
+}
+
+/* 浮层里的答案自带承载面，不再靠外面那张卡托着 */
+.knowledgeAsk.dock-floating .knowledgeAnswer,
+.knowledgeAsk.dock-floating .knowledgeAskHistory {
   border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface);
-  padding: 14px 16px;
-  box-shadow: var(--bioaz-shadow-overlay);
+  box-shadow: var(--bioaz-shadow-floating);
 }
 
-.knowledgeAsk.dock-floating .knowledgeAskBar {
-  border-radius: var(--bioaz-radius-control);
-  box-shadow: none;
-}
-
-.knowledgeAskClose {
-  position: absolute;
-  top: 6px;
-  right: 8px;
+.knowledgeAskCollapse {
   display: grid;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   place-items: center;
   border: 0;
-  border-radius: var(--bioaz-radius-tool);
-  background: transparent;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  padding: 0;
   color: var(--bioaz-text-tertiary);
   cursor: pointer;
 }
+
+.knowledgeAskCollapse:hover { background: var(--bioaz-surface-active); color: var(--bioaz-text-primary); }
 
 .knowledgeAskClose:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
 
