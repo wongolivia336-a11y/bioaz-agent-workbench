@@ -668,29 +668,37 @@
 
 .qaChatComposer {
   position: relative;
-  display: flex;
-  min-height: 54px;
-  align-items: flex-end;
-  gap: 8px;
-  border: 1px solid var(--bioaz-border-strong);
-  border-radius: var(--bioaz-radius-card);
-  background: var(--bioaz-surface);
-  padding: 10px 10px 10px 44px;
   box-shadow: var(--bioaz-shadow-subtle);
 }
 
-.qaChatComposer > textarea {
-  min-width: 0;
-  min-height: 34px;
-  flex: 1;
-  resize: none;
-  border: 0;
-  outline: 0;
+.qaChatComposerStack > .roleSelector { justify-self: start; }
+
+/* QA 与 DMPK 共用同一颗 panel 控件；打开态必须有足够对比度，
+   否则 16px 的 PanelRightClose 会看起来像一个没渲染出来的空框。 */
+.qa-reviewModuleShell .tumorInspectorToggle {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
-  padding: 7px 2px;
-  color: var(--bioaz-text-primary);
-  font: inherit;
-  line-height: 20px;
+  padding: 0;
+  color: var(--bioaz-text-tertiary);
+}
+
+.qa-reviewModuleShell .tumorInspectorToggle:hover {
+  border-color: rgba(41, 0, 255, 0.12);
+  background: rgba(41, 0, 255, 0.08);
+  color: var(--bioaz-brand-primary);
+}
+
+.qa-reviewModuleShell .tumorInspectorToggle.isActive,
+.qa-reviewModuleShell .tumorInspectorToggle.isActive:hover {
+  border-color: var(--bioaz-brand-primary);
+  background: var(--bioaz-brand-primary);
+  color: #fff;
 }
 
 /* 右侧 panel 的四百像素文档 tab：按可用宽度重排纸张，不显示缩略图轨。 */

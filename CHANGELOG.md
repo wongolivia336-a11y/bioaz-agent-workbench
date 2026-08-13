@@ -9,6 +9,8 @@
 - Moved approval and rejection into a decision card directly above the QA
   composer, matching the other business chatflows, and retained the compact
   chat pill only while a tab occupies the canvas.
+- Reused the shared coworker selector and rounded business composer for QA, and
+  gave the panel toggle the same high-contrast open state used by DMPK.
 - Added a width-adaptive document rendering for the 400px panel state and
   aligned the QA topbar, panel tabs, active underline, and return icon.
 - Kept QA answers page-grounded and added shared composer attachment support.

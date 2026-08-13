@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
 import { AgentReply, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
+import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { InlineSelect } from "../../components/workbench-shell/InlineSelect";
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import { Button, StatusChip, type StatusTone } from "../../components/ui";
@@ -48,7 +49,7 @@ const roleTitle: Record<QaViewerRole, string> = {
   owner: "负责人端",
 };
 
-export default function QaReviewSession({ projectName, taskTitle, viewerRole = "approver" }: AgentModuleSessionProps) {
+export default function QaReviewSession({ projectName, taskTitle, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange }: AgentModuleSessionProps) {
   const role = viewerRole as QaViewerRole;
   const [panelOpen, setPanelOpen] = useState(true);
   const [activePanelId, setActivePanelId] = useState("ai-review");
@@ -69,6 +70,7 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
 
   const version = qaVersions.find((item) => item.id === versionId) ?? qaVersions[0];
   const openFindings = qaFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
+  const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
 
   const sendChat = () => {
     const question = chatText.trim();
@@ -276,8 +278,11 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
                   : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => resolveWith("rejected", "驳回：仍有时间逻辑未修订，请修改后重新提交。")}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => resolveWith("approved", "经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。")}>通过</Button></div> : null}
               </section>
             ) : null}
-            <WorkbenchComposer className="qaChatComposer" attachments={chatAttachments} onAttachmentsChange={setChatAttachments} project={projectName} activeCoworkerId="qa-review" globalDrop>
-              <textarea rows={1} value={chatText} placeholder="问 QA 审核同事，例如：第 8 页那条时间逻辑怎么判的" onChange={(event) => setChatText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendChat(); } }} />
+            <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={outcome === null} onChange={onCoworkerChange} />
+            <WorkbenchComposer className="dmpkComposer qaChatComposer" attachments={chatAttachments} onAttachmentsChange={setChatAttachments} project={projectName} activeCoworkerId={activeCoworkerId} globalDrop>
+              <div className="composerInputStack">
+                <input value={chatText} placeholder="问 QA 审核同事，例如：第 8 页那条时间逻辑怎么判的" onChange={(event) => setChatText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); sendChat(); } }} />
+              </div>
               <button className="sendIconButton" type="button" aria-label="发送" disabled={!chatText.trim()} onClick={sendChat}><Send size={18} /></button>
             </WorkbenchComposer>
           </footer>
