@@ -70,14 +70,24 @@
   font-weight: 600;
 }
 
-.hubScopeCreate {
-  margin-top: 4px;
-  border-top: 1px solid var(--bioaz-border);
-  padding-top: 8px;
+/* 容器动作贴着范围选择器，跟右侧的内容动作分开 */
+.hubCreateMenu { position: relative; flex: none; }
+
+.hubCreateMenu > button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-secondary);
+  cursor: pointer;
 }
 
-.hubScopeCreate:hover { color: var(--bioaz-text-primary); }
+.hubCreateMenu > button:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+.hubCreateMenu .toolMenu { right: auto; left: 0; min-width: 168px; }
 
 /* 动态栏的「只看与我有关」——收件箱那条动态栏合并进来之后的落点 */
 .activityMineToggle {
@@ -142,6 +152,59 @@
 }
 
 .projectTypeChoice button.isOn strong { color: var(--bioaz-agent-accent); }
+
+/* ===================================================================
+   侧栏：项目吃掉全部弹性空间，资料空间沉到底
+   -------------------------------------------------------------------
+   资料空间一年建几次，项目每天都在用。原来两组都参与弹性分配，结果项目
+   被压到只剩两三行要滚动，而三个资料空间稳稳占着位置。
+   =================================================================== */
+.librarySpaceTree {
+  display: grid;
+  flex: none;
+  gap: 6px;
+  margin-top: auto;
+  margin-bottom: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--bioaz-border);
+}
+
+/* 最多四行，再多自己滚——它不该把项目挤下去 */
+.librarySpaceScroll {
+  display: grid;
+  max-height: 136px;
+  gap: 2px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.librarySpaceRowWrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 26px;
+  align-items: center;
+}
+
+.librarySpaceRowWrap > .librarySpaceRow { min-width: 0; }
+
+.librarySpaceMoreButton {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.librarySpaceRowWrap:hover .librarySpaceMoreButton,
+.librarySpaceRowWrap.menuOpen .librarySpaceMoreButton,
+.librarySpaceMoreButton:focus-visible { opacity: 1; }
+
+.librarySpaceMoreButton:hover { background: var(--bioaz-surface-active); color: var(--bioaz-text-primary); }
 
 .librarySpaceRow.active {
   background: var(--bioaz-surface-active);
@@ -236,6 +299,77 @@
   gap: 12px;
   margin-bottom: 22px;
 }
+
+/* ---- 浮动停靠：项目内视角 ----
+   同一个组件、同一套控件，只是坐到底部。收起时是一颗胶囊，展开是完整问答。 */
+.knowledgeAskLauncher {
+  position: absolute;
+  z-index: 40;
+  bottom: 20px;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 9px 16px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+  white-space: nowrap;
+  box-shadow: var(--bioaz-shadow-floating);
+  cursor: pointer;
+  transform: translateX(-50%);
+}
+
+.knowledgeAskLauncher:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+.knowledgeAskLauncher > svg { color: var(--bioaz-agent-accent); }
+
+.knowledgeAskLauncher em {
+  border-left: 1px solid var(--bioaz-border);
+  padding-left: 8px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  font-style: normal;
+}
+
+.knowledgeAsk.dock-floating {
+  position: absolute;
+  z-index: 40;
+  right: 24px;
+  bottom: 20px;
+  left: 24px;
+  width: min(760px, calc(100% - 48px));
+  margin: 0 auto;
+  border: 1px solid var(--bioaz-border-strong);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  padding: 14px 16px;
+  box-shadow: var(--bioaz-shadow-overlay);
+}
+
+.knowledgeAsk.dock-floating .knowledgeAskBar {
+  border-radius: var(--bioaz-radius-control);
+  box-shadow: none;
+}
+
+.knowledgeAskClose {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+}
+
+.knowledgeAskClose:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
 
 .knowledgeAskBar {
   display: grid;

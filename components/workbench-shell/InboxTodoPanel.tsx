@@ -1,7 +1,9 @@
 "use client";
 
-import { Bot, Check, CornerUpRight, FileText, Inbox, Sparkles, Undo2, User } from "lucide-react";
-import { useState } from "react";
+import { Bot, Check, CornerUpRight, FileText, Filter, Inbox, Sparkles, Undo2, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Menu, MenuGroup, MenuItem } from "../ui";
 import {
   inboxActionLabel,
   inboxItems,
@@ -48,12 +50,23 @@ const priorityLabel = { high: "高优先级", medium: "中优先级", low: "低�
 export function InboxTodoPanel({ account, projectFilter, resolved, onResolve, onOpenReview }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [rejectDraft, setRejectDraft] = useState<string | null>(null);
+  const [priority, setPriority] = useState<string | null>(null);
+  const [kind, setKind] = useState<string | null>(null);
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useEffect(() => { setHost(document.getElementById("workbench-topbar-actions")); }, []);
 
   const items = inboxItems.filter((item) => (
     item.lane === "todo"
     && item.audienceRole === account.role
     && !resolved[item.id]
     && (!projectFilter || item.project === projectFilter)
+    && (!priority || priorityLabel[item.priority] === priority)
+    && (!kind || inboxKindLabel[item.kind] === kind)
+  ));
+  const kindOptions = Array.from(new Set(
+    inboxItems
+      .filter((item) => item.lane === "todo" && item.audienceRole === account.role)
+      .map((item) => inboxKindLabel[item.kind]),
   ));
   const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
 
@@ -68,6 +81,27 @@ export function InboxTodoPanel({ account, projectFilter, resolved, onResolve, on
      没有；剩下半句是教学，用户看一次就够，之后天天占一行。 */
   return (
     <section className="projectTabPanel inboxTodoPanel">
+      {/* 顶栏右侧不该是空的：每个 tab 都在同一个位置给出属于它的操作，
+          位置固定了用户才形成惯性。待我处理这一屏能做的整体动作就是筛选。 */}
+      {host ? createPortal(
+        <div className="libraryToolLayer">
+          <Menu icon={<Filter size={16} />} label="筛选" active={Boolean(priority || kind)}>
+            <MenuGroup label="优先级">
+              <MenuItem active={!priority} onSelect={() => setPriority(null)}>全部优先级</MenuItem>
+              {Object.values(priorityLabel).map((label) => (
+                <MenuItem key={label} active={priority === label} onSelect={() => setPriority(priority === label ? null : label)}>{label}</MenuItem>
+              ))}
+            </MenuGroup>
+            <MenuGroup label="事项类型">
+              <MenuItem active={!kind} onSelect={() => setKind(null)}>全部类型</MenuItem>
+              {kindOptions.map((label) => (
+                <MenuItem key={label} active={kind === label} onSelect={() => setKind(kind === label ? null : label)}>{label}</MenuItem>
+              ))}
+            </MenuGroup>
+          </Menu>
+        </div>,
+        host,
+      ) : null}
       <div className="inboxBody">
         <div className="inboxList" role="list">
           {items.length ? items.map((item) => (

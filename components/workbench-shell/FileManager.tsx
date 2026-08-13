@@ -290,13 +290,16 @@ export function FileManager({
         projects={projects}
         value={selectedProject}
         onChange={(name) => { onSelectedProjectChange(name); onSelectedFolderChange(null); onViewChange("overview"); }}
-        onCreate={() => {
+      />
+      <ContainerCreateMenu
+        onCreate={(type) => {
           // 新建表单住在「资料 · 全部项目」那一屏，所以这个动作要把人带过去，
           // 否则在待我处理页点了新建什么都不会发生
           onSelectedProjectChange(null);
           onSelectedFolderChange(null);
           onViewChange("overview");
           onHubTabChange("data");
+          setProjectDraftType(type);
           setProjectCreateOpen(true);
         }}
       />
@@ -336,16 +339,9 @@ export function FileManager({
           topbarActionHost,
         ) : null}
 
+        {/* 类型在菜单里已经选过了，这里只问名字 */}
         {projectCreateOpen ? (
           <div className="libraryProjectCreateBlock">
-            <div className="projectTypeChoice" role="radiogroup" aria-label="新建类型">
-              <button type="button" role="radio" aria-checked={projectDraftType === "client"} className={projectDraftType === "client" ? "isOn" : ""} onClick={() => setProjectDraftType("client")}>
-                <Folder size={13} /><span><strong>项目</strong><small>一单客户委托，仅成员可见</small></span>
-              </button>
-              <button type="button" role="radio" aria-checked={projectDraftType === "library"} className={projectDraftType === "library" ? "isOn" : ""} onClick={() => setProjectDraftType("library")}>
-                <Library size={13} /><span><strong>资料空间</strong><small>不挂客户，全员可见</small></span>
-              </button>
-            </div>
             <div className="libraryProjectCreateRow">
               {projectDraftType === "client" ? <Folder size={14} /> : <Library size={14} />}
               <input
@@ -583,7 +579,9 @@ export function FileManager({
           ) : null}
       </>
 
-      <WorkspaceAssistant context="library" libraryContext={{ project, business }} />
+      {/* 跟跨项目视角同一个组件，只是停在底部。原来这里是另一颗写死「当前项目」
+          的胶囊——同一件事两套控件两套词，用户还得分别学一遍。 */}
+      <KnowledgeAsk projects={projects} files={activeFiles} onOpenFile={setPreviewFile} dock="floating" defaultScope={project} />
       {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} /> : null}
       {detailFile ? <FileDetails file={detailFile} onClose={() => setDetailFile(null)} /> : null}
     </section>
@@ -610,7 +608,7 @@ type Props = {
 
 /* 项目筛选器。层级翻转之后，项目不再是必须先走的那条路，而是这一个控件——
    默认「全部项目」，收窄到某个项目时下面的视图退回你熟悉的两列形式。 */
-function ProjectScopePicker({ projects, value, onChange, onCreate }: { projects: WorkbenchProject[]; value: string | null; onChange: (project: string | null) => void; onCreate: () => void }) {
+function ProjectScopePicker({ projects, value, onChange }: { projects: WorkbenchProject[]; value: string | null; onChange: (project: string | null) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
   const clients = projects.filter((item) => item.type === "client");
@@ -639,8 +637,30 @@ function ProjectScopePicker({ projects, value, onChange, onCreate }: { projects:
               <span>{item.name}</span>{value === item.name ? <Check size={12} /> : null}
             </button>
           ))}
-          <button className="toolMenuItem hubScopeCreate" type="button" onClick={() => { onCreate(); setOpen(false); }}>
-            <Plus size={13} /><span>新建项目或资料空间</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* 顶栏的新建入口。紧挨着范围选择器，因为它们是同一类东西——容器动作靠左跟着
+   scope 走，内容动作（搜索/筛选/上传）靠右，两类不混在一起。
+   这里没有位置暗示类型，所以给两条明确的菜单项，而不是先开表单再问类型。 */
+function ContainerCreateMenu({ onCreate }: { onCreate: (type: ProjectType) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
+  return (
+    <div ref={ref} className="hubCreateMenu">
+      <button type="button" aria-label="新建项目或资料空间" title="新建项目或资料空间" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        <Plus size={14} />
+      </button>
+      {open ? (
+        <div className="toolMenu" role="menu">
+          <button className="toolMenuItem" type="button" onClick={() => { onCreate("client"); setOpen(false); }}>
+            <Folder size={13} /><span>新建项目</span>
+          </button>
+          <button className="toolMenuItem" type="button" onClick={() => { onCreate("library"); setOpen(false); }}>
+            <Library size={13} /><span>新建资料空间</span>
           </button>
         </div>
       ) : null}

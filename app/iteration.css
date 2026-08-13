@@ -2,20 +2,37 @@ textarea {
   font: inherit;
 }
 
+/* 挂靠菜单铺满整条操作行。
+   它原来是 calc(100% + 46px)，那个 46 是按「新建任务 + 搜索」两列的行宽
+   凑出来的；后来收件箱插进来变成三列，新建任务那一格从 210 缩到 164，
+   菜单跟着缩水，项目名一半都被截断。
+   改成贴着 .sidebarActions 的左右边（它本来就是 position: relative），
+   宽度自己算出来，往后再加几颗图标都不用回来改这个数。 */
+.newChatWrap { position: static; }
+
 .newChatMenu.isOpen {
-  width: calc(100% + 46px);
-  max-width: calc(100vw - 28px);
+  left: 0;
+  right: 0;
+  width: auto;
+  max-width: none;
   overflow: hidden;
   top: calc(100% + 6px);
+}
+
+/* 侧栏收起时那一行只有 52px 宽，贴边就等于把菜单压没了。
+   这时候改回定宽，让它从图标旁边横着展开。 */
+.dmpkShell.sidebarCollapsed .newChatMenu.isOpen {
+  right: auto;
+  width: 248px;
 }
 
 .newChatHoverBridge {
   position: absolute;
   top: 100%;
   left: 0;
+  right: 0;
   z-index: 19;
   display: block;
-  width: calc(100% + 46px);
   height: 10px;
 }
 
