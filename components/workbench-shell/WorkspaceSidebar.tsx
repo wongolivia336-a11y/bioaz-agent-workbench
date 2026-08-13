@@ -46,9 +46,10 @@ export function WorkspaceSidebar(props: Props) {
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({ "project-xx": true, "project-yy": true, "project-zz": false });
   const [searchOpen, setSearchOpen] = useState(false);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
-  const [projectCreateOpen, setProjectCreateOpen] = useState(false);
+  /* null = 没在建。开着的时候直接记类型，因为类型由「你点了哪一组的 +」决定，
+     不再有二选一那一步。 */
+  const [createType, setCreateType] = useState<ProjectType | null>(null);
   const [projectDraft, setProjectDraft] = useState("");
-  const [projectDraftType, setProjectDraftType] = useState<ProjectType>("client");
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountRef = useDismissableLayer<HTMLDivElement>(accountMenuOpen, () => setAccountMenuOpen(false));
   const activeProject = props.activeTaskId ? props.currentProject : null;
@@ -72,15 +73,16 @@ export function WorkspaceSidebar(props: Props) {
     setNewTaskOpen(false);
     props.onStartTask(project);
   };
+  const openCreate = (type: ProjectType) => { setCreateType(type); setProjectDraft(""); };
   const commitProject = () => {
-    const created = props.onCreateProject(projectDraft, projectDraftType);
+    if (!createType) return;
+    const created = props.onCreateProject(projectDraft, createType);
     if (!created) return;
     setOpenProjects((current) => ({ ...current, [created.id]: true }));
     setProjectDraft("");
-    setProjectDraftType("client");
-    setProjectCreateOpen(false);
+    setCreateType(null);
   };
-  const closeProjectCreate = () => { setProjectCreateOpen(false); setProjectDraft(""); setProjectDraftType("client"); };
+  const closeProjectCreate = () => { setCreateType(null); setProjectDraft(""); };
 
   return (
     <aside className="sidebar">
@@ -155,30 +157,12 @@ export function WorkspaceSidebar(props: Props) {
       <nav className="navBlock projectTree" aria-label="项目">
         <div className="navSectionHeader">
           <span>项目</span>
-          <button type="button" aria-label="新建" title="新建项目或资料空间" onClick={() => setProjectCreateOpen(true)}><Plus size={14} /></button>
+          <button type="button" aria-label="新建项目" title="新建项目" onClick={() => openCreate("client")}><Plus size={14} /></button>
         </div>
-        {projectCreateOpen ? (
-          <div className="projectCreateBlock">
-            {/* 二级选择：先定类型再起名。类型决定它长出哪些 tab、默认给谁看，
-                所以必须在建之前问，不能建完再改。 */}
-            <div className="projectTypeChoice" role="radiogroup" aria-label="新建类型">
-              <button type="button" role="radio" aria-checked={projectDraftType === "client"} className={projectDraftType === "client" ? "isOn" : ""} onClick={() => setProjectDraftType("client")}>
-                <Folder size={13} />
-                <span><strong>项目</strong><small>一单客户委托，仅成员可见</small></span>
-              </button>
-              <button type="button" role="radio" aria-checked={projectDraftType === "library"} className={projectDraftType === "library" ? "isOn" : ""} onClick={() => setProjectDraftType("library")}>
-                <Library size={13} />
-                <span><strong>资料空间</strong><small>不挂客户，全员可见</small></span>
-              </button>
-            </div>
-            <div className="projectCreateRow">
-              {projectDraftType === "client" ? <Folder size={14} /> : <Library size={14} />}
-              <input autoFocus value={projectDraft} onChange={(event) => setProjectDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") commitProject(); if (event.key === "Escape") closeProjectCreate(); }} placeholder={projectDraftType === "client" ? "项目名称" : "资料空间名称"} aria-label="名称" />
-              <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建"><Check size={14} /></button>
-              <button type="button" onClick={closeProjectCreate} aria-label="取消"><X size={12} /></button>
-            </div>
-          </div>
-        ) : null}
+        {/* 位置已经说明了类型：在「项目」这一行点 +，要建的就是项目。
+            原来这里还弹一个「项目 / 资料空间」二选一，是让人回答一个他刚刚
+            用点击位置已经回答过的问题。 */}
+        {createType === "client" ? <ContainerCreateRow type="client" value={projectDraft} onChange={setProjectDraft} onCommit={commitProject} onCancel={closeProjectCreate} /> : null}
         {visibleProjects.filter((project) => project.type === "client").map((project) => (
           <SidebarProject
             key={project.id}
@@ -213,22 +197,29 @@ export function WorkspaceSidebar(props: Props) {
       </nav>
 
       {/* 资料空间独立成组：它跟项目共用实现，但不是项目——混进项目列表就
-          又变回"假项目"了，而且往后项目要挂委托方/合同号，它一列都填不上。 */}
-      {visibleProjects.some((project) => project.type === "library") ? (
-        <nav className="navBlock projectTree librarySpaceTree" aria-label="资料空间">
-          <div className="navSectionHeader"><span>资料空间</span></div>
+          又变回"假项目"了，而且往后项目要挂委托方/合同号，它一列都填不上。
+
+          两组的能力必须对等。原来只有「项目」那组能建能改，资料空间只能点开看，
+          可它们明明是同一种容器——一个能管一个不能管，层级就说不通了。 */}
+      <nav className="navBlock librarySpaceTree" aria-label="资料空间">
+        <div className="navSectionHeader">
+          <span>资料空间</span>
+          <button type="button" aria-label="新建资料空间" title="新建资料空间" onClick={() => openCreate("library")}><Plus size={14} /></button>
+        </div>
+        {createType === "library" ? <ContainerCreateRow type="library" value={projectDraft} onChange={setProjectDraft} onCommit={commitProject} onCancel={closeProjectCreate} /> : null}
+        <div className="librarySpaceScroll">
           {visibleProjects.filter((project) => project.type === "library").map((project) => (
-            <button
-              className={`sidebarFolderShortcut librarySpaceRow ${props.activeLibrarySpace === project.name ? "active" : ""}`}
-              type="button"
+            <SidebarLibrarySpace
               key={project.id}
-              onClick={() => props.onOpenLibraryFolder(project.name, null)}
-            >
-              <Library size={14} /><span>{project.name}</span>
-            </button>
+              title={project.name}
+              active={props.activeLibrarySpace === project.name}
+              onOpen={() => props.onOpenLibraryFolder(project.name, null)}
+              onRename={(name) => props.onRenameProject(project.id, name)}
+              onDelete={() => props.onDeleteProject(project.id)}
+            />
           ))}
-        </nav>
-      ) : null}
+        </div>
+      </nav>
 
       <div ref={accountRef} className={`account accountMenuTrigger ${accountMenuOpen ? "menuOpen" : ""}`}>
         <button type="button" onClick={() => setAccountMenuOpen((value) => !value)} aria-expanded={accountMenuOpen}>
@@ -255,6 +246,61 @@ export function WorkspaceSidebar(props: Props) {
         ) : null}
       </div>
     </aside>
+  );
+}
+
+/** 两组共用的新建行。类型由调用位置传进来，行内不再问一次。 */
+function ContainerCreateRow({ type, value, onChange, onCommit, onCancel }: { type: ProjectType; value: string; onChange: (value: string) => void; onCommit: () => void; onCancel: () => void }) {
+  return (
+    <div className="projectCreateRow">
+      {type === "client" ? <Folder size={14} /> : <Library size={14} />}
+      <input
+        autoFocus
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => { if (event.key === "Enter") onCommit(); if (event.key === "Escape") onCancel(); }}
+        placeholder={type === "client" ? "项目名称" : "资料空间名称"}
+        aria-label={type === "client" ? "项目名称" : "资料空间名称"}
+      />
+      <button type="button" disabled={!value.trim()} onClick={onCommit} aria-label="确认新建"><Check size={14} /></button>
+      <button type="button" onClick={onCancel} aria-label="取消"><X size={12} /></button>
+    </div>
+  );
+}
+
+/** 资料空间一行。跟项目行一样能重命名、能删——两组能力对等，层级才立得住。 */
+function SidebarLibrarySpace({ title, active, onOpen, onRename, onDelete }: { title: string; active: boolean; onOpen: () => void; onRename: (name: string) => void; onDelete: () => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+  const ref = useDismissableLayer<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
+  const commit = () => {
+    const next = draft.trim();
+    if (next && next !== title) onRename(next);
+    setEditing(false);
+  };
+  if (editing) {
+    return (
+      <div className="projectCreateRow sidebarInlineEditor">
+        <Library size={14} />
+        <input autoFocus value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={(event) => { if (event.key === "Enter") commit(); if (event.key === "Escape") { setDraft(title); setEditing(false); } }} aria-label="资料空间名称" />
+      </div>
+    );
+  }
+  return (
+    <div ref={ref} className={`librarySpaceRowWrap ${menuOpen ? "menuOpen" : ""}`} onContextMenu={(event) => { event.preventDefault(); setMenuOpen(true); }}>
+      <button className={`sidebarFolderShortcut librarySpaceRow ${active ? "active" : ""}`} type="button" onClick={onOpen}>
+        <Library size={14} /><span>{title}</span>
+      </button>
+      <button className="librarySpaceMoreButton" type="button" aria-label={`${title}更多操作`} onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal size={14} /></button>
+      {menuOpen ? (
+        <div className="sidebarMenu chatMenu">
+          <button type="button" onClick={() => { onOpen(); setMenuOpen(false); }}><Eye size={14} />打开</button>
+          <button type="button" onClick={() => { setDraft(title); setEditing(true); setMenuOpen(false); }}><FileText size={14} />重命名</button>
+          <button type="button" onClick={() => { if (window.confirm(`删除资料空间「${title}」？`)) onDelete(); setMenuOpen(false); }}><Trash2 size={14} />删除</button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

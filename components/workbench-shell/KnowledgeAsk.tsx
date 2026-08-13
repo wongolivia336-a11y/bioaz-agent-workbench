@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUp, ChevronDown, FileText, History, Quote, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { KnowledgeFile } from "../../lib/workbench/shellTypes";
 import type { WorkbenchProject } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
@@ -57,13 +57,26 @@ function answerFor(question: string, scope: string, files: KnowledgeFile[]): Ask
   };
 }
 
-export function KnowledgeAsk({ projects, files, onOpenFile }: { projects: WorkbenchProject[]; files: KnowledgeFile[]; onOpenFile: (file: KnowledgeFile) => void }) {
+/**
+ * 一个组件，两种停靠：
+ *   dock="inline"   跨项目视角，问答就是来这儿的目的，所以停在内容顶部
+ *   dock="floating" 项目内，翻文件才是目的，问答随手可用，所以浮在底部
+ *
+ * 停靠位置变，控件不变——同一个输入框、同一个范围下拉、同一套带出处的答案。
+ * 项目内那颗胶囊原来把范围写死成「当前项目」，换成同一个下拉之后，你在项目
+ * 里也能临时把范围放大到全部资料或某个资料空间。
+ */
+export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", defaultScope }: { projects: WorkbenchProject[]; files: KnowledgeFile[]; onOpenFile: (file: KnowledgeFile) => void; dock?: "inline" | "floating"; defaultScope?: string }) {
   const [text, setText] = useState("");
-  const [scope, setScope] = useState(scopePresets[0]);
+  const [scope, setScope] = useState(defaultScope ?? scopePresets[0]);
   const [scopeOpen, setScopeOpen] = useState(false);
   const [turns, setTurns] = useState<AskTurn[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // 浮动态默认收起：项目页的主角是文件，问答不该一进来就占半屏
+  const [open, setOpen] = useState(dock === "inline");
   const scopeRef = useDismissableLayer<HTMLDivElement>(scopeOpen, () => setScopeOpen(false));
+
+  useEffect(() => { setScope(defaultScope ?? scopePresets[0]); }, [defaultScope]);
 
   const scopeOptions = [...scopePresets, ...projects.map((project) => project.name)];
   const scopedFiles = scope === "全部资料" ? files : files.filter((file) => file.project === scope);
@@ -77,8 +90,21 @@ export function KnowledgeAsk({ projects, files, onOpenFile }: { projects: Workbe
     setText("");
   };
 
+  if (dock === "floating" && !open) {
+    return (
+      <button className="knowledgeAskLauncher" type="button" onClick={() => setOpen(true)}>
+        <Sparkles size={15} />
+        <span>问问项目助手</span>
+        <em>{scope}</em>
+      </button>
+    );
+  }
+
   return (
-    <section className="knowledgeAsk" aria-label="资料问答">
+    <section className={`knowledgeAsk dock-${dock}`} aria-label="资料问答">
+      {dock === "floating" ? (
+        <button className="knowledgeAskClose" type="button" onClick={() => setOpen(false)} aria-label="收起助手"><ChevronDown size={14} /></button>
+      ) : null}
       <div className="knowledgeAskBar">
         <Sparkles size={16} className="knowledgeAskSpark" />
         <input
