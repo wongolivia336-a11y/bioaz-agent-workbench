@@ -3602,9 +3602,13 @@ button {
   }
 }
 
+/* 两列，不是三列。第三列 400px 原本留给旧版 .dmpkPanel，而现在没有任何组件
+   渲染那个元素——它只剩在 CSS 里。responsive.css 的 1024–1199 段先在最窄处
+   止过一次血，但 1200 以上一直照常扣：1280 的屏上工作区从 1000 掉到 588，
+   QA 审核台的面板再占 400，原件列只剩 186px，那张纸永远看不全。 */
 .dmpkShell {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 400px;
+  grid-template-columns: 280px minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
   background: var(--canvas);
@@ -3612,7 +3616,7 @@ button {
 }
 
 .dmpkShell.sidebarCollapsed {
-  grid-template-columns: 72px minmax(0, 1fr) 400px;
+  grid-template-columns: 72px minmax(0, 1fr);
 }
 
 .dmpkShell.sidebarCollapsed .sidebar {

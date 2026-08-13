@@ -35,6 +35,12 @@ type PanelContext = {
   onAddNote: () => void;
 };
 
+/* expandable 在这里被收窄到只剩「AI文件比对」一栏，这是刻意的。
+   「全屏」在用户脑子里的意思是「让我正在看的那个东西变大」——QA 里那个东西
+   是原件，所以放大原件的手势留在原件工具栏上；面板全屏只在放宽真能多看到
+   东西的时候才给。批注和备注都是窄条目列表，撑到全屏只是每行变长；
+   只有 qaDiffPair 是左右并排两列，400px 里两边都被挤成竖条。
+   剩下两栏的按钮不会消失，只置灰并给出理由（见 WorkbenchPanelBody）。 */
 export function getQaReviewPanels(context: PanelContext): ResolvedInspectorPanel[] {
   return [
     {
@@ -44,7 +50,7 @@ export function getQaReviewPanels(context: PanelContext): ResolvedInspectorPanel
       state: "populated",
       isDefault: true,
       primary: true,
-      expandable: true,
+      expandable: false,
       content: <AiReviewPanel {...context} />,
     },
     {
@@ -64,7 +70,7 @@ export function getQaReviewPanels(context: PanelContext): ResolvedInspectorPanel
       state: "populated",
       isDefault: false,
       primary: true,
-      expandable: true,
+      expandable: false,
       content: <NotesPanel {...context} />,
     },
   ];
