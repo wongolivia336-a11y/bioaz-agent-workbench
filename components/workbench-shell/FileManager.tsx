@@ -27,12 +27,8 @@ import {
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { initialKnowledgeFiles } from "../../lib/workbench/mockWorkspace";
-import type { InboxAccount } from "../../lib/workbench/mockInbox";
 import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
 import type { ProjectType, WorkbenchProject, WorkbenchTask } from "../../modules/types";
-import { InboxTodoPanel } from "./InboxTodoPanel";
-import { ProjectActivityTab } from "./ProjectActivityTab";
-import { ProjectPlanTab } from "./ProjectPlanTab";
 import { KnowledgeAsk } from "./KnowledgeAsk";
 import { Menu, MenuGroup, MenuItem, NavTabs } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
@@ -41,16 +37,13 @@ import { useDismissableLayer } from "./useDismissableLayer";
 /* 项目中枢的四个 tab。层级在这里翻转了：以前必须先选一个项目才能看到
    动态/计划/资料，所以待办天生跨不了项目。现在 tab 在上、项目在下，
    项目从"必经路径"降级成"一个筛选维度"，默认全部项目。 */
-export type HubTab = "todo" | "activity" | "plan" | "data";
+export type HubTab = "data";
 
 type SortKey = "updated" | "kind" | "name" | "source";
 type TimeBucket = "all" | "today" | "week" | "month" | "earlier";
 
 const clientHubTabs: Array<{ id: HubTab; label: string }> = [
-  { id: "todo", label: "待我处理" },
-  { id: "activity", label: "动态" },
-  { id: "plan", label: "计划" },
-  { id: "data", label: "资料" },
+  { id: "data", label: "资料与产物" },
 ];
 
 // 资料空间没有任务、没有流转，动态和计划对它是空的——空 tab 会教用户
@@ -98,10 +91,6 @@ export function FileManager({
   view,
   hubTab,
   onHubTabChange,
-  account,
-  resolvedInbox,
-  onResolveInbox,
-  onOpenReview,
   onSelectedProjectChange,
   onSelectedFolderChange,
   onViewChange,
@@ -306,25 +295,6 @@ export function FileManager({
     </div>,
     topbarTabHost,
   ) : null;
-
-  if (activeHubTab !== "data") {
-    return (
-      <section className="workbenchView hubView">
-        {tabsPortal}
-        {activeHubTab === "todo" ? (
-          <InboxTodoPanel
-            account={account}
-            projectFilter={selectedProject}
-            resolved={resolvedInbox}
-            onResolve={onResolveInbox}
-            onOpenReview={onOpenReview}
-          />
-        ) : null}
-        {activeHubTab === "activity" ? <ProjectActivityTab project={project} account={account} /> : null}
-        {activeHubTab === "plan" ? <ProjectPlanTab project={project} /> : null}
-      </section>
-    );
-  }
 
   if (!selectedProject) {
     return (
@@ -596,10 +566,6 @@ type Props = {
   view: LibraryView;
   hubTab: HubTab;
   onHubTabChange: (tab: HubTab) => void;
-  account: InboxAccount;
-  resolvedInbox: Record<string, string>;
-  onResolveInbox: (itemId: string, note: string) => void;
-  onOpenReview: (docTitle: string, project: string) => void;
   onSelectedProjectChange: (project: string | null) => void;
   onSelectedFolderChange: (folderId: string | null) => void;
   onViewChange: (view: LibraryView) => void;
