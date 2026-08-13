@@ -1,3 +1,5 @@
+import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
+
 /* QA 审核的静态素材。
    -------------------------------------------------------------------
    全部是假数据，但结构按真实审核台来：AI 批注是「条目」不是「文本块」，
@@ -106,7 +108,7 @@ export const qaInitialNotes: QaNote[] = [
    分工也刻意留在这里：问「为什么/怎么办」走对话，做「采纳/忽略」走右侧列表。
    所以下面没有任何一条回答承诺替用户落处置动作。 */
 
-export type QaChatMessage = { id: string; role: "user" | "agent"; text: string };
+export type QaChatMessage = { id: string; role: "user" | "agent"; text: string; attachments?: ComposerAttachment[] };
 
 export const qaChatOpening: QaChatMessage[] = [
   {

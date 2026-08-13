@@ -1,21 +1,26 @@
 # Changelog
 
-## 2026-08-13 — QA Review: Document-First Focus and a Resident Coworker
+## 2026-08-13 — QA Review: Detachable Review Canvas
 
-- Added a resident chat dock to the QA review workspace so the QA coworker can
-  be asked why a finding was raised without giving up a column to conversation.
-  Canned answers always cite a page; unmatched questions decline instead of
-  inventing an answer.
-- Inverted the fullscreen gesture for QA: the document expands and the panel
-  steps aside, rather than the panel covering the document. Escape or the panel
-  toggle returns, restoring the reader's own zoom.
-- Restricted panel fullscreen to the AI comparison tab, the only panel that
-  gains content when widened.
+- Made the document the fourth QA panel tab and detached it into the center
+  canvas by default when an inbox review opens.
+- Unified document and AI comparison expansion as one detach-to-canvas action;
+  returning either tab restores the center chatflow and its full composer.
+- Moved approval and rejection into a decision card directly above the QA
+  composer, matching the other business chatflows, and retained the compact
+  chat pill only while a tab occupies the canvas.
+- Reused the shared coworker selector and rounded business composer for QA, and
+  gave the panel toggle the same high-contrast open state used by DMPK.
+- Added a width-adaptive document rendering for the 400px panel state and
+  aligned the QA topbar, panel tabs, active underline, and return icon.
+- Kept QA answers page-grounded and added shared composer attachment support.
 - Reused an existing review chat when the same inbox item is opened again,
   instead of stacking identically named tasks in the sidebar.
 - Removed the dead 400px third shell column reserved for a legacy panel no
   component renders. Above 1200px it was silently taking 400px from every
   workspace, leaving the QA document column at 186px on a 1280px screen.
+- Started DMPK parameter recognition when a dispatched task already carries an
+  initial request, and allowed natural-language correction while fields remain.
 
 ## 2026-08-05 — Responsive Baseline Archive
 

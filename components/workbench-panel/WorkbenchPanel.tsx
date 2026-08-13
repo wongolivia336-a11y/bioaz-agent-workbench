@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, Maximize2, Minimize2, PanelRight, Plus, X } from "lucide-react";
+import { Check, CircleAlert, Maximize2, Minimize2, PanelRightClose, PanelRightOpen, Plus, X } from "lucide-react";
 import { useState } from "react";
 import type { ResolvedInspectorPanel } from "../workbench-inspector/WorkbenchInspector";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
@@ -35,7 +35,7 @@ export function PanelToggle({ open, onToggle }: { open: boolean; onToggle: () =>
       onClick={() => { if (open) setSuppressHover(true); onToggle(); }}
       onMouseLeave={() => setSuppressHover(false)}
     >
-      <PanelRight size={16} />
+      {open ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
     </button>
   );
 }
