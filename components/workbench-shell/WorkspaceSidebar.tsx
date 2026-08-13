@@ -120,8 +120,7 @@ export function WorkspaceSidebar(props: Props) {
                 </>
               ) : null}
             </div>
-            {/* 收件箱是图标级入口而不是一级导航行：它是"跳过去"的动作，
-                跟搜索同类。但徽标带数字——未处理数比一个红点更有用。 */}
+            {/* 收件箱保持高频图标入口；它现在进入独立邮箱页面。 */}
             <button className="sidebarInboxButton" type="button" onClick={props.onOpenInbox} aria-label={`收件箱，${props.inboxCount} 条待处理`} title={`收件箱 · ${props.inboxCount} 条待处理`}>
               <Inbox size={16} />
               {props.inboxCount ? <i className="sidebarInboxBadge">{props.inboxCount}</i> : null}
@@ -132,7 +131,7 @@ export function WorkspaceSidebar(props: Props) {
       </div>
 
       <nav className="navBlock workspaceViews" aria-label="工作区">
-        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>项目中枢</span></button>
+        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>数据中枢</span></button>
         <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
       </nav>
 

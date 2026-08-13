@@ -1,10 +1,10 @@
 "use client";
 
 import { Check, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Minimize2, Send, Undo2, ZoomIn, ZoomOut } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
-import { AgentReply, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
+import { ActivityChain, AgentReply, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { InlineSelect } from "../../components/workbench-shell/InlineSelect";
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
@@ -49,13 +49,13 @@ const roleTitle: Record<QaViewerRole, string> = {
   owner: "负责人端",
 };
 
-export default function QaReviewSession({ projectName, taskTitle, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange }: AgentModuleSessionProps) {
+export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange }: AgentModuleSessionProps) {
   const role = viewerRole as QaViewerRole;
   const [panelOpen, setPanelOpen] = useState(true);
   const [activePanelId, setActivePanelId] = useState("ai-review");
   const [visiblePanelIds, setVisiblePanelIds] = useState(["document", "ai-review", "ai-diff", "notes"]);
   /* 从收件箱进入默认把文档弹到主位；收回后主位恢复为标准 chatflow。 */
-  const [poppedPanelId, setPoppedPanelId] = useState<QaPoppedPanelId | null>("document");
+  const [poppedPanelId, setPoppedPanelId] = useState<QaPoppedPanelId | null>(initialRequest ? null : "document");
   const [versionId, setVersionId] = useState(qaVersions[0].id);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(100);
@@ -64,13 +64,32 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
   const [notes, setNotes] = useState<QaNote[]>(qaInitialNotes);
   const [noteDraft, setNoteDraft] = useState("");
   const [outcome, setOutcome] = useState<"submitted" | "approved" | "rejected" | null>(null);
-  const [chatMessages, setChatMessages] = useState<QaChatMessage[]>(qaChatOpening);
+  const [chatMessages, setChatMessages] = useState<QaChatMessage[]>(initialRequest ? [{
+    id: "qa-mail-upload",
+    role: "user",
+    text: "审批流转邮件已接收，请审核随附报告。",
+    attachments: [{ id: "mail-report", kind: "file", label: qaDocument.title, meta: "来自收件箱 · 第一版", origin: "library" }],
+  }] : qaChatOpening);
+  const [mailReviewRunning, setMailReviewRunning] = useState(Boolean(initialRequest));
+  const initialMailHandled = useRef(false);
   const [chatText, setChatText] = useState("");
   const [chatAttachments, setChatAttachments] = useState<ComposerAttachment[]>([]);
 
   const version = qaVersions.find((item) => item.id === versionId) ?? qaVersions[0];
   const openFindings = qaFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
+
+  useEffect(() => {
+    if (!initialRequest || initialMailHandled.current) return;
+    initialMailHandled.current = true;
+    setChatMessages((current) => [...current, { id: "qa-mail-accepted", role: "agent", text: "已接收邮件上下文和报告原件。我会先校验版本与页码，再执行时间逻辑、内容一致性和版式检查。" }]);
+    const timer = window.setTimeout(() => {
+      setMailReviewRunning(false);
+      setChatMessages((current) => [...current, ...qaChatOpening.map((message) => ({ ...message, id: `mail-${message.id}` }))]);
+      setPoppedPanelId("document");
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [initialRequest]);
 
   const sendChat = () => {
     const question = chatText.trim();
@@ -269,6 +288,7 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
             {chatMessages.map((message) => message.role === "agent"
               ? <AgentReply key={message.id}>{message.text}</AgentReply>
               : <UserBubble key={message.id} text={message.text} attachments={message.attachments} />)}
+            {initialRequest && mailReviewRunning ? <ActivityChain title="正在审核报告" running steps={["读取邮件要求与附件版本", "核对 7 页正文与页码", "校验时间逻辑与内容一致性", "生成 6 条可定位审核意见"]} onOpen={() => setActivePanelId("ai-review")} /> : null}
           </div></div>
           <footer className="qaChatComposerStack">
             {!outcome ? (
