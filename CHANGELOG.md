@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-13 — QA Review: Document-First Focus and a Resident Coworker
+
+- Added a resident chat dock to the QA review workspace so the QA coworker can
+  be asked why a finding was raised without giving up a column to conversation.
+  Canned answers always cite a page; unmatched questions decline instead of
+  inventing an answer.
+- Inverted the fullscreen gesture for QA: the document expands and the panel
+  steps aside, rather than the panel covering the document. Escape or the panel
+  toggle returns, restoring the reader's own zoom.
+- Restricted panel fullscreen to the AI comparison tab, the only panel that
+  gains content when widened.
+- Reused an existing review chat when the same inbox item is opened again,
+  instead of stacking identically named tasks in the sidebar.
+- Removed the dead 400px third shell column reserved for a legacy panel no
+  component renders. Above 1200px it was silently taking 400px from every
+  workspace, leaving the QA document column at 186px on a 1280px screen.
+
 ## 2026-08-05 — Responsive Baseline Archive
 
 - Aligned the sidebar collapse breakpoint with its mobile drawer behavior.

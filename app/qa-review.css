@@ -25,6 +25,20 @@
   .qaReviewWorkspace:has(.workbenchPanel.isOpen) > :not(.workbenchPanel) {
     grid-column: 1;
   }
+
+  /* 药丸该停在原件的正中间，不能把面板那 400px 也算进去。
+     但上一条的 `grid-column: 1` 对它不起作用——它是绝对定位的 grid 子项，
+     只写起始线的话终止线是 auto，而 auto 对绝对定位会解析成容器的 padding 边，
+     于是包含块从第一列起点一路铺到面板右缘，药丸正好居中到面板上。
+     终止线必须写死。 */
+  .qaReviewWorkspace:has(.workbenchPanel.isOpen) > .floatingChatDock {
+    grid-column: 1 / 2;
+  }
+
+  /* 面板全屏时原件已经被盖住了，再按原件那一列居中就成了偏心，放它横过整行 */
+  .qaReviewWorkspace:has(.workbenchPanel.isFocus) > .floatingChatDock {
+    grid-column: 1 / -1;
+  }
 }
 
 .qaRoleBadge {
@@ -130,6 +144,10 @@
 .qaViewerPager button:hover:not(:disabled),
 .qaViewerZoom button:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
 
+/* 全屏是个开关不是一次性动作，按下态要看得出来，否则退出的那颗按钮
+   跟旁边的缩放键长得一模一样 */
+.qaViewerZoom button.isActive { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
+
 .qaViewerPager button:disabled { opacity: 0.36; cursor: default; }
 
 .qaViewerStage {
@@ -194,7 +212,9 @@
      左半边推出可滚动区域，那部分永远够不着。 */
   justify-content: safe center;
   overflow: auto;
-  padding: 24px;
+  /* 底部这一截是给常驻药丸的落脚点。药丸不像 DMPK 那样只在全屏时出现，
+     所以两种状态下都得留，否则滚到底时最后一行永远压在药丸底下。 */
+  padding: 24px 24px 104px;
 }
 
 .qaPage {
@@ -562,6 +582,7 @@
 @media (max-width: 900px) {
   .qaViewerStage { grid-template-columns: minmax(0, 1fr); }
   .qaThumbRail { display: none; }
-  .qaPageScroll { padding: 14px; }
+  /* 窄屏下缩略图轨没了，药丸还在，底部那一截照留 */
+  .qaPageScroll { padding: 14px 14px 96px; }
   .qaTopbarTools { flex-wrap: wrap; }
 }

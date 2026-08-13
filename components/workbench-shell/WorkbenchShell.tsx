@@ -196,12 +196,26 @@ export default function WorkbenchShell() {
   };
 
   /* 收件箱里的「打开文件逐条审阅」。收件箱不认识 module，它只喊一句
-     「把这份文件的审阅台打开」，由 shell 决定落到哪个 module。 */
+     「把这份文件的审阅台打开」，由 shell 决定落到哪个 module。
+
+     这里新建而不是跳去撰写人那条任务，是因为任务是「人」的、项目文件夹才是
+     共享的：别人流转过来的文档，审批人在同一个项目下开自己的一条审阅 Chat。
+     但同一份文件只开一条——重复点开同一条待办会在侧栏堆出一串同名任务，
+     而它们指向的是同一份文件的同一次审阅。 */
   const openQaReview = (docTitle: string, projectName: string) => {
     const module = getAgentModule("qa-review");
     if (!module) return;
-    const taskId = createRuntimeTask(docTitle, module, projectName);
+    const existing = runtimeTasks.find((task) => task.moduleId === module.moduleId
+      && task.project === projectName
+      && task.title === docTitle
+      && !deletedTaskIds.includes(task.id));
+    const taskId = existing?.id ?? createRuntimeTask(docTitle, module, projectName);
     if (!taskId) return;
+    if (existing) {
+      setProject(projectName);
+      setTaskTitle(docTitle);
+      setActiveTaskId(existing.id);
+    }
     setActiveModule(module);
     setActiveCoworkerId(module.suggestedCoworker.id);
     setInitialRequest(undefined);

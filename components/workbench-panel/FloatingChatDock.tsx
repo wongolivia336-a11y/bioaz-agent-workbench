@@ -12,6 +12,10 @@ type FloatingChatDockProps = {
   onSend: () => void;
   disabled?: boolean;
   placeholder?: string;
+  /* DMPK 里药丸是「进全屏」这个动作的结果，所以一出现就该能打字。
+     QA 里它是常驻的，会话一打开就在——那时用户要读的是原件，
+     抢走光标会让翻页键、退格全落进输入框。所以默认聚焦可关。 */
+  autoFocus?: boolean;
 };
 
 /** 播报浮层的停留时长；到点淡出，只在药丸上留一颗未读点 */
@@ -24,7 +28,7 @@ const BROADCAST_MS = 3500;
  * 它刻意只带「输入 + 发送」这一条最小路径：全屏是审核视角，
  * 参数补全卡、附件、同事切换那些都属于 dock 态的 composer，收进来只会把药丸撑成第二个 composer。
  */
-export function FloatingChatDock({ messages, text, onTextChange, onSend, disabled = false, placeholder = "问一句，或补充说明…" }: FloatingChatDockProps) {
+export function FloatingChatDock({ messages, text, onTextChange, onSend, disabled = false, placeholder = "问一句，或补充说明…", autoFocus = true }: FloatingChatDockProps) {
   const [expanded, setExpanded] = useState(false);
   const [broadcastIds, setBroadcastIds] = useState<string[]>([]);
   const [unread, setUnread] = useState(false);
@@ -69,10 +73,11 @@ export function FloatingChatDock({ messages, text, onTextChange, onSend, disable
   }, [expanded, messages]);
 
   /* 药丸一出现就把光标放进去。全屏是「我要开始看这块内容」，
-     不该再要求用户先点一下才能说话。 */
+     不该再要求用户先点一下才能说话。常驻场景下由调用方关掉。 */
   useEffect(() => {
+    if (!autoFocus) return;
     inputRef.current?.focus();
-  }, []);
+  }, [autoFocus]);
 
   /* Esc 一次只退一层：浮层开着就先关浮层，并且拦住事件——
      外面那层监听挂在 window 上，不拦的话浮层和全屏画布会一起消失。 */

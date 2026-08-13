@@ -1,24 +1,37 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Download, FileText, Maximize2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, Download, FileText, Maximize2, Minimize2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
 import { InlineSelect } from "../../components/workbench-shell/InlineSelect";
 import { Button, StatusChip, type StatusTone } from "../../components/ui";
 import type { AgentModuleSessionProps } from "../types";
 import { getQaReviewPanels, type QaViewerRole } from "./panels";
 import {
+  qaChatOpening,
   qaDocument,
   qaFindings,
   qaInitialNotes,
   qaVersions,
+  resolveQaReply,
+  type QaChatMessage,
   type QaFinding,
   type QaFindingState,
   type QaNote,
 } from "./reviewData";
 
 /* 撰写人端与审批人端是同一个 Session 的两种角色渲染，不是两个页面。
-   左边永远是原件，右边永远是那三栏；角色只决定谁能落笔、顶栏出现哪个主操作。 */
+   左边永远是原件，右边永远是那三栏；角色只决定谁能落笔、顶栏出现哪个主操作。
+
+   这个模块没有对话列，这是布局判断不是遗漏：审阅的主角是原件，
+   用户 80% 的动作（读纸、点批注跳页、采纳/忽略）都发生在原件与批注之间，
+   而这两者必须同屏——点一条批注要能立刻在纸上看到第几页。一个 tab 容器
+   装不下同屏，所以对话不占一整列，收成常驻药丸浮在纸上。
+   分工：问「为什么/怎么办」走药丸，做「采纳/忽略」走右侧列表。 */
+
+/** 进原件全屏时至少放到这个倍数——一个不让纸变大的「全屏」是假的 */
+const VIEWER_FOCUS_ZOOM = 140;
 
 const versionTone: Record<string, StatusTone> = {
   draft: "neutral",
@@ -56,9 +69,63 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
   const [notes, setNotes] = useState<QaNote[]>(qaInitialNotes);
   const [noteDraft, setNoteDraft] = useState("");
   const [outcome, setOutcome] = useState<"submitted" | "approved" | "rejected" | null>(null);
+  const [viewerFocus, setViewerFocus] = useState(false);
+  const [chatMessages, setChatMessages] = useState<QaChatMessage[]>(qaChatOpening);
+  const [chatText, setChatText] = useState("");
+  /** 退出全屏要还原用户自己调过的倍数，不是粗暴地设回 100 */
+  const zoomBeforeFocus = useRef(zoom);
 
   const version = qaVersions.find((item) => item.id === versionId) ?? qaVersions[0];
   const openFindings = qaFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
+
+  /* 「全屏」在用户脑子里只有一个意思：让我正在看的那个东西变大。
+     DMPK 里那个东西是产物，所以铺开的是面板；QA 里是原件，所以铺开的是原件、
+     面板让位。同一个手势两个方向，不是两套机制。 */
+  const enterViewerFocus = () => {
+    zoomBeforeFocus.current = zoom;
+    setZoom((value) => Math.max(value, VIEWER_FOCUS_ZOOM));
+    setPanelOpen(false);
+    setPanelFocus(false);
+    setViewerFocus(true);
+  };
+
+  const exitViewerFocus = () => {
+    setZoom(zoomBeforeFocus.current);
+    setPanelOpen(true);
+    setViewerFocus(false);
+  };
+
+  useEffect(() => {
+    if (!viewerFocus) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      /* 药丸展开态在捕获阶段自己先吃掉一次 Esc，轮到这里就只剩「退全屏」这一层。
+         内联而不是调 exitViewerFocus，是为了不让这个 effect 每次渲染都重挂。 */
+      setZoom(zoomBeforeFocus.current);
+      setPanelOpen(true);
+      setViewerFocus(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [viewerFocus]);
+
+  /* 面板全屏只对「AI文件比对」开放。切走或面板收起时自动退出，
+     否则会剩下一块盖住原件、自己又没有出口的全屏面板。 */
+  useEffect(() => {
+    if (panelFocus && (!panelOpen || activePanelId !== "ai-diff")) setPanelFocus(false);
+  }, [activePanelId, panelFocus, panelOpen]);
+
+  const sendChat = () => {
+    const question = chatText.trim();
+    if (!question) return;
+    const stamp = Date.now();
+    setChatMessages((current) => [
+      ...current,
+      { id: `qa-chat-user-${stamp}`, role: "user", text: question },
+      { id: `qa-chat-agent-${stamp}`, role: "agent", text: resolveQaReply(question) },
+    ]);
+    setChatText("");
+  };
 
   const focusFinding = (finding: QaFinding) => {
     setActiveFindingId(finding.id);
@@ -106,7 +173,7 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
   };
 
   return (
-    <section className={`dmpkWorkspace qaReviewWorkspace ${panelFocus ? "isPanelFocus" : ""}`}>
+    <section className={`dmpkWorkspace qaReviewWorkspace ${panelFocus ? "isPanelFocus" : ""} ${viewerFocus ? "isViewerFocus" : ""}`}>
       <header className="topbar">
         <div className="breadcrumb">
           <span>{projectName}</span>
@@ -146,7 +213,9 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
           ) : (
             <StatusChip tone="neutral">只读</StatusChip>
           )}
-          <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
+          {/* 原件全屏时面板是收起的，所以这颗按钮同时是回来的路——
+              否则用户要先找到原件工具栏上那颗才退得出去。 */}
+          <PanelToggle open={panelOpen} onToggle={() => { if (viewerFocus) { exitViewerFocus(); return; } setPanelOpen((value) => !value); }} />
         </div>
       </header>
 
@@ -165,7 +234,17 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
             <b>{zoom}%</b>
             <button type="button" aria-label="放大" onClick={() => setZoom((value) => Math.min(160, value + 10))}><ZoomIn size={14} /></button>
             <button type="button" aria-label="下载"><Download size={14} /></button>
-            <button type="button" aria-label="全屏"><Maximize2 size={14} /></button>
+            {/* 放大原件的手势贴着原件自己的工具栏，不跟面板那颗抢同一个词 */}
+            <button
+              type="button"
+              className={viewerFocus ? "isActive" : ""}
+              aria-label={viewerFocus ? "退出原件全屏" : "原件全屏"}
+              aria-pressed={viewerFocus}
+              title={viewerFocus ? "退出全屏（Esc）" : "原件全屏"}
+              onClick={() => (viewerFocus ? exitViewerFocus() : enterViewerFocus())}
+            >
+              {viewerFocus ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            </button>
           </span>
         </header>
 
@@ -218,6 +297,18 @@ export default function QaReviewSession({ projectName, taskTitle, viewerRole = "
         focus={panelFocus}
         onFocusChange={setPanelFocus}
         onPanelChange={setActivePanelId}
+      />
+
+      {/* 药丸在 QA 是常驻的，不像 DMPK 只在全屏时冒出来——这里没有对话列，
+          它是找 QA 审核同事说话的唯一入口，收起态只占一行，不跟原件抢宽度。
+          不自动聚焦：会话一打开用户要读的是纸，不是打字。 */}
+      <FloatingChatDock
+        messages={chatMessages}
+        text={chatText}
+        onTextChange={setChatText}
+        onSend={sendChat}
+        autoFocus={false}
+        placeholder="问 QA 审核同事，例如：第 8 页那条时间逻辑怎么判的"
       />
     </section>
   );
