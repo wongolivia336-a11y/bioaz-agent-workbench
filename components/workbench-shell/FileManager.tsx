@@ -30,25 +30,20 @@ import { initialKnowledgeFiles } from "../../lib/workbench/mockWorkspace";
 import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
 import type { ProjectType, WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { KnowledgeAsk } from "./KnowledgeAsk";
-import { Menu, MenuGroup, MenuItem, NavTabs } from "../ui";
+import { Menu, MenuGroup, MenuItem } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-/* 项目中枢的四个 tab。层级在这里翻转了：以前必须先选一个项目才能看到
-   动态/计划/资料，所以待办天生跨不了项目。现在 tab 在上、项目在下，
-   项目从"必经路径"降级成"一个筛选维度"，默认全部项目。 */
-export type HubTab = "data";
+/* 这里曾经是「待我处理 / 动态 / 计划 / 资料」四个 tab。前三个搬进邮箱之后
+   只剩一个，而**一个 tab 不是 tab，是标题**——一条只能选中它自己的 tab 栏
+   什么也没告诉用户，还跟面包屑里的「数据中枢」说了同一件事。
+
+   连带的问题更大：那一行里挤着三种性质完全不同的控件——tab（看什么）、
+   项目范围（筛什么）、加号（新建什么）。三者视觉权重接近，读不出层级。
+   现在只留真正会改变你在看什么的两个：范围筛选器 + 新建。 */
 
 type SortKey = "updated" | "kind" | "name" | "source";
 type TimeBucket = "all" | "today" | "week" | "month" | "earlier";
-
-const clientHubTabs: Array<{ id: HubTab; label: string }> = [
-  { id: "data", label: "资料与产物" },
-];
-
-// 资料空间没有任务、没有流转，动态和计划对它是空的——空 tab 会教用户
-// 怀疑所有 tab，所以按类型直接不给。
-const libraryHubTabs: Array<{ id: HubTab; label: string }> = [{ id: "data", label: "资料" }];
 
 const sortOptions: Array<{ id: SortKey; label: string }> = [
   { id: "updated", label: "按更新时间" },
@@ -89,8 +84,6 @@ export function FileManager({
   selectedFolderId,
   folders,
   view,
-  hubTab,
-  onHubTabChange,
   onSelectedProjectChange,
   onSelectedFolderChange,
   onViewChange,
@@ -121,9 +114,6 @@ export function FileManager({
     ? projects.find((item) => item.name === selectedProject)?.type ?? "client"
     : null;
   const isLibrarySpace = selectedType === "library";
-  const hubTabs = isLibrarySpace ? libraryHubTabs : clientHubTabs;
-  // 落到一个不存在的 tab（比如从项目切到资料空间时停在「计划」）就退回资料
-  const activeHubTab: HubTab = hubTabs.some((tab) => tab.id === hubTab) ? hubTab : "data";
 
   useEffect(() => {
     setTopbarActionHost(document.getElementById("workbench-topbar-actions"));
@@ -266,15 +256,12 @@ export function FileManager({
   const toggleSelected = (id: string) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const toggleAll = (ids: string[]) => setSelectedIds((current) => ids.every((id) => current.includes(id)) ? [] : ids);
 
-  /* tab 栏在所有视角下都渲染——它现在是项目中枢的顶层，不再是"进了某个项目
-     之后才出现的东西"。这是层级翻转的落点。 */
+  /* 范围先行：这一行现在只回答「你在看哪一批资料」，以及「不够就新建一个」。
+     页面叫什么由面包屑负责，不在这里重复。 */
   const tabsPortal = topbarTabHost ? createPortal(
     <div className="hubTabLayer">
-      <NavTabs items={hubTabs} value={activeHubTab} onChange={onHubTabChange} label="项目中枢" />
-      {/* 新建收进筛选器菜单：你打开它本来就是在想「我要哪个项目」，
-          「没有我要的？建一个」正好接在这句话末尾。摆到顶栏当常驻按钮的话，
-          它会让人以为「在计划页建的项目」和「在动态页建的」有区别——
-          新建是容器级动作，不属于任何一个 tab。 */}
+      {/* 新建收进筛选器右边：你打开范围选择器本来就是在想「我要哪个项目」，
+          「没有我要的？建一个」正好接在这句话末尾。 */}
       <ProjectScopePicker
         projects={projects}
         value={selectedProject}
@@ -287,7 +274,6 @@ export function FileManager({
           onSelectedProjectChange(null);
           onSelectedFolderChange(null);
           onViewChange("overview");
-          onHubTabChange("data");
           setProjectDraftType(type);
           setProjectCreateOpen(true);
         }}
@@ -564,8 +550,6 @@ type Props = {
   selectedFolderId: string | null;
   folders: LibraryFolder[];
   view: LibraryView;
-  hubTab: HubTab;
-  onHubTabChange: (tab: HubTab) => void;
   onSelectedProjectChange: (project: string | null) => void;
   onSelectedFolderChange: (folderId: string | null) => void;
   onViewChange: (view: LibraryView) => void;

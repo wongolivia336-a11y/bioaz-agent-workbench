@@ -3759,29 +3759,6 @@ button {
   color: var(--body);
 }
 
-.activityChain summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: min(720px, 100%);
-  cursor: pointer;
-  list-style: none;
-  color: var(--body);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.activityChain summary::-webkit-details-marker {
-  display: none;
-}
-
-.activityChain summary em {
-  margin-left: auto;
-  color: var(--muted);
-  font-style: normal;
-  font-weight: 600;
-}
-
 .bluePanelLink {
   display: inline;
   border: 0;
@@ -3859,19 +3836,65 @@ button {
   padding: 18px 20px 22px;
 }
 
-.activityChain p {
+/* ===================================================================
+   ActivityChain（components/workbench-shell/AgentPrimitives.tsx）
+   -------------------------------------------------------------------
+   这里原本是给一套旧结构写的：图标是 <p> 里的第一个 <i>，所以 <p> 自己
+   是 `grid-template-columns: 14px minmax(0,1fr)` 的两列。
+
+   现在的组件把图标挪到了兄弟 <span>，<p> 里只剩文字——那条旧规则还在生效，
+   于是整段文字掉进第一列那 14px 里，渲染成一个汉字一行往下掉。
+   旧结构已经没有任何组件在用（DMPK 走的是 .agentRun/.timeline），
+   所以旧规则整段换成按真实结构写的这几条。 */
+
+.activityChainHeader {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 12px 16px;
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.activityChainHeader > span { display: inline-flex; color: var(--blue); }
+.activityChainHeader strong { color: var(--ink); font-size: 13px; }
+.activityChainHeader small { margin-left: auto; color: var(--muted); font-size: 12px; font-weight: 600; }
+.activityChainHeader > svg { flex: none; color: var(--muted); }
+
+.activityChainBody {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--bioaz-border);
+  padding: 14px 16px 16px;
+}
+
+/* 图标一列、文字一列。minmax(0,1fr) 是关键——不写 min 值的话，
+   长中文步骤名会把这一列撑到 max-content，再被外层挤回去。 */
+.activityStep {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr);
   align-items: start;
-  gap: 16px;
-  margin: 0;
-  color: var(--body);
-  font-size: 14px;
+  gap: 10px;
   animation: nodeIn 220ms ease-out both;
 }
 
-.activityChain p:not(:last-child) {
-  padding-bottom: 20px;
+.activityStep > span {
+  display: inline-flex;
+  margin-top: 2px;
+  color: var(--blue);
+}
+
+.activityStep p {
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .activityChain i {
@@ -3895,22 +3918,6 @@ button {
 
 .activityChain p:last-child i::after {
   display: none;
-}
-
-.activityChain p span {
-  display: grid;
-  gap: 6px;
-}
-
-.activityChain p strong {
-  color: var(--ink);
-  font-size: 14px;
-}
-
-.activityChain p small {
-  color: var(--body);
-  font-size: 13px;
-  line-height: 1.45;
 }
 
 .parameterTaskCard {
