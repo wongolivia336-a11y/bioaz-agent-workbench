@@ -404,6 +404,39 @@
   box-shadow: var(--bioaz-shadow-subtle);
 }
 
+/* 跨项目视角下问答是这一屏的主角，所以 inline 那条给足高度——
+   参考成熟 AI 产品的入口，composer 是"大而安静"，不是一根细横杠。
+   浮动态不吃这条：它停在文件表上方，撑高就成了遮挡。 */
+.knowledgeAsk.dock-inline .knowledgeAskBar { padding: 16px 12px 16px 18px; }
+.knowledgeAsk.dock-inline .knowledgeAskBar input { font-size: var(--bioaz-type-section-size); }
+
+.knowledgeAskSuggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.knowledgeAskSuggestions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 7px 13px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+  cursor: pointer;
+  transition: border-color var(--bioaz-motion-fast) var(--bioaz-ease-standard), color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
+}
+
+.knowledgeAskSuggestions button > svg { color: var(--bioaz-agent-accent); }
+
+.knowledgeAskSuggestions button:hover {
+  border-color: var(--bioaz-agent-accent-border);
+  color: var(--bioaz-text-primary);
+}
+
 .knowledgeAskBar:focus-within {
   border-color: var(--bioaz-agent-accent);
   box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);

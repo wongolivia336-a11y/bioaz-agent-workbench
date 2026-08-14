@@ -37,20 +37,36 @@ function pickCitations(files: KnowledgeFile[], hints: RegExp): Citation[] {
   return pool.map((file, index) => ({ file: file.title, locator: locators[index] ?? "附录" }));
 }
 
+/* 建议问题。三条**必须走到三个不同的分支**——两张卡点下去吐同一段话，
+   演示时第一眼就穿帮，跟当初 files.slice(0,3) 引错出处是同一类错误。 */
+export const askSuggestions = [
+  "血浆样本保存条件是什么",
+  "报告归档的命名规则怎么定",
+  "这次 DMPK 的计价依据是什么",
+];
+
 function answerFor(question: string, scope: string, files: KnowledgeFile[]): AskTurn {
   const scopeLabel = scope === "全部资料" ? "全部资料" : `「${scope}」`;
-  const wantsArtifact = /报价|出一份|生成|做一份|算一下多少钱/.test(question);
-  if (wantsArtifact) {
+  const id = `ask-${Date.now()}`;
+  if (/报价|计价|出一份|生成|做一份|算一下多少钱/.test(question)) {
     return {
-      id: `ask-${Date.now()}`,
+      id,
       question,
       answer: `我在${scopeLabel}里查到了计价依据与历史报价区间，可以作为参考。但出一份正式报价单要走任务流程、留审批轨迹，我这里只能给你依据。`,
       citations: pickCitations(files, /报价|计价|参数字典|模板/),
       handoff: "DMPK 报价同事",
     };
   }
+  if (/归档|命名|审计|留痕|溯源/.test(question)) {
+    return {
+      id,
+      question,
+      answer: `根据${scopeLabel}：归档包统一按「报告编号_版本_日期」命名；原始记录与终版报告一并入库，审计轨迹保留全部版本，已生效满 30 天的交付包自动归档。`,
+      citations: pickCitations(files, /归档|审计|溯源|记录|规范/),
+    };
+  }
   return {
-    id: `ask-${Date.now()}`,
+    id,
     question,
     answer: `根据${scopeLabel}：血浆样本采集后需在 30 分钟内完成离心并转入 -80℃ 保存；PK 参数计算采用非房室模型（NCA），AUC 用梯形法。方法学验证的接受标准为准确度 ±15%（LLOQ ±20%）。`,
     citations: pickCitations(files, /SOP|方法学|采样|保存|归档|规范|LC-MS/),
@@ -88,12 +104,13 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
   const latest = turns[turns.length - 1] ?? null;
   const earlier = turns.slice(0, -1);
 
-  const submit = () => {
-    const question = text.trim();
-    if (!question) return;
-    setTurns((current) => [...current, answerFor(question, scope, scopedFiles)]);
+  const ask = (question: string) => {
+    const next = question.trim();
+    if (!next) return;
+    setTurns((current) => [...current, answerFor(next, scope, scopedFiles)]);
     setText("");
   };
+  const submit = () => ask(text);
 
   if (dock === "floating" && !open) {
     return (
@@ -146,6 +163,21 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
           <ArrowUp size={15} />
         </button>
       </div>
+
+      {/* 建议卡只在跨项目视角、且还没问过的时候出现。
+          进了某个项目主角就是翻文件，那时候这几张卡是在抢文件表的首屏；
+          问过一次之后用户已经知道这儿能问什么，再挂着就是占位置。
+          三条各自命中不同的回答分支，不是三张一样的装饰。 */}
+      {dock === "inline" && !turns.length ? (
+        <div className="knowledgeAskSuggestions">
+          {askSuggestions.map((suggestion) => (
+            <button type="button" key={suggestion} onClick={() => ask(suggestion)}>
+              <Sparkles size={13} />
+              <span>{suggestion}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {latest ? (
         <article className="knowledgeAnswer">

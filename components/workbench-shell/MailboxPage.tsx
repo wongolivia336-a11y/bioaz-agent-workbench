@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, Check, ChevronDown, FileArchive, FileText, Inbox, Paperclip, Search, Send, Sparkles, UserRound, X } from "lucide-react";
+import { Archive, Check, ChevronDown, FileArchive, FileText, Inbox, MessageSquarePlus, Paperclip, Search, Send, Sparkles, UserRound, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import type { InboxAccount } from "../../lib/workbench/mockInbox";
@@ -10,7 +10,8 @@ import {
   type MailItem,
   type MailModuleId,
 } from "../../lib/workbench/mailboxData";
-import { Button, EmptyState, NavTabs, SegmentedControl, StatusChip } from "../ui";
+import type { WorkbenchTask } from "../../modules/types";
+import { Button, EmptyState, Menu, MenuGroup, MenuItem, NavTabs, SegmentedControl, StatusChip } from "../ui";
 
 /**
  * 邮箱。
@@ -28,9 +29,20 @@ import { Button, EmptyState, NavTabs, SegmentedControl, StatusChip } from "../ui
 
 type MailFilter = "all" | "todo" | "done";
 
-export function MailboxPage({ account, onStartTask }: {
+export type MailHandoffPayload = {
+  subject: string;
+  project?: string;
+  context: string;
+  moduleId?: MailModuleId;
+  /** 传了就是「加入这条已有的对话」，不传才是新开一条 */
+  taskId?: string;
+};
+
+export function MailboxPage({ account, tasks, onStartTask }: {
   account: InboxAccount;
-  onStartTask: (payload: { subject: string; project?: string; context: string; moduleId?: MailModuleId }) => void;
+  /** 「加入对话」的候选：同项目下已有的任务 Chat */
+  tasks: WorkbenchTask[];
+  onStartTask: (payload: MailHandoffPayload) => void;
 }) {
   const [lane, setLane] = useState<MailboxLane>("received");
   const [filter, setFilter] = useState<MailFilter>("all");
@@ -85,16 +97,33 @@ export function MailboxPage({ account, onStartTask }: {
     setComposing(false);
   };
   const resolve = () => selected && setMail((items) => items.map((item) => item.id === selected.id ? { ...item, action: "done" } : item));
-  const startTask = () => {
-    if (!selected) return;
-    const attachmentContext = selected.attachments.map((item) => `- ${item.name}（${item.meta}）`).join("\n") || "- 无附件";
+
+  /* 打开即已读。「已读」和「已处理」是两件事——读过它还留在待办里，
+     徽标数看的是 action 不是 unread。 */
+  const openMail = (id: string) => {
+    setSelectedId(id);
+    setComposing(false);
+    setMail((items) => items.map((item) => item.id === id && item.unread ? { ...item, unread: false } : item));
+  };
+
+  /* 邮件是「可注入对话的上下文」，不只是「任务启动器」：同一封信既可以开一条
+     新的 Chat，也可以丢进这个项目下已经开着的那条。所以这里出参带 taskId，
+     由 shell 决定是新建还是落到已有会话。 */
+  const handoff = (item: MailItem, taskId?: string) => {
+    const attachmentContext = item.attachments.map((file) => `- ${file.name}（${file.meta}）`).join("\n") || "- 无附件";
     onStartTask({
-      subject: selected.subject.replace(/^(请审批|待确认|终审流转)：?/, ""),
-      project: selected.contextProject,
-      moduleId: selected.moduleId,
-      context: `来自邮件的任务上下文\n发件人：${selected.from}（${selected.fromRole}）\n要求：${selected.preview}\n附件：\n${attachmentContext}\n\n请基于以上上下文协助我完成处理。`,
+      subject: item.subject.replace(/^(请审批|待确认|终审流转)：?/, ""),
+      project: item.contextProject,
+      moduleId: item.moduleId,
+      taskId,
+      context: `来自邮件的任务上下文\n发件人：${item.from}（${item.fromRole}）\n要求：${item.preview}\n附件：\n${attachmentContext}\n\n请基于以上上下文协助我完成处理。`,
     });
   };
+
+  /** 候选会话按邮件所属项目收窄；没写项目的邮件（纯知会）就只能新开 */
+  const candidatesFor = (item: MailItem) => item.contextProject
+    ? tasks.filter((task) => task.project === item.contextProject)
+    : [];
 
   /* 待办数挂在 tab 的 count 上，不拼进 label——NavTabs 自己会渲染徽标，
      拼字符串会得到一个跟数字团队那几个 tab 对不齐的"假徽标"。 */
@@ -136,26 +165,46 @@ export function MailboxPage({ account, onStartTask }: {
         label="邮件筛选"
       />
       <div className="mailboxRows">
-        {visible.length ? visible.map((item) => (
-          <button
-            className={`mailboxRow ${selected?.id === item.id && !composing ? "active" : ""}`}
-            type="button"
-            key={item.id}
-            onClick={() => { setSelectedId(item.id); setComposing(false); }}
-          >
-            <div>
-              <strong>{item.lane === "received" ? item.from : `发给 ${item.to.join("、")}`}</strong>
-              <time>{item.time}</time>
+        {visible.length ? visible.map((item) => {
+          const candidates = candidatesFor(item);
+          return (
+            /* 行是 div 不是 button：右边那颗「加入对话」是行内的第二个动作，
+               button 套 button 是非法嵌套，菜单也会被行的点击吃掉。 */
+            <div
+              className={`mailboxRow ${selected?.id === item.id && !composing ? "active" : ""} ${item.unread ? "isUnread" : ""}`}
+              key={item.id}
+            >
+              <button className="mailboxRowMain" type="button" onClick={() => openMail(item.id)}>
+                <div>
+                  <strong>{item.lane === "received" ? item.from : `发给 ${item.to.join("、")}`}</strong>
+                  <time>{item.time}</time>
+                </div>
+                <b>{item.subject}</b>
+                <p>{item.preview}</p>
+                <footer>
+                  {item.action === "open" ? <StatusChip tone="warning">待处理</StatusChip> : null}
+                  {item.action === "done" ? <StatusChip tone="success">已完成</StatusChip> : null}
+                  {item.attachments.length ? <span><Paperclip size={12} />{item.attachments.length}</span> : null}
+                </footer>
+              </button>
+              {/* 不必先点开邮件才能把它交给数字同事——扫列表时就能决定 */}
+              <div className="mailboxRowActions">
+                <Menu icon={<MessageSquarePlus size={15} />} label="加入对话">
+                  <MenuGroup label="新开一条">
+                    <MenuItem onSelect={() => handoff(item)}>新建任务处理这封邮件</MenuItem>
+                  </MenuGroup>
+                  {candidates.length ? (
+                    <MenuGroup label={`加入 ${item.contextProject} 下已有的`}>
+                      {candidates.map((task) => (
+                        <MenuItem key={task.id} onSelect={() => handoff(item, task.id)}>{task.title}</MenuItem>
+                      ))}
+                    </MenuGroup>
+                  ) : null}
+                </Menu>
+              </div>
             </div>
-            <b>{item.subject}</b>
-            <p>{item.preview}</p>
-            <footer>
-              {item.action === "open" ? <StatusChip tone="warning">待处理</StatusChip> : null}
-              {item.action === "done" ? <StatusChip tone="success">已完成</StatusChip> : null}
-              {item.attachments.length ? <span><Paperclip size={12} />{item.attachments.length}</span> : null}
-            </footer>
-          </button>
-        )) : (
+          );
+        }) : (
           <EmptyState
             icon={<Inbox size={20} />}
             title={query || filter !== "all" ? "没有符合条件的邮件" : "这个信箱是空的"}
@@ -175,6 +224,12 @@ export function MailboxPage({ account, onStartTask }: {
             </div>
             <button type="button" onClick={() => setComposing(false)} aria-label="关闭"><X size={16} /></button>
           </header>
+          {/* 发件身份不是装饰：切账号会换岗位，而岗位决定这封信在对方那边
+              以什么身份进入审批流。发出去之后再解释就晚了。 */}
+          <div className="mailField mailFieldStatic">
+            <span>发件人</span>
+            <p><strong>{account.name}</strong><em>{account.roleLabel}</em>{account.email}</p>
+          </div>
           <label className="mailField">
             <span>收件人</span>
             <div className="mailRecipient">
@@ -252,7 +307,7 @@ export function MailboxPage({ account, onStartTask }: {
               </div>
               {selected.action === "open" ? (
                 <div>
-                  <Button variant="primary" size="small" leadingIcon={<Sparkles size={14} />} onClick={startTask}>进入处理会话</Button>
+                  <Button variant="primary" size="small" leadingIcon={<Sparkles size={14} />} onClick={() => handoff(selected)}>进入处理会话</Button>
                   <Button variant="secondary" size="small" leadingIcon={<Check size={14} />} onClick={resolve}>标记完成</Button>
                 </div>
               ) : null}
