@@ -1,0 +1,56 @@
+/* ===================================================================
+   会话列宽对齐
+
+   对话流和输入框此前是两个独立的宽度来源：实测 DMPK 会话里
+   .dmpkConversation 是 900px、.dmpkComposerWrap 是 760px，同一个中轴、
+   两边各差 70px。消息卡比输入框宽出一截，扫下来会觉得"卡片左右不一样宽"。
+
+   review.css:1592 其实已经写过 min(900px, 100%)，但没赢——这一屏
+   iteration → review 两层都在改同一批类，来源散了。这里收成一个变量，
+   对话流和输入框都引它，之后要改宽度只改这一处。
+
+   加载顺序在 review.css 之后、responsive.css 之前。
+   =================================================================== */
+
+.dmpkShell {
+  --bioaz-session-column: 900px;
+  /* 输入框是 absolute 定位、靠右侧让出面板宽度，max-width 里那一项减的就是它 */
+  --bioaz-session-gutter: 400px;
+}
+
+/* 对话流。它自己也有一套 max-width（窄屏下会被夹到 820），
+   和输入框那套断点不一样，所以两者在不同宽度下会朝不同方向漂——
+   1440 上输入框窄 140px，1280 上反而宽 54px。两个上限都收到同一个变量。 */
+.dmpkShell.dmpk-quotationModuleShell .dmpkWorkspace .dmpkConversation,
+.dmpkShell.tumor-reportModuleShell .legacyTumorWorkspace .conversation {
+  width: min(var(--bioaz-session-column), 100%);
+  max-width: min(var(--bioaz-session-column), 100%);
+  margin-inline: auto;
+}
+
+/* 输入框。760 那个数原本卡在 max-width 上而不是 width 上——
+   只改 width 是没用的，会被 max-width 夹回去。两个一起给。
+   减 gutter 那一项保留：窗口变窄时它负责让输入框不越过右侧面板。 */
+.dmpkShell .dmpkWorkspace > .dmpkComposerWrap,
+.dmpkShell .legacyTumorWorkspace > .legacyComposerStack {
+  width: min(var(--bioaz-session-column), 100%);
+  max-width: min(var(--bioaz-session-column), 100% - var(--bioaz-session-gutter));
+}
+
+/* review.css:6388 那条把上限钉在 760，它带 :has(.workbenchPanel.isOpen)，
+   :has 按参数里最高的算特异度，整条是 (0,5,0)。这里在同一个元素上多挂一个
+   .dmpkShell 凑到 (0,6,0) 才压得住。
+   保留它扣面板宽度那一项——那是防止窄屏时 composer 压到面板底下的，
+   注释里写了原因，不能一起丢掉。 */
+:is(.dmpk-quotationModuleShell, .tumor-reportModuleShell).dmpkShell
+  > :is(.dmpkWorkspace, .workspace, .legacyTumorWorkspace):has(.workbenchPanel.isOpen)
+  > :is(.dmpkComposerWrap, .legacyComposerStack) {
+  max-width: min(var(--bioaz-session-column), calc(100% - var(--panel-width, 400px)));
+}
+
+/* 肿瘤报告的对话流走的是 --bioaz-chat-width（920），比它自己的 composer 宽 20px。
+   收到同一个列宽上，三个会话的对话流才是一个数。 */
+.dmpkShell.tumor-reportModuleShell,
+.dmpkShell.dmpk-quotationModuleShell {
+  --bioaz-chat-width: min(900px, 100%);
+}

@@ -1,0 +1,308 @@
+/* ===================================================================
+   新建任务首屏视觉层
+
+   加载顺序必须在 review.css 之后、responsive.css 之前：
+   前者是这一屏当前的样式来源，需要在同等特异度下覆盖；
+   后者的窄屏规则要继续压过这里。
+
+   核心是一条取舍：快捷入口、项目选择器、输入框三者都想当焦点，
+   同时亮等于都不亮。这里按状态分时——未选项目时项目选择器最亮，
+   选完之后焦点交给输入框，快捷入口始终靠面积而不是亮度保持存在感。
+   =================================================================== */
+
+/* ---------- 1. 氛围底 ---------- */
+
+/* review.css 把这层关掉了（.newTaskHome::before { display: none }），
+   这里重新启用。两团非对称的径向渐变——对称会显得像模板。 */
+.newTaskHome::before {
+  display: block;
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    radial-gradient(
+      760px 520px at 50% 32%,
+      color-mix(in srgb, var(--bioaz-brand-primary) 5%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      520px 430px at 84% 6%,
+      color-mix(in srgb, var(--bioaz-agent-accent) 4%, transparent),
+      transparent 72%
+    );
+  pointer-events: none;
+  content: "";
+}
+
+/* review.css:1288 用 display/content 双 !important 把这层焊死了
+   （当时是为了干掉 iteration.css 里那张 56px 的网格底纹）。
+   同等武器才拆得掉——这里不是偷懒，是被迫对齐。 */
+.dmpkShell.workbenchShell .newTaskHome::before {
+  display: block !important;
+  content: "" !important;
+}
+
+.newTaskIntro {
+  position: relative;
+  z-index: 1;
+  /* 原来是 align-content: center，上下均分空隙，卡片到输入区空了 132px。
+     把上留白做成可伸缩的一段，内容整体下沉去贴近输入区。 */
+  align-content: center;
+  padding: clamp(16px, 8vh, 88px) 0 12px;
+  /* 整屏左对齐：介绍区与下方 composer dock 用同一个宽度和同一种居中方式，
+     两者的左边缘才会落在同一条线上。此前是 1040 / 856，左边差 3px——
+     这种错位比差 30px 更难受，因为看得出不对但说不出哪不对。 */
+  width: min(860px, 100%);
+  justify-items: start;
+  margin-inline: auto;
+}
+
+/* 标题区居中，卡片以下全部左对齐——两个区分工不同：
+   上面是英雄区（一眼扫过），下面是操作区（沿一条左边线往下走）。
+   居中的对象是整个 860px 列，所以它正压在卡片行和输入框的中轴上。 */
+.newTaskIntro > .logoAwakening,
+.newTaskIntro > .newTaskHeading {
+  justify-self: center;
+}
+
+.newTaskHeading {
+  justify-items: center;
+  max-width: 640px;
+  text-align: center;
+}
+
+.taskExampleGrid {
+  justify-self: stretch;
+}
+
+/* ---------- 2. 标题区 ---------- */
+
+.logoAwakening {
+  width: 52px;
+  height: 52px;
+}
+
+.logoAwakening svg {
+  width: 46px;
+  height: 46px;
+}
+
+/* 下边距比上一版多 14px：居中区和左对齐区交界处需要一段明确的呼吸，
+   否则「上面居中、下面靠左」会读成排版出错而不是有意分区。 */
+.newTaskHeading {
+  margin: 14px 0 40px;
+}
+
+/* ---------- 2.5 圆角归到 tokens 已有的三级刻度 ----------
+   改前这一屏跑出 16 / 999 / 16 / 8 / 14 / 11 六个值，其中 11 和 14
+   没人决定过，999 是上一版加的。tokens.css 早就定义了
+   tool 8 / control 12 / container 16，问题不是缺规范是没用规范。 */
+
+/* 容器级：输入框与卡片 —— 已经是 16px，这里只把来源写明 */
+.newTaskComposerDock > .newTaskComposer,
+.taskExampleGrid button {
+  border-radius: var(--bioaz-radius-container);
+}
+
+/* 控件级：项目选择器、它的菜单、发送与加号 */
+.newTaskComposerDock > .projectSelector > button,
+.newTaskComposerDock > .projectSelector .projectSelectorMenu,
+.newTaskComposerDock .newTaskComposer > .sendIconButton,
+.newTaskComposerDock .newTaskComposer .composerAddButton {
+  border-radius: var(--bioaz-radius-control);
+}
+
+/* 小件级：卡片里的图标砖 */
+.taskExampleIcon {
+  border-radius: var(--bioaz-radius-tool);
+}
+
+/* ---------- 3. 快捷入口：升级形态，不降权重 ---------- */
+
+/* 原来卡片行 1040px、输入区 856px，卡片横向压过主操作 184px。
+   对齐到同一列宽，卡片仍然是四张，但不再越界。 */
+.taskExampleGrid {
+  width: min(860px, 100%);
+}
+
+.taskExampleGrid button {
+  border-color: var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  /* 纯白改成极淡的向下渐变，和氛围底呼应，卡片才不像浮在另一个图层上 */
+  background: linear-gradient(
+    180deg,
+    var(--bioaz-surface) 0%,
+    color-mix(in srgb, var(--bioaz-brand-primary) 2.5%, var(--bioaz-surface)) 100%
+  );
+}
+
+.taskExampleIcon {
+  width: 36px;
+  height: 36px;
+  border-color: color-mix(in srgb, var(--bioaz-brand-primary) 10%, transparent);
+  border-radius: var(--bioaz-radius-tool);
+  background: color-mix(in srgb, var(--bioaz-brand-primary) 5%, var(--bioaz-surface));
+}
+
+/* 那颗装饰小方块在四张卡上各变一个形状（方块 / 横杠 / 圆点 / 对勾），
+   既不表意也不成体系，扫视时纯粹是噪点。 */
+.newTaskIntro .taskExampleGrid button .taskExampleIcon::after {
+  display: none;
+}
+
+/* 禁用卡不再整卡压暗——压暗会让它看起来像加载失败。
+   改成虚线边框，「即将接入」自己做成 badge 说明原因。 */
+.taskExampleGrid button:disabled {
+  border-style: dashed;
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface-subtle);
+  opacity: 1;
+}
+
+.taskExampleGrid button:disabled .taskExampleIcon {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-disabled);
+}
+
+.taskExampleGrid button:disabled strong {
+  color: var(--bioaz-text-tertiary);
+}
+
+.taskExampleGrid button:disabled .taskExampleCopy small {
+  width: fit-content;
+  padding: 1px 7px;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-status-neutral-soft);
+  color: var(--bioaz-status-neutral);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* 未选项目 —— 卡片降为未激活。用的是「安静」而不是「压暗」：
+   压暗读作坏了，安静读作还没轮到。跟禁用卡（虚线边）也要能区分开，
+   那是「永远不可用」，这是「现在不可用」。 */
+.taskExampleGrid button[data-gated="true"] {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface-subtle);
+}
+
+.taskExampleGrid button[data-gated="true"] .taskExampleIcon {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface-hover);
+  color: var(--bioaz-text-tertiary);
+}
+
+.taskExampleGrid button[data-gated="true"] strong {
+  color: var(--bioaz-text-tertiary);
+}
+
+.taskExampleGrid button[data-gated="true"] .taskExampleTop svg {
+  color: var(--bioaz-text-disabled);
+}
+
+.taskExampleGate {
+  display: none;
+  color: var(--bioaz-brand-primary);
+  font-size: 11.5px;
+  font-style: normal;
+}
+
+/* hover 才说明原因：四张卡同时挂一句一样的话是噪音，
+   但把手放上去的那一刻，人正需要这句话。 */
+.taskExampleGrid button[data-gated="true"]:hover .taskExampleGate,
+.taskExampleGrid button[data-gated="true"]:focus-visible .taskExampleGate {
+  display: block;
+}
+
+.taskExampleGrid button[data-gated="true"]:hover .taskExampleCopy small,
+.taskExampleGrid button[data-gated="true"]:focus-visible .taskExampleCopy small {
+  display: none;
+}
+
+/* ---------- 4. 项目选择器：留在输入框上方，宽度收成 pill ---------- */
+
+/* 整宽是它现在最大的问题：宽度等于输入框会让人以为两者同级，
+   但它其实是输入框的前置条件。 */
+.newTaskComposerDock > .projectSelector {
+  justify-self: start;
+}
+
+.newTaskComposerDock > .projectSelector > button {
+  width: auto;
+  height: 38px;
+  grid-template-columns: 18px auto 16px;
+  padding-inline: 15px;
+  transition:
+    border-color var(--bioaz-motion-standard) var(--bioaz-ease-out-2),
+    background-color var(--bioaz-motion-standard) var(--bioaz-ease-out-2),
+    color var(--bioaz-motion-standard) var(--bioaz-ease-out-2);
+}
+
+/* 菜单原本靠 left:0/right:0 贴合整宽按钮，按钮收窄后跟着按钮左对齐。
+   继续向上展开：下方是输入框（主操作，不能盖），上方是快捷入口
+   —— 此刻你正在选项目，那条备选路径被盖住无所谓。 */
+.newTaskComposerDock > .projectSelector .projectSelectorMenu {
+  right: auto;
+  left: 0;
+  min-width: 260px;
+  transform: none;
+}
+
+/* 未选项目 —— 全屏最亮的元素 */
+.newTaskComposerDock.needsProject > .projectSelector > button {
+  border-color: color-mix(in srgb, var(--bioaz-brand-primary) 32%, transparent);
+  background: color-mix(in srgb, var(--bioaz-brand-primary) 5%, var(--bioaz-surface));
+  color: var(--bioaz-brand-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--bioaz-brand-primary) 5%, transparent);
+}
+
+.newTaskComposerDock.needsProject > .projectSelector > button:hover {
+  border-color: color-mix(in srgb, var(--bioaz-brand-primary) 46%, transparent);
+  background: color-mix(in srgb, var(--bioaz-brand-primary) 8%, var(--bioaz-surface));
+}
+
+/* 已选项目 —— 退场，把焦点让给输入框 */
+.newTaskComposerDock:not(.needsProject) > .projectSelector > button {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-secondary);
+  box-shadow: none;
+}
+
+/* ---------- 5. 输入框聚光 ---------- */
+
+/* 原来的阴影是 0 5px 18px rgba(18,24,38,.045)——4.5% 等于没有。
+   换成双层：一层贴地定形，一层带品牌色的远距辉光负责发光。 */
+.newTaskComposerDock > .newTaskComposer {
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--bioaz-text-primary) 5%, transparent),
+    0 14px 34px color-mix(in srgb, var(--bioaz-brand-primary) 8%, transparent);
+  transition:
+    border-color var(--bioaz-motion-standard) var(--bioaz-ease-out-2),
+    box-shadow var(--bioaz-motion-spatial) var(--bioaz-ease-out-2);
+}
+
+/* 没选项目时它还不是主角，辉光收着 */
+.newTaskComposerDock.needsProject > .newTaskComposer {
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--bioaz-text-primary) 4%, transparent);
+}
+
+.newTaskComposerDock:not(.needsProject) > .newTaskComposer:focus-within {
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--bioaz-text-primary) 5%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--bioaz-brand-primary) 6%, transparent),
+    0 18px 44px color-mix(in srgb, var(--bioaz-brand-primary) 13%, transparent);
+}
+
+/* 空槽也要占位，否则选完项目多出一行会把下面顶下去 */
+.newTaskComposerDock > .newTaskWelcomePrompt {
+  min-height: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newTaskComposerDock > .projectSelector > button,
+  .newTaskComposerDock > .newTaskComposer {
+    transition: none;
+  }
+}

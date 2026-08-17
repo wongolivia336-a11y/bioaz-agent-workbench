@@ -61,10 +61,12 @@ import type { AgentModuleSessionProps } from "../types";
 import { Button, Dialog } from "../../components/ui";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard, PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
+import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
+import { MessageAttachments } from "../../components/workbench-shell/WorkbenchComposer";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
 import { resolveInspectorPanels, type InspectorPanelRegistry } from "../../components/workbench-inspector/WorkbenchInspector";
 
-export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange }: AgentModuleSessionProps) {
+export default function LegacyTumorReportWorkbench({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange }: AgentModuleSessionProps) {
   const [stage, setStage] = useState<Stage>("empty");
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [validationProgress, setValidationProgress] = useState(0);
@@ -461,12 +463,13 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           <PanelToggle open={inspectorOpen} onToggle={() => setInspectorOpen((current) => !current)} />
         </header>
 
+        <SessionMinimap scrollerRef={chatScrollerRef} />
         <div className="chatScroller" ref={chatScrollerRef}>
           <PriorSessionHistory snapshots={priorSessionSnapshots} />
           {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
           {/* 开场白与初始请求是会话的一部分，上传后不该消失 */}
-          {initialRequest ? <div className="legacyInitialRequest"><p>{initialRequest}</p></div> : null}
-          <div className="legacyTumorOpening"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div>
+          {initialRequest ? <div className="legacyInitialRequest" data-minimap="user" data-minimap-label={initialRequest}><p>{initialRequest}<MessageAttachments items={initialAttachments} /></p></div> : null}
+          <div className="legacyTumorOpening" data-minimap="agent" data-minimap-label="开场：肿瘤报告数字同事"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div>
           {stage !== "empty" && stage !== "uploaded" ? (
             <Conversation
               files={files}
@@ -1193,7 +1196,7 @@ function Conversation({
 
   return (
     <section className="conversation">
-      <div className="userBubble">
+      <div className="userBubble" data-minimap="user" data-minimap-label="开始 · 已上传方案与数据">
         <div className="attachedFiles">
           {files.map((file) => (
             <span key={file.id}>
@@ -1276,7 +1279,7 @@ function Conversation({
           ) : null}
 
           {artifactsVisible ? (
-            <section className="artifactStack">
+            <section className="artifactStack" data-minimap="artifact" data-minimap-label="产物">
               <ArtifactCard
                 icon={<FileText size={28} />}
                 title="Word 报告"
@@ -1321,7 +1324,7 @@ function Conversation({
           <SquadStatusCard steps={reviewSteps} elapsed={reviewElapsed} running={stage === "reviewing"} />
           {followupState !== "idle" ? <FollowupAnswer state={followupState} /> : null}
           {stage !== "reviewing" && reviews.every((item) => item.status === "confirmed") ? (
-            <section className="artifactStack">
+            <section className="artifactStack" data-minimap="artifact" data-minimap-label="产物">
               <ArtifactCard
                 icon={<FileCheck size={26} />}
                 title="专家建议文档"
@@ -1367,7 +1370,7 @@ function AgentReply({
   children: React.ReactNode;
 }) {
   return (
-    <article className={`agentReply ${tone}`}>
+    <article className={`agentReply ${tone}`} data-minimap="agent" data-minimap-label={title}>
       <div className="agentReplyBubble">
         <p>
           <strong>{title}</strong> {children}{" "}
@@ -1395,7 +1398,7 @@ function UserEventBubbles({
   return (
     <>
       {scoped.map((event) => (
-        <div className="userActionBubble" key={event.id}>
+        <div className="userActionBubble" key={event.id} data-minimap="user" data-minimap-label={event.text}>
           {event.text}
         </div>
       ))}
@@ -1420,7 +1423,7 @@ function SquadStatusCard({
   const doneCount = steps.filter((step) => step.status === "done").length;
 
   return (
-    <article className={`agentRun squadStatus ${running ? "running" : "settled collapsed"}`}>
+    <article className={`agentRun squadStatus ${running ? "running" : "settled collapsed"}`} data-minimap="activity" data-minimap-label="专家小队">
       <div className="runHeader squadStatusHeader">
         <span className="squadStatusMark">
           <Users size={15} />
@@ -1497,7 +1500,7 @@ function ThinkingCard({
   const activeStepIndex = Math.max(0, steps.findIndex((step) => step.status === "active"));
 
   return (
-    <article className={`agentRun ${running ? "running" : "settled"} ${!expanded ? "collapsed" : ""}`}>
+    <article className={`agentRun ${running ? "running" : "settled"} ${!expanded ? "collapsed" : ""}`} data-minimap="activity" data-minimap-label={title}>
       <button
         className="runHeader"
         type="button"

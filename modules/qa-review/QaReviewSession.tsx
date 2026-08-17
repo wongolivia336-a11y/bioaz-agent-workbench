@@ -7,6 +7,7 @@ import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-pane
 import { ActivityChain, AgentReply, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { InlineSelect } from "../../components/workbench-shell/InlineSelect";
+import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import { Button, StatusChip, type StatusTone } from "../../components/ui";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
@@ -72,6 +73,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   }] : qaChatOpening);
   const [mailReviewRunning, setMailReviewRunning] = useState(Boolean(initialRequest));
   const initialMailHandled = useRef(false);
+  const chatScrollerRef = useRef<HTMLDivElement>(null);
   const [chatText, setChatText] = useState("");
   const [chatAttachments, setChatAttachments] = useState<ComposerAttachment[]>([]);
 
@@ -284,7 +286,8 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
         </section>
       ) : (
         <section className="qaChatflow">
-          <div className="dmpkChatScroller"><div className="dmpkConversation">
+          <SessionMinimap scrollerRef={chatScrollerRef} />
+          <div className="dmpkChatScroller" ref={chatScrollerRef}><div className="dmpkConversation">
             {chatMessages.map((message) => message.role === "agent"
               ? <AgentReply key={message.id}>{message.text}</AgentReply>
               : <UserBubble key={message.id} text={message.text} attachments={message.attachments} />)}

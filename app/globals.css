@@ -20,8 +20,11 @@
   --red-soft: #f8f2f1;
   --blue: #2900ff;
   --blue-soft: #f3f1ff;
-  --radius-card: 16px;
-  --radius-control: 14px;
+  /* 这两个是早于 tokens.css 的旧名，值还和官方刻度对不上
+     （--radius-control 是 14px，而 --bioaz-radius-control 是 12px）。
+     改成别名而不是直接删：还有 7 处在引它，别名能一次性把它们拉回刻度。 */
+  --radius-card: var(--bioaz-radius-container);
+  --radius-control: var(--bioaz-radius-control);
   --shadow: 0 18px 60px rgba(17, 19, 24, 0.08);
 }
 
@@ -117,7 +120,8 @@ button {
 .sidebarCollapseButton {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  /* 32px 方按钮属于小件层 */
+  border-radius: var(--bioaz-radius-tool);
 }
 
 .sidebarCollapseButton:hover,
@@ -854,7 +858,8 @@ button {
   width: 40px;
   height: 40px;
   padding: 0;
-  border-radius: 14px;
+  /* 收起态还是同一颗按钮，圆角不该跟着变——展开态是 control，这里也是 */
+  border-radius: var(--bioaz-radius-control);
   font-size: 0;
 }
 
@@ -5932,7 +5937,8 @@ button {
   flex: 0 0 auto;
   place-items: center;
   border: 0;
-  border-radius: 7px;
+  /* 28px 图标钮属于小件层 */
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: #667085;
   opacity: 0;

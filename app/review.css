@@ -40,7 +40,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .brand { margin: 0 8px 16px; font-size: 20px; letter-spacing: -.01em; }
 .brand img { width: 31px; height: 27px; }
 .sidebarActions { margin-bottom: 18px; }
-.newChat { height: 40px; border-color: var(--review-line-strong); border-radius: 10px; box-shadow: none; }
+/* 40px 高的主按钮属于控件层，不是小件层 */
+.newChat { height: 40px; border-color: var(--review-line-strong); border-radius: var(--bioaz-radius-control); box-shadow: none; }
 .newChat:hover { border-color: #b9b4ed; box-shadow: none; transform: none; }
 .workspaceViewRow, .pinnedProjectRow, .sidebarTaskRow { border-radius: 8px; }
 .workspaceViewRow.active, .chatRow.active, .sidebarTaskRow.active { background: #eeeff2; color: var(--review-ink); }
@@ -53,7 +54,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .breadcrumb button { border: 0; background: transparent; padding: 3px 0; color: var(--review-muted); cursor: pointer; }
 .breadcrumb button:hover { color: var(--review-ink); }
 .navSectionHeader { display: flex; min-height: 28px; align-items: center; justify-content: space-between; padding: 0 6px; color: var(--review-muted); font-size: 11px; font-weight: 600; }
-.navSectionHeader button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--review-muted); }
+.navSectionHeader button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
 .navSectionHeader button:hover { background: #eef0f3; color: var(--review-ink); }
 .projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: 9px; background: #fff; padding: 4px 5px 4px 8px; }
 .projectCreateRow > svg { color: var(--review-muted); }

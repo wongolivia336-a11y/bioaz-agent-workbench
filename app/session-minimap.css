@@ -1,0 +1,122 @@
+/* ===================================================================
+   会话缩略导航 —— 详见 components/workbench-shell/SessionMinimap.tsx
+
+   默认态是「不存在」：opacity 由 JS 按指针到右边缘的距离给，滚动不参与。
+   所以这里不写任何 :hover，也不写任何跟 scroll 有关的状态。
+   =================================================================== */
+
+/* 原生滚动条自己就是一条一直可见、且随滚动变化的竖条，和 minimap 的
+   默认隐身互相矛盾。会话流交给 minimap 独占右边缘。 */
+.dmpkChatScroller,
+.chatScroller {
+  scrollbar-width: none;
+}
+
+.dmpkChatScroller::-webkit-scrollbar,
+.chatScroller::-webkit-scrollbar {
+  display: none;
+}
+
+.sessionMinimap {
+  position: absolute;
+  z-index: 8;
+  width: 0;
+  transition: opacity var(--bioaz-motion-standard) var(--bioaz-ease-out-2);
+}
+
+/* 刻度全部右端对齐在 right:14px 这条隐含线上，波峰向左长出去。
+   这里曾经画过一条 1px 实脊线，已删——它和面板左边框相距 14.5px、
+   宽度相同、颜色相近，两条并排会被读成一条线画歪了。 */
+
+/* 纹理线：纯装饰，不可点、不进无障碍树。
+   它负责密度和轮廓，语义仍然只由下面的实刻度承担。 */
+.sessionMinimapGrain {
+  position: absolute;
+  right: 14px;
+  display: block;
+  width: 34px;
+  height: 2px;
+  /* 高度 2px，用负 margin 对中比 translateY(-50%) 省一次变换合成 */
+  margin-top: -1px;
+  border-radius: var(--bioaz-radius-full);
+  transform-origin: right center;
+  background: rgba(17, 19, 24, 0.22);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.sessionMinimapTick {
+  position: absolute;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 34px;
+  /* 刻度本身只有 2px 高，靠这 14px 的透明盒子才点得中 */
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.sessionMinimapTick > i {
+  display: block;
+  width: 34px;
+  height: 2px;
+  border-radius: var(--bioaz-radius-full);
+  /* 每帧改的是 transform 和 opacity，不动 width——合成器能直接接管 */
+  transform-origin: right center;
+  background: rgba(17, 19, 24, 0.34);
+  will-change: transform, opacity;
+}
+
+.sessionMinimapTick[data-kind="user"] > i {
+  background: rgba(17, 19, 24, 0.5);
+}
+
+.sessionMinimapTick[data-kind="activity"] > i,
+.sessionMinimapTick[data-kind="artifact"] > i,
+.sessionMinimapTick[data-kind="divider"] > i {
+  background: var(--bioaz-agent-accent);
+}
+
+.sessionMinimapTick[data-current="true"] > i {
+  height: 3px;
+  background: var(--bioaz-action-primary);
+}
+
+.sessionMinimapLabel {
+  position: absolute;
+  /* 让开刻度的最大长度（14 + 34）再留 8px 呼吸 */
+  right: 56px;
+  max-width: 240px;
+  padding: 4px 9px;
+  overflow: hidden;
+  transform: translateY(-50%);
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  box-shadow: var(--bioaz-shadow-floating);
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: var(--bioaz-type-label-line);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.sessionMinimapLabel[data-kind="activity"],
+.sessionMinimapLabel[data-kind="artifact"],
+.sessionMinimapLabel[data-kind="divider"] {
+  border-color: var(--bioaz-agent-accent-border);
+  color: var(--bioaz-agent-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sessionMinimap {
+    transition: none;
+  }
+}
