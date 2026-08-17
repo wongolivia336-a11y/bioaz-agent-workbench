@@ -88,16 +88,18 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
   const [scopeOpen, setScopeOpen] = useState(false);
   const [turns, setTurns] = useState<AskTurn[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
-  // 浮动态默认收起：项目页的主角是文件，问答不该一进来就占半屏
-  const [open, setOpen] = useState(dock === "inline");
+  /* 两种停靠都从收起的胶囊开始。
+     此前只有浮动态收起、跨项目态常驻展开，于是同一个问答在两屏是两副样子：
+     一屏是一条占着首屏的输入条，另一屏是一颗要点开的胶囊。
+     统一成"点一下才展开"之后，文件表在两屏都能立刻看到。 */
+  const [open, setOpen] = useState(false);
   const scopeRef = useDismissableLayer<HTMLDivElement>(scopeOpen, () => setScopeOpen(false));
 
   useEffect(() => { setScope(defaultScope ?? scopePresets[0]); }, [defaultScope]);
 
-  /* open 的初值来自 dock，但 dock 是会变的：从「全部项目」收窄到某个项目时，
-     同一个组件实例从 inline 变成 floating，而 useState 只读一次初值——
-     结果浮动态一直是展开的，那颗收起的胶囊永远不出现。 */
-  useEffect(() => { setOpen(dock === "inline"); }, [dock]);
+  /* dock 会变：从「全部项目」收窄到某个项目时同一个实例换停靠。
+     换停靠时收回胶囊，避免上一屏展开着的面板跟着漂到新位置。 */
+  useEffect(() => { setOpen(false); }, [dock]);
 
   const scopeOptions = [...scopePresets, ...projects.map((project) => project.name)];
   const scopedFiles = scope === "全部资料" ? files : files.filter((file) => file.project === scope);
@@ -112,11 +114,12 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
   };
   const submit = () => ask(text);
 
-  if (dock === "floating" && !open) {
+  /* 收起态：两种停靠共用同一颗胶囊 */
+  if (!open) {
     return (
-      <button className="knowledgeAskLauncher" type="button" onClick={() => setOpen(true)}>
+      <button className={`knowledgeAskLauncher dock-${dock}`} type="button" onClick={() => setOpen(true)}>
         <Sparkles size={15} />
-        <span>问问项目助手</span>
+        <span>{dock === "floating" ? "问问项目助手" : "问问资料助手"}</span>
         <em>{scope}</em>
       </button>
     );
@@ -128,13 +131,10 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
         {/* 浮动态的首格是收起键，不是一颗绝对定位盖在右上角的叉。
             展开与收起共用同一颗胶囊，答案浮在它上方——同一个东西变大变小，
             而不是把胶囊塞进一张更大的卡里再套一层。 */}
-        {dock === "floating" ? (
-          <button className="knowledgeAskCollapse" type="button" onClick={() => setOpen(false)} aria-label="收起助手">
-            <ChevronDown size={14} />
-          </button>
-        ) : (
-          <Sparkles size={16} className="knowledgeAskSpark" />
-        )}
+        {/* 两种停靠都能收回胶囊，所以首格一律是收起键 */}
+        <button className="knowledgeAskCollapse" type="button" onClick={() => setOpen(false)} aria-label="收起助手">
+          <ChevronDown size={14} />
+        </button>
         <input
           value={text}
           onChange={(event) => setText(event.target.value)}
@@ -164,11 +164,12 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
         </button>
       </div>
 
-      {/* 建议卡只在跨项目视角、且还没问过的时候出现。
-          进了某个项目主角就是翻文件，那时候这几张卡是在抢文件表的首屏；
-          问过一次之后用户已经知道这儿能问什么，再挂着就是占位置。
+      {/* 建议卡跟着展开一起出现，两种停靠一视同仁。
+          此前它被 dock === "inline" 挡着，于是项目里点开胶囊只有一个空输入框，
+          用户不知道这儿能问什么。既然默认是收起的，就不存在"抢文件表首屏"了。
+          问过一次之后不再显示——那时用户已经知道能问什么。
           三条各自命中不同的回答分支，不是三张一样的装饰。 */}
-      {dock === "inline" && !turns.length ? (
+      {!turns.length ? (
         <div className="knowledgeAskSuggestions">
           {askSuggestions.map((suggestion) => (
             <button type="button" key={suggestion} onClick={() => ask(suggestion)}>

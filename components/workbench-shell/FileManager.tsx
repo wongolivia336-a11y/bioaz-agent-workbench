@@ -288,8 +288,34 @@ export function FileManager({
         {tabsPortal}
         <input className="visuallyHidden" id="hub-file-upload" type="file" multiple onChange={upload} />
         {topbarActionHost ? createPortal(
+          /* 顺序和项目内那条顶栏一致：搜索 → 筛选 → 排序 → 切换业务 → 上传文件。
+             这三颗菜单原来挂在下面「全部文件 N 项」那行里，而项目内的同三颗在顶栏——
+             同一组控件两个家，进出项目时得重新找一遍。 */
           <div className="libraryToolLayer">
             <LibrarySearch value={query} onChange={setQuery} placeholder="搜索全部资料..." />
+            <Menu icon={<Filter size={16} />} label="筛选" active={rootFilterActive}>
+              <MenuGroup label="所属项目">
+                <MenuItem active={!rootProject} onSelect={() => setRootProject(null)}>全部项目</MenuItem>
+                {rootProjectOptions.map((name) => <MenuItem key={name} active={rootProject === name} onSelect={() => setRootProject(rootProject === name ? null : name)}>{name}</MenuItem>)}
+              </MenuGroup>
+              <MenuGroup label="文件类型">
+                <MenuItem active={!rootKind} onSelect={() => setRootKind(null)}>全部类型</MenuItem>
+                {rootKindOptions.map((kind) => <MenuItem key={kind} active={rootKind === kind} onSelect={() => setRootKind(rootKind === kind ? null : kind)}>{kind}</MenuItem>)}
+              </MenuGroup>
+              <MenuGroup label="来源">
+                <MenuItem active={!rootSource} onSelect={() => setRootSource(null)}>全部来源</MenuItem>
+                {rootSourceOptions.map((source) => <MenuItem key={source} active={rootSource === source} onSelect={() => setRootSource(rootSource === source ? null : source)}>{source}</MenuItem>)}
+              </MenuGroup>
+              <MenuGroup label="更新时间">
+                {timeOptions.map((option) => <MenuItem key={option.id} active={rootTime === option.id} onSelect={() => setRootTime(option.id)}>{option.label}</MenuItem>)}
+              </MenuGroup>
+            </Menu>
+            <Menu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
+              {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
+            </Menu>
+            <Menu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
+              {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
+            </Menu>
             <label className="primaryButton compact topbarFileAction" htmlFor="hub-file-upload"><Upload size={14} />上传文件</label>
           </div>,
           topbarActionHost,
@@ -314,13 +340,14 @@ export function FileManager({
           </div>
         ) : null}
 
-        {/* 跨项目视角的主角是问答，不是文件列表。用户来这儿是要一个答案，
-            文件列表退到下面当"我在这些资料里问"的范围说明。
+        {/* 问答和项目内用同一副形态：底部一颗胶囊，点开才展开。
+            原来这里是常驻展开的一条输入带，占掉首屏、把文件表压到下面——
+            而同一个问答在项目内却是一颗要点开的胶囊，两屏两副样子。
 
             这里原本还有一条项目卡片带（点进某个项目），已删——顶栏那个筛选器
             干的是同一件事。同一个动作给两个入口，用户就得先判断该点哪个。
             "哪个项目有多少份"改由下面表格的「所属」列回答。 */}
-        <KnowledgeAsk projects={projects} files={rootFiles} onOpenFile={setPreviewFile} />
+        <KnowledgeAsk projects={projects} files={rootFiles} onOpenFile={setPreviewFile} dock="floating" />
 
         {!projects.length ? (
           <EmptyState
@@ -334,31 +361,7 @@ export function FileManager({
           <div className="sectionBar">
             <strong>全部文件</strong>
             <span>{allRootFiles.length} 项</span>
-            <div className="sectionBarActions">
-              <Menu icon={<Filter size={16} />} label="筛选" active={rootFilterActive}>
-                <MenuGroup label="所属项目">
-                  <MenuItem active={!rootProject} onSelect={() => setRootProject(null)}>全部项目</MenuItem>
-                  {rootProjectOptions.map((name) => <MenuItem key={name} active={rootProject === name} onSelect={() => setRootProject(rootProject === name ? null : name)}>{name}</MenuItem>)}
-                </MenuGroup>
-                <MenuGroup label="文件类型">
-                  <MenuItem active={!rootKind} onSelect={() => setRootKind(null)}>全部类型</MenuItem>
-                  {rootKindOptions.map((kind) => <MenuItem key={kind} active={rootKind === kind} onSelect={() => setRootKind(rootKind === kind ? null : kind)}>{kind}</MenuItem>)}
-                </MenuGroup>
-                <MenuGroup label="来源">
-                  <MenuItem active={!rootSource} onSelect={() => setRootSource(null)}>全部来源</MenuItem>
-                  {rootSourceOptions.map((source) => <MenuItem key={source} active={rootSource === source} onSelect={() => setRootSource(rootSource === source ? null : source)}>{source}</MenuItem>)}
-                </MenuGroup>
-                <MenuGroup label="更新时间">
-                  {timeOptions.map((option) => <MenuItem key={option.id} active={rootTime === option.id} onSelect={() => setRootTime(option.id)}>{option.label}</MenuItem>)}
-                </MenuGroup>
-              </Menu>
-              <Menu icon={<ArrowUpDown size={16} />} label="排序" active={sortBy !== "updated"}>
-                {sortOptions.map((option) => <MenuItem key={option.id} active={sortBy === option.id} onSelect={() => setSortBy(option.id)}>{option.label}</MenuItem>)}
-              </Menu>
-              <Menu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
-                {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
-              </Menu>
-            </div>
+            {/* 筛选 / 排序 / 切换业务 已上移到顶栏，和项目内那条对齐 */}
           </div>
           {/* 跨项目视角要回答「这份属于谁」，所以多一列所属；项目内不需要，
               整张表都在同一个项目里。 */}
