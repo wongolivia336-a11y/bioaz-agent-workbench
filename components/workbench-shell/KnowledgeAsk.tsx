@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, ChevronDown, FileText, History, Quote, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronDown, FileText, History, Maximize2, Minimize2, Quote, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { KnowledgeFile } from "../../lib/workbench/shellTypes";
 import type { WorkbenchProject } from "../../modules/types";
@@ -93,6 +93,9 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
      一屏是一条占着首屏的输入条，另一屏是一颗要点开的胶囊。
      统一成"点一下才展开"之后，文件表在两屏都能立刻看到。 */
   const [open, setOpen] = useState(false);
+  /* 全屏：答案带出处、可能还挂着历史，吸底那个尺寸读长答案不够用。
+     只放大问答本身，不接管整页——文件表还得看得见，它是这个答案的取材范围。 */
+  const [full, setFull] = useState(false);
   const scopeRef = useDismissableLayer<HTMLDivElement>(scopeOpen, () => setScopeOpen(false));
 
   useEffect(() => { setScope(defaultScope ?? scopePresets[0]); }, [defaultScope]);
@@ -126,13 +129,14 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
   }
 
   return (
-    <section className={`knowledgeAsk dock-${dock}`} aria-label="资料问答">
+    <section className={`knowledgeAsk dock-${dock} ${full ? "isFull" : ""}`} aria-label="资料问答">
       <div className="knowledgeAskBar">
-        {/* 浮动态的首格是收起键，不是一颗绝对定位盖在右上角的叉。
-            展开与收起共用同一颗胶囊，答案浮在它上方——同一个东西变大变小，
-            而不是把胶囊塞进一张更大的卡里再套一层。 */}
-        {/* 两种停靠都能收回胶囊，所以首格一律是收起键 */}
-        <button className="knowledgeAskCollapse" type="button" onClick={() => setOpen(false)} aria-label="收起助手">
+        {/* 首格是收起键，不是一颗绝对定位盖在右上角的叉。
+            展开与收起共用同一颗胶囊——同一个东西变大变小，
+            而不是把胶囊塞进一张更大的卡里再套一层。
+            收起时一并退出全屏，否则下次点开直接是全屏，
+            而用户以为自己点开的是那颗小胶囊。 */}
+        <button className="knowledgeAskCollapse" type="button" onClick={() => { setOpen(false); setFull(false); }} aria-label="收起助手">
           <ChevronDown size={14} />
         </button>
         <input
@@ -159,6 +163,19 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
             </div>
           ) : null}
         </div>
+        {/* 全屏只在问过之后才有意义——没有答案时放大的是一个空框 */}
+        {turns.length ? (
+          <button
+            className="knowledgeAskFull"
+            type="button"
+            onClick={() => setFull((value) => !value)}
+            aria-pressed={full}
+            aria-label={full ? "退出全屏" : "全屏查看"}
+            title={full ? "退出全屏" : "全屏查看"}
+          >
+            {full ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
+        ) : null}
         <button className="knowledgeAskSend" type="button" disabled={!text.trim()} onClick={submit} aria-label="提问">
           <ArrowUp size={15} />
         </button>

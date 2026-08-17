@@ -1646,7 +1646,10 @@ button { -webkit-tap-highlight-color: transparent; }
   --library-accent-soft: rgba(92, 96, 184, 0.06);
   --library-accent-line: rgba(92, 96, 184, 0.18);
   position: relative;
-  padding-bottom: 108px !important;
+  /* 原来是 108px，用来给绝对定位的问答胶囊腾出不被遮挡的空间。
+     胶囊改成 sticky 之后自己在流里占位，这圈内边距反而变成了它的天花板——
+     sticky 的包含块是内容盒，够不到内边距里，胶囊会悬在离底 108px 的位置。 */
+  padding-bottom: var(--bioaz-space-6) !important;
 }
 .knowledgeRootActions {
   display: flex;

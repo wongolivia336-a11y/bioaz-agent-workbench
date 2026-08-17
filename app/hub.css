@@ -302,24 +302,27 @@
 
 /* ---- 浮动停靠：项目内视角 ----
    同一个组件、同一套控件，只是坐到底部。收起时是一颗胶囊，展开是完整问答。 */
+/* 和展开态同一个定位模型：sticky 吸底。原来是 absolute，而定位祖先
+   .workbenchView 自己就是滚动容器，于是这颗胶囊会跟着文件表一起滚走，
+   翻到列表中段时它正好压在某一行上。 */
 .knowledgeAskLauncher {
-  position: absolute;
+  position: sticky;
   z-index: 40;
   bottom: 20px;
-  left: 50%;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  width: fit-content;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-surface);
+  margin: 20px auto 0;
   padding: 9px 16px;
   color: var(--bioaz-text-secondary);
   font-size: var(--bioaz-type-small-size);
   white-space: nowrap;
   box-shadow: var(--bioaz-shadow-floating);
   cursor: pointer;
-  transform: translateX(-50%);
 }
 
 .knowledgeAskLauncher:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
@@ -341,17 +344,49 @@
    改成跟 DMPK 全屏时 composer 收成药丸同一套形状语言（review.css 里那句
    「连续感交给 composer → 药丸 那一层」）：**胶囊永远是胶囊**，展开只是在它
    上方浮出答案。外层退化成一个只管定位的透明网格，不再是一张卡。 */
+/* sticky 而不是 absolute：这一层的定位祖先 .workbenchView 自己就是滚动容器，
+   absolute 的孩子会跟着内容一起滚走。sticky 吸在滚动视口底部，翻多久都在。
+   代价是它要待在流的末尾，否则除了吸底还会在原位留一个等高的空洞。 */
 .knowledgeAsk.dock-floating {
-  position: absolute;
+  position: sticky;
   z-index: 40;
-  right: 24px;
   bottom: 20px;
-  left: 24px;
   display: grid;
   width: min(760px, calc(100% - 48px));
   gap: 8px;
-  margin: 0 auto;
+  margin: 20px auto 0;
 }
+
+/* 全屏：只放大问答本身，不接管整页——下面那张文件表是这个答案的取材范围，
+   遮住它反而让人不知道"在哪些资料里问的"。 */
+.knowledgeAsk.dock-floating.isFull {
+  width: min(1100px, calc(100% - 48px));
+}
+
+.knowledgeAsk.dock-floating.isFull .knowledgeAnswer {
+  max-height: calc(100vh - 260px);
+}
+
+.knowledgeAsk.dock-floating .knowledgeAnswer {
+  max-height: 42vh;
+  overflow: auto;
+}
+
+.knowledgeAskFull {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+}
+
+.knowledgeAskFull:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
+.knowledgeAskFull[aria-pressed="true"] { color: var(--bioaz-agent-accent); }
 
 /* 答案、历史、建议卡全部浮在胶囊上方。用 order 而不是改 JSX 顺序：
    建议卡紧贴输入框（order 2），答案和历史再往上排。 */

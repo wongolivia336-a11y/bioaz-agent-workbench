@@ -340,15 +340,6 @@ export function FileManager({
           </div>
         ) : null}
 
-        {/* 问答和项目内用同一副形态：底部一颗胶囊，点开才展开。
-            原来这里是常驻展开的一条输入带，占掉首屏、把文件表压到下面——
-            而同一个问答在项目内却是一颗要点开的胶囊，两屏两副样子。
-
-            这里原本还有一条项目卡片带（点进某个项目），已删——顶栏那个筛选器
-            干的是同一件事。同一个动作给两个入口，用户就得先判断该点哪个。
-            "哪个项目有多少份"改由下面表格的「所属」列回答。 */}
-        <KnowledgeAsk projects={projects} files={rootFiles} onOpenFile={setPreviewFile} dock="floating" />
-
         {!projects.length ? (
           <EmptyState
             title="暂无项目"
@@ -368,8 +359,13 @@ export function FileManager({
           <FileTable files={allRootFiles} showOwnerScope onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
         </section>
 
-        {/* 跨项目视角的问答已经是页面主角（KnowledgeAsk），不再挂角落那颗胶囊，
-            否则同一件事有两个入口 */}
+        {/* 问答放在流的最后，因为它是 position: sticky 吸底的。
+            放在中间的话，除了吸在底部之外还会在原位留一个等高的空洞。
+
+            这里原本还有一条项目卡片带（点进某个项目），已删——顶栏那个筛选器
+            干的是同一件事。"哪个项目有多少份"改由表格的「所属」列回答。 */}
+        <KnowledgeAsk projects={projects} files={rootFiles} onOpenFile={setPreviewFile} dock="floating" />
+
         {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} /> : null}
         {detailFile ? <FileDetails file={detailFile} onClose={() => setDetailFile(null)} /> : null}
       </section>
