@@ -309,7 +309,10 @@
   position: sticky;
   z-index: 40;
   bottom: 20px;
-  display: inline-flex;
+  /* 必须是 flex 而不是 inline-flex：行内级盒子的 margin-inline:auto 不居中，
+     胶囊会贴在内容区左边缘。原先靠 left:50% + translateX(-50%) 居中，
+     改成 sticky 之后那套失效了，得换成块级盒 + auto 外边距。 */
+  display: flex;
   align-items: center;
   gap: 8px;
   width: fit-content;
