@@ -154,9 +154,12 @@ export function WorkspaceSidebar(props: Props) {
       ) : null}
 
       <nav className="navBlock projectTree" aria-label="项目">
+        {/* 「新建项目」是这一栏的主操作，不是可有可无的小工具——项目是任务和
+            文件的归属容器，没有项目什么都开不了。所以它是带文字的实体按钮，
+            而「新建资料空间」保持轻量图标：资料空间是可选的收纳，不是前置条件。 */}
         <div className="navSectionHeader">
           <span>项目</span>
-          <button type="button" aria-label="新建项目" title="新建项目" onClick={() => openCreate("client")}><Plus size={14} /></button>
+          <button className="navSectionCreate" type="button" onClick={() => openCreate("client")}><Plus size={13} />新建</button>
         </div>
         {/* 位置已经说明了类型：在「项目」这一行点 +，要建的就是项目。
             原来这里还弹一个「项目 / 资料空间」二选一，是让人回答一个他刚刚

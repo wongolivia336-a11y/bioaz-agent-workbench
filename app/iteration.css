@@ -2343,12 +2343,13 @@ body > main.dmpkShell::after { content: none; }
   font-weight: 600;
   cursor: pointer;
   pointer-events: auto;
-  transition: opacity 120ms ease, transform 240ms var(--ambient-ease);
+  transition: opacity 180ms var(--bioaz-ease-out-2);
 }
 
 .ambientAssistantEntry { --icon-stroke: 1.6; }
 .ambientAssistantEntry svg { color: #334155; }
-.ambientFileAssistant[data-expanded="true"] .ambientAssistantEntry { opacity: 0; transform: translateY(5px); pointer-events: none; }
+/* 胶囊退场也只做透明度，不带位移 */
+.ambientFileAssistant[data-expanded="true"] .ambientAssistantEntry { opacity: 0; pointer-events: none; }
 
 .ambientAssistantComposer {
   position: absolute;
@@ -2383,17 +2384,16 @@ body > main.dmpkShell::after { content: none; }
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  /* 展开只做透明度，180ms。原来是三个属性三个时长（opacity 140 / blur 180 /
+     translateY 220），三条曲线各跑各的，看起来像"飘"进来而不是"出现"。
+     blur 也违反 tokens.css 里那条——只动 transform 与 opacity，filter 走不了合成器。 */
   opacity: 0;
-  filter: blur(5px);
-  transform: translateY(8px);
   pointer-events: none;
-  transition: opacity 140ms ease, filter 180ms ease, transform 220ms var(--ambient-ease);
+  transition: opacity 180ms var(--bioaz-ease-out-2);
 }
 
 .ambientFileAssistant[data-expanded="true"] .ambientAssistantSuggestions {
   opacity: 1;
-  filter: blur(0);
-  transform: none;
   pointer-events: auto;
   transition-delay: 80ms;
 }

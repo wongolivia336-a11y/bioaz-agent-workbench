@@ -55,6 +55,23 @@ button { -webkit-tap-highlight-color: transparent; }
 .breadcrumb button:hover { color: var(--review-ink); }
 .navSectionHeader { display: flex; min-height: 28px; align-items: center; justify-content: space-between; padding: 0 6px; color: var(--review-muted); font-size: 11px; font-weight: 600; }
 .navSectionHeader button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
+/* 「新建项目」升级成实体按钮：项目是任务与文件的归属容器，是前置条件，
+   不该和旁边那些轻量图标钮长得一样。 */
+.navSectionHeader .navSectionCreate {
+  display: inline-flex;
+  width: auto;
+  height: 26px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--review-line-strong);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 0 9px 0 7px;
+  color: var(--review-ink);
+  font-size: var(--bioaz-type-label-size);
+  font-weight: 600;
+}
+.navSectionHeader .navSectionCreate:hover { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
 .navSectionHeader button:hover { background: #eef0f3; color: var(--review-ink); }
 .projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: 9px; background: #fff; padding: 4px 5px 4px 8px; }
 .projectCreateRow > svg { color: var(--review-muted); }
@@ -2247,18 +2264,12 @@ button { -webkit-tap-highlight-color: transparent; }
   position: relative;
   z-index: 1;
 }
-/* hover 不做扫光，只做轻微上浮 + 阴影加深，读起来更像实体按钮 */
+/* hover 只换边框色，不上浮、不扫光、不加重阴影。
+   这颗胶囊是常驻入口，鼠标每次路过都动一下会很吵；而且"要不要展开"由点击
+   决定，hover 不该做出任何像是要发生什么的暗示。 */
 .knowledgeBaseView .ambientAssistantEntry:hover {
   border-color: rgba(92, 96, 184, 0.28);
   background: #fff;
-  box-shadow:
-    0 10px 24px rgba(18, 24, 38, 0.09),
-    0 2px 6px rgba(18, 24, 38, 0.04);
-  transform: translateY(-1px);
-}
-.knowledgeBaseView .ambientAssistantEntry:active {
-  box-shadow: 0 4px 12px rgba(18, 24, 38, 0.07);
-  transform: translateY(0);
 }
 .knowledgeBaseView .ambientAssistantEntry svg {
   width: 16px;
@@ -5765,37 +5776,17 @@ button { -webkit-tap-highlight-color: transparent; }
 /* ===================================================================
    底部胶囊 —— hover 时一次极淡扫过，静止时完全不动
    =================================================================== */
-@keyframes bioazPillSheen {
-  from { transform: translateX(-120%) skewX(-12deg); }
-  to { transform: translateX(220%) skewX(-12deg); }
-}
+/* bioazPillSheen 的 keyframes 一并删掉，唯一的引用已经没了。
+   overflow/isolate 也不再需要——它们本来是给那道扫光做裁剪层的。 */
 .knowledgeBaseView .ambientAssistantEntry {
   position: relative;
-  overflow: hidden;
-  isolation: isolate;
 }
-.knowledgeBaseView .ambientAssistantEntry::after {
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 38%;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    color-mix(in srgb, var(--bioaz-agent-accent) 14%, transparent),
-    transparent
-  );
-  content: "";
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-120%) skewX(-12deg);
-}
-.knowledgeBaseView .ambientAssistantEntry:hover::after {
-  opacity: 1;
-  animation: bioazPillSheen var(--bioaz-duration-5, 700ms) var(--bioaz-ease-out-3, ease-out) 1;
-}
+/* 这里原来有一道 hover 扫光（bioazPillSheen，700ms 斜向高光划过胶囊），已删。
+   三个理由：
+   1. 它和 review.css:2250 那条规则的注释直接冲突——那里写着「hover 不做扫光，
+      只做轻微上浮 + 阴影加深」，两处各写各的，靠行号先后决出胜负；
+   2. 这颗胶囊是常驻入口，鼠标每次路过都放一次 700ms 的光，读起来像在自我推销；
+   3. 展开与否由点击决定，hover 不该承诺任何东西。 */
 .knowledgeBaseView .ambientAssistantEntry > * {
   position: relative;
   z-index: 1;
