@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import type { ComposerAttachment } from "../lib/workbench/composerAttachments";
 
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
@@ -100,6 +101,8 @@ export type AgentModuleSessionProps = {
   projectName: string;
   taskTitle: string;
   initialRequest?: string;
+  /** 首轮请求随带的附件（目前只有邮件交接会带）。渲染成 chip，不要拼进正文。 */
+  initialAttachments?: ComposerAttachment[];
   coworkers: CoworkerDefinition[];
   activeCoworkerId: string;
   onCoworkerChange: (coworkerId: string) => void;

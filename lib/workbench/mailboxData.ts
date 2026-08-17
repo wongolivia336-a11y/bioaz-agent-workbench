@@ -6,7 +6,8 @@
 
    放在 lib/workbench 而不是组件里：假数据和共享类型归这儿，组件只负责渲染。 */
 
-export type MailboxLane = "received" | "sent";
+/* draft 是第三条 lane：此前「存草稿」是颗死按钮，草稿既存不下也没处看。 */
+export type MailboxLane = "received" | "sent" | "draft";
 
 /** none = 纯知会，没有要你做的事；open/done 才进待办口径 */
 export type MailActionStatus = "open" | "done" | "none";

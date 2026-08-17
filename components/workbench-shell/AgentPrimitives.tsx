@@ -7,7 +7,7 @@ import { MessageAttachments } from "./WorkbenchComposer";
 
 export function AgentReply({ children }: { children: ReactNode }) {
   return (
-    <div className="agentReply">
+    <div className="agentReply" data-minimap="agent">
       <span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span>
       <p>{children}</p>
     </div>
@@ -15,7 +15,7 @@ export function AgentReply({ children }: { children: ReactNode }) {
 }
 
 export function UserBubble({ text, attachments }: { text: string; attachments?: ComposerAttachment[] }) {
-  return <div className="userBubble">{text}<MessageAttachments items={attachments} /></div>;
+  return <div className="userBubble" data-minimap="user" data-minimap-label={text}>{text}<MessageAttachments items={attachments} /></div>;
 }
 
 export function PanelLink<T extends string>({ panelId, onOpen, children }: { panelId: T; onOpen: (panelId: T) => void; children: ReactNode }) {
@@ -24,7 +24,7 @@ export function PanelLink<T extends string>({ panelId, onOpen, children }: { pan
 
 export function ActivityChain({ title, steps, running, onOpen }: { title: string; steps: string[]; running: boolean; onOpen: (panelId: string) => void }) {
   return (
-    <section className={`activityChain ${running ? "running" : "done"}`}>
+    <section className={`activityChain ${running ? "running" : "done"}`} data-minimap="activity" data-minimap-label={title}>
       <button className="activityChainHeader" type="button" onClick={() => onOpen("process")}>
         <span>{running ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}</span>
         <strong>{title}</strong>

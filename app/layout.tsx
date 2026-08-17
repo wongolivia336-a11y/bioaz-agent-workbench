@@ -17,6 +17,9 @@ import "./composer-chips.css";
 import "./inbox.css";
 import "./hub.css";
 import "./qa-review.css";
+import "./session-minimap.css";
+import "./new-task-home.css";
+import "./session-column.css";
 import "../styles/design-system.css";
 import "./responsive.css";
 

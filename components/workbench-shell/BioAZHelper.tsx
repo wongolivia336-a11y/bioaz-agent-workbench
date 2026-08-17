@@ -21,7 +21,7 @@ export function CoworkerSwitchCard({ from, to, endingCurrentFlow = false, onConf
 }
 
 export function ContextDivider({ children }: { children: string }) {
-  return <div className="contextDivider"><span>{children}</span><span className="contextSummaryHelp"><button type="button" aria-label="查看交接上下文摘要"><CircleHelp size={14} /></button><span className="contextSummaryCard" role="tooltip"><strong>交接上下文摘要</strong><p>已保留上一位数字同事确认过的任务目标、关键参数、材料与产物状态；未发送草稿和未确认推断不会带入新会话。</p><small>{children}</small></span></span></div>;
+  return <div className="contextDivider" data-minimap="divider" data-minimap-label={children}><span>{children}</span><span className="contextSummaryHelp"><button type="button" aria-label="查看交接上下文摘要"><CircleHelp size={14} /></button><span className="contextSummaryCard" role="tooltip"><strong>交接上下文摘要</strong><p>已保留上一位数字同事确认过的任务目标、关键参数、材料与产物状态；未发送草稿和未确认推断不会带入新会话。</p><small>{children}</small></span></span></div>;
 }
 
 export function PriorSessionHistory({ snapshots }: { snapshots?: AgentSessionSnapshot[] }) {

@@ -2979,9 +2979,10 @@ body > main.dmpkShell::after { content: none; }
   --warning: #8b6f38;
   --danger: #9b5a55;
   --focus-ring: rgba(41, 0, 255, .18);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* 第三套命名。值本来就和官方刻度一致，改成别名只为断掉"以后各改各的"这条路 */
+  --radius-sm: var(--bioaz-radius-tool);
+  --radius-md: var(--bioaz-radius-control);
+  --radius-lg: var(--bioaz-radius-container);
   --content-max: 1200px;
   --page-gutter: clamp(24px, 4vw, 56px);
 }

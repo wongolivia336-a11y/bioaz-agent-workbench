@@ -44,6 +44,10 @@ export function NewTaskHome(props: Props) {
       ? `我建议将这项任务分派给${props.suggestedCoworker.name}，请在下方确认。`
       : "请补充你希望完成的工作，我会识别任务并推荐合适的数字同事。");
 
+  /* 分时高亮：项目是发送的前置条件，没选之前它是全屏最亮的元素，
+     选完就退成安静的灰，焦点交给输入框。任何一刻只有一个东西最亮。 */
+  const needsProject = !props.conversationStarted && !props.project;
+
   const submit = () => {
     if (!props.text.trim()) return;
     // 没选项目时 shell 只会弹提示、不会真的发出去，chip 要留在原地
@@ -58,22 +62,37 @@ export function NewTaskHome(props: Props) {
     {!props.conversationStarted ? <div className="newTaskIntro">
       <LogoAwakening />
       <div className="newTaskHeading">
-        <span>BioAZ Agent Workbench</span>
+        {/* 原来这里还有一行 BIOAZ AGENT WORKBENCH 的 eyebrow，
+            和左上角侧边栏的字标重复，删掉后标题区从三层收到两层 */}
         <h1>今天要推进哪项工作？</h1>
         <p>描述目标或从常用流程开始。任务会保留在所属项目中，过程与产物均可追溯。</p>
       </div>
-      <div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => <ActionCard density="default" data-ability={item.id} disabled={item.availability === "placeholder"} key={item.id} onClick={() => props.onQuickStart(item.id)}>
-        <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{item.availability !== "placeholder" ? <ArrowUpRight size={14} /> : null}</span>
-        <span className="taskExampleCopy"><strong>{item.label}</strong><small>{item.availability === "placeholder" ? "即将接入" : "启动标准流程"}</small></span>
-      </ActionCard>)}</div>
+      {/* 快捷入口和输入框一样需要先选项目——Shell 的 createRuntimeTask 没项目
+          直接 return null 并弹提示。所以这四张卡此前是「看起来可点、点了才报错」。
+          gated 把这个既有约束提前显性化，不增加任何步骤。 */}
+      <div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => {
+        const placeholder = item.availability === "placeholder";
+        const gated = !placeholder && !props.project;
+        return <ActionCard density="default" data-ability={item.id} data-gated={gated ? "true" : undefined} disabled={placeholder} key={item.id} onClick={() => props.onQuickStart(item.id)}>
+          <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{!placeholder ? <ArrowUpRight size={14} /> : null}</span>
+          <span className="taskExampleCopy">
+            <strong>{item.label}</strong>
+            <small>{placeholder ? "即将接入" : "启动标准流程"}</small>
+            {gated ? <em className="taskExampleGate">需要先选择项目</em> : null}
+          </span>
+        </ActionCard>;
+      })}</div>
     </div> : <div className="helperConversationCanvas" aria-live="polite">
       <div className="helperConversationInner">
         {request ? <div className="helperUserMessage"><span>{request}<MessageAttachments items={sentAttachments} /></span></div> : null}
         <div className="helperAgentMessage"><img src="/logo/bioaz-logo.svg" alt="" /><div><strong>BioAZ Helper</strong><p>{helperMessage}</p></div></div>
       </div>
     </div>}
-    <div className="newTaskComposerDock">
-      {!props.conversationStarted ? <div className="newTaskWelcomePrompt"><span>{props.project ? `你想在“${props.project}”中完成什么任务？` : "描述任务，或先选择所属项目。"}</span></div> : null}
+    <div className={`newTaskComposerDock ${needsProject ? "needsProject" : ""}`}>
+      {/* 未选项目时这一格留空：提示语原本写着「或先选择所属项目」，
+          和下面那颗写着「选择项目」的按钮说的是同一件事。空槽保留，
+          避免选完项目后多出一行把下面的东西顶下去。 */}
+      {!props.conversationStarted ? <div className="newTaskWelcomePrompt">{props.project ? <span>{`你想在“${props.project}”中完成什么任务？`}</span> : null}</div> : null}
       {!props.conversationStarted && props.projectNotice ? <div className="newTaskProjectNotice" role="status"><CircleAlert size={14} /><span>{props.projectNotice}</span></div> : null}
       {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard taskType={props.pendingTaskType ?? "待确认任务"} coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
       {!props.conversationStarted ? <ProjectSelector project={props.project} options={props.projectOptions} invalid={Boolean(props.projectNotice)} onChange={props.onProjectChange} /> : null}
@@ -86,7 +105,7 @@ export function NewTaskHome(props: Props) {
         project={props.project}
         globalDrop
       >
-        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(); } }} placeholder="描述你要完成的任务..." rows={1} />
+        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(); } }} placeholder={needsProject ? "先选择上方的项目，再描述任务" : "描述你要完成的任务..."} rows={1} />
         <button className="sendIconButton" type="button" onClick={submit} disabled={!props.text.trim()} aria-label="发送"><Send size={16} /></button>
       </WorkbenchComposer>
     </div>
