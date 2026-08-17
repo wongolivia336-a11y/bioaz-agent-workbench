@@ -1428,15 +1428,13 @@ button {
   font-size: 13px;
 }
 
+/* 不自己限宽：会话列已经统一到一个宽度（session-column.css），
+   这里再叠一层 max-width 只会造出第四个宽度值。
+   原来是 820px、running 时 860px——同一张卡跑完的瞬间会横向缩 40px。 */
 .agentRun {
   border: 1px solid rgba(215, 220, 229, 0.75);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
-  max-width: 820px;
-}
-
-.agentRun.running {
-  max-width: 860px;
 }
 
 .agentRun.collapsed {
@@ -1660,16 +1658,23 @@ button {
   animation: nodePulseIn 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* 执行链一律用 agent accent（#5c60b8），不用 logo 蓝（#2900ff）——
+   tokens.css 里 --bioaz-brand-primary 的注释写着「仅限 Logo 与极少数品牌级入口」，
+   而这条链在每个会话里反复出现，用满饱和的品牌蓝会盖过内容。
+
+   同时把强调关系反过来：原来 done 是实心蓝、active 是白心，于是一整列
+   蓝点里最不显眼的反而是"正在做的那一步"。现在 active 才带光晕，
+   done 退成中性灰。 */
 .timelineItem.done .timelineDot {
-  border-color: rgba(41, 0, 255, 0.18);
-  background: var(--brand);
-  box-shadow: 0 0 0 3px rgba(41, 0, 255, 0.06);
+  border-color: var(--bioaz-border-strong);
+  background: var(--bioaz-text-disabled);
+  box-shadow: none;
 }
 
 .timelineItem.active .timelineDot {
-  border-color: var(--brand);
+  border-color: var(--bioaz-agent-accent);
   background: #fff;
-  box-shadow: 0 0 0 5px rgba(41, 0, 255, 0.08);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--bioaz-agent-accent) 14%, transparent);
 }
 
 .timelineLine {
@@ -1678,7 +1683,7 @@ button {
   bottom: 0;
   left: 4px;
   width: 1px;
-  background: linear-gradient(180deg, rgba(41, 0, 255, 0.28), var(--line));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bioaz-agent-accent) 26%, transparent), var(--line));
   transform-origin: top;
   animation: lineGrow 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -1698,10 +1703,11 @@ button {
   font-size: 13.5px;
 }
 
+/* 「进行中」这枚 chip 同理走 agent accent，不走 logo 蓝 */
 .timelineTitle span {
-  border-radius: 999px;
-  background: var(--blue-soft);
-  color: var(--blue);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
   padding: 2px 6px;
   font-size: 11px;
   font-weight: 700;

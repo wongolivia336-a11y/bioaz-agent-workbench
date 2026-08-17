@@ -633,15 +633,18 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .agentRun.collapsed .runHeader {
   border-radius: var(--bioaz-radius-control);
 }
+/* 强调关系反过来：原来已完成是实心 accent、进行中是白心，
+   于是一整列彩点里最不显眼的反而是"正在做的那一步"。
+   现在只有进行中带色和光晕，已完成退成中性灰。 */
 .dmpkShell .timelineItem.done .timelineDot {
-  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 20%, transparent);
-  background: var(--bioaz-agent-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bioaz-agent-accent) 8%, transparent);
+  border-color: var(--bioaz-border-strong);
+  background: var(--bioaz-text-disabled);
+  box-shadow: none;
 }
 .dmpkShell .timelineItem.active .timelineDot {
   border-color: var(--bioaz-agent-accent);
   background: var(--bioaz-surface);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--bioaz-agent-accent) 9%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--bioaz-agent-accent) 14%, transparent);
 }
 .dmpkShell .timelineLine {
   background: linear-gradient(
@@ -5341,7 +5344,8 @@ button { -webkit-tap-highlight-color: transparent; }
    折叠态例外——它要退成无框透明的一行，与肿瘤报告一致。 */
 .dmpkShell :is(.agentRun, .thinkingCard, .activityChain):not(.collapsed) {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  /* 这几个都是卡片，走容器级；原来钉死 8px，是小件层的值 */
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   box-shadow: none;
 }

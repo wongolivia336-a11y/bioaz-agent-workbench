@@ -353,11 +353,21 @@
   margin: 0 auto;
 }
 
-/* 答案与历史浮在胶囊上方。用 order 而不是改 JSX 顺序：inline 停靠是
-   「搜索框在上、结果在下」，那边的顺序是对的。 */
+/* 答案、历史、建议卡全部浮在胶囊上方。用 order 而不是改 JSX 顺序：
+   建议卡紧贴输入框（order 2），答案和历史再往上排。 */
 .knowledgeAsk.dock-floating .knowledgeAskHistory { order: 0; }
 .knowledgeAsk.dock-floating .knowledgeAnswer { order: 1; margin: 0; }
-.knowledgeAsk.dock-floating .knowledgeAskBar { order: 2; }
+.knowledgeAsk.dock-floating .knowledgeAskSuggestions { order: 2; justify-content: center; }
+.knowledgeAsk.dock-floating .knowledgeAskBar { order: 3; }
+
+/* 范围菜单向上展开。它原来朝下开，而这条问答栏就贴在视口底部——
+   菜单直接掉出屏幕，最后几个资料空间根本选不到。 */
+.knowledgeAsk.dock-floating .knowledgeAskScopeMenu {
+  top: auto;
+  bottom: calc(100% + 6px);
+  max-height: min(320px, 50vh);
+  overflow: auto;
+}
 
 /* 胶囊：跟 .knowledgeAskLauncher 同一副轮廓——全圆角、同一层阴影。
    收起和展开之间只有宽度在变，形状不变。 */
