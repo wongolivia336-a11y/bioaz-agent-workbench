@@ -947,12 +947,18 @@ button {
   padding: 0 28px;
 }
 
+/* 面包屑永远单行。原来 nowrap 只写在 ≤1023 的媒体查询里，于是 1024–1280
+   这一段被挤时它会换行——中文没有词边界，一挤就是一字一行的竖排。
+   这是路径，不是正文，任何宽度下都该截断而不是折行。 */
 .breadcrumb {
   display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 11px;
   color: var(--body);
   font-size: 14px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .panelToggle {

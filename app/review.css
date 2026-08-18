@@ -48,7 +48,10 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .sidebar .workspaceViewRow.active::before,
 .dmpkShell .sidebar .chatRow.active::before { background: #2a2d33; }
 .account { border-top-color: var(--review-line); }
-.topbar { height: 54px; border-bottom-color: var(--review-line); background: rgba(255, 255, 255, .92); backdrop-filter: blur(10px); }
+/* position/z-index 不是装饰：backdrop-filter 会让 .topbar 自成一个层叠上下文，
+   而它是 static，于是整棵子树（包括版本下拉这种浮层）被压在任何 position:relative
+   的兄弟——比如右侧面板——下面。给它一个显式的定位与层级，浮层才盖得住。 */
+.topbar { position: relative; z-index: 5; height: 54px; border-bottom-color: var(--review-line); background: rgba(255, 255, 255, .92); backdrop-filter: blur(10px); }
 .breadcrumb { color: var(--review-muted); }
 .breadcrumb strong { color: var(--review-ink); }
 .breadcrumb button { border: 0; background: transparent; padding: 3px 0; color: var(--review-muted); cursor: pointer; }

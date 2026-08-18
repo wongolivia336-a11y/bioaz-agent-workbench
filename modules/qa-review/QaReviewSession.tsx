@@ -28,6 +28,9 @@ import {
 
 type QaPoppedPanelId = "document" | "ai-diff";
 
+/** 邮件进来那一次跑批的消息 id。跑完要按 id 找回它把 running 关掉 */
+const QA_MAIL_RUN_ID = "qa-mail-run";
+
 const versionTone: Record<string, StatusTone> = {
   draft: "neutral",
   review: "running",
@@ -72,7 +75,6 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     attachments: [{ id: "mail-report", kind: "file", label: qaDocument.title, meta: "来自收件箱 · 第一版", origin: "library" }],
   }] : qaChatOpening);
   const [mailReviewRunning, setMailReviewRunning] = useState(Boolean(initialRequest));
-  const initialMailHandled = useRef(false);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
   const [chatText, setChatText] = useState("");
   const [chatAttachments, setChatAttachments] = useState<ComposerAttachment[]>([]);
@@ -81,13 +83,34 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const openFindings = qaFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
 
+  /* 不用 ref 做"只跑一次"的闸。ref 会活过 StrictMode 的二次挂载，而 timer 不会——
+     第一遍排了 timer、cleanup 清掉、第二遍因为 ref 已是 true 直接返回，于是
+     timer 永远不再排，跑批卡在"处理中"、结论那条消息永远不来。
+     改成：状态更新按固定 id 幂等，timer 每次都重排。 */
   useEffect(() => {
-    if (!initialRequest || initialMailHandled.current) return;
-    initialMailHandled.current = true;
-    setChatMessages((current) => [...current, { id: "qa-mail-accepted", role: "agent", text: "已接收邮件上下文和报告原件。我会先校验版本与页码，再执行时间逻辑、内容一致性和版式检查。" }]);
+    if (!initialRequest) return;
+    /* 执行链作为一条消息进时间线，而不是渲染在列表外面。跑完它折叠、留下，
+       不再整条消失——审批人要能回头看这一版当时是怎么跑的。 */
+    setChatMessages((current) => current.some((message) => message.id === QA_MAIL_RUN_ID) ? current : [
+      ...current,
+      { id: "qa-mail-accepted", role: "agent", text: "已接收邮件上下文和报告原件。我会先校验版本与页码，再执行时间逻辑、内容一致性和版式检查。" },
+      {
+        id: QA_MAIL_RUN_ID,
+        role: "run",
+        text: "正在审核报告",
+        running: true,
+        steps: ["读取邮件要求与附件版本", "核对 7 页正文与页码", "校验时间逻辑与内容一致性", `生成 ${qaFindings.length} 条可定位审核意见`],
+        doneTitle: `已完成${qaVersions[0].label}审核`,
+      },
+    ]);
     const timer = window.setTimeout(() => {
       setMailReviewRunning(false);
-      setChatMessages((current) => [...current, ...qaChatOpening.map((message) => ({ ...message, id: `mail-${message.id}` }))]);
+      setChatMessages((current) => {
+        const settled = current.map((message) => (message.id === QA_MAIL_RUN_ID ? { ...message, running: false } : message));
+        const summaryId = `mail-${qaChatOpening[0].id}`;
+        if (settled.some((message) => message.id === summaryId)) return settled;
+        return [...settled, ...qaChatOpening.map((message) => ({ ...message, id: `mail-${message.id}` }))];
+      });
       setPoppedPanelId("document");
     }, 1400);
     return () => window.clearTimeout(timer);
@@ -288,10 +311,19 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
         <section className="qaChatflow">
           <SessionMinimap scrollerRef={chatScrollerRef} />
           <div className="dmpkChatScroller" ref={chatScrollerRef}><div className="dmpkConversation">
-            {chatMessages.map((message) => message.role === "agent"
-              ? <AgentReply key={message.id}>{message.text}</AgentReply>
-              : <UserBubble key={message.id} text={message.text} attachments={message.attachments} />)}
-            {initialRequest && mailReviewRunning ? <ActivityChain title="正在审核报告" running steps={["读取邮件要求与附件版本", "核对 7 页正文与页码", "校验时间逻辑与内容一致性", "生成 6 条可定位审核意见"]} onOpen={() => setActivePanelId("ai-review")} /> : null}
+            {chatMessages.map((message) => message.role === "run"
+              ? <ActivityChain
+                  key={message.id}
+                  title={message.text}
+                  steps={message.steps ?? []}
+                  running={Boolean(message.running)}
+                  doneTitle={message.doneTitle}
+                  timedOut={message.timedOut}
+                  onOpen={() => setActivePanelId("ai-review")}
+                />
+              : message.role === "agent"
+                ? <AgentReply key={message.id}>{message.text}</AgentReply>
+                : <UserBubble key={message.id} text={message.text} attachments={message.attachments} />)}
           </div></div>
           <footer className="qaChatComposerStack">
             {!outcome ? (
@@ -323,8 +355,10 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
         onPanelChange={setActivePanelId}
       />
 
+      {/* 悬浮坞只放对话。执行链是时间线上的过程记录，收进药丸里既读不了也点不开，
+          它留在展开的 chatflow 里等你回去看。 */}
       {poppedPanelId ? <FloatingChatDock
-        messages={chatMessages}
+        messages={chatMessages.filter((message): message is QaChatMessage & { role: "user" | "agent" } => message.role !== "run")}
         text={chatText}
         onTextChange={setChatText}
         onSend={sendChat}

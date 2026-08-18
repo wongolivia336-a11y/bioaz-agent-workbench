@@ -232,7 +232,25 @@ export const qaInitialNotes: QaNote[] = [
    分工也刻意留在这里：问「为什么/怎么办」走对话，做「采纳/忽略」走右侧列表。
    所以下面没有任何一条回答承诺替用户落处置动作。 */
 
-export type QaChatMessage = { id: string; role: "user" | "agent"; text: string; attachments?: ComposerAttachment[] };
+/**
+ * 会话里的一条。`run` 是 AI 跑批那条执行链——它必须是**消息**而不是挂在
+ * 组件上的一个布尔量：一次审核跨好几版、AI 会跑好几次，每次都要在时间线上
+ * 留一条可回看的记录。原来它是 `mailReviewRunning && <ActivityChain>`，
+ * 跑完整条从树上摘掉，回不去"第二版当时 AI 说了什么"。
+ */
+export type QaChatMessage = {
+  id: string;
+  role: "user" | "agent" | "run";
+  /** role=run 时是执行链标题 */
+  text: string;
+  attachments?: ComposerAttachment[];
+  /** 以下四个只在 role=run 时有意义 */
+  steps?: string[];
+  running?: boolean;
+  /** 跑完之后这条链的标题 */
+  doneTitle?: string;
+  timedOut?: boolean;
+};
 
 export const qaChatOpening: QaChatMessage[] = [
   {
