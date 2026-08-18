@@ -5,11 +5,13 @@
    所以待办天生跨不了项目；现在项目只是 tab 内部的一个筛选维度。
    =================================================================== */
 
-.hubTabLayer {
+/* 范围选择器 + 新建。名字原来叫 hubTabLayer，但它从来不是 tab——
+   它换的是「在哪批资料里看」，现在跟面包屑同行，名字也跟着改正。 */
+.hubScopeLayer {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .hubView {
@@ -360,19 +362,134 @@
   margin: 20px auto 0;
 }
 
-/* 全屏：只放大问答本身，不接管整页——下面那张文件表是这个答案的取材范围，
-   遮住它反而让人不知道"在哪些资料里问的"。 */
-.knowledgeAsk.dock-floating.isFull {
-  width: min(1100px, calc(100% - 48px));
-}
-
-.knowledgeAsk.dock-floating.isFull .knowledgeAnswer {
-  max-height: calc(100vh - 260px);
-}
-
 .knowledgeAsk.dock-floating .knowledgeAnswer {
   max-height: 42vh;
   overflow: auto;
+}
+
+/* ===================================================================
+   铺开的临时问答窗
+   -------------------------------------------------------------------
+   放大不是把胶囊拉宽——上一版只是 width: 1100px，读长答案时仍然是
+   一条压在文件表上的窄带。这里换成一个次级界面：铺满面包屑以下、
+   左侧任务栏以右的那一整格，像临时开出来的一个会话窗。
+
+   它是工作区网格里显式落在第 2 行的绝对定位子项，所以包含块正好是
+   那一格——顶栏和侧边栏天然留在外面，不用去算它们有多高多宽。
+
+   这是一次性的窗：没有任务、不进侧边栏，Esc 或窗头那颗键就收回胶囊。
+   =================================================================== */
+.knowledgeAskWindow {
+  position: absolute;
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  grid-row: 2;
+  grid-column: 1 / -1;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--bioaz-surface);
+  animation: knowledgeAskWindowIn 180ms var(--bioaz-ease-standard, ease) both;
+}
+
+/* 只淡入。位移和模糊在这块面积上都会变成一次「东西飞进来」的表演 */
+@keyframes knowledgeAskWindowIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.knowledgeAskWindowBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 0 16px 0 20px;
+  min-height: 52px;
+}
+
+.knowledgeAskWindowTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-section-size);
+  font-weight: 600;
+}
+
+.knowledgeAskWindowTitle > svg { color: var(--bioaz-agent-accent); }
+
+.knowledgeAskWindowScope {
+  border-left: 1px solid var(--bioaz-border);
+  padding-left: 10px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+}
+
+/* 「这一屏不会留下来」得说在前面，否则用户会以为自己开了一个任务 */
+.knowledgeAskWindowNote {
+  margin-right: auto;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.knowledgeAskWindowClose {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.knowledgeAskWindowClose:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
+
+.knowledgeAskWindowScroll {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 会话列跟工作台其他对话同宽，读起来是同一种东西 */
+.knowledgeAskThread {
+  display: grid;
+  width: min(760px, calc(100% - 48px));
+  gap: 16px;
+  margin: 0 auto;
+  padding: 24px 0 8px;
+}
+
+.knowledgeAskThread .knowledgeAnswer {
+  max-height: none;
+  overflow: visible;
+}
+
+/* 输入条停在窗底正中，和吸底那颗是同一副轮廓 */
+.knowledgeAskWindowComposer {
+  display: grid;
+  padding: 12px 0 22px;
+}
+
+.knowledgeAskWindowComposer .knowledgeAskBar {
+  width: min(760px, calc(100% - 48px));
+  border-radius: var(--bioaz-radius-full);
+  margin: 0 auto;
+  padding: 8px 10px 8px 18px;
+  box-shadow: var(--bioaz-shadow-floating);
+}
+
+/* 范围菜单在窗底也得朝上开，否则掉出窗外 */
+.knowledgeAskWindowComposer .knowledgeAskScopeMenu {
+  top: auto;
+  bottom: calc(100% + 6px);
+  max-height: min(320px, 50vh);
+  overflow: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knowledgeAskWindow { animation-duration: 1ms; }
 }
 
 .knowledgeAskFull {
@@ -672,7 +789,7 @@
 
 @media (max-width: 900px) {
   .hubView { padding: 16px; }
-  .hubTabLayer { flex-wrap: wrap; gap: 8px; }
+  .hubScopeLayer { flex-wrap: wrap; gap: 8px; }
 
   /* 范围选择器换到第二行，但发送键要跟输入框待在同一行——
      它被挤到单独一行左对齐时，看着像个孤零零的图标按钮。 */

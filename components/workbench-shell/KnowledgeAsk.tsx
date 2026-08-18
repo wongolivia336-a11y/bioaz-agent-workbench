@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowUp, ChevronDown, FileText, History, Maximize2, Minimize2, Quote, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { KnowledgeFile } from "../../lib/workbench/shellTypes";
 import type { WorkbenchProject } from "../../modules/types";
 import { useDismissableLayer } from "./useDismissableLayer";
@@ -93,16 +94,32 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
      一屏是一条占着首屏的输入条，另一屏是一颗要点开的胶囊。
      统一成"点一下才展开"之后，文件表在两屏都能立刻看到。 */
   const [open, setOpen] = useState(false);
-  /* 全屏：答案带出处、可能还挂着历史，吸底那个尺寸读长答案不够用。
-     只放大问答本身，不接管整页——文件表还得看得见，它是这个答案的取材范围。 */
+  /* 放大：不是把胶囊拉宽，而是换成一个次级界面——铺满面包屑以下、
+     侧边栏以右的整块区域，像一个临时开出来的会话窗。
+     它**不进侧边栏**：这是一次性的问答，关掉就结束，不留任务。 */
   const [full, setFull] = useState(false);
   const scopeRef = useDismissableLayer<HTMLDivElement>(scopeOpen, () => setScopeOpen(false));
+  const rootRef = useRef<HTMLElement | null>(null);
+  /* 全屏窗要挂到工作区上，而不是留在文件表里——文件表自己是滚动容器，
+     浮在它内部的东西会跟着列表一起滚走，也盖不住顶栏以下的整块区域。 */
+  const [host, setHost] = useState<HTMLElement | null>(null);
 
   useEffect(() => { setScope(defaultScope ?? scopePresets[0]); }, [defaultScope]);
 
   /* dock 会变：从「全部项目」收窄到某个项目时同一个实例换停靠。
      换停靠时收回胶囊，避免上一屏展开着的面板跟着漂到新位置。 */
-  useEffect(() => { setOpen(false); }, [dock]);
+  useEffect(() => { setOpen(false); setFull(false); }, [dock]);
+
+  useEffect(() => {
+    setHost(rootRef.current?.closest<HTMLElement>(".dmpkWorkspace, .workspace") ?? null);
+  }, [open]);
+
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setFull(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [full]);
 
   const scopeOptions = [...scopePresets, ...projects.map((project) => project.name)];
   const scopedFiles = scope === "全部资料" ? files : files.filter((file) => file.project === scope);
@@ -117,10 +134,71 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
   };
   const submit = () => ask(text);
 
+  /* 输入条在吸底和全屏两处是同一段结构，抽出来渲染，避免两份各自漂移 */
+  const askBar = (inWindow: boolean) => (
+    <div className="knowledgeAskBar">
+      {/* 首格是收起键，不是一颗绝对定位盖在右上角的叉。
+          展开与收起共用同一颗胶囊——同一个东西变大变小，
+          而不是把胶囊塞进一张更大的卡里再套一层。
+          收起时一并退出全屏，否则下次点开直接是全屏，
+          而用户以为自己点开的是那颗小胶囊。
+          全屏窗里收起键让位给窗头那颗，一个动作只留一个门。 */}
+      {inWindow ? null : (
+        <button className="knowledgeAskCollapse" type="button" onClick={() => { setOpen(false); setFull(false); }} aria-label="收起助手">
+          <ChevronDown size={14} />
+        </button>
+      )}
+      <input
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        onKeyDown={(event) => { if (event.key === "Enter") submit(); }}
+        placeholder="问一个问题，比如「血浆样本保存条件是什么」"
+        aria-label="向资料提问"
+      />
+      {/* 范围选择器就是那个"电子围栏"：圈定在哪批资料里回答 */}
+      <div ref={inWindow ? undefined : scopeRef} className="knowledgeAskScope">
+        <button type="button" aria-expanded={scopeOpen} onClick={() => setScopeOpen((value) => !value)}>
+          <span>{scope}</span>
+          <small>{scopedFiles.length} 份</small>
+          <ChevronDown size={12} />
+        </button>
+        {scopeOpen ? (
+          <div className="toolMenu knowledgeAskScopeMenu" role="menu">
+            {scopeOptions.map((option) => (
+              <button className={`toolMenuItem ${option === scope ? "active" : ""}`} type="button" key={option} onClick={() => { setScope(option); setScopeOpen(false); }}>
+                {option}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      {/* 放大只在问过之后才有意义——没有答案时铺开的是一整屏空框 */}
+      {turns.length && !inWindow ? (
+        <button
+          className="knowledgeAskFull"
+          type="button"
+          onClick={() => setFull(true)}
+          aria-label="铺开为临时问答窗"
+          title="铺开为临时问答窗"
+        >
+          <Maximize2 size={14} />
+        </button>
+      ) : null}
+      <button className="knowledgeAskSend" type="button" disabled={!text.trim()} onClick={submit} aria-label="提问">
+        <ArrowUp size={15} />
+      </button>
+    </div>
+  );
+
   /* 收起态：两种停靠共用同一颗胶囊 */
   if (!open) {
     return (
-      <button className={`knowledgeAskLauncher dock-${dock}`} type="button" onClick={() => setOpen(true)}>
+      <button
+        ref={(node) => { rootRef.current = node; }}
+        className={`knowledgeAskLauncher dock-${dock}`}
+        type="button"
+        onClick={() => setOpen(true)}
+      >
         <Sparkles size={15} />
         <span>{dock === "floating" ? "问问项目助手" : "问问资料助手"}</span>
         <em>{scope}</em>
@@ -129,57 +207,12 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
   }
 
   return (
-    <section className={`knowledgeAsk dock-${dock} ${full ? "isFull" : ""}`} aria-label="资料问答">
-      <div className="knowledgeAskBar">
-        {/* 首格是收起键，不是一颗绝对定位盖在右上角的叉。
-            展开与收起共用同一颗胶囊——同一个东西变大变小，
-            而不是把胶囊塞进一张更大的卡里再套一层。
-            收起时一并退出全屏，否则下次点开直接是全屏，
-            而用户以为自己点开的是那颗小胶囊。 */}
-        <button className="knowledgeAskCollapse" type="button" onClick={() => { setOpen(false); setFull(false); }} aria-label="收起助手">
-          <ChevronDown size={14} />
-        </button>
-        <input
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => { if (event.key === "Enter") submit(); }}
-          placeholder="问一个问题，比如「血浆样本保存条件是什么」"
-          aria-label="向资料提问"
-        />
-        {/* 范围选择器就是那个"电子围栏"：圈定在哪批资料里回答 */}
-        <div ref={scopeRef} className="knowledgeAskScope">
-          <button type="button" aria-expanded={scopeOpen} onClick={() => setScopeOpen((value) => !value)}>
-            <span>{scope}</span>
-            <small>{scopedFiles.length} 份</small>
-            <ChevronDown size={12} />
-          </button>
-          {scopeOpen ? (
-            <div className="toolMenu knowledgeAskScopeMenu" role="menu">
-              {scopeOptions.map((option) => (
-                <button className={`toolMenuItem ${option === scope ? "active" : ""}`} type="button" key={option} onClick={() => { setScope(option); setScopeOpen(false); }}>
-                  {option}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-        {/* 全屏只在问过之后才有意义——没有答案时放大的是一个空框 */}
-        {turns.length ? (
-          <button
-            className="knowledgeAskFull"
-            type="button"
-            onClick={() => setFull((value) => !value)}
-            aria-pressed={full}
-            aria-label={full ? "退出全屏" : "全屏查看"}
-            title={full ? "退出全屏" : "全屏查看"}
-          >
-            {full ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
-        ) : null}
-        <button className="knowledgeAskSend" type="button" disabled={!text.trim()} onClick={submit} aria-label="提问">
-          <ArrowUp size={15} />
-        </button>
-      </div>
+    <section
+      ref={(node) => { rootRef.current = node; }}
+      className={`knowledgeAsk dock-${dock} ${full ? "isFull" : ""}`}
+      aria-label="资料问答"
+    >
+      {askBar(false)}
 
       {/* 建议卡跟着展开一起出现，两种停靠一视同仁。
           此前它被 dock === "inline" 挡着，于是项目里点开胶囊只有一个空输入框，
@@ -197,39 +230,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
         </div>
       ) : null}
 
-      {latest ? (
-        <article className="knowledgeAnswer">
-          <p className="knowledgeAnswerQuestion">{latest.question}</p>
-          <p className="knowledgeAnswerBody">{latest.answer}</p>
-
-          {/* 出处不是装饰，是这个答案能不能用的前提 */}
-          <div className="knowledgeAnswerCitations">
-            <span className="knowledgeCitationLabel"><Quote size={11} />出处</span>
-            {latest.citations.map((citation) => {
-              const file = files.find((item) => item.title === citation.file);
-              return (
-                <button
-                  className="knowledgeCitation"
-                  type="button"
-                  key={`${citation.file}-${citation.locator}`}
-                  onClick={() => { if (file) onOpenFile(file); }}
-                >
-                  <FileText size={11} />
-                  <span>{citation.file}</span>
-                  <em>{citation.locator}</em>
-                </button>
-              );
-            })}
-          </div>
-
-          {latest.handoff ? (
-            <p className="knowledgeAnswerHandoff">
-              要出正式产物得走任务流程 —— 要我叫 <strong>{latest.handoff}</strong> 接手吗？
-              <button type="button">交给它</button>
-            </p>
-          ) : null}
-        </article>
-      ) : null}
+      {latest ? <AskAnswer turn={latest} files={files} onOpenFile={onOpenFile} /> : null}
 
       {earlier.length ? (
         <div className="knowledgeAskHistory">
@@ -246,6 +247,78 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
           ) : null}
         </div>
       ) : null}
+
+      {/* 铺开的临时问答窗。挂在工作区上、只盖住面包屑以下那一格，
+          于是面包屑和左侧任务栏始终留着——用户随时看得到自己在哪，
+          也随时能一步走开。这一屏没有对应的任务，关掉就没了。 */}
+      {full && host
+        ? createPortal(
+            <section className="knowledgeAskWindow" role="dialog" aria-label="资料问答 · 临时会话">
+              <header className="knowledgeAskWindowBar">
+                <span className="knowledgeAskWindowTitle"><Sparkles size={15} />资料问答</span>
+                <span className="knowledgeAskWindowScope">{scope} · {scopedFiles.length} 份</span>
+                <span className="knowledgeAskWindowNote">临时会话，不会存进左侧任务</span>
+                <button
+                  className="knowledgeAskWindowClose"
+                  type="button"
+                  onClick={() => setFull(false)}
+                  aria-label="收回问答窗（Esc）"
+                  title="收回问答窗（Esc）"
+                >
+                  <Minimize2 size={15} />
+                </button>
+              </header>
+
+              <div className="knowledgeAskWindowScroll">
+                <div className="knowledgeAskThread">
+                  {turns.map((turn) => (
+                    <AskAnswer key={turn.id} turn={turn} files={files} onOpenFile={onOpenFile} />
+                  ))}
+                </div>
+              </div>
+
+              <footer className="knowledgeAskWindowComposer">{askBar(true)}</footer>
+            </section>,
+            host,
+          )
+        : null}
     </section>
+  );
+}
+
+/** 一问一答：问题在上、答案在下、出处跟着答案走。吸底和全屏共用这一份。 */
+function AskAnswer({ turn, files, onOpenFile }: { turn: AskTurn; files: KnowledgeFile[]; onOpenFile: (file: KnowledgeFile) => void }) {
+  return (
+    <article className="knowledgeAnswer">
+      <p className="knowledgeAnswerQuestion">{turn.question}</p>
+      <p className="knowledgeAnswerBody">{turn.answer}</p>
+
+      {/* 出处不是装饰，是这个答案能不能用的前提 */}
+      <div className="knowledgeAnswerCitations">
+        <span className="knowledgeCitationLabel"><Quote size={11} />出处</span>
+        {turn.citations.map((citation) => {
+          const file = files.find((item) => item.title === citation.file);
+          return (
+            <button
+              className="knowledgeCitation"
+              type="button"
+              key={`${citation.file}-${citation.locator}`}
+              onClick={() => { if (file) onOpenFile(file); }}
+            >
+              <FileText size={11} />
+              <span>{citation.file}</span>
+              <em>{citation.locator}</em>
+            </button>
+          );
+        })}
+      </div>
+
+      {turn.handoff ? (
+        <p className="knowledgeAnswerHandoff">
+          要出正式产物得走任务流程 —— 要我叫 <strong>{turn.handoff}</strong> 接手吗？
+          <button type="button">交给它</button>
+        </p>
+      ) : null}
+    </article>
   );
 }
