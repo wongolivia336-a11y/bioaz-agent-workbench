@@ -338,15 +338,11 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     onFilesSelected(event.dataTransfer.files);
   };
 
+  /* id 在 updater 外面生成。updater 必须是纯函数——React 会重复调用它，
+     把 Date.now() 留在里面等于让同一条消息拿到两个 id。 */
   const addUserEvent = (after: UserEvent["after"], text: string) => {
-    setUserEvents((items) => [
-      ...items,
-      {
-        id: `${after}-${Date.now()}-${items.length}`,
-        after,
-        text,
-      },
-    ]);
+    const id = `${after}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setUserEvents((items) => [...items, { id, after, text }]);
   };
 
   const removeFile = (fileId: string) => {
@@ -355,9 +351,10 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     setStage(next.length ? "uploaded" : "empty");
   };
 
+  /* 「开始校验」不再单独发一条消息：附件那条气泡本身就是这次发送，
+     文案写在气泡里。以前两者并存，同一个动作在对话里说了两遍。 */
   const startValidation = () => {
     if (!canStart) return;
-    addUserEvent("upload", "开始校验");
     setStage("validating");
     suggestTopic("process");
   };
@@ -369,16 +366,18 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     suggestTopic("generation");
   };
 
+  /* 播报与推进阶段都留在事件处理器里，不能写进 setWarnings 的 updater。
+     updater 会被 React 重复执行（开发态的 StrictMode 就会），
+     写在里面的 addUserEvent 于是把同一句「已确认风险并继续生成。」发了两遍。 */
   const acceptWarning = (id: string) => {
-    setWarnings((items) => {
-      const next = items.map((item) => (item.id === id ? { ...item, accepted: true } : item));
-      if (!items.every((item) => item.accepted) && next.every((item) => item.accepted)) {
-        addUserEvent("warning", "已确认风险并继续生成。");
-        setStage("generating");
-        suggestTopic("generation");
-      }
-      return next;
-    });
+    const target = warnings.find((item) => item.id === id);
+    if (!target || target.accepted) return;
+    const lastOne = warnings.every((item) => item.id === id || item.accepted);
+    setWarnings((items) => items.map((item) => (item.id === id ? { ...item, accepted: true } : item)));
+    if (!lastOne) return;
+    addUserEvent("warning", "已确认风险并继续生成。");
+    setStage("generating");
+    suggestTopic("generation");
   };
 
   const rejectWarnings = () => {
@@ -400,23 +399,20 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
     suggestTopic("review");
   };
 
+  /* 同 acceptWarning：播报留在处理器里，别放进 updater。 */
   const confirmReview = (id: string) => {
-    setReviews((items) => {
-      const next = items.map((item) =>
-        item.id === id ? { ...item, status: "confirmed" as const } : item,
-      );
-      if (
-        !items.every((item) => item.status === "confirmed") &&
-        next.every((item) => item.status === "confirmed")
-      ) {
-        addUserEvent("review", "已确认全部专家建议，进入最终放行准备。");
-      }
-      return next;
-    });
+    const target = reviews.find((item) => item.id === id);
+    if (!target || target.status === "confirmed") return;
+    const lastOne = reviews.every((item) => item.id === id || item.status === "confirmed");
+    setReviews((items) =>
+      items.map((item) => (item.id === id ? { ...item, status: "confirmed" as const } : item)),
+    );
+    if (lastOne) addUserEvent("review-confirm", "已确认全部专家建议，进入最终放行准备。");
   };
 
   const confirmAllReviews = () => {
-    addUserEvent("review", "已确认全部专家建议，进入最终放行准备。");
+    if (allReviewsConfirmed) return;
+    addUserEvent("review-confirm", "已确认全部专家建议，进入最终放行准备。");
     setReviews((items) => items.map((item) => ({ ...item, status: "confirmed" })));
   };
 
@@ -439,10 +435,18 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const sendComposerMessage = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    addUserEvent(
-      ["generated", "reviewing", "review", "exported"].includes(stage) ? "review" : "warning",
-      trimmed,
-    );
+    /* 消息挂在「当前进行到的那一段」之后，否则它会落进一段还没渲染的区块里
+       直接消失（生成阶段发的消息原来挂在 review 上，而 review 那段要等审核
+       发起后才出现）。 */
+    const anchor: UserEvent["after"] =
+      stage === "empty" || stage === "uploaded"
+        ? "upload"
+        : stage === "validating" || stage === "warning"
+          ? "warning"
+          : stage === "generating" || stage === "generated"
+            ? "generation"
+            : "review-followup";
+    addUserEvent(anchor, trimmed);
     setComposerText("");
 
     if (stage === "review" || stage === "exported") {
@@ -470,7 +474,10 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           {/* 开场白与初始请求是会话的一部分，上传后不该消失 */}
           {initialRequest ? <div className="legacyInitialRequest" data-minimap="user" data-minimap-label={initialRequest}><p>{initialRequest}<MessageAttachments items={initialAttachments} /></p></div> : null}
           <div className="legacyTumorOpening" data-minimap="agent" data-minimap-label="开场：肿瘤报告数字同事"><img src="/logo/bioaz-logo.svg" alt="" /><p>你好，我是肿瘤报告数字同事。我会先检查实验方案和原始数据，再完成风险确认、报告生成与专家审核。请通过下方加号上传方案 DOCX 和数据 XLSX。</p></div>
-          {stage !== "empty" && stage !== "uploaded" ? (
+          {/* 还没开始校验时对话流是空的，但这时发出去的补充说明也得留在屏幕上 */}
+          {stage === "empty" || stage === "uploaded" ? (
+            <UserEventBubbles events={userEvents} after="upload" />
+          ) : (
             <Conversation
               files={files}
               userEvents={userEvents}
@@ -490,7 +497,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
                 openTopic(topic);
               }}
             />
-          ) : null}
+          )}
         </div>
 
         <div className="legacyComposerStack">
@@ -1190,13 +1197,18 @@ function Conversation({
   const generationVisible = ["generating", "generated", "reviewing", "review", "exported"].includes(stage);
   const artifactsVisible = ["generated", "reviewing", "review", "exported"].includes(stage);
   const reviewVisible = ["reviewing", "review", "exported"].includes(stage);
+  const reviewSettled = stage !== "reviewing";
+  const allReviewsConfirmed = reviews.every((item) => item.status === "confirmed");
   const validationElapsed = useStageTimer(stage === "validating", stage === "empty" || stage === "uploaded");
   const generationElapsed = useStageTimer(stage === "generating", stage === "warning");
   const reviewElapsed = useStageTimer(stage === "reviewing", stage === "generated");
 
   return (
     <section className="conversation">
-      <div className="userBubble" data-minimap="user" data-minimap-label="开始 · 已上传方案与数据">
+      {/* 附件 + 动作是同一条发送，写在同一个气泡里。
+          以前这里写死一句「开始」，紧跟着又单发一条「开始校验」，
+          读起来像用户连着说了两遍同一件事。 */}
+      <div className="userBubble" data-minimap="user" data-minimap-label="开始校验 · 已上传方案与数据">
         <div className="attachedFiles">
           {files.map((file) => (
             <span key={file.id}>
@@ -1205,7 +1217,7 @@ function Conversation({
             </span>
           ))}
         </div>
-        <p>开始</p>
+        <p>开始校验</p>
       </div>
       <UserEventBubbles events={userEvents} after="upload" />
 
@@ -1297,11 +1309,15 @@ function Conversation({
               />
             </section>
           ) : null}
+          <UserEventBubbles events={userEvents} after="generation" />
         </section>
       ) : null}
 
       {reviewVisible ? (
         <section className="phaseBlock">
+          {/* 这里只放「发起专家小队审核」。审核之后的确认语挂在 review-confirm 上，
+              排在专家检查过程和小队结论之后——两者原来共用 review 锚点，
+              于是「已确认全部专家建议」跑到了它所确认的那段过程前面。 */}
           <UserEventBubbles events={userEvents} after="review" />
           <ThinkingCard
             running={stage === "reviewing"}
@@ -1322,34 +1338,47 @@ function Conversation({
             onInspector={() => onInspector("review")}
           />
           <SquadStatusCard steps={reviewSteps} elapsed={reviewElapsed} running={stage === "reviewing"} />
-          {followupState !== "idle" ? <FollowupAnswer state={followupState} /> : null}
-          {stage !== "reviewing" && reviews.every((item) => item.status === "confirmed") ? (
-            <section className="artifactStack" data-minimap="artifact" data-minimap-label="产物">
-              <ArtifactCard
-                icon={<FileCheck size={26} />}
-                title="专家建议文档"
-                name="专家建议确认与补充证据摘要.md"
-                meta="Review · 3 items · confirmed"
-                onPreview={() => onPreviewArtifact("review-doc")}
-              />
-            </section>
-          ) : null}
-          {stage !== "reviewing" ? (
+
+          {/* 检查刚结束、还没确认时的那段回复 */}
+          {reviewSettled && !allReviewsConfirmed ? (
             <AgentReply
-              title={
-                reviews.every((item) => item.status === "confirmed")
-                  ? "专家建议已确认完成。"
-                  : "专家检查完成。"
-              }
-              tone={reviews.every((item) => item.status === "confirmed") ? "success" : "neutral"}
+              title="专家检查完成。"
               actionLabel="查看审核问题列表"
               onAction={() => onInspector("review")}
             >
-              {reviews.every((item) => item.status === "confirmed")
-                ? "专家建议已形成文档，可作为最终放行前的审核材料。当前报告已满足进入最终放行的前置条件，最终是否通过仍由 SD / QA / 统计角色签核决定。"
-                : `当前还有 ${reviews.filter((item) => item.status === "pending").length} 条建议需要人工确认或补充证据。最终是否通过由 SD / QA / 统计角色签核决定，处理完下方确认列表后才能进入最终放行。`}
+              {`当前还有 ${reviews.filter((item) => item.status === "pending").length} 条建议需要人工确认或补充证据。最终是否通过由 SD / QA / 统计角色签核决定，处理完下方确认列表后才能进入最终放行。`}
             </AgentReply>
           ) : null}
+
+          {/* 确认动作排在检查结论之后 */}
+          <UserEventBubbles events={userEvents} after="review-confirm" />
+
+          {reviewSettled && allReviewsConfirmed ? (
+            <>
+              <section className="artifactStack" data-minimap="artifact" data-minimap-label="产物">
+                <ArtifactCard
+                  icon={<FileCheck size={26} />}
+                  title="专家建议文档"
+                  name="专家建议确认与补充证据摘要.md"
+                  meta="Review · 3 items · confirmed"
+                  onPreview={() => onPreviewArtifact("review-doc")}
+                />
+              </section>
+              <AgentReply
+                title="专家建议已确认完成。"
+                tone="success"
+                actionLabel="查看审核问题列表"
+                onAction={() => onInspector("review")}
+              >
+                专家建议已形成文档，可作为最终放行前的审核材料。当前报告已满足进入最终放行的前置条件，最终是否通过仍由 SD / QA / 统计角色签核决定。
+              </AgentReply>
+            </>
+          ) : null}
+
+          {/* 追问和它的回答收在最后一段，不能跟确认动作共用锚点——
+              共用的话，确认之后再问的一句会排到它所在阶段的产物前面。 */}
+          <UserEventBubbles events={userEvents} after="review-followup" />
+          {followupState !== "idle" ? <FollowupAnswer state={followupState} /> : null}
         </section>
       ) : null}
     </section>

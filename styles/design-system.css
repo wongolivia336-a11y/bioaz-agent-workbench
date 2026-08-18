@@ -1360,10 +1360,79 @@ body:has(.bioazDesignSystemPage) {
   flex: none;
 }
 
-/* 顶栏工具层并入标题行右侧 */
-.topbarSecondRow:has(.topbarTabLayer:empty) {
-  border-top: 0;
-  margin-top: -1px;
+/* ===================================================================
+   工作台页头：两行四格
+   -------------------------------------------------------------------
+   每一格只回答一个问题，控件按这个判据落位，不按「哪儿还有空」：
+
+     行1 左  面包屑（+ 作用域选择器——它换的是路径，所以属于面包屑）
+     行1 右  主操作。**至多一颗**，实心，这一屏最想让你做的那件事。
+     行2 左  分栏 tab。只放「换整块内容」的那种；只换某一列的
+             tab 归那一列的列头（邮箱的收件箱/已发送就是这种）。
+     行2 右  作用于当前这一部分的工具：搜索、筛选、排序。全是幽灵态，
+             没有实心按钮——它们是修饰语，不是动作。
+
+   分隔线只有一条，画在整个页头底下。行与行之间不画：两行是一个页头的
+   上下文和它的分栏，不是两条并列的工具条。
+
+   行2 两格都空就整行不存在。原来这里有两套互相打架的判空：工具格里塞着
+   一个永远空的 .topbarActions 包装，于是 `:has(.topbarToolLayer:empty)`
+   永远不成立——工具格自己被藏了，行却留着，邮箱和数字团队顶上因此
+   多出 48px 空带和一条线。现在 #workbench-topbar-actions 就是工具格本身，
+   判空只有一处。
+   =================================================================== */
+.topbarPathLayer {
+  min-height: 56px;
+}
+
+.topbarScopeSlot,
+.topbarPrimarySlot {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+
+/* 页头里所有控件同一档高度。主操作原来吃的是
+   `.dmpkShell.workbenchShell .primaryButton.compact` 那条 36px，
+   比工具行的 34px 高 2px——同一个页头里两种控件高，没有理由。 */
+.topbarPathLayer,
+.topbarSecondRow {
+  --bioaz-topbar-control: 34px;
+}
+/* 要压过 `.dmpkShell.workbenchShell .primaryButton.compact`——那条是
+   (0,4,0)，两个类打头。所以这里也得凑够四个类。
+   .bioazUiButton 也在列：邮箱用的是设计系统那颗 Button，
+   数据中枢用的是老的 .primaryButton.compact，两者得一样高。 */
+.dmpkShell .topbar :is(.topbarScopeSlot, .topbarPrimarySlot, .topbarToolLayer) :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton, .toolIconButton, .bioazUiButton) {
+  min-height: var(--bioaz-topbar-control);
+  height: var(--bioaz-topbar-control);
+}
+
+/* 作用域那两颗比主操作轻一档——它们贴着面包屑，是路径的一部分，不是动作。
+   但彼此必须一样高：原来一颗靠内距撑出 25px、一颗写死 28px，并排着差 3px。 */
+.topbarScopeSlot :is(.hubScopePicker, .hubCreateMenu) > button {
+  box-sizing: border-box;
+  height: 28px;
+}
+
+.topbarScopeSlot:empty,
+.topbarPrimarySlot:empty { display: none; }
+
+/* 主操作靠右；作用域跟着面包屑走，不推到右边去 */
+.topbarPrimarySlot { margin-left: auto; }
+
+/* 两行共用同一条左右边线，也就是正文的那一条。第二行原来自带 20px 内距，
+   于是 tab 和工具比上面的面包屑各缩进 20px，两行读起来像两个容器。 */
+.topbarSecondRow {
+  min-height: 46px;
+  padding-inline: 0;
+}
+
+.topbarSecondRow > .topbarToolLayer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bioaz-space-2);
 }
 
 /* 搜索框三页统一宽度 */
@@ -1373,11 +1442,26 @@ body:has(.bioazDesignSystemPage) {
   flex: none;
 }
 
+/* 工具行最后一件要正好收在正文右边线上。搜索框自带的 4px 右外边距
+   是旧布局留下的，在这里会让整行比正文短 4px。 */
+.topbarToolLayer .libraryToolSearch {
+  margin-right: 0;
+}
+
+.topbarToolLayer .libraryToolLayer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+}
+
 /* 通栏分隔线：标题行与内容之间只有这一条 */
 .dmpkWorkspace.workbenchMode > .topbar {
   border-bottom: 1px solid var(--bioaz-border);
 }
-.dmpkWorkspace.workbenchMode > .topbar .topbarSecondRow {
+.dmpkWorkspace.workbenchMode > .topbar .topbarSecondRow,
+.dmpkWorkspace.workbenchMode > .topbar .topbarTabLayer,
+.dmpkWorkspace.workbenchMode > .topbar .topbarToolLayer {
   border-top: 0;
 }
 
@@ -1388,27 +1472,34 @@ body:has(.bioazDesignSystemPage) {
   margin-top: var(--bioaz-space-5);
 }
 
-/* 工具移入标题行后：让标题行成为「标题 + 工具」的两端对齐布局 */
-.topbarInlineTools {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--bioaz-space-2);
-  margin-left: auto;
-}
-.topbarInlineTools:empty { display: none; }
-.topbarInlineTools .libraryToolLayer {
-  display: flex;
-  align-items: center;
-  gap: var(--bioaz-space-2);
-}
-
-/* 没有 Tab 时第二行整体不占位，标题行下就是通栏线 */
-.topbarSecondRow:has(.topbarTabLayer:empty):has(.topbarToolLayer:empty) {
+/* 两格都空 → 整行不存在，标题行下面直接就是通栏线 */
+.topbarSecondRow:has(> .topbarTabLayer:empty):has(> .topbarToolLayer:empty) {
   display: none;
 }
+.topbarSecondRow > .topbarTabLayer:empty,
 .topbarSecondRow > .topbarToolLayer:empty { display: none; }
+
+/* 进了页头的 tab 栏交出自己那条底线和外边距：页头底下已经有一条通栏线，
+   选中条压在那条线上就够了，再画一条就成了双线。 */
+.topbarTabLayer .bioazUiNavTabs {
+  border-bottom: 0;
+  margin: 0;
+}
+.topbarTabLayer .bioazUiNavTab {
+  margin-bottom: 0;
+}
+
+/* 页头里的 tab 满高，选中条才落在通栏线上而不是浮在半空 */
+.topbarSecondRow > .topbarTabLayer,
+.topbarSecondRow > .topbarTabLayer .bioazUiNavTabs,
+.topbarSecondRow > .topbarTabLayer .bioazUiNavTab {
+  align-self: stretch;
+  height: auto;
+}
+.topbarSecondRow > .topbarTabLayer .bioazUiNavTab {
+  display: inline-flex;
+  align-items: center;
+}
 
 /* ===================================================================
    修掉嵌套滚动容器冒出的箭头

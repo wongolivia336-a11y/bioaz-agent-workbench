@@ -55,6 +55,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .breadcrumb button:hover { color: var(--review-ink); }
 .navSectionHeader { display: flex; min-height: 28px; align-items: center; justify-content: space-between; padding: 0 6px; color: var(--review-muted); font-size: 11px; font-weight: 600; }
 .navSectionHeader button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
+/* 这里曾把「新建项目」做成带文字的实体按钮，已回退为加号图标钮：
+   侧边栏两栏的头部动作保持同一副长相，比强调其中一个更要紧。 */
 .navSectionHeader button:hover { background: #eef0f3; color: var(--review-ink); }
 .projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: 9px; background: #fff; padding: 4px 5px 4px 8px; }
 .projectCreateRow > svg { color: var(--review-muted); }
@@ -1646,7 +1648,10 @@ button { -webkit-tap-highlight-color: transparent; }
   --library-accent-soft: rgba(92, 96, 184, 0.06);
   --library-accent-line: rgba(92, 96, 184, 0.18);
   position: relative;
-  padding-bottom: 108px !important;
+  /* 原来是 108px，用来给绝对定位的问答胶囊腾出不被遮挡的空间。
+     胶囊改成 sticky 之后自己在流里占位，这圈内边距反而变成了它的天花板——
+     sticky 的包含块是内容盒，够不到内边距里，胶囊会悬在离底 108px 的位置。 */
+  padding-bottom: var(--bioaz-space-6) !important;
 }
 .knowledgeRootActions {
   display: flex;
@@ -1680,16 +1685,6 @@ button { -webkit-tap-highlight-color: transparent; }
   border-color: var(--bioaz-border-strong);
   background: #f5f6f8;
 }
-.topbarActions {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: flex-end;
-  margin-left: auto;
-}
-.topbarActions:empty {
-  display: none;
-}
 .projectLibraryActions {
   display: flex;
   flex-wrap: wrap;
@@ -1700,7 +1695,10 @@ button { -webkit-tap-highlight-color: transparent; }
 .projectLibraryActions > :is(button, label) {
   cursor: pointer;
 }
-.topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) {
+
+/* 页头里的按钮统一 34px 一档。这一组规则原来挂在 .topbarActions 上，
+   而那个容器从来没有内容——选择器全程没命中过任何东西。 */
+:is(.topbarPrimarySlot, .topbarToolLayer, .topbarScopeSlot) :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) {
   display: inline-flex;
   box-sizing: border-box;
   width: auto;
@@ -1718,36 +1716,30 @@ button { -webkit-tap-highlight-color: transparent; }
   white-space: nowrap;
   appearance: none;
 }
-.topbarActions .topbarFileAction {
-  width: 96px;
-  min-width: 96px;
-}
-.topbarActions .topbarCreateFolderButton {
-  width: 120px;
-  min-width: 120px;
-}
-.topbarActions :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) > svg {
+:is(.topbarPrimarySlot, .topbarToolLayer) :is(.primaryButton.compact, .secondaryButton.compact, .libraryTrashButton) > svg {
   width: 15px;
   height: 15px;
   flex: none;
 }
-.topbarActions .primaryButton.compact,
-.topbarActions .primaryButton.compact:hover {
+
+/* 实心只给行1右边那一颗主操作。工具行里不出现实心按钮——
+   四颗一样重的按钮排在一起，等于一颗都没有重点。 */
+.topbarPrimarySlot .primaryButton.compact,
+.topbarPrimarySlot .primaryButton.compact:hover {
   border-color: #17191e;
   background: #17191e;
   color: #fff;
 }
-.topbarActions .primaryButton.compact:hover {
+.topbarPrimarySlot .primaryButton.compact:hover {
   border-color: #050608;
   background: #050608;
 }
-.topbarActions .secondaryButton.compact,
-.topbarActions .libraryTrashButton {
+.topbarToolLayer :is(.secondaryButton.compact, .libraryTrashButton) {
   border: 1px solid var(--bioaz-border);
   background: #fff;
   color: var(--bioaz-text-primary);
 }
-.topbarActions :is(.secondaryButton.compact, .libraryTrashButton):hover {
+.topbarToolLayer :is(.secondaryButton.compact, .libraryTrashButton):hover {
   border-color: var(--bioaz-border-strong);
   background: #f5f6f8;
 }
@@ -2244,18 +2236,12 @@ button { -webkit-tap-highlight-color: transparent; }
   position: relative;
   z-index: 1;
 }
-/* hover 不做扫光，只做轻微上浮 + 阴影加深，读起来更像实体按钮 */
+/* hover 只换边框色，不上浮、不扫光、不加重阴影。
+   这颗胶囊是常驻入口，鼠标每次路过都动一下会很吵；而且"要不要展开"由点击
+   决定，hover 不该做出任何像是要发生什么的暗示。 */
 .knowledgeBaseView .ambientAssistantEntry:hover {
   border-color: rgba(92, 96, 184, 0.28);
   background: #fff;
-  box-shadow:
-    0 10px 24px rgba(18, 24, 38, 0.09),
-    0 2px 6px rgba(18, 24, 38, 0.04);
-  transform: translateY(-1px);
-}
-.knowledgeBaseView .ambientAssistantEntry:active {
-  box-shadow: 0 4px 12px rgba(18, 24, 38, 0.07);
-  transform: translateY(0);
 }
 .knowledgeBaseView .ambientAssistantEntry svg {
   width: 16px;
@@ -2368,13 +2354,8 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .topbarToolLayer {
   display: flex;
-  min-height: 52px;
   align-items: center;
   justify-content: flex-end;
-  border-top: 1px solid var(--bioaz-border);
-}
-.topbarToolLayer:has(> .topbarActions:empty) {
-  display: none;
 }
 
 .projectSpaceTabs {
@@ -4600,9 +4581,14 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ===== Header 第二行：Tab 在左、工具在右，同一排只留一条分界线 ===== */
+/* 用最小高度而不是纵向内距：这一行装的东西高矮差很多——项目 Tab 自带
+   11px 上下内距、约 48px 高，而数据中枽的范围胶囊只有 25px。
+   给内距会把 Tab 那种撑得更高，给最小高度则两者都由 align-items:center
+   居中。原来纵向为零，25px 的胶囊底边离下面那条分隔线只剩 3px，像贴在线上。 */
 .topbarSecondRow {
   display: flex;
   min-width: 0;
+  min-height: 48px;
   align-items: center;
   gap: var(--bioaz-space-4);
   border-top: 1px solid var(--bioaz-border);
@@ -5762,37 +5748,17 @@ button { -webkit-tap-highlight-color: transparent; }
 /* ===================================================================
    底部胶囊 —— hover 时一次极淡扫过，静止时完全不动
    =================================================================== */
-@keyframes bioazPillSheen {
-  from { transform: translateX(-120%) skewX(-12deg); }
-  to { transform: translateX(220%) skewX(-12deg); }
-}
+/* bioazPillSheen 的 keyframes 一并删掉，唯一的引用已经没了。
+   overflow/isolate 也不再需要——它们本来是给那道扫光做裁剪层的。 */
 .knowledgeBaseView .ambientAssistantEntry {
   position: relative;
-  overflow: hidden;
-  isolation: isolate;
 }
-.knowledgeBaseView .ambientAssistantEntry::after {
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 38%;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    color-mix(in srgb, var(--bioaz-agent-accent) 14%, transparent),
-    transparent
-  );
-  content: "";
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-120%) skewX(-12deg);
-}
-.knowledgeBaseView .ambientAssistantEntry:hover::after {
-  opacity: 1;
-  animation: bioazPillSheen var(--bioaz-duration-5, 700ms) var(--bioaz-ease-out-3, ease-out) 1;
-}
+/* 这里原来有一道 hover 扫光（bioazPillSheen，700ms 斜向高光划过胶囊），已删。
+   三个理由：
+   1. 它和 review.css:2250 那条规则的注释直接冲突——那里写着「hover 不做扫光，
+      只做轻微上浮 + 阴影加深」，两处各写各的，靠行号先后决出胜负；
+   2. 这颗胶囊是常驻入口，鼠标每次路过都放一次 700ms 的光，读起来像在自我推销；
+   3. 展开与否由点击决定，hover 不该承诺任何东西。 */
 .knowledgeBaseView .ambientAssistantEntry > * {
   position: relative;
   z-index: 1;
@@ -6386,6 +6352,57 @@ button { -webkit-tap-highlight-color: transparent; }
   border-left: 1px solid rgba(17, 19, 24, 0.06);
 }
 
+/* ===================================================================
+   分界线可拖拽
+   -------------------------------------------------------------------
+   抓手整条贴在面板内缘。面板是 overflow: hidden，往左探出去的部分会被
+   裁掉，所以它只能长在里面——正文有 14px 内边距，10px 的热区落在留白上，
+   不会挡住任何内容。
+   =================================================================== */
+.workbenchPanel { position: relative; }
+
+.workbenchPanelResizer {
+  position: absolute;
+  z-index: 40;
+  inset: 0 auto 0 0;
+  width: 10px;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+/* 抓住时线本身变粗、上色——「这条线是可以动的」只在指针到位时才说 */
+.workbenchPanelResizer::after {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--bioaz-agent-accent);
+  content: "";
+  opacity: 0;
+  transition: opacity var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.workbenchPanelResizer:hover::after,
+.workbenchPanelResizer:focus-visible::after,
+.workbenchPanelResizer.isDragging::after {
+  opacity: 1;
+}
+
+.workbenchPanelResizer:focus-visible {
+  outline: none;
+}
+
+/* 拖动时铺一张透明罩：指针扫过对话区不会把文字一路刷蓝，
+   光标也一路保持 col-resize，而不是每过一个元素换一次样子。 */
+.workbenchPanelResizer.isDragging::before {
+  position: fixed;
+  z-index: 1;
+  inset: 0;
+  cursor: col-resize;
+  content: "";
+  user-select: none;
+}
+
 /* composer 是 position:absolute，不吃 grid-column，所以要自己算边界。
    它原本是 left:36px / right:36px，我上一版只改了 right，左右就不对称了，
    中轴比对话列偏右 18px。这里两边一起给：左贴对话列左缘，右收到面板左侧，
@@ -6417,6 +6434,9 @@ button { -webkit-tap-highlight-color: transparent; }
     border-radius: 0;
     box-shadow: -18px 0 48px rgba(17, 19, 24, 0.14);
   }
+
+  /* 这时面板是盖在对话上的浮层，不占布局列，没有边界可拽 */
+  .workbenchPanelResizer { display: none; }
 }
 
 /* ===================================================================
@@ -6582,10 +6602,27 @@ button { -webkit-tap-highlight-color: transparent; }
    参数卡分页 tab 是两种语汇。改成：无底色、底部一条 accent 短条，
    整条 tab 栏坐在一条 hairline 上，短条压在这条线上。
    =================================================================== */
+/* ===================================================================
+   这条栏的对齐全部由三个值决定，右侧图标不再自己另算一套：
+     --panel-tab-label  标签行的高度
+     --panel-tab-lift   标签行离 hairline 的距离（tab 自己的下留白）
+     --panel-tab-inset  面板正文的左右留白，标签首字与它对齐
+   加号和全屏键按同样的 lift 贴底，再补上「按钮比标签高出来的一半」，
+   于是它们的图标和 tab 文字落在同一条中线上。原来它们是
+   align-self: center（整条栏居中），而 tab 是 flex-end（贴 hairline），
+   两套基准差 5.5px，看起来就是图标浮在 tab 上方。
+   =================================================================== */
 .workbenchPanelTabs {
+  --panel-tab-label: 18px;
+  --panel-tab-lift: 14px;
+  --panel-tab-inset: 14px;
+  --panel-tab-pad: 8px;
+  --panel-action-size: 28px;
   align-items: flex-end;
   border-bottom: 1px solid var(--bioaz-border);
-  padding: 0 8px 0 12px;
+  /* 右缘按正文留白收齐；左边减掉 tab 自己的内边距，
+     于是首个 tab 的图标正好落在正文的左边线上 */
+  padding: 0 var(--panel-tab-inset) 0 calc(var(--panel-tab-inset) - var(--panel-tab-pad));
 }
 
 .workbenchPanelTabScroll {
@@ -6624,9 +6661,14 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* 叉号跟着基线走，不再垂直居中于整条栏 */
-/* 加号与 tab 基线对齐，并稍微收窄，让 tab 成为这条栏的主角 */
-.workbenchPanelAdd {
-  align-self: center;
+/* 加号与全屏键跟 tab 用同一条基线：先贴到 hairline 上方 lift 处，
+   再补回「按钮比标签高出来的那一半」，两者图标于是同心。 */
+.workbenchPanelAdd,
+.workbenchPanelViewActions {
+  align-self: flex-end;
+  margin-bottom: calc(
+    var(--panel-tab-lift) - (var(--panel-action-size) - var(--panel-tab-label)) / 2
+  );
 }
 
 .workbenchPanelTabDot {
@@ -6659,13 +6701,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanelTab {
   height: 100%;
   align-items: center;
-  padding-bottom: 14px;
+  padding-bottom: var(--panel-tab-lift);
 }
 
 .workbenchPanelTab > button:first-child {
-  height: auto;
+  height: var(--panel-tab-label);
   align-items: center;
-  padding: 0 4px 0 10px;
+  padding: 0 4px 0 var(--panel-tab-pad);
 }
 
 /* 选中条也随之收短一点，视觉上和文字宽度更贴合 */
@@ -7134,9 +7176,9 @@ button { -webkit-tap-highlight-color: transparent; }
   to { opacity: 1; transform: none; }
 }
 
-/* 全屏下面板自己就是一整张卡，tab 栏左缘对齐内容而不是贴边 */
+/* 全屏下面板自己就是一整张卡，tab 栏左右都跟着正文的留白走 */
 .workbenchPanel.isFocus .workbenchPanelTabs {
-  padding: 0 16px 0 20px;
+  --panel-tab-inset: clamp(20px, 4vw, 64px);
 }
 
 /* 给底部的悬浮药丸让出落脚点，滚到底时最后一条内容不会被压住 */
@@ -7164,7 +7206,6 @@ button { -webkit-tap-highlight-color: transparent; }
   display: flex;
   flex: none;
   align-items: center;
-  align-self: center;
   gap: 2px;
 }
 

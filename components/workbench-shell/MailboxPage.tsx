@@ -1,7 +1,8 @@
 "use client";
 
 import { Archive, ArrowLeft, Check, FileArchive, FileText, Inbox, MessageSquarePlus, Paperclip, Search, Send, Sparkles, UserRound, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { inboxAccounts, type InboxAccount } from "../../lib/workbench/mockInbox";
 import { fileAttachmentFromUpload, mergeAttachments, type ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import { ComposerAttachMenu } from "./ComposerAttachMenu";
@@ -56,6 +57,9 @@ export function MailboxPage({ account, tasks, onStartTask }: {
   const [lane, setLane] = useState<MailboxLane>("received");
   const [filter, setFilter] = useState<MailFilter>("all");
   const [query, setQuery] = useState("");
+  /* 写邮件是这一页唯一的主操作，跟别的页一样挂到页头右边。
+     它原来夹在左列的搜索框旁边，跟「找信」混成一组。 */
+  const [topbarPrimaryHost, setTopbarPrimaryHost] = useState<HTMLElement | null>(null);
   const [mail, setMail] = useState(initialMail);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   /* 右侧大区默认是「写邮件」，不是空态。收信和发信是这一页的两件事，
@@ -81,6 +85,8 @@ export function MailboxPage({ account, tasks, onStartTask }: {
   const selected = selectedId ? mail.find((item) => item.id === selectedId) ?? null : null;
   const todoCount = mail.filter((item) => item.lane === "received" && item.action === "open").length;
   const draftCount = mail.filter((item) => item.lane === "draft").length;
+
+  useEffect(() => { setTopbarPrimaryHost(document.getElementById("workbench-topbar-primary")); }, []);
 
   /* 只有真人。邮件是人与人之间的正式流转凭证——要把活交给数字同事，
      「进入处理会话」是更直接的一条路，两条路并存只会让人不知道该用哪个。 */
@@ -207,6 +213,10 @@ export function MailboxPage({ account, tasks, onStartTask }: {
     : [];
 
   return <section className="mailboxPage">
+    {topbarPrimaryHost ? createPortal(
+      <Button variant="primary" size="small" leadingIcon={<Send size={14} />} onClick={startCompose}>写邮件</Button>,
+      topbarPrimaryHost,
+    ) : null}
     <div className="mailboxListPane">
       {/* 信箱切换从 topbar 挪进这一列：它换的是「这一列显示哪批信」，
           放在被它控制的那一列头上，比放在 820px 外的顶栏讲得通。
@@ -222,12 +232,12 @@ export function MailboxPage({ account, tasks, onStartTask }: {
         onChange={(next) => { setLane(next); setFilter("all"); }}
         label="邮箱"
       />
+      {/* 搜索只过滤这一列，所以留在这一列里；写邮件是整页的动作，已经上到页头。 */}
       <div className="mailboxListTools">
         <label>
           <Search size={14} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索全部邮件" />
         </label>
-        <Button variant="secondary" size="small" leadingIcon={<Send size={14} />} onClick={startCompose}>写邮件</Button>
       </div>
       {/* 「全部 / 待我处理 / 已完成」是收件箱内部的呈现切换，已发送和草稿没有
           「待我处理」这回事；搜索时结果跨 lane，这三颗也失去意义。 */}

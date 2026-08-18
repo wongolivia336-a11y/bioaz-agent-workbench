@@ -1,9 +1,16 @@
 "use client";
 
 import { Check, CircleAlert, Maximize2, Minimize2, PanelRightClose, PanelRightOpen, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ResolvedInspectorPanel } from "../workbench-inspector/WorkbenchInspector";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
+
+/* 默认宽度不写在这里——各模块的 `--panel-width` 不一样（DMPK 320、QA 与肿瘤
+   报告 400）。重置就是把内联覆盖删掉，让 CSS 里那份重新生效，再把量到的值读回来。 */
+const PANEL_WIDTH_MIN = 320;
+const PANEL_WIDTH_MAX = 760;
+/** 对话列的下限。面板再宽也不能把中间那一列压到读不了。 */
+const CONVERSATION_MIN_WIDTH = 420;
 
 type PanelState = {
   panels: ResolvedInspectorPanel[];
@@ -41,12 +48,98 @@ export function PanelToggle({ open, onToggle }: { open: boolean; onToggle: () =>
 }
 
 /**
+ * 左侧那条分界线的抓手。
+ *
+ * 宽度写在**工作区**上而不是面板上——`--panel-width` 是工作区那条
+ * grid-template-columns 读的值，写在面板自己身上，父级的列宽不会变。
+ * 面板在三个模块里都是工作区的直接子元素，所以 parentElement 就是它。
+ *
+ * 拖动过程直接写 DOM 变量、不走 state：每帧 setState 会把整个面板重渲一遍，
+ * 拖起来是顿的。宽度回到 state 只发生在松手和键盘调整时，用来报给读屏。
+ */
+function PanelResizer({ panelRef }: { panelRef: React.RefObject<HTMLElement> }) {
+  const [dragging, setDragging] = useState(false);
+  const [width, setWidth] = useState(PANEL_WIDTH_MIN);
+  const dragRef = useRef<{ pointerX: number; width: number } | null>(null);
+
+  const workspace = () => panelRef.current?.parentElement ?? null;
+  const measure = () => panelRef.current?.getBoundingClientRect().width ?? PANEL_WIDTH_MIN;
+
+  // 报给读屏的初始值只能量出来，各模块的默认宽度不同
+  useEffect(() => { setWidth(measure()); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const clamp = (next: number) => {
+    const room = workspace()?.getBoundingClientRect().width ?? Number.POSITIVE_INFINITY;
+    const ceiling = Math.max(PANEL_WIDTH_MIN, Math.min(PANEL_WIDTH_MAX, room - CONVERSATION_MIN_WIDTH));
+    return Math.round(Math.min(Math.max(next, PANEL_WIDTH_MIN), ceiling));
+  };
+
+  const apply = (next: number) => {
+    const settled = clamp(next);
+    workspace()?.style.setProperty("--panel-width", `${settled}px`);
+    return settled;
+  };
+
+  const reset = () => {
+    workspace()?.style.removeProperty("--panel-width");
+    setWidth(measure());
+  };
+
+  return (
+    <div
+      className={`workbenchPanelResizer ${dragging ? "isDragging" : ""}`}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="拖动调整面板宽度"
+      aria-valuemin={PANEL_WIDTH_MIN}
+      aria-valuemax={PANEL_WIDTH_MAX}
+      aria-valuenow={Math.round(width)}
+      tabIndex={0}
+      onDoubleClick={reset}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        dragRef.current = { pointerX: event.clientX, width: measure() };
+        setDragging(true);
+      }}
+      onPointerMove={(event) => {
+        const drag = dragRef.current;
+        if (!drag) return;
+        // 面板在右边，所以向左拖是变宽
+        apply(drag.width + (drag.pointerX - event.clientX));
+      }}
+      onPointerUp={(event) => {
+        if (!dragRef.current) return;
+        dragRef.current = null;
+        setDragging(false);
+        setWidth(measure());
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }}
+      onPointerCancel={() => {
+        dragRef.current = null;
+        setDragging(false);
+        setWidth(measure());
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") setWidth(apply(measure() + 24));
+        else if (event.key === "ArrowRight") setWidth(apply(measure() - 24));
+        else if (event.key === "Home") reset();
+        else return;
+        event.preventDefault();
+      }}
+    />
+  );
+}
+
+/**
  * 面板本体，占满白卡右侧一整列（含顶栏那一行），左侧一条顶天立地的分界线。
  * tab 栏是它自己的头部，所以分界线两侧一眼能分出「对话」与「面板」。
  */
 export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds = [], open = true, focus = false, onFocusChange }: PanelState & { open?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useDismissableLayer<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
+  const panelRef = useRef<HTMLElement>(null);
 
   const visiblePanels = panels.filter((panel) => visibleIds.includes(panel.id));
   const active = visiblePanels.find((panel) => panel.id === activePanelId) ?? visiblePanels[0];
@@ -69,7 +162,9 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
   };
 
   return (
-    <aside className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""}`} aria-hidden={!open}>
+    <aside ref={panelRef} className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""}`} aria-hidden={!open}>
+      {/* 全屏态没有中间那一列可分，抓手就没有意义 */}
+      {open && !focus ? <PanelResizer panelRef={panelRef} /> : null}
       <div className="workbenchPanelTabs">
         <div className="workbenchPanelTabScroll" role="tablist" aria-label="工作面板">
           {visiblePanels.map((panel) => {
