@@ -96,9 +96,14 @@ export type PreviewSection = "recognized" | "issues" | "qa" | "context";
 export type PreviewKind = "validation" | "review";
 export type ArtifactPreviewKind = "word" | "package" | "prism" | "figure" | "qc" | "evidence" | "review-doc";
 
+/**
+ * 用户消息挂在哪一段之后。锚点必须跟着对话往下走，否则消息会浮到
+ * 它所回应的那段过程上面去——「已确认全部专家建议」原来和「发起审核」
+ * 共用 review 锚点，于是确认语出现在专家检查过程之前。
+ */
 export type UserEvent = {
   id: string;
-  after: "upload" | "warning" | "review";
+  after: "upload" | "warning" | "generation" | "review" | "review-confirm" | "review-followup";
   text: string;
 };
 
