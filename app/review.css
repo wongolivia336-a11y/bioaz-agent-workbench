@@ -55,23 +55,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .breadcrumb button:hover { color: var(--review-ink); }
 .navSectionHeader { display: flex; min-height: 28px; align-items: center; justify-content: space-between; padding: 0 6px; color: var(--review-muted); font-size: 11px; font-weight: 600; }
 .navSectionHeader button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
-/* 「新建项目」升级成实体按钮：项目是任务与文件的归属容器，是前置条件，
-   不该和旁边那些轻量图标钮长得一样。 */
-.navSectionHeader .navSectionCreate {
-  display: inline-flex;
-  width: auto;
-  height: 26px;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--review-line-strong);
-  border-radius: var(--bioaz-radius-tool);
-  background: var(--bioaz-surface);
-  padding: 0 9px 0 7px;
-  color: var(--review-ink);
-  font-size: var(--bioaz-type-label-size);
-  font-weight: 600;
-}
-.navSectionHeader .navSectionCreate:hover { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+/* 这里曾把「新建项目」做成带文字的实体按钮，已回退为加号图标钮：
+   侧边栏两栏的头部动作保持同一副长相，比强调其中一个更要紧。 */
 .navSectionHeader button:hover { background: #eef0f3; color: var(--review-ink); }
 .projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: 9px; background: #fff; padding: 4px 5px 4px 8px; }
 .projectCreateRow > svg { color: var(--review-muted); }
@@ -4614,9 +4599,14 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ===== Header 第二行：Tab 在左、工具在右，同一排只留一条分界线 ===== */
+/* 用最小高度而不是纵向内距：这一行装的东西高矮差很多——项目 Tab 自带
+   11px 上下内距、约 48px 高，而数据中枽的范围胶囊只有 25px。
+   给内距会把 Tab 那种撑得更高，给最小高度则两者都由 align-items:center
+   居中。原来纵向为零，25px 的胶囊底边离下面那条分隔线只剩 3px，像贴在线上。 */
 .topbarSecondRow {
   display: flex;
   min-width: 0;
+  min-height: 48px;
   align-items: center;
   gap: var(--bioaz-space-4);
   border-top: 1px solid var(--bioaz-border);
