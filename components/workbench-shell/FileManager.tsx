@@ -109,6 +109,10 @@ export function FileManager({
   const [projectDraftType, setProjectDraftType] = useState<ProjectType>("client");
   const [topbarActionHost, setTopbarActionHost] = useState<HTMLElement | null>(null);
   const [topbarTabHost, setTopbarTabHost] = useState<HTMLElement | null>(null);
+  /* 上传是这一屏唯一的主操作，跟搜索筛选不是一档东西，所以走行1右边那一格；
+     范围选择器换的是路径，跟面包屑同行。 */
+  const [topbarScopeHost, setTopbarScopeHost] = useState<HTMLElement | null>(null);
+  const [topbarPrimaryHost, setTopbarPrimaryHost] = useState<HTMLElement | null>(null);
   const project = selectedProject ?? "全部项目";
   const selectedType: ProjectType | null = selectedProject
     ? projects.find((item) => item.name === selectedProject)?.type ?? "client"
@@ -118,6 +122,8 @@ export function FileManager({
   useEffect(() => {
     setTopbarActionHost(document.getElementById("workbench-topbar-actions"));
     setTopbarTabHost(document.getElementById("workbench-topbar-tabs"));
+    setTopbarScopeHost(document.getElementById("workbench-topbar-scope"));
+    setTopbarPrimaryHost(document.getElementById("workbench-topbar-primary"));
   }, []);
 
   useEffect(() => {
@@ -256,12 +262,12 @@ export function FileManager({
   const toggleSelected = (id: string) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   const toggleAll = (ids: string[]) => setSelectedIds((current) => ids.every((id) => current.includes(id)) ? [] : ids);
 
-  /* 范围先行：这一行现在只回答「你在看哪一批资料」，以及「不够就新建一个」。
-     页面叫什么由面包屑负责，不在这里重复。 */
-  const tabsPortal = topbarTabHost ? createPortal(
-    <div className="hubTabLayer">
-      {/* 新建收进筛选器右边：你打开范围选择器本来就是在想「我要哪个项目」，
-          「没有我要的？建一个」正好接在这句话末尾。 */}
+  /* 范围选择器跟面包屑同一行：它回答的是「你在看哪一批资料」，
+     跟面包屑是同一个问题的两半，分成上下两行读起来像两件事。
+     新建接在它右边——你打开范围选择器本来就是在想「我要哪个项目」，
+     「没有我要的？建一个」正好接在这句话末尾。 */
+  const tabsPortal = topbarScopeHost ? createPortal(
+    <div className="hubScopeLayer">
       <ProjectScopePicker
         projects={projects}
         value={selectedProject}
@@ -279,7 +285,13 @@ export function FileManager({
         }}
       />
     </div>,
-    topbarTabHost,
+    topbarScopeHost,
+  ) : null;
+
+  /** 上传：两个视图共用同一颗主操作，落在行1右边 */
+  const uploadPortal = (htmlFor: string) => topbarPrimaryHost ? createPortal(
+    <label className="primaryButton compact topbarFileAction" htmlFor={htmlFor}><Upload size={14} />上传文件</label>,
+    topbarPrimaryHost,
   ) : null;
 
   if (!selectedProject) {
@@ -287,10 +299,12 @@ export function FileManager({
       <section className="workbenchView knowledgeBaseView knowledgeRootView">
         {tabsPortal}
         <input className="visuallyHidden" id="hub-file-upload" type="file" multiple onChange={upload} />
+        {uploadPortal("hub-file-upload")}
         {topbarActionHost ? createPortal(
-          /* 顺序和项目内那条顶栏一致：搜索 → 筛选 → 排序 → 切换业务 → 上传文件。
+          /* 顺序和项目内那条顶栏一致：搜索 → 筛选 → 排序 → 切换业务。
              这三颗菜单原来挂在下面「全部文件 N 项」那行里，而项目内的同三颗在顶栏——
-             同一组控件两个家，进出项目时得重新找一遍。 */
+             同一组控件两个家，进出项目时得重新找一遍。
+             上传已经移到行1的主操作格，这里只剩「改变这批文件怎么显示」的工具。 */
           <div className="libraryToolLayer">
             <LibrarySearch value={query} onChange={setQuery} placeholder="搜索全部资料..." />
             <Menu icon={<Filter size={16} />} label="筛选" active={rootFilterActive}>
@@ -316,7 +330,6 @@ export function FileManager({
             <Menu icon={<Briefcase size={16} />} label="切换业务" active={business !== "全部业务"}>
               {businessOptions.map((option) => <MenuItem key={option} active={business === option} onSelect={() => setBusiness(option)}>{option}</MenuItem>)}
             </Menu>
-            <label className="primaryButton compact topbarFileAction" htmlFor="hub-file-upload"><Upload size={14} />上传文件</label>
           </div>,
           topbarActionHost,
         ) : null}
@@ -381,6 +394,7 @@ export function FileManager({
     <section className="workbenchView knowledgeBaseView projectLibraryView">
       <input className="visuallyHidden" id="project-file-upload" type="file" multiple onChange={upload} />
       {tabsPortal}
+      {inTrash ? null : uploadPortal("project-file-upload")}
       {topbarActionHost ? createPortal(
         <div className="libraryToolLayer">
           <LibrarySearch value={query} onChange={setQuery} placeholder={inTrash ? "搜索回收站文件..." : "搜索当前项目文件..."} />
@@ -416,7 +430,6 @@ export function FileManager({
             <Trash2 size={16} />
             {trashFiles.length ? <span className="toolBadge">{trashFiles.length}</span> : null}
           </button>
-          {inTrash ? null : <label className="primaryButton compact topbarFileAction" htmlFor="project-file-upload"><Upload size={14} />上传文件</label>}
         </div>,
         topbarActionHost,
       ) : null}

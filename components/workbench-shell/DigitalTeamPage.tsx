@@ -45,7 +45,11 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
   const [activeTab, setActiveTab] = useState<TeamTab>("coworkers");
   const [query, setQuery] = useState("");
   const [topbarHost, setTopbarHost] = useState<HTMLElement | null>(null);
-  useEffect(() => { setTopbarHost(document.getElementById("workbench-topbar-actions")); }, []);
+  const [topbarTabHost, setTopbarTabHost] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setTopbarHost(document.getElementById("workbench-topbar-actions"));
+    setTopbarTabHost(document.getElementById("workbench-topbar-tabs"));
+  }, []);
   const [domain, setDomain] = useState(domains[0]);
   const [useOpen, setUseOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -181,13 +185,19 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
         topbarHost,
       ) : null}
 
-      <NavTabs
-        className="digitalTeamTabs"
-        items={teamTabs.map((tab) => ({ ...tab, count: tabCounts[tab.id] }))}
-        value={activeTab}
-        onChange={(id) => { setActiveTab(id); setQuery(""); }}
-        label="数字团队"
-      />
+      {/* 这三个 tab 换的是整块内容（Skills / MCP 会把整页换掉），所以归顶栏第二行。
+          搜索框就在同一行右边——它的 placeholder 本来就跟着 tab 变，
+          原来两者隔着一条分隔线、上下差 100px，读起来不像一组。 */}
+      {topbarTabHost ? createPortal(
+        <NavTabs
+          className="digitalTeamTabs"
+          items={teamTabs.map((tab) => ({ ...tab, count: tabCounts[tab.id] }))}
+          value={activeTab}
+          onChange={(id) => { setActiveTab(id); setQuery(""); }}
+          label="数字团队"
+        />,
+        topbarTabHost,
+      ) : null}
 
       {activeTab === "coworkers" ? (
         <>
