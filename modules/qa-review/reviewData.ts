@@ -135,7 +135,9 @@ export const qaFindings: QaFinding[] = [
   { id: "f7", raisedIn: "v3", source: "ai", category: "content", docPage: 6, innerPage: "5/7", severity: "warning", recordId: "记录1-COA", text: "本版新增的留样说明与第 2 页「样品已全部消耗」相互矛盾" },
 ];
 
-/* v3 相对 v2 的变更。有 findingId 的是在回应某条问题，没有的是无关修改。 */
+/* 变更按「哪两版之间」存。比对基线可以改，所以这里不能只存一对版本——
+   v1→v2 那批没有 findingId：那一轮的问题清单本身没有建模，
+   与其编几条对不上的关联，不如老实作为无关修改列出来。 */
 export const qaDiffRows: QaDiffRow[] = [
   { id: "d1", fromVersion: "v2", toVersion: "v3", page: 1, innerPage: "1/7", field: "收检日期", before: "2025-12-12", after: "2025-11-10", kind: "changed", findingId: "f1" },
   { id: "d2", fromVersion: "v2", toVersion: "v3", page: 1, innerPage: "1/7", field: "审核时间", before: "2025-12-11", after: "2025-10-09", kind: "changed", findingId: "f2" },
@@ -143,7 +145,21 @@ export const qaDiffRows: QaDiffRow[] = [
   { id: "d4", fromVersion: "v2", toVersion: "v3", page: 3, innerPage: "2/7", field: "样品名称", before: "硝酸异哈梨酯", after: "硝酸异哈哈梨酯", kind: "changed", findingId: "f6" },
   { id: "d5", fromVersion: "v2", toVersion: "v3", page: 6, innerPage: "5/7", field: "留样说明", before: "—", after: "留样期限 24 个月，存放于 A 区冷库", kind: "added" },
   { id: "d6", fromVersion: "v2", toVersion: "v3", page: 4, innerPage: "3/7", field: "检测依据", before: "《中国药典》2025 年版四部通则 0441", after: "《中国药典》2025 年版四部通则 0441、0402", kind: "changed" },
+
+  { id: "d7", fromVersion: "v1", toVersion: "v2", page: 1, innerPage: "1/7", field: "报告编号", before: "IARC-R-2025333306", after: "IARC-R-20253333063", kind: "changed" },
+  { id: "d8", fromVersion: "v1", toVersion: "v2", page: 2, innerPage: "1/7", field: "检测项目表", before: "—", after: "新增「含量测定」一行", kind: "added" },
+  { id: "d9", fromVersion: "v1", toVersion: "v2", page: 7, innerPage: "6/7", field: "附录B 原始谱图", before: "附录B 原始谱图（12 页）", after: "—", kind: "removed" },
 ];
+
+/** 任意两版之间的差异。比对基线可改，所以取数必须按版本对，不能写死一对。 */
+export function diffBetween(fromVersion: string, toVersion: string) {
+  return qaDiffRows.filter((row) => row.fromVersion === fromVersion && row.toVersion === toVersion);
+}
+
+/** 这一对版本之间有没有记录在案的差异——没有就该说"没有"，不该拿别的版本的凑数。 */
+export function hasDiff(fromVersion: string, toVersion: string) {
+  return diffBetween(fromVersion, toVersion).length > 0;
+}
 
 /**
  * v3 对 v2 那轮六条问题的复核结论。
