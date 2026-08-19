@@ -6277,8 +6277,10 @@ button {
 }
 
 .taskPreviewBackdrop,
+/* 必须压过铺满的问答窗（z-index 120）：从问答里点出处打开文件，
+   文件得浮在最上面，否则点了像没反应。 */
 .knowledgePreviewBackdrop {
-  z-index: 180;
+  z-index: 400;
   background: rgba(242, 244, 247, 0.94);
 }
 

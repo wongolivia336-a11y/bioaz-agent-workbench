@@ -14,7 +14,7 @@ import {
   type MailModuleId,
   type MailResourceRef,
 } from "../../lib/workbench/mailboxData";
-import type { WorkbenchTask } from "../../modules/types";
+import type { MailDraft, WorkbenchTask } from "../../modules/types";
 import { Button, Dialog, EmptyState, Menu, MenuGroup, MenuItem, NavTabs, SegmentedControl, StatusChip } from "../ui";
 
 /**
@@ -49,11 +49,14 @@ export type MailHandoffPayload = {
   taskId?: string;
 };
 
-export function MailboxPage({ account, tasks, onStartTask }: {
+export function MailboxPage({ account, tasks, onStartTask, draft, onDraftConsumed }: {
   account: InboxAccount;
   /** 「加入对话」的候选：同项目下已有的任务 Chat */
   tasks: WorkbenchTask[];
   onStartTask: (payload: MailHandoffPayload) => void;
+  /** 别处预填的草稿（QA 驳回退回撰写人）。消费一次就清掉，否则回邮箱又被覆盖 */
+  draft?: MailDraft | null;
+  onDraftConsumed?: () => void;
 }) {
   const [lane, setLane] = useState<MailboxLane>("received");
   const [filter, setFilter] = useState<MailFilter>("all");
@@ -119,6 +122,23 @@ export function MailboxPage({ account, tasks, onStartTask }: {
     setBody("");
     setComposeAttachments([]);
   };
+
+  /* 别处（目前是 QA 驳回）预填的草稿。只填到草稿为止——发不发是人的决定，
+     退回这件事对撰写人有真实后果，不该由一次点击悄悄送出去。
+     收件人按名字匹配，匹配不上就留空让人自己选，不硬塞一个错的。 */
+  useEffect(() => {
+    if (!draft) return;
+    setPane("compose");
+    setSelectedId(null);
+    setComposeAttachments([]);
+    setRecipientQuery("");
+    setMentionOpen(false);
+    setSubject(draft.subject);
+    setBody(draft.body);
+    const match = mentionCandidates.find((person) => person.name === draft.to);
+    setRecipients(match ? [match] : []);
+    onDraftConsumed?.();
+  }, [draft, onDraftConsumed]);
   const writeWithAi = () => {
     setSubject((value) => value || "终审流转：硝酸异哈哈梨酯检测报告");
     setBody("李老师您好，\n\n该报告已完成一线撰写、AI 辅助校验及审批人复核，现将报告与审阅记录一并发送给您进行最终审批和归档。\n\n请重点确认报告结论及版本信息；如无异议，请完成归档。谢谢。");

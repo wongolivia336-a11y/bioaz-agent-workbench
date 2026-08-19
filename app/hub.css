@@ -379,14 +379,19 @@
 
    这是一次性的窗：没有任务、不进侧边栏，Esc 或窗头那颗键就收回胶囊。
    =================================================================== */
+/* 铺满整张白卡，连面包屑那一行一起盖掉。
+   之前只盖第 2 行，于是顶上并排两条头：面包屑说"你在数据中枢/全部项目"，
+   窗头说"你在资料问答"——而这一刻前一句已经不成立了。
+   侧边栏留着（它是换地方的唯一出口），卡内则全归这一屏。 */
 .knowledgeAskWindow {
   position: absolute;
   z-index: 120;
   inset: 0;
   display: grid;
-  grid-row: 2;
+  grid-row: 1 / -1;
   grid-column: 1 / -1;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface);
   animation: knowledgeAskWindowIn 180ms var(--bioaz-ease-standard, ease) both;
 }
@@ -397,14 +402,31 @@
   to { opacity: 1; }
 }
 
+/* 一条轻头：返回键 + 标题 + 一句"这屏不会留下来"。没有边框——
+   下面就是会话内容，画条线等于又把它切成两块。 */
 .knowledgeAskWindowBar {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid var(--bioaz-border);
-  padding: 0 16px 0 20px;
-  min-height: 52px;
+  padding: 0 20px;
+  min-height: 56px;
 }
+
+.knowledgeAskWindowBack {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.knowledgeAskWindowBack:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
 
 .knowledgeAskWindowTitle {
   display: inline-flex;
@@ -417,16 +439,10 @@
 
 .knowledgeAskWindowTitle > svg { color: var(--bioaz-agent-accent); }
 
-.knowledgeAskWindowScope {
-  border-left: 1px solid var(--bioaz-border);
-  padding-left: 10px;
-  color: var(--bioaz-text-secondary);
-  font-size: var(--bioaz-type-small-size);
-}
-
-/* 「这一屏不会留下来」得说在前面，否则用户会以为自己开了一个任务 */
+/* 「这一屏不会留下来」得说在前面，否则用户会以为自己开了一个任务。
+   范围不在这儿说了——它跟着 composer 走，提问时才用得上。 */
 .knowledgeAskWindowNote {
-  margin-right: auto;
+  margin-left: auto;
   color: var(--bioaz-text-tertiary);
   font-size: var(--bioaz-type-label-size);
 }
@@ -472,13 +488,20 @@
   padding: 12px 0 22px;
 }
 
+/* 窗里少了收起键那一格，列数要跟着减。沿用四列模板的话，输入框会掉进
+   第一列那个 auto 里被压成一小条，而范围芯片反倒吃掉 1fr。 */
 .knowledgeAskWindowComposer .knowledgeAskBar {
   width: min(760px, calc(100% - 48px));
+  grid-template-columns: minmax(0, 1fr) auto auto;
   border-radius: var(--bioaz-radius-full);
   margin: 0 auto;
   padding: 8px 10px 8px 18px;
   box-shadow: var(--bioaz-shadow-floating);
 }
+
+/* 范围切换紧挨发送键，落在 composer 右侧——它改的是"在哪批资料里问"，
+   属于这一次提问的参数，跟输入框同一行才读得成一句话。 */
+.knowledgeAskWindowComposer .knowledgeAskScope { justify-self: end; }
 
 /* 范围菜单在窗底也得朝上开，否则掉出窗外 */
 .knowledgeAskWindowComposer .knowledgeAskScopeMenu {
