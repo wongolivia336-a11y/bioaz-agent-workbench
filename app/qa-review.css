@@ -836,127 +836,159 @@
    =================================================================== */
 .qaPageScroll { position: relative; }
 
+/* 模式开关：收起是一颗圈住的加号，开着长出「正在注释」。
+   模式类控件必须自报状态——只把图标点亮，用户过两分钟就忘了自己开着。 */
+.qaAnnotateToggle {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 0 8px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
+    background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
+    color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaAnnotateToggle:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+.qaAnnotateToggle.isOn {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  font-weight: 600;
+}
+
+/* 开着的时候纸面自己也要说话：光标变十字，选中色换成批注色 */
+.qaPageScroll.isAnnotating { cursor: crosshair; }
+.qaPageScroll.isAnnotating .qaPage { cursor: crosshair; }
+.qaPageScroll.isAnnotating ::selection {
+  background: color-mix(in srgb, var(--bioaz-agent-accent) 26%, transparent);
+}
+
 .qaAnnotationCard {
   position: absolute;
   z-index: 30;
   right: 16px;
   display: grid;
-  width: 292px;
-  gap: 8px;
+  width: 268px;
+  gap: 7px;
   border: 1px solid var(--bioaz-agent-accent-border, var(--bioaz-border));
   border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface);
-  padding: 12px;
+  padding: 10px;
   box-shadow: var(--bioaz-shadow-floating);
   animation: qaAnnotationIn 140ms var(--bioaz-ease-standard, ease) both;
 }
 
-@keyframes qaAnnotationIn { from { opacity: 0; } to { opacity: 1; } }
-
-.qaAnnotationCard > header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.qaAnnotationCard > header > strong { font-size: var(--bioaz-type-small-size); }
-.qaAnnotationCard > header > small { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
-
-.qaAnnotationCard > header > button {
+/* 输入行：一行高，自己长；右边一颗确认键 */
+.qaAnnotationRow {
   display: grid;
-  width: 22px;
-  height: 22px;
-  place-items: center;
-  border: 0;
-  border-radius: var(--bioaz-radius-tool);
-  background: transparent;
-  margin-left: auto;
-  color: var(--bioaz-text-tertiary);
-  cursor: pointer;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: end;
+  gap: 6px;
 }
 
-.qaAnnotationCard > header > button:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
-
-/* 引文是这条批注的锚，得看得出是"文档里的原话"而不是你写的 */
-.qaAnnotationQuote {
-  border-left: 2px solid var(--bioaz-agent-accent);
-  background: var(--bioaz-surface-subtle);
-  margin: 0;
-  padding: 6px 8px;
-  color: var(--bioaz-text-secondary);
-  font-size: var(--bioaz-type-label-size);
-  line-height: 1.5;
-}
-
-.qaAnnotationKind {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-control);
-  padding: 3px;
-}
-
-.qaAnnotationKind > button {
-  border: 0;
-  border-radius: calc(var(--bioaz-radius-control) - 4px);
-  background: transparent;
-  padding: 5px 0;
-  color: var(--bioaz-text-secondary);
-  font: inherit;
-  font-size: var(--bioaz-type-label-size);
-  cursor: pointer;
-}
-
-.qaAnnotationKind > button.isOn {
-  background: var(--bioaz-surface-active);
-  color: var(--bioaz-text-primary);
-  font-weight: 600;
-}
-
-/* 提交前就说清楚它会去哪儿——两个去处的后果完全不同 */
-.qaAnnotationWhere {
-  margin: 0;
-  color: var(--bioaz-text-tertiary);
-  font-size: var(--bioaz-type-label-size);
-  line-height: 1.45;
-}
-
-.qaAnnotationCard textarea {
+.qaAnnotationRow textarea {
   width: 100%;
+  min-height: 30px;
+  max-height: 120px;
   box-sizing: border-box;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-surface);
-  padding: 7px 9px;
+  padding: 6px 9px;
   color: var(--bioaz-text-primary);
   font: inherit;
   font-size: var(--bioaz-type-label-size);
-  resize: vertical;
+  line-height: 1.45;
+  resize: none;
+  field-sizing: content;
 }
 
-.qaAnnotationCard textarea:focus-visible {
+.qaAnnotationRow textarea:focus-visible {
   outline: 0;
   border-color: var(--bioaz-agent-accent);
   box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
 }
 
-.qaAnnotationActions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+.qaAnnotationSend {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
 }
 
-.qaAnnotationActions > button:first-child {
-  border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-tool);
-  background: var(--bioaz-surface);
-  padding: 6px 12px;
+.qaAnnotationSend:disabled { background: var(--bioaz-border-strong); cursor: default; }
+
+@keyframes qaAnnotationIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* 引文是这条批注的锚，得看得出是"文档里的原话"而不是你写的 */
+.qaAnnotationQuote {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-left: 2px solid var(--bioaz-agent-accent);
+  margin: 0;
+  padding: 0 0 0 7px;
   color: var(--bioaz-text-secondary);
-  font: inherit;
   font-size: var(--bioaz-type-label-size);
+  line-height: 1.5;
+}
+
+.qaAnnotationQuote > em {
+  flex: none;
+  margin-left: auto;
+  color: var(--bioaz-text-tertiary);
+  font-size: 10px;
+  font-style: normal;
+}
+
+/* 去向是两个小字，不是半张卡 */
+.qaAnnotationKind {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.qaAnnotationKind > button {
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  padding: 2px 8px;
+  color: var(--bioaz-text-tertiary);
+  font: inherit;
+  font-size: 11px;
   cursor: pointer;
+}
+
+.qaAnnotationKind > button:hover { color: var(--bioaz-text-primary); }
+
+.qaAnnotationKind > button.isOn {
+  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 30%, transparent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  font-weight: 600;
+}
+
+/* 提交前就说清楚它会去哪儿——两个去处的后果完全不同 */
+.qaAnnotationKind > small {
+  margin-left: auto;
+  color: var(--bioaz-text-tertiary);
+  font-size: 10px;
 }
 
 /* 人工提的那条在清单里要认得出来 */

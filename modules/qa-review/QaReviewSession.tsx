@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Maximize2, Minimize2, Send, Undo2, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, CirclePlus, Download, FileText, GitCompare, Maximize2, Minimize2, Send, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
@@ -77,6 +77,10 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const [annotation, setAnnotation] = useState<{ quote: string; top: number } | null>(null);
   const [annotationDraft, setAnnotationDraft] = useState("");
   const [annotationKind, setAnnotationKind] = useState<"defect" | "note">("defect");
+  /* 批注是一个**模式**，不是"选中就弹"。不分模式的话，想复制一段文字、
+     想双击选个词，都会被一张卡打断——而读原件的时间远多于写批注的时间。
+     进了模式光标变十字、纸面透出一层底色，你知道自己现在在批注。 */
+  const [annotateMode, setAnnotateMode] = useState(false);
   /** 比对基线。默认取这一版该跟谁比，但审批人可以改成任意一版 */
   const [baseVersionId, setBaseVersionId] = useState(qaVersions.find((item) => item.id === qaCurrentVersionId)?.comparedAgainst ?? "v2");
   const [syncScroll, setSyncScroll] = useState(true);
@@ -132,6 +136,18 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     return () => window.clearTimeout(timer);
   }, [initialRequest]);
 
+  /* Esc 先收卡片、再退模式。一次退两层会让人以为自己点错了。 */
+  useEffect(() => {
+    if (!annotateMode) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (annotation) { setAnnotation(null); window.getSelection()?.removeAllRanges(); return; }
+      setAnnotateMode(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [annotateMode, annotation]);
+
   const sendChat = () => {
     const question = chatText.trim();
     if (!question) return;
@@ -154,7 +170,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
      选中文字这个动作本身已经表达了"我要说这一处"，再要求先切模式
      等于让人把同一件事说两遍。 */
   const captureSelection = (event: React.MouseEvent<HTMLElement>) => {
-    if (outcome !== null || role === "owner") return;
+    if (!annotateMode || outcome !== null || role === "owner") return;
     const selection = window.getSelection();
     const quote = selection?.toString().trim() ?? "";
     if (!quote) return;
@@ -327,6 +343,26 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
             <span>{qaDocument.pageCount}</span>
             <button type="button" aria-label="下一页" disabled={page === qaDocument.pageCount} onClick={() => setPage((value) => Math.min(qaDocument.pageCount, value + 1))}><ChevronRight size={14} /></button>
           </span>
+          {/* 批注模式开关。收起时只是一颗圈住的加号，开着时长出「正在注释」
+              四个字——模式类控件必须一眼看出自己开着，光靠图标变色不够。 */}
+          {outcome === null && role !== "owner" ? (
+            <button
+              type="button"
+              className={`qaAnnotateToggle ${annotateMode ? "isOn" : ""}`}
+              aria-pressed={annotateMode}
+              aria-label={annotateMode ? "退出批注模式" : "进入批注模式"}
+              title={annotateMode ? "退出批注模式（Esc）" : "批注模式：选中原文即可批注"}
+              onClick={() => {
+                setAnnotateMode((value) => !value);
+                setAnnotation(null);
+                window.getSelection()?.removeAllRanges();
+              }}
+            >
+              <CirclePlus size={15} />
+              {annotateMode ? <span>正在注释</span> : null}
+            </button>
+          ) : null}
+
           <span className="qaViewerZoom">
             <button type="button" aria-label="缩小" onClick={() => setZoom((value) => Math.max(60, value - 10))}><ZoomOut size={14} /></button>
             <b>{zoom}%</b>
@@ -361,7 +397,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
             ))}
           </div>
 
-          <div className="qaPageScroll" onMouseUp={captureSelection}>
+          <div className={`qaPageScroll ${annotateMode ? "isAnnotating" : ""}`} onMouseUp={captureSelection}>
             {/* 原型不渲染真 PDF，只按版式给出一张可信的占位页，
                 这样批注定位到第几页仍然说得通。 */}
             {annotation ? (
@@ -511,14 +547,38 @@ function AnnotationCard({
   onSubmit: () => void;
   onCancel: () => void;
 }) {
+  /* 一行式，跟评论气泡一个量级——批注多数是一句话，给一个三行文本域
+     等于暗示"你得写一段"。输入框自己会随内容长高。 */
   return (
     <aside className="qaAnnotationCard" style={{ top }} aria-label="新增批注">
-      <header>
-        <strong>新增批注</strong>
-        <small>{pageRef}</small>
-        <button type="button" onClick={onCancel} aria-label="取消"><X size={13} /></button>
-      </header>
-      <blockquote className="qaAnnotationQuote">{quote}</blockquote>
+      <blockquote className="qaAnnotationQuote">{quote}<em>{pageRef}</em></blockquote>
+
+      <div className="qaAnnotationRow">
+        <textarea
+          autoFocus
+          rows={1}
+          value={draft}
+          placeholder="添加批注…"
+          onChange={(event) => onDraftChange(event.target.value)}
+          onKeyDown={(event) => {
+            // Enter 直接提交，Shift+Enter 换行——跟 composer 一个手感
+            if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSubmit(); }
+            if (event.key === "Escape") onCancel();
+          }}
+        />
+        <button
+          className="qaAnnotationSend"
+          type="button"
+          disabled={!draft.trim()}
+          onClick={onSubmit}
+          aria-label="提交批注"
+          title="提交批注（Enter）"
+        >
+          <Check size={14} />
+        </button>
+      </div>
+
+      {/* 去向留在卡里，但收成两个小字：它是个选择，不该占掉半张卡 */}
       <div className="qaAnnotationKind" role="radiogroup" aria-label="批注去向">
         <button type="button" role="radio" aria-checked={kind === "defect"} className={kind === "defect" ? "isOn" : ""} onClick={() => onKindChange("defect")}>
           要求修改
@@ -526,20 +586,7 @@ function AnnotationCard({
         <button type="button" role="radio" aria-checked={kind === "note"} className={kind === "note" ? "isOn" : ""} onClick={() => onKindChange("note")}>
           仅记录
         </button>
-      </div>
-      <p className="qaAnnotationWhere">
-        {kind === "defect" ? "进「审核结果」清单，下一版会逐条验证改没改。" : "进「审批备注」，只写入审计轨迹，不要求对方修改。"}
-      </p>
-      <textarea
-        autoFocus
-        rows={3}
-        value={draft}
-        placeholder={kind === "defect" ? "写明要改什么，例如：盖章日期早于批准时间，请修订为批准之后。" : "写明你的判断依据。"}
-        onChange={(event) => onDraftChange(event.target.value)}
-      />
-      <div className="qaAnnotationActions">
-        <button type="button" onClick={onCancel}>取消</button>
-        <Button variant="primary" size="small" disabled={!draft.trim()} onClick={onSubmit}>提交批注</Button>
+        <small>{kind === "defect" ? "进审核结果，下一版验证" : "进审批备注，只留痕"}</small>
       </div>
     </aside>
   );
