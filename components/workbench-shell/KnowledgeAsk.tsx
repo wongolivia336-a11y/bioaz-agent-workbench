@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, BookmarkPlus, Check, ChevronDown, FileText, History, Maximize2, Minimize2, Quote, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowUp, BookmarkPlus, Check, ChevronDown, FileText, History, Maximize2, Quote, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { KnowledgeFile } from "../../lib/workbench/shellTypes";
@@ -101,7 +101,12 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
      侧边栏以右的整块区域，像一个临时开出来的会话窗。
      它**不进侧边栏**：这是一次性的问答，关掉就结束，不留任务。 */
   const [full, setFull] = useState(false);
+  /* 吸底那条和全屏窗里那条是两个 DOM 节点，各自要一个 ref。
+     共用一个的话，没挂上 ref 的那条在 useDismissableLayer 里
+     `ref.current?.contains(...)` 得到 undefined，取反成真 —— 点开的那一下
+     自己就把自己关了，范围下拉在全屏窗里根本打不开。 */
   const scopeRef = useDismissableLayer<HTMLDivElement>(scopeOpen, () => setScopeOpen(false));
+  const windowScopeRef = useDismissableLayer<HTMLDivElement>(scopeOpen, () => setScopeOpen(false));
   const rootRef = useRef<HTMLElement | null>(null);
   /* 全屏窗要挂到工作区上，而不是留在文件表里——文件表自己是滚动容器，
      浮在它内部的东西会跟着列表一起滚走，也盖不住顶栏以下的整块区域。 */
@@ -159,7 +164,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
         aria-label="向资料提问"
       />
       {/* 范围选择器就是那个"电子围栏"：圈定在哪批资料里回答 */}
-      <div ref={inWindow ? undefined : scopeRef} className="knowledgeAskScope">
+      <div ref={inWindow ? windowScopeRef : scopeRef} className="knowledgeAskScope">
         <button type="button" aria-expanded={scopeOpen} onClick={() => setScopeOpen((value) => !value)}>
           <span>{scope}</span>
           <small>{scopedFiles.length} 份</small>
@@ -266,19 +271,23 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
       {full && host
         ? createPortal(
             <section className="knowledgeAskWindow" role="dialog" aria-label="资料问答 · 临时会话">
+              {/* 窗头只留一个出口。原来这条压在面包屑下面，于是顶上叠了两条头：
+                  一条讲"你在数据中枢的哪儿"，一条讲"你在问答里"——而这一刻
+                  前者已经不成立了，人根本不在文件表上。所以整块盖掉，
+                  只留一颗返回键。范围和"临时会话"这两句话跟着 composer 走，
+                  它们是提问时才用得上的信息，不该常驻在顶上。 */}
               <header className="knowledgeAskWindowBar">
-                <span className="knowledgeAskWindowTitle"><Sparkles size={15} />资料问答</span>
-                <span className="knowledgeAskWindowScope">{scope} · {scopedFiles.length} 份</span>
-                <span className="knowledgeAskWindowNote">临时会话，不会存进左侧任务</span>
                 <button
-                  className="knowledgeAskWindowClose"
+                  className="knowledgeAskWindowBack"
                   type="button"
                   onClick={() => setFull(false)}
-                  aria-label="收回问答窗（Esc）"
-                  title="收回问答窗（Esc）"
+                  aria-label="返回数据中枢（Esc）"
+                  title="返回数据中枢（Esc）"
                 >
-                  <Minimize2 size={15} />
+                  <ArrowLeft size={16} />
                 </button>
+                <span className="knowledgeAskWindowTitle"><Sparkles size={15} />资料问答</span>
+                <span className="knowledgeAskWindowNote">临时会话，不会存进左侧任务</span>
               </header>
 
               <div className="knowledgeAskWindowScroll">
