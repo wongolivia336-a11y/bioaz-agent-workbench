@@ -1327,8 +1327,11 @@ button.inspectorParameterField:hover { background: var(--surface); }
   grid-template-rows: 58px 68px minmax(0, 1fr);
 }
 
+/* 底部留白要盖住那摞悬浮的 composer。原来写死 210px，而这一摞会长高——
+   交接卡出现时它超过 210，最后一段回复就被压在卡片底下。
+   实际高度由 JS 量出来写进 --tumor-composer-reserve，写死的值只当兜底。 */
 .tumor-reportModuleShell .chatScroller {
-  padding-bottom: 210px;
+  padding-bottom: var(--tumor-composer-reserve, 210px);
 }
 
 .tumor-reportModuleShell .conversation .agentReply {
@@ -1424,7 +1427,9 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 .legacyComposerStack > .coworkerSelector { justify-self: start; }
-.legacyComposerStack > .coworkerSwitchCard { width: min(660px, 100%); }
+/* 交接卡跟 composer 同宽。它原来被钉死在 660px，而这一列是 794px——
+   同一摞里两个卡片右边缘差 134px，看起来像其中一个没对齐。
+   DMPK 那边本来就没有这条限制，所以是这里落单了。 */
 .legacyComposerStack .composerShell {
   position: static;
   border-top: 0;

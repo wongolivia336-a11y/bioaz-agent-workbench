@@ -806,6 +806,28 @@
 
 .qaReviewWorkspace .workbenchPanelTab.isActive::after { bottom: -1px; }
 
+/* 决策卡里的入口。它长得像句子里的一段可点文字，不是第四颗按钮——
+   这张卡的动作只有驳回和通过两个，再加一颗同等重量的按钮会稀释它们。 */
+.qaApprovalJump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--bioaz-agent-accent) 34%, transparent);
+  background: transparent;
+  padding: 0;
+  color: color-mix(in srgb, var(--bioaz-agent-accent) 78%, var(--bioaz-text-primary));
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaApprovalJump > svg { flex: none; opacity: 0.75; }
+
+.qaApprovalJump:hover {
+  border-bottom-color: var(--bioaz-agent-accent);
+}
+
 @media (max-width: 900px) {
   .qaChatComposerStack { width: calc(100% - 28px); }
   .qaDetachedPanelBody { padding: 14px 14px 96px; }

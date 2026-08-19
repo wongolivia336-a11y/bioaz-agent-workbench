@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Minimize2, Send, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Maximize2, Minimize2, Send, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
@@ -206,6 +206,15 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     setPoppedPanelId(null);
   };
 
+  /* 决策卡是一个入口：挡着你做决定的是「还有 N 条没处置」，
+     所以点它直接进 Canvas——原件占中、问题清单在右，就地处置。
+     入口指向那 N 条，而不是泛泛地预览文档：光看原件看不出哪几条没解决。 */
+  const openFindingsForDecision = () => {
+    setPanelOpen(true);
+    setActivePanelId("ai-review");
+    setPoppedPanelId("document");
+  };
+
   return (
     <section className={`dmpkWorkspace qaReviewWorkspace ${poppedPanelId ? "hasPoppedCanvas" : "hasChatflow"}`}>
       <header className="topbar">
@@ -328,7 +337,23 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
           <footer className="qaChatComposerStack">
             {!outcome ? (
               <section className="warningDecision qaApprovalCard">
-                <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "负责人视角为只读"}</strong><p>{openFindings} 条 AI 批注仍待处置，结论会写入审批记录。</p></div><small>{role === "owner" ? "只读" : "待确认"}</small></header>
+                <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "负责人视角为只读"}</strong><p>
+                  {openFindings ? (
+                    <>
+                      <button className="qaApprovalJump" type="button" onClick={openFindingsForDecision}>
+                        <Maximize2 size={12} />{openFindings} 条 AI 批注仍待处置
+                      </button>
+                      ，结论会写入审批记录。
+                    </>
+                  ) : (
+                    <>
+                      <button className="qaApprovalJump" type="button" onClick={openFindingsForDecision}>
+                        <Maximize2 size={12} />{qaFindings.length} 条 AI 批注已全部处置
+                      </button>
+                      ，结论会写入审批记录。
+                    </>
+                  )}
+                </p></div><small>{role === "owner" ? "只读" : "待确认"}</small></header>
                 {role === "author" ? <div className="warningActions"><Button variant="primary" size="small" disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条 AI 批注未处置` : undefined} onClick={() => resolveWith("submitted", `已逐条处置 ${qaFindings.length} 条 AI 批注，提交${version.label}终审。`)}>提交审批</Button></div>
                   : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => resolveWith("rejected", "驳回：仍有时间逻辑未修订，请修改后重新提交。")}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => resolveWith("approved", "经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。")}>通过</Button></div> : null}
               </section>
