@@ -34,6 +34,9 @@ export type QaFinding = {
   severity: "error" | "warning";
   recordId: string;
   text: string;
+  /* 这条问题落在纸面的哪个字段上。没有它，问题就只能停在右侧列表里，
+     而审批人真正要的是"在原文哪儿"——清单给的是结论，纸面才是证据。 */
+  anchorField?: string;
 };
 
 /**
@@ -126,13 +129,13 @@ export const qaDocument = {
    两批混在同一个数组里，靠 raisedIn 区分——它们是同一类对象，
    排序和处置逻辑完全一样，没有理由拆成两个列表。 */
 export const qaFindings: QaFinding[] = [
-  { id: "f1", raisedIn: "v2", source: "ai", category: "time", docPage: 1, innerPage: "1/7", severity: "error", recordId: "记录1-COA", text: "收检日期（2025-12-12）> 检测开始日期（2025-11-11），时间逻辑有问题" },
-  { id: "f2", raisedIn: "v2", source: "ai", category: "time", docPage: 1, innerPage: "1/7", severity: "error", recordId: "记录1-COA", text: "审核时间（2025-12-11）> 批准时间（2025-10-10），时间逻辑有问题" },
-  { id: "f3", raisedIn: "v2", source: "ai", category: "time", docPage: 8, innerPage: "7/7", severity: "error", recordId: "记录1-COA", text: "盖章日期（2025-10-09）< 批准时间（2025-10-10），盖章动作必须发生在其余流程之后" },
-  { id: "f4", raisedIn: "v2", source: "ai", category: "page", docPage: 2, innerPage: "1/7", severity: "warning", recordId: "记录1-COA", text: "页码标记列表存在缺页问题（缺少第 1 页，但总页数应为 7 页）" },
-  { id: "f5", raisedIn: "v2", source: "ai", category: "page", docPage: 5, innerPage: "4/7", severity: "warning", recordId: "记录1-COA", text: "页码标记列表存在多页问题（出现“第 17 页/共 7 页”）" },
-  { id: "f6", raisedIn: "v2", source: "human", category: "content", docPage: 3, innerPage: "2/7", severity: "warning", recordId: "记录1-COA", text: "样品名称在正文与封面不一致（正文写“硝酸异哈梨酯”，封面写“硝酸异哈哈梨酯”）" },
-  { id: "f7", raisedIn: "v3", source: "ai", category: "content", docPage: 6, innerPage: "5/7", severity: "warning", recordId: "记录1-COA", text: "本版新增的留样说明与第 2 页「样品已全部消耗」相互矛盾" },
+  { id: "f1", raisedIn: "v2", source: "ai", category: "time", docPage: 1, innerPage: "1/7", severity: "error", recordId: "记录1-COA", anchorField: "收检日期", text: "收检日期（2025-12-12）> 检测开始日期（2025-11-11），时间逻辑有问题" },
+  { id: "f2", raisedIn: "v2", source: "ai", category: "time", docPage: 1, innerPage: "1/7", severity: "error", recordId: "记录1-COA", anchorField: "审核时间", text: "审核时间（2025-12-11）> 批准时间（2025-10-10），时间逻辑有问题" },
+  { id: "f3", raisedIn: "v2", source: "ai", category: "time", docPage: 8, innerPage: "7/7", severity: "error", recordId: "记录1-COA", anchorField: "盖章日期", text: "盖章日期（2025-10-09）< 批准时间（2025-10-10），盖章动作必须发生在其余流程之后" },
+  { id: "f4", raisedIn: "v2", source: "ai", category: "page", docPage: 2, innerPage: "1/7", severity: "warning", recordId: "记录1-COA", anchorField: "页码标记", text: "页码标记列表存在缺页问题（缺少第 1 页，但总页数应为 7 页）" },
+  { id: "f5", raisedIn: "v2", source: "ai", category: "page", docPage: 5, innerPage: "4/7", severity: "warning", recordId: "记录1-COA", anchorField: "页码标记", text: "页码标记列表存在多页问题（出现“第 17 页/共 7 页”）" },
+  { id: "f6", raisedIn: "v2", source: "human", category: "content", docPage: 3, innerPage: "2/7", severity: "warning", recordId: "记录1-COA", anchorField: "样品名称", text: "样品名称在正文与封面不一致（正文写“硝酸异哈梨酯”，封面写“硝酸异哈哈梨酯”）" },
+  { id: "f7", raisedIn: "v3", source: "ai", category: "content", docPage: 6, innerPage: "5/7", severity: "warning", recordId: "记录1-COA", anchorField: "留样说明", text: "本版新增的留样说明与第 2 页「样品已全部消耗」相互矛盾" },
 ];
 
 /* 变更按「哪两版之间」存。比对基线可以改，所以这里不能只存一对版本——
@@ -154,6 +157,61 @@ export const qaDiffRows: QaDiffRow[] = [
 /** 任意两版之间的差异。比对基线可改，所以取数必须按版本对，不能写死一对。 */
 export function diffBetween(fromVersion: string, toVersion: string) {
   return qaDiffRows.filter((row) => row.fromVersion === fromVersion && row.toVersion === toVersion);
+}
+
+/* 纸面上印着的字段。并排比对要的是两份**文档**，不是两列字段表，
+   所以这份清单同时决定了那张纸长什么样。 */
+export const qaPageFields: Array<{ field: string; en: string }> = [
+  { field: "样品名称", en: "SAMPLE NAME" },
+  { field: "报告编号", en: "REPORT NO." },
+  { field: "检测类别", en: "TEST TYPE" },
+  { field: "委托单位", en: "APPLICANT" },
+  { field: "收检日期", en: "DATE RECEIVED" },
+  { field: "审核时间", en: "DATE REVIEWED" },
+  { field: "盖章日期", en: "DATE SEALED" },
+  { field: "检测依据", en: "TEST BASIS" },
+  { field: "留样说明", en: "SAMPLE RETENTION" },
+];
+
+/** 当前版（v3）纸面上的值。更早的版本一律由它倒推，见 pageValues。 */
+const qaPageBaseValues: Record<string, string> = {
+  样品名称: "硝酸异哈哈梨酯",
+  报告编号: "IARC-R-20253333063",
+  检测类别: "委托检验",
+  委托单位: "江苏小小药业有限公司",
+  收检日期: "2025-11-10",
+  审核时间: "2025-10-09",
+  盖章日期: "2025-10-09",
+  检测依据: "《中国药典》2025 年版四部通则 0441、0402",
+  留样说明: "留样期限 24 个月，存放于 A 区冷库",
+  页码标记: "第 4 页/共 7 页",
+};
+
+/** 新到旧。倒推靠它，别处不要再写一份版本顺序。 */
+const versionChain = ["v3", "v2", "v1"];
+
+/**
+ * 某一版纸面上的值。
+ *
+ * 不为每一版各存一份——三份表迟早会跟 qaDiffRows 对不上，
+ * 而"改了什么"必须只有一个真相源。这里从当前版逐段反向套用 diff 往回倒。
+ */
+export function pageValues(versionId: string): Record<string, string> {
+  const values = { ...qaPageBaseValues };
+  const target = versionChain.indexOf(versionId);
+  if (target <= 0) return values;
+  for (let step = 0; step < target; step += 1) {
+    for (const row of diffBetween(versionChain[step + 1], versionChain[step])) {
+      values[row.field] = row.before;
+    }
+  }
+  return values;
+}
+
+/** 这一对版本之间变了的字段名，用来在纸面上就地标出来 */
+export function changedFields(fromVersion: string, toVersion: string): Map<string, QaDiffRow["kind"]> {
+  // as const 是必需的：不加的话 map 出来是 string[][]，Map 要的是元组
+  return new Map(diffBetween(fromVersion, toVersion).map((row) => [row.field, row.kind] as const));
 }
 
 /** 这一对版本之间有没有记录在案的差异——没有就该说"没有"，不该拿别的版本的凑数。 */

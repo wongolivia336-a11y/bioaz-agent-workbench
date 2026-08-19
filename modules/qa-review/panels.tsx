@@ -90,23 +90,33 @@ function AiReviewPanel({ role, locked, findings, findingStates, activeFindingId,
     .filter((group) => group.items.length);
   const open = findings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
   const human = findings.filter((finding) => finding.source === "human").length;
+  const reviewed = findings.length - open;
 
   return (
     <div className="qaPanel">
       <header className="qaPanelHead">
         <div>
           <strong>审核结果</strong>
-          <small>{findings.length} 条 · {open} 条待处置{human ? ` · 人工 ${human} 条` : ""}</small>
+          <small>{findings.length} 条 · AI {findings.length - human} 条 · 人工 {human} 条</small>
         </div>
         <StatusChip tone={open ? "warning" : "success"} dot>{open ? "待处置" : "全部处置完"}</StatusChip>
       </header>
+
+      {/* 逐条走完是有终点的，所以给进度而不是只给一个"还剩几条"。
+          条形本身就是那个终点：走满了才谈得上放行。 */}
+      <div className="qaReviewProgress">
+        <span className="qaReviewProgressBar" aria-hidden="true">
+          <i style={{ width: `${findings.length ? (reviewed / findings.length) * 100 : 0}%` }} />
+        </span>
+        <small>已处置 {reviewed} / {findings.length} 条</small>
+      </div>
 
       {locked ? (
         <p className="qaPanelHint">本版已有审批结论，批注冻结为只读。要再改就得提交新版本。</p>
       ) : role === "author" ? (
         <p className="qaPanelHint">逐条处置后才能提交审批。忽略也算处置，但要在审批备注里说明理由。</p>
       ) : (
-        <p className="qaPanelHint">撰写人的处置结论在每条右侧。你可以采纳，也可以驳回整份。</p>
+        <p className="qaPanelHint">逐条确认或忽略。确认过的会划掉并沉为灰色，剩下的才是还要看的。</p>
       )}
 
       {groups.map((group, index) => (
@@ -116,7 +126,7 @@ function AiReviewPanel({ role, locked, findings, findingStates, activeFindingId,
             const state = findingStates[finding.id] ?? "open";
             return (
               <article
-                className={`qaFinding state-${state} ${activeFindingId === finding.id ? "isActive" : ""}`}
+                className={`qaFinding state-${state} source-${finding.source} ${activeFindingId === finding.id ? "isActive" : ""}`}
                 key={finding.id}
               >
                 <button className="qaFindingBody" type="button" onClick={() => onFocusFinding(finding)}>
@@ -135,9 +145,14 @@ function AiReviewPanel({ role, locked, findings, findingStates, activeFindingId,
                 </button>
                 <footer className="qaFindingActions">
                   <span className={`qaFindingState state-${state}`}>{qaFindingStateLabel[state]}</span>
-                  {role === "author" && !locked ? (
+                  {/* 审批人也要能逐条落结论。原来只有撰写人有这两颗，审批人只能
+                      整份驳回——于是"哪几条我认、哪几条我不认"没地方表达。
+                      两端用词不同：撰写人是「采纳」这条意见，审批人是「确认」这是个问题。 */}
+                  {role !== "owner" && !locked ? (
                     <span className="qaFindingButtons">
-                      <button type="button" className={state === "accepted" ? "isOn" : ""} onClick={() => onFindingState(finding.id, state === "accepted" ? "open" : "accepted")}>采纳</button>
+                      <button type="button" className={state === "accepted" ? "isOn" : ""} onClick={() => onFindingState(finding.id, state === "accepted" ? "open" : "accepted")}>
+                        {role === "author" ? "采纳" : "确认问题"}
+                      </button>
                       <button type="button" className={state === "dismissed" ? "isOn" : ""} onClick={() => onFindingState(finding.id, state === "dismissed" ? "open" : "dismissed")}>忽略</button>
                     </span>
                   ) : null}

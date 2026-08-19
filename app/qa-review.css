@@ -1016,6 +1016,28 @@
   font-size: var(--bioaz-type-label-size);
 }
 
+/* 比对头上的图例。三种颜色不注明的话，用户得自己猜哪个是新增 */
+.qaCompareLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.qaCompareLegend > span { display: inline-flex; align-items: center; gap: 4px; }
+
+.qaCompareLegend > span::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  content: "";
+}
+
+.qaCompareLegend > .legend-changed::before { background: #f59e0b; }
+.qaCompareLegend > .legend-added::before { background: #3b82f6; }
+.qaCompareLegend > .legend-removed::before { background: #ef4444; }
+
 .qaCompareSync {
   display: inline-flex;
   align-items: center;
@@ -1067,24 +1089,162 @@
 
 .qaComparePage { width: 100%; max-width: 520px; margin: 0 auto; }
 
-/* 变了的字段就地标出来。左栏标"改之前"，右栏标"改之后"，
-   同一行两边同高，扫一眼就知道这一处对应的是哪一处。 */
-.qaCompareField > dt > small {
-  display: block;
-  color: var(--bioaz-text-tertiary);
-  font-size: 10px;
-  font-weight: 400;
+/* ===================================================================
+   三套颜色，三件不同的事，不能混用同一组色
+   -------------------------------------------------------------------
+   ① 批注来源：AI（琥珀）／人工（品牌紫）——审批人要一眼分出机器说的和人写的
+   ② 比对增删改：新增（蓝）／删除（红）／修改（橙）——沿用旧系统那套，
+      因为审批人已经认得它，换一套等于让他重学
+   ③ 处置状态：已处置一律褪成中性并划掉，不占第三组颜色
+   =================================================================== */
+
+/* ---- ① 纸面上的批注标记 ---- */
+.qaDocMark {
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  padding: 1px 3px;
+  margin: 0 -3px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
 }
 
+.qaDocMark > em {
+  margin-left: 5px;
+  border-radius: var(--bioaz-radius-full);
+  padding: 0 5px;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+/* AI 提的：琥珀。跟"机器初筛"的分量相称，不抢人工那条 */
+.qaDocMark.source-ai { background: color-mix(in srgb, #f59e0b 22%, transparent); }
+.qaDocMark.source-ai > em { background: #f59e0b; color: #fff; }
+.qaDocMark.source-ai:hover { background: color-mix(in srgb, #f59e0b 34%, transparent); }
+
+/* 人工提的：品牌紫。人落的笔要比机器的重 */
+.qaDocMark.source-human { background: var(--bioaz-agent-accent-soft); }
+.qaDocMark.source-human > em { background: var(--bioaz-agent-accent); color: #fff; }
+.qaDocMark.source-human:hover { background: color-mix(in srgb, var(--bioaz-agent-accent) 24%, transparent); }
+
+/* ③ 处置完就退场：划掉、褪灰。它还在（合规不许删），但不再要注意力 */
+.qaDocMark.isSettled {
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  text-decoration: line-through;
+}
+
+.qaDocMark.isSettled > em { background: var(--bioaz-border-strong); color: var(--bioaz-text-secondary); }
+
+.qaDocMark.isActive {
+  outline: 2px solid var(--bioaz-agent-accent);
+  outline-offset: 1px;
+}
+
+/* ---- 逐条处置的进度 ---- */
+.qaReviewProgress {
+  display: grid;
+  gap: 5px;
+  padding: 0 2px 2px;
+}
+
+.qaReviewProgressBar {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+}
+
+.qaReviewProgressBar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--bioaz-agent-accent);
+  transition: width var(--bioaz-motion-standard, 220ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaReviewProgress > small { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
+
+/* 列表里也带一道来源色，跟纸面上那处对得上 */
+.qaFinding.source-human { border-left: 2px solid var(--bioaz-agent-accent); }
+.qaFinding.source-ai { border-left: 2px solid color-mix(in srgb, #f59e0b 70%, transparent); }
+
+/* 处置完的条目：划掉正文、整条褪下去，跟纸面同一套语言 */
+.qaFinding:is(.state-accepted, .state-dismissed) { opacity: 0.62; }
+.qaFinding:is(.state-accepted, .state-dismissed) .qaFindingBody p { text-decoration: line-through; }
+.qaFinding.state-accepted { border-left-color: var(--bioaz-success, #10b981); }
+
+/* 变了的字段就地标在纸上。两栏是同一份版式的两个版本，所以同一字段
+   左右天然同高——不需要额外对齐，扫一眼就知道这一处对应的是哪一处。
+
+   左栏（基线）标的是"改之前"，右栏（当前）标的是"改之后"，
+   所以同一个 kind 在两边给的语义不同：新增在左边其实是"原来没有"。 */
 .qaCompareField {
   border-radius: var(--bioaz-radius-tool);
-  padding: 4px 6px;
+  padding: 3px 6px;
   margin: 0 -6px;
+  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
 }
 
-.qaCompareField.kind-changed { background: color-mix(in srgb, #f59e0b 12%, transparent); }
-.qaCompareField.kind-added { background: color-mix(in srgb, #10b981 12%, transparent); }
-.qaCompareField.kind-removed { background: color-mix(in srgb, #ef4444 10%, transparent); }
+/* ② 增删改沿用旧系统的配色：修改=橙、新增=蓝、删除=红且划掉。
+      删除那条必须划掉——只靠底色，红和橙在小面积上分不开。 */
+.qaCompareField.kind-changed { background: color-mix(in srgb, #f59e0b 16%, transparent); }
+.qaCompareField.kind-added.side-current { background: color-mix(in srgb, #3b82f6 16%, transparent); }
+.qaCompareField.kind-removed.side-base { background: color-mix(in srgb, #ef4444 14%, transparent); }
+.qaCompareField.kind-removed.side-base dd { text-decoration: line-through; }
+
+/* 一边有、另一边没有的那种：空的那边给一条虚线，说明"这里本来没有内容"，
+   而不是留一片白让人以为没渲染出来 */
+.qaCompareField.kind-added.side-base,
+.qaCompareField.kind-removed.side-current {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    color-mix(in srgb, var(--bioaz-text-tertiary) 10%, transparent) 6px 12px
+  );
+}
+
+.qaCompareField.kind-added.side-base dd,
+.qaCompareField.kind-removed.side-current dd {
+  color: var(--bioaz-text-disabled);
+}
+
+/* 页脚那条页码标记也会变，它不在 dl 里，单独给 */
+.qaPageFooter > span.qaCompareField { margin: 0; }
+
+/* ---- 版本下拉 ----
+   菜单项原来是裸 button，压根没吃到 .toolMenuItem，于是每条都是浏览器
+   默认按钮：一个大方块、居中文字、自己的边框。套回菜单语言。 */
+.qaVersionOption {
+  align-items: flex-start;
+  padding: 7px 8px;
+}
+
+.qaVersionOption > span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+  text-align: left;
+}
+
+.qaVersionOption > span > b {
+  color: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.qaVersionOption > span > small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+}
+
+.qaVersionOption.active > span > b { font-weight: 600; }
+.qaVersionOption > svg { flex: none; margin-top: 2px; }
 
 @media (max-width: 1023px) {
   /* 两栏各 50% 在这儿只剩不到 300px，纸张会被压成一条 —— 改成上下叠 */
