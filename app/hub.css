@@ -175,29 +175,42 @@
    两者常驻同权重会让侧栏下半截被低频的东西长期占着。 */
 .librarySpaceHeader { padding-inline: 0; }
 
-.librarySpaceDisclosure {
+/* 必须写成 .navSectionHeader .librarySpaceDisclosure：review.css 里那条
+   `.navSectionHeader button` 把这一行的所有按钮钉成 26×26 的 grid 格并居中，
+   于是箭头、文字、计数被塞进 26px 里竖着叠成三行。宽高都得显式解开。 */
+.navSectionHeader .librarySpaceDisclosure {
   display: inline-flex;
+  width: auto;
+  height: auto;
   min-width: 0;
   flex: 1;
   align-items: center;
+  justify-content: flex-start;
   gap: 5px;
   border: 0;
   border-radius: var(--bioaz-radius-tool);
   background: transparent;
-  padding: 2px 6px;
+  padding: 3px 6px;
   color: inherit;
   font: inherit;
   font-size: 11px;
   font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.librarySpaceDisclosure:hover { color: var(--bioaz-text-primary); }
+.navSectionHeader .librarySpaceDisclosure:hover {
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-primary);
+}
 
 .librarySpaceDisclosure > svg {
   flex: none;
   transition: transform var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
 }
+
+.librarySpaceDisclosure > span { flex: none; }
 
 .librarySpaceTree.isOpen .librarySpaceDisclosure > svg { transform: rotate(90deg); }
 

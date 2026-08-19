@@ -120,7 +120,14 @@ export type AgentModuleSessionProps = {
   /* 让 module 预填一封邮件草稿并跳到邮箱。QA 驳回用它把问题清单退回撰写人：
      状态变更是机制，这封信是通知——所以只到草稿为止，发不发由人决定。 */
   onComposeMail?: (draft: MailDraft) => void;
+  /* 会话级结论（目前是 QA 的提交/通过/驳回）。必须由 shell 按任务保存：
+     module 组件在切走再切回时会重新挂载，结论留在组件里就等于点完就没了，
+     而"这一版审完了没有"恰恰是回到会话时第一个要看到的东西。 */
+  sessionOutcome?: SessionOutcome;
+  onSessionOutcomeChange?: (outcome: SessionOutcome) => void;
 };
+
+export type SessionOutcome = "submitted" | "approved" | "rejected" | null;
 
 export type MailDraft = {
   /** 收件人姓名。邮箱那边按名字匹配到人，匹配不上就只填主题和正文 */
