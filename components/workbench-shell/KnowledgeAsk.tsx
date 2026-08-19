@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, ChevronDown, FileText, History, Maximize2, Minimize2, Quote, Sparkles } from "lucide-react";
+import { ArrowUp, BookmarkPlus, Check, ChevronDown, FileText, History, Maximize2, Minimize2, Quote, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { KnowledgeFile } from "../../lib/workbench/shellTypes";
@@ -83,7 +83,10 @@ function answerFor(question: string, scope: string, files: KnowledgeFile[]): Ask
  * 项目内那颗胶囊原来把范围写死成「当前项目」，换成同一个下拉之后，你在项目
  * 里也能临时把范围放大到全部资料或某个资料空间。
  */
-export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", defaultScope }: { projects: WorkbenchProject[]; files: KnowledgeFile[]; onOpenFile: (file: KnowledgeFile) => void; dock?: "inline" | "floating"; defaultScope?: string }) {
+export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", defaultScope, onSaveAnswer }: { projects: WorkbenchProject[]; files: KnowledgeFile[]; onOpenFile: (file: KnowledgeFile) => void; dock?: "inline" | "floating"; defaultScope?: string; onSaveAnswer?: (title: string, body: string) => void }) {
+  /* 存过哪几条要记住：按钮变成「已存到产物」，否则用户不确定刚才那下有没有生效，
+     就会再点一次，产物里躺着两份一模一样的东西。 */
+  const [savedTurnIds, setSavedTurnIds] = useState<string[]>([]);
   const [text, setText] = useState("");
   const [scope, setScope] = useState(defaultScope ?? scopePresets[0]);
   const [scopeOpen, setScopeOpen] = useState(false);
@@ -230,7 +233,16 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
         </div>
       ) : null}
 
-      {latest ? <AskAnswer turn={latest} files={files} onOpenFile={onOpenFile} /> : null}
+      {latest ? (
+        <AskAnswer
+          turn={latest}
+          files={files}
+          onOpenFile={onOpenFile}
+          onSave={onSaveAnswer}
+          saved={savedTurnIds.includes(latest.id)}
+          onSaved={() => setSavedTurnIds((current) => [...current, latest.id])}
+        />
+      ) : null}
 
       {earlier.length ? (
         <div className="knowledgeAskHistory">
@@ -272,7 +284,15 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
               <div className="knowledgeAskWindowScroll">
                 <div className="knowledgeAskThread">
                   {turns.map((turn) => (
-                    <AskAnswer key={turn.id} turn={turn} files={files} onOpenFile={onOpenFile} />
+                    <AskAnswer
+                      key={turn.id}
+                      turn={turn}
+                      files={files}
+                      onOpenFile={onOpenFile}
+                      onSave={onSaveAnswer}
+                      saved={savedTurnIds.includes(turn.id)}
+                      onSaved={() => setSavedTurnIds((current) => [...current, turn.id])}
+                    />
                   ))}
                 </div>
               </div>
@@ -287,7 +307,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
 }
 
 /** 一问一答：问题在上、答案在下、出处跟着答案走。吸底和全屏共用这一份。 */
-function AskAnswer({ turn, files, onOpenFile }: { turn: AskTurn; files: KnowledgeFile[]; onOpenFile: (file: KnowledgeFile) => void }) {
+function AskAnswer({ turn, files, onOpenFile, onSave, saved, onSaved }: { turn: AskTurn; files: KnowledgeFile[]; onOpenFile: (file: KnowledgeFile) => void; onSave?: (title: string, body: string) => void; saved?: boolean; onSaved?: () => void }) {
   return (
     <article className="knowledgeAnswer">
       <p className="knowledgeAnswerQuestion">{turn.question}</p>
@@ -318,6 +338,19 @@ function AskAnswer({ turn, files, onOpenFile }: { turn: AskTurn; files: Knowledg
           要出正式产物得走任务流程 —— 要我叫 <strong>{turn.handoff}</strong> 接手吗？
           <button type="button">交给它</button>
         </p>
+      ) : null}
+
+      {/* 轻量保存：资料空间不是任务驱动的，这里问出来的答案没有任务去承接它，
+          存下来才不会问完就散。存的是这个空间自己的沉淀，不走审批轨迹。 */}
+      {onSave ? (
+        <button
+          className={`knowledgeAnswerSave ${saved ? "isSaved" : ""}`}
+          type="button"
+          disabled={saved}
+          onClick={() => { onSave(turn.question, turn.answer); onSaved?.(); }}
+        >
+          {saved ? <><Check size={12} />已存到产物</> : <><BookmarkPlus size={12} />存到产物</>}
+        </button>
       ) : null}
     </article>
   );

@@ -45,6 +45,9 @@ import { useDismissableLayer } from "./useDismissableLayer";
 type SortKey = "updated" | "kind" | "name" | "source";
 type TimeBucket = "all" | "today" | "week" | "month" | "earlier";
 
+/** 资料空间里「从问答存下来」的那类产物。只此一处定义，别处按它判。 */
+const LIBRARY_ANSWER_KIND = "问答产物";
+
 const sortOptions: Array<{ id: SortKey; label: string }> = [
   { id: "updated", label: "按更新时间" },
   { id: "kind", label: "按文件类型" },
@@ -90,6 +93,7 @@ export function FileManager({
   onCreateProject,
 }: Props) {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
+  // 资料空间里"从问答存下来的那种"产物，靠 kind 认，别处不要再写这个字面量
   const [query, setQuery] = useState("");
   const [business, setBusiness] = useState("全部业务");
   const [kindFilter, setKindFilter] = useState<string | null>(null);
@@ -145,6 +149,31 @@ export function FileManager({
   const projectFiles = activeFiles.filter((file) => file.space === "projects" && file.project === project);
   const projectInputs = projectFiles.filter((file) => file.owner === "Admin");
   const projectOutputs = projectFiles.filter((file) => file.owner !== "Admin");
+  /* 资料空间也分两栏，但分法跟项目不同：项目按"谁产出的"分（输入/任务产物），
+     资料空间没有任务，它的产物来自**问答**——在这儿问出来的答案，
+     顺手存下来就是这个空间的沉淀。 */
+  const spaceOutputs = projectFiles.filter((file) => file.kind === LIBRARY_ANSWER_KIND);
+  const spaceInputs = projectFiles.filter((file) => file.kind !== LIBRARY_ANSWER_KIND);
+
+  /** 轻量保存：把一条问答存成这个资料空间的产物。不走任务、不留审批轨迹。 */
+  const saveAnswer = (title: string, body: string) => {
+    const target = selectedProject ?? "公共资料";
+    setFiles((items) => [
+      {
+        id: `answer-${Date.now()}`,
+        title: title.length > 30 ? `${title.slice(0, 30)}…` : title,
+        project: target,
+        space: "projects",
+        kind: LIBRARY_ANSWER_KIND,
+        business: "全部业务",
+        owner: "问答",
+        updated: "刚刚",
+        status: body.slice(0, 60),
+        agentReady: true,
+      },
+      ...items,
+    ]);
+  };
   const trashFiles = files.filter((file) => deletedIds.includes(file.id) && file.project === project);
   const kindOptions = useMemo(() => projectFiles.map((file) => file.kind).filter((kind, index, list) => list.indexOf(kind) === index), [projectFiles]);
   const sourceOptions = useMemo(() => projectFiles.map(sourceOf).filter((source, index, list) => list.indexOf(source) === index), [projectFiles]);
@@ -464,10 +493,13 @@ export function FileManager({
                 // 资料空间没有任务，「任务产物」那一栏永远是空的。又一根死柱子——
                 // 用户见过一次"这里永远没东西"，就会开始怀疑别处的空栏是不是也没用。
                 isLibrarySpace ? (
-                  <section className="libraryListSurface">
-                    <div className="libraryListIntro"><strong>全部资料</strong><span>{projectFiles.length} 项</span></div>
-                    <FileTable files={sortFiles(projectFiles.filter(matchesFilters))} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
-                  </section>
+                  /* 之前这里收成一栏，理由是"资料空间没有任务，产物栏永远是空的"。
+                     那个理由只在"产物 = 任务产物"时成立。资料空间的产物来自问答，
+                     所以两栏重新立起来，右边那栏由下方助手的「存到产物」喂。 */
+                  <div className="projectFileLanes projectOverviewLanes">
+                    <OverviewLane title="资料" icon={<FolderInput size={16} />} description={`上传到这个空间的文档 · ${spaceInputs.length} 项`} total={spaceInputs.length} files={sortFiles(spaceInputs.filter(matchesFilters)).slice(0, 10)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                    <OverviewLane title="产物" icon={<FolderOutput size={16} />} description={`从这里的问答存下来的 · ${spaceOutputs.length} 项`} total={spaceOutputs.length} files={sortFiles(spaceOutputs.filter(matchesFilters)).slice(0, 10)} onOpenAll={() => onViewChange("outputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+                  </div>
                 ) : (
                 <div className="projectFileLanes projectOverviewLanes">
                   <OverviewLane title="项目资料" icon={<FolderInput size={16} />} description={`提供给数字同事的项目上下文 · ${projectInputs.length} 项`} total={projectInputs.length} files={projectInputs.slice(0, 10)} onOpenAll={() => onViewChange("inputs")} onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
@@ -549,7 +581,9 @@ export function FileManager({
 
       {/* 跟跨项目视角同一个组件，只是停在底部。原来这里是另一颗写死「当前项目」
           的胶囊——同一件事两套控件两套词，用户还得分别学一遍。 */}
-      <KnowledgeAsk projects={projects} files={activeFiles} onOpenFile={setPreviewFile} dock="floating" defaultScope={project} />
+      {/* 资料空间才给「存到产物」：项目里的产物由任务生成，问答存进去会
+          混淆"这份东西是怎么来的"。 */}
+      <KnowledgeAsk projects={projects} files={activeFiles} onOpenFile={setPreviewFile} dock="floating" defaultScope={project} onSaveAnswer={isLibrarySpace ? saveAnswer : undefined} />
       {previewFile ? <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} /> : null}
       {detailFile ? <FileDetails file={detailFile} onClose={() => setDetailFile(null)} /> : null}
     </section>

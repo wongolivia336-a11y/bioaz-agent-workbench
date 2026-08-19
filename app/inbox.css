@@ -134,6 +134,25 @@
   line-height: 1.75;
 }
 
+/* 附件区：选完文件要能看见自己选了什么，并且能一个个撤掉。
+   放在正文下面而不是页脚——它是这封信的一部分内容，不是发送工具。 */
+.mailComposeAttachments {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--bioaz-border);
+  padding-top: 14px;
+}
+
+.mailComposeAttachmentsLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.mailComposeAttachments .composerChipRow { margin: 0; }
+
 /* 收件人：chip + 输入框同处一格，菜单贴着这一格向下展开 */
 .mailRecipientField { align-items: start; }
 

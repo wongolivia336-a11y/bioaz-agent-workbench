@@ -136,7 +136,8 @@ export function WorkbenchComposer({
   return as === "form" ? <form {...shared} onSubmit={onSubmit}>{body}</form> : <div {...shared}>{body}</div>;
 }
 
-function ComposerChipRow({ items, onRemove }: { items: ComposerAttachment[]; onRemove: (id: string) => void }) {
+/** 导出给写邮件复用：选了文件却看不见，跟没选是一样的。 */
+export function ComposerChipRow({ items, onRemove }: { items: ComposerAttachment[]; onRemove: (id: string) => void }) {
   return (
     <div className="composerChipRow">
       {items.map((item) => {

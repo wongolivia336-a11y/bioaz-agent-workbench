@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { inboxAccounts, type InboxAccount } from "../../lib/workbench/mockInbox";
 import { fileAttachmentFromUpload, mergeAttachments, type ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import { ComposerAttachMenu } from "./ComposerAttachMenu";
+import { ComposerChipRow } from "./WorkbenchComposer";
 import {
   initialMail,
   type MailboxLane,
@@ -500,6 +501,21 @@ function MailComposePane(props: {
         </div>
 
         <textarea value={props.body} onChange={(event) => props.onBodyChange(event.target.value)} placeholder="写邮件正文，或让 AI 根据收件人、附件和行动要求起草…" />
+
+        {/* 选中的文件必须在这儿露面。此前只有菜单里那个勾变了，正文区一片空白——
+            用户选完看不到任何东西，只能理解成"没有下一步"。
+            跟会话 composer 共用同一排 chip，两处传文件本来就是同一件事。 */}
+        {props.attachments.length ? (
+          <div className="mailComposeAttachments">
+            <span className="mailComposeAttachmentsLabel">
+              <Paperclip size={13} />附件 {props.attachments.length} 项
+            </span>
+            <ComposerChipRow
+              items={props.attachments}
+              onRemove={(id) => props.onAttachmentsChange(props.attachments.filter((item) => item.id !== id))}
+            />
+          </div>
+        ) : null}
       </div>
 
       <footer className="mailComposerFoot">
