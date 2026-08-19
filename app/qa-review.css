@@ -52,11 +52,42 @@
   font-weight: 600;
 }
 
+/* ===================================================================
+   顶栏在窄屏下的让位顺序
+   -------------------------------------------------------------------
+   QA 顶栏比 DMPK / 肿瘤报告重得多：面包屑 + 角色徽标 + 版本选择器 +
+   状态 + 面板开关，天然宽约 764px。而面板一开，顶栏只拿得到第一列
+   （1280 时 794px 够用，1100 时只剩 446px）。
+
+   让位规则：面包屑可以被压缩并省略号截断，右边这组工具一步不让——
+   版本和状态是这一屏的身份，截掉它们比截掉项目名严重得多。
+   原来两边都能压，而面包屑又没有 nowrap（那条只写在 ≤1023 里），
+   于是它被压成 139px 宽 × 158px 高的一列竖排字。
+   =================================================================== */
+.qaReviewWorkspace > .topbar > .breadcrumb {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qaReviewWorkspace > .topbar > .breadcrumb > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .qaTopbarTools {
   display: flex;
+  flex: none;
   margin-left: auto;
   align-items: center;
   gap: 8px;
+}
+
+/* 角色徽标是三者里最可牺牲的——真正窄下来先收它 */
+@media (max-width: 1180px) {
+  .qaRoleBadge { display: none; }
 }
 
 .qaTopbarTools .inlineSelectMenu button {
@@ -69,6 +100,30 @@
   color: var(--bioaz-text-tertiary);
   font-size: 11px;
 }
+
+/* 跑批超时：过程还在，只是结论没出来，所以是一条提示 + 一条出路，不是错误红块 */
+.agentRunTimeout {
+  display: flex;
+  align-items: center;
+  gap: var(--bioaz-space-2);
+  border-top: 1px solid var(--bioaz-border);
+  padding: 10px 14px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+}
+
+.agentRunTimeout button {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 4px 10px;
+  color: var(--bioaz-text-primary);
+  font-family: inherit;
+  font-size: var(--bioaz-type-label-size);
+  cursor: pointer;
+}
+
+.agentRunTimeout button:hover { border-color: var(--bioaz-border-strong); background: var(--bioaz-surface-subtle); }
 
 /* ---- 原件视图 ---- */
 
