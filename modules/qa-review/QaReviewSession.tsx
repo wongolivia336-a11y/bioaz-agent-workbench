@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Minimize2, Send, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Highlighter, Maximize2, Minimize2, Send, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
@@ -14,10 +14,16 @@ import type { ComposerAttachment } from "../../lib/workbench/composerAttachments
 import type { AgentModuleSessionProps } from "../types";
 import { getQaReviewPanels, type QaViewerRole } from "./panels";
 import {
+  changedFields,
+  diffBetween,
+  formatPageRef,
+  pageValues,
   qaChatOpening,
+  qaCurrentVersionId,
   qaDocument,
   qaFindings,
   qaInitialNotes,
+  qaPageFields,
   qaVersions,
   resolveQaReply,
   type QaChatMessage,
@@ -25,6 +31,18 @@ import {
   type QaFindingState,
   type QaNote,
 } from "./reviewData";
+
+/* 人工批注默认落在纸面的哪个字段上。划词时没有真 PDF 的坐标，
+   所以按当前页给一个锚点，让它跟 AI 那批一样能在纸上被标出来。 */
+const humanAnchorByPage: Record<number, string> = {
+  1: "样品名称",
+  2: "页码标记",
+  3: "样品名称",
+  4: "检测依据",
+  5: "页码标记",
+  6: "留样说明",
+  7: "盖章日期",
+};
 
 type QaPoppedPanelId = "document" | "ai-diff";
 
@@ -67,6 +85,20 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const [activeFindingId, setActiveFindingId] = useState<string | null>(null);
   const [notes, setNotes] = useState<QaNote[]>(qaInitialNotes);
   const [noteDraft, setNoteDraft] = useState("");
+  /* 审批人划词写的批注。默认是「缺陷」——进问题清单、跟 AI 那批同一类对象，
+     下一版要逐条验证改没改；勾成「仅记录」才落到审批备注里。
+     两者不是一回事：备注是一条时间线，答不了"上一版提的那条解决了吗"。 */
+  const [humanFindings, setHumanFindings] = useState<QaFinding[]>([]);
+  const [annotation, setAnnotation] = useState<{ quote: string; top: number } | null>(null);
+  const [annotationDraft, setAnnotationDraft] = useState("");
+  const [annotationKind, setAnnotationKind] = useState<"defect" | "note">("defect");
+  /* 批注是一个**模式**，不是"选中就弹"。不分模式的话，想复制一段文字、
+     想双击选个词，都会被一张卡打断——而读原件的时间远多于写批注的时间。
+     进了模式光标变十字、纸面透出一层底色，你知道自己现在在批注。 */
+  const [annotateMode, setAnnotateMode] = useState(false);
+  /** 比对基线。默认取这一版该跟谁比，但审批人可以改成任意一版 */
+  const [baseVersionId, setBaseVersionId] = useState(qaVersions.find((item) => item.id === qaCurrentVersionId)?.comparedAgainst ?? "v2");
+  const [syncScroll, setSyncScroll] = useState(true);
   const [outcome, setOutcome] = useState<"submitted" | "approved" | "rejected" | null>(null);
   const [chatMessages, setChatMessages] = useState<QaChatMessage[]>(initialRequest ? [{
     id: "qa-mail-upload",
@@ -80,7 +112,10 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const [chatAttachments, setChatAttachments] = useState<ComposerAttachment[]>([]);
 
   const version = qaVersions.find((item) => item.id === versionId) ?? qaVersions[0];
-  const openFindings = qaFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
+  /* AI 的和人工的是同一个清单。合并在这里做一次，下面所有计数、面板、
+     决策卡的门禁全部读它——分两处各算各的，迟早对不上。 */
+  const allFindings = useMemo(() => [...qaFindings, ...humanFindings], [humanFindings]);
+  const openFindings = allFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
 
   /* 不用 ref 做"只跑一次"的闸。ref 会活过 StrictMode 的二次挂载，而 timer 不会——
@@ -116,6 +151,18 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     return () => window.clearTimeout(timer);
   }, [initialRequest]);
 
+  /* Esc 先收卡片、再退模式。一次退两层会让人以为自己点错了。 */
+  useEffect(() => {
+    if (!annotateMode) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (annotation) { setAnnotation(null); window.getSelection()?.removeAllRanges(); return; }
+      setAnnotateMode(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [annotateMode, annotation]);
+
   const sendChat = () => {
     const question = chatText.trim();
     if (!question) return;
@@ -134,6 +181,62 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     setPage(Math.min(finding.docPage, qaDocument.pageCount));
   };
 
+  /* 划词就是批注的入口。不另做一个「进入批注模式」的开关——
+     选中文字这个动作本身已经表达了"我要说这一处"，再要求先切模式
+     等于让人把同一件事说两遍。 */
+  const captureSelection = (event: React.MouseEvent<HTMLElement>) => {
+    if (!annotateMode || outcome !== null || role === "owner") return;
+    const selection = window.getSelection();
+    const quote = selection?.toString().trim() ?? "";
+    if (!quote) return;
+    const stage = event.currentTarget.getBoundingClientRect();
+    const range = selection?.getRangeAt(0).getBoundingClientRect();
+    setAnnotation({
+      quote: quote.length > 60 ? `${quote.slice(0, 60)}…` : quote,
+      top: range ? range.bottom - stage.top + 8 : 24,
+    });
+    setAnnotationDraft("");
+    setAnnotationKind("defect");
+  };
+
+  const submitAnnotation = () => {
+    const text = annotationDraft.trim();
+    if (!text || !annotation) return;
+    const stamp = Date.now();
+
+    if (annotationKind === "defect") {
+      /* 缺陷进问题清单，带上引文和页码——下一版复核要靠这两样定位。 */
+      const finding: QaFinding = {
+        id: `h-${stamp}`,
+        category: "content",
+        raisedIn: versionId,
+        source: "human",
+        docPage: page,
+        severity: "warning",
+        recordId: "人工批注",
+        anchorField: humanAnchorByPage[page] ?? "样品名称",
+        text: `${text}（原文：「${annotation.quote}」）`,
+      };
+      setHumanFindings((current) => [...current, finding]);
+      setActivePanelId("ai-review");
+      setActiveFindingId(finding.id);
+    } else {
+      setNotes((current) => [...current, {
+        id: `note-${stamp}`,
+        source: "human",
+        author: role === "author" ? "林一一" : "王林彬",
+        time: "刚刚",
+        text: `${formatPageRef(page)}：${text}（原文：「${annotation.quote}」）`,
+      }]);
+      setActivePanelId("notes");
+    }
+
+    setPanelOpen(true);
+    setAnnotation(null);
+    setAnnotationDraft("");
+    window.getSelection()?.removeAllRanges();
+  };
+
   const addNote = () => {
     const text = noteDraft.trim();
     if (!text) return;
@@ -150,17 +253,20 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const reviewPanels = useMemo(() => getQaReviewPanels({
     role,
     locked: outcome !== null,
+    findings: allFindings,
     findingStates,
     activeFindingId,
     notes,
     noteDraft,
+    baseVersionId,
+    currentVersionId: versionId,
     onFindingState: (findingId, state) => setFindingStates((current) => ({ ...current, [findingId]: state })),
     onFocusFinding: focusFinding,
     onNoteDraftChange: setNoteDraft,
     onAddNote: addNote,
   // focusFinding / addNote 只读上面这些 state，跟着它们一起失效即可
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [role, outcome, findingStates, activeFindingId, notes, noteDraft]);
+  }), [role, outcome, allFindings, findingStates, activeFindingId, notes, noteDraft, baseVersionId, versionId]);
 
   const resolveWith = (next: "submitted" | "approved" | "rejected", noteText: string) => {
     setNotes((current) => [...current, {
@@ -174,15 +280,18 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     setOutcome(next);
   };
 
+  /* 文档收进「更多」。常驻三个 tab 是三种**结论**：审核结果 / 文件比对 / 审批备注；
+     文档是被审的那个东西，正常状态它占中间的画布，不该跟结论并列常驻。
+     原来四个 panel 全是 primary，于是加号菜单里「更多」那组永远是空的。 */
   const documentPanel = {
     id: "document",
     label: "文档",
     icon: FileText,
     state: "populated" as const,
     isDefault: false,
-    primary: true,
+    primary: false,
     expandable: true,
-    content: <QaDocumentCompact page={page} onPageChange={setPage} />,
+    content: <QaDocumentCompact page={page} versionId={versionId} onPageChange={setPage} />,
   };
   const panels = [documentPanel, ...reviewPanels];
   const dockPanels = panels.filter((panel) => panel.id !== poppedPanelId);
@@ -204,6 +313,15 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const returnPoppedPanel = () => {
     if (poppedPanelId) setActivePanelId(poppedPanelId);
     setPoppedPanelId(null);
+  };
+
+  /* 决策卡是一个入口：挡着你做决定的是「还有 N 条没处置」，
+     所以点它直接进 Canvas——原件占中、问题清单在右，就地处置。
+     入口指向那 N 条，而不是泛泛地预览文档：光看原件看不出哪几条没解决。 */
+  const openFindingsForDecision = () => {
+    setPanelOpen(true);
+    setActivePanelId("ai-review");
+    setPoppedPanelId("document");
   };
 
   return (
@@ -244,6 +362,28 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
             <span>{qaDocument.pageCount}</span>
             <button type="button" aria-label="下一页" disabled={page === qaDocument.pageCount} onClick={() => setPage((value) => Math.min(qaDocument.pageCount, value + 1))}><ChevronRight size={14} /></button>
           </span>
+          {/* 批注模式开关。收起时只是一颗圈住的加号，开着时长出「正在注释」
+              四个字——模式类控件必须一眼看出自己开着，光靠图标变色不够。 */}
+          {outcome === null && role !== "owner" ? (
+            <button
+              type="button"
+              className={`qaAnnotateToggle ${annotateMode ? "isOn" : ""}`}
+              aria-pressed={annotateMode}
+              aria-label={annotateMode ? "退出批注模式" : "进入批注模式"}
+              title={annotateMode ? "退出批注模式（Esc）" : "批注模式：选中原文即可批注"}
+              onClick={() => {
+                setAnnotateMode((value) => !value);
+                setAnnotation(null);
+                window.getSelection()?.removeAllRanges();
+              }}
+            >
+              {/* 荧光笔比"圈加号"具体：这个动作就是在纸上划一道再写句话。
+                  没用气泡图标——那个在这套界面里已经代表"跟同事说话"。 */}
+              <Highlighter size={15} />
+              {annotateMode ? <span>正在注释</span> : null}
+            </button>
+          ) : null}
+
           <span className="qaViewerZoom">
             <button type="button" aria-label="缩小" onClick={() => setZoom((value) => Math.max(60, value - 10))}><ZoomOut size={14} /></button>
             <b>{zoom}%</b>
@@ -278,35 +418,48 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
             ))}
           </div>
 
-          <div className="qaPageScroll">
+          <div className={`qaPageScroll ${annotateMode ? "isAnnotating" : ""}`} onMouseUp={captureSelection}>
             {/* 原型不渲染真 PDF，只按版式给出一张可信的占位页，
                 这样批注定位到第几页仍然说得通。 */}
-            <article className="qaPage" style={{ width: `${(zoom / 100) * 560}px` }}>
-              <p className="qaPageNo">报告编号(NO.)： <b>{qaDocument.reportNo}</b></p>
-              <h1>检测报告<small>TEST REPORT</small></h1>
-              <dl className="qaPageFields">
-                <div><dt>样品名称<small>SAMPLE NAME</small></dt><dd>{qaDocument.sampleName}</dd></div>
-                <div><dt>报告编号<small>REPORT NO.</small></dt><dd>{qaDocument.reportNo}</dd></div>
-                <div><dt>检测类别<small>TEST TYPE</small></dt><dd>{qaDocument.testType}</dd></div>
-                <div><dt>委托单位<small>APPLICANT</small></dt><dd>{qaDocument.applicant}</dd></div>
-              </dl>
-              {activeFindingId ? (
+            {annotation ? (
+              <AnnotationCard
+                quote={annotation.quote}
+                top={annotation.top}
+                draft={annotationDraft}
+                kind={annotationKind}
+                pageRef={formatPageRef(page)}
+                onDraftChange={setAnnotationDraft}
+                onKindChange={setAnnotationKind}
+                onSubmit={submitAnnotation}
+                onCancel={() => { setAnnotation(null); window.getSelection()?.removeAllRanges(); }}
+              />
+            ) : null}
+            {/* 纸面跟着顶栏那个版本下拉走——切了版本文档没变的话，那个下拉等于没接上 */}
+            <QaPageSheet
+              versionId={versionId}
+              width={(zoom / 100) * 560}
+              findings={allFindings}
+              findingStates={findingStates}
+              activeFindingId={activeFindingId}
+              onFocusFinding={(finding) => { focusFinding(finding); setActivePanelId("ai-review"); setPanelOpen(true); }}
+              marker={activeFindingId ? (
                 <p className="qaPageMarker">
-                  已定位到第 {page} 页 · {qaFindings.find((finding) => finding.id === activeFindingId)?.text.slice(0, 24)}…
+                  已定位到第 {page} 页 · {allFindings.find((finding) => finding.id === activeFindingId)?.text.slice(0, 24)}…
                 </p>
               ) : null}
-              <footer className="qaPageFooter">{qaDocument.issuer}<span>第 {page} 页 / 共 {qaDocument.pageCount} 页</span></footer>
-            </article>
+            />
           </div>
         </div>
       </div> : poppedPanelId === "ai-diff" ? (
-        <section className="qaDetachedCanvas qaDetachedPanelCanvas">
-          <header className="qaDetachedPanelBar">
-            <span><GitCompare size={14} />AI 文件比对</span>
-            <button type="button" aria-label="将 AI 文件比对收回右侧面板" title="收回到右侧面板" onClick={returnPoppedPanel}><Minimize2 size={15} /></button>
-          </header>
-          <div className="qaDetachedPanelBody">{poppedPanel?.content}</div>
-        </section>
+        <QaCompareCanvas
+          baseVersionId={baseVersionId}
+          currentVersionId={versionId}
+          syncScroll={syncScroll}
+          onBaseChange={setBaseVersionId}
+          onCurrentChange={setVersionId}
+          onSyncScrollChange={setSyncScroll}
+          onReturn={returnPoppedPanel}
+        />
       ) : (
         <section className="qaChatflow">
           <SessionMinimap scrollerRef={chatScrollerRef} />
@@ -328,7 +481,23 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
           <footer className="qaChatComposerStack">
             {!outcome ? (
               <section className="warningDecision qaApprovalCard">
-                <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "负责人视角为只读"}</strong><p>{openFindings} 条 AI 批注仍待处置，结论会写入审批记录。</p></div><small>{role === "owner" ? "只读" : "待确认"}</small></header>
+                <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "负责人视角为只读"}</strong><p>
+                  {openFindings ? (
+                    <>
+                      <button className="qaApprovalJump" type="button" onClick={openFindingsForDecision}>
+                        <Maximize2 size={12} />{openFindings} 条 AI 批注仍待处置
+                      </button>
+                      ，结论会写入审批记录。
+                    </>
+                  ) : (
+                    <>
+                      <button className="qaApprovalJump" type="button" onClick={openFindingsForDecision}>
+                        <Maximize2 size={12} />{qaFindings.length} 条 AI 批注已全部处置
+                      </button>
+                      ，结论会写入审批记录。
+                    </>
+                  )}
+                </p></div><small>{role === "owner" ? "只读" : "待确认"}</small></header>
                 {role === "author" ? <div className="warningActions"><Button variant="primary" size="small" disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条 AI 批注未处置` : undefined} onClick={() => resolveWith("submitted", `已逐条处置 ${qaFindings.length} 条 AI 批注，提交${version.label}终审。`)}>提交审批</Button></div>
                   : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => resolveWith("rejected", "驳回：仍有时间逻辑未修订，请修改后重新提交。")}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => resolveWith("approved", "经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。")}>通过</Button></div> : null}
               </section>
@@ -369,8 +538,273 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   );
 }
 
+/**
+ * 那张纸。主视图和比对两栏共用同一个组件——并排比对必须是两份**文档**，
+ * 用两套渲染的话，左右版式一有出入，看到的"差异"就分不清是改动还是渲染。
+ *
+ * highlight 传进来时按字段就地标色：这一栏是基线就标"改之前"，是当前就标"改之后"。
+ */
+function QaPageSheet({
+  versionId,
+  width,
+  highlight,
+  side,
+  marker,
+  findings,
+  findingStates,
+  activeFindingId,
+  onFocusFinding,
+}: {
+  versionId: string;
+  width?: number;
+  highlight?: Map<string, string>;
+  side?: "base" | "current";
+  marker?: React.ReactNode;
+  /* 传了问题就在纸面上标出来。比对两栏不传——那边要看的是版本之间的差异，
+     再叠一层批注高亮会变成两套颜色在同一张纸上打架。 */
+  findings?: QaFinding[];
+  findingStates?: Record<string, QaFindingState>;
+  activeFindingId?: string | null;
+  onFocusFinding?: (finding: QaFinding) => void;
+}) {
+  const values = pageValues(versionId);
+  const byField = new Map<string, QaFinding[]>();
+  for (const finding of findings ?? []) {
+    if (!finding.anchorField) continue;
+    byField.set(finding.anchorField, [...(byField.get(finding.anchorField) ?? []), finding]);
+  }
+
+  /* 纸面上的一处标记。AI 提的和人工提的给两种颜色——审批人得一眼看出
+     哪些是机器说的、哪些是人写的，这两者的可信度和责任归属完全不同。
+     已处置的褪成中性并划掉，剩下的才继续吸引注意力。 */
+  const mark = (field: string, children: React.ReactNode) => {
+    const hits = byField.get(field);
+    if (!hits?.length) return children;
+    const hasHuman = hits.some((item) => item.source === "human");
+    const allSettled = hits.every((item) => (findingStates?.[item.id] ?? "open") !== "open");
+    const isActive = hits.some((item) => item.id === activeFindingId);
+    return (
+      <button
+        type="button"
+        className={`qaDocMark ${hasHuman ? "source-human" : "source-ai"} ${allSettled ? "isSettled" : ""} ${isActive ? "isActive" : ""}`}
+        onClick={() => onFocusFinding?.(hits[0])}
+        title={hits.map((item) => item.text).join("\n")}
+      >
+        {children}
+        <em>{hits.length > 1 ? `${hits.length} 条` : hasHuman ? "人工" : "AI"}</em>
+      </button>
+    );
+  };
+
+  return (
+    <article className="qaPage" style={width ? { width: `${width}px` } : undefined}>
+      <p className="qaPageNo">报告编号(NO.)： <b>{values["报告编号"]}</b></p>
+      <h1>检测报告<small>TEST REPORT</small></h1>
+      <dl className="qaPageFields">
+        {qaPageFields.map(({ field, en }) => {
+          const kind = highlight?.get(field);
+          return (
+            <div key={field} className={kind ? `qaCompareField kind-${kind} side-${side ?? "current"}` : undefined}>
+              <dt>{field}<small>{en}</small></dt>
+              <dd>{mark(field, values[field] || "—")}</dd>
+            </div>
+          );
+        })}
+      </dl>
+      {marker}
+      <footer className="qaPageFooter">
+        {qaDocument.issuer}
+        <span className={highlight?.get("页码标记") ? "qaCompareField kind-changed" : undefined}>
+          {mark("页码标记", values["页码标记"])}
+        </span>
+      </footer>
+    </article>
+  );
+}
+
+/**
+ * 划词之后就地弹出的批注卡。
+ *
+ * 落点是个选择而不是两个入口：默认「要求修改」，因为审批人写下一段话
+ * 十有八九是要对方改；勾成「仅记录」才当审批意见。两者去处不同——
+ * 要求修改的进问题清单、跨版本被验证；仅记录的进审批备注、只留痕。
+ */
+function AnnotationCard({
+  quote,
+  top,
+  draft,
+  kind,
+  pageRef,
+  onDraftChange,
+  onKindChange,
+  onSubmit,
+  onCancel,
+}: {
+  quote: string;
+  top: number;
+  draft: string;
+  kind: "defect" | "note";
+  pageRef: string;
+  onDraftChange: (value: string) => void;
+  onKindChange: (kind: "defect" | "note") => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  /* 一行式，跟评论气泡一个量级——批注多数是一句话，给一个三行文本域
+     等于暗示"你得写一段"。输入框自己会随内容长高。 */
+  return (
+    <aside className="qaAnnotationCard" style={{ top }} aria-label="新增批注">
+      <blockquote className="qaAnnotationQuote">{quote}<em>{pageRef}</em></blockquote>
+
+      <div className="qaAnnotationRow">
+        <textarea
+          autoFocus
+          rows={1}
+          value={draft}
+          placeholder="添加批注…"
+          onChange={(event) => onDraftChange(event.target.value)}
+          onKeyDown={(event) => {
+            // Enter 直接提交，Shift+Enter 换行——跟 composer 一个手感
+            if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSubmit(); }
+            if (event.key === "Escape") onCancel();
+          }}
+        />
+        <button
+          className="qaAnnotationSend"
+          type="button"
+          disabled={!draft.trim()}
+          onClick={onSubmit}
+          aria-label="提交批注"
+          title="提交批注（Enter）"
+        >
+          <Check size={14} />
+        </button>
+      </div>
+
+      {/* 去向留在卡里，但收成两个小字：它是个选择，不该占掉半张卡 */}
+      <div className="qaAnnotationKind" role="radiogroup" aria-label="批注去向">
+        <button type="button" role="radio" aria-checked={kind === "defect"} className={kind === "defect" ? "isOn" : ""} onClick={() => onKindChange("defect")}>
+          要求修改
+        </button>
+        <button type="button" role="radio" aria-checked={kind === "note"} className={kind === "note" ? "isOn" : ""} onClick={() => onKindChange("note")}>
+          仅记录
+        </button>
+        <small>{kind === "defect" ? "进审核结果，下一版验证" : "进审批备注，只留痕"}</small>
+      </div>
+    </aside>
+  );
+}
+
+/**
+ * 双栏比对。左基线、右当前，两边各自一个版本下拉——
+ * 「跟哪一版比」本来就是审批人要自己决定的事，写死成"上一版"
+ * 在连提两版、中间没审的情况下会漏掉一半改动。
+ */
+function QaCompareCanvas({
+  baseVersionId,
+  currentVersionId,
+  syncScroll,
+  onBaseChange,
+  onCurrentChange,
+  onSyncScrollChange,
+  onReturn,
+}: {
+  baseVersionId: string;
+  currentVersionId: string;
+  syncScroll: boolean;
+  onBaseChange: (id: string) => void;
+  onCurrentChange: (id: string) => void;
+  onSyncScrollChange: (value: boolean) => void;
+  onReturn: () => void;
+}) {
+  const rows = diffBetween(baseVersionId, currentVersionId);
+  const highlight = changedFields(baseVersionId, currentVersionId);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  const syncingRef = useRef(false);
+
+  /* 同步滚动用比例而不是像素：两栏内容高度不一定相等，
+     按像素同步会在长的一边走到底时把短的一边甩在中间。
+
+     ref 必须在事件里读，不能在 render 时当参数传进来——首帧两个 ref 都还是
+     null，闭包会把 null 一直捏在手里，等到某次无关的重渲染才恢复。 */
+  const linkScroll = (side: "base" | "current") => () => {
+    const from = side === "base" ? leftRef.current : rightRef.current;
+    const to = side === "base" ? rightRef.current : leftRef.current;
+    if (!syncScroll || !from || !to || syncingRef.current) return;
+    syncingRef.current = true;
+    const ratio = from.scrollTop / Math.max(1, from.scrollHeight - from.clientHeight);
+    to.scrollTop = ratio * Math.max(0, to.scrollHeight - to.clientHeight);
+    window.requestAnimationFrame(() => { syncingRef.current = false; });
+  };
+
+  const pane = (side: "base" | "current") => {
+    const versionId = side === "base" ? baseVersionId : currentVersionId;
+    const onChange = side === "base" ? onBaseChange : onCurrentChange;
+    const version = qaVersions.find((item) => item.id === versionId);
+    return (
+      <div className="qaComparePane">
+        <header className="qaComparePaneBar">
+          <em>{side === "base" ? "基线版本" : "当前版本"}</em>
+          <InlineSelect label={side === "base" ? "选择基线版本" : "选择当前版本"} trigger={<span>{version?.label ?? versionId}</span>}>
+            {(close) => qaVersions.map((item) => (
+              <button
+                className={`toolMenuItem qaVersionOption ${item.id === versionId ? "active" : ""}`}
+                type="button"
+                key={item.id}
+                onClick={() => { onChange(item.id); close(); }}
+              >
+                <span>
+                  <b>{item.label}</b>
+                  <small>{versionStatusLabel[item.status]} · {item.submittedAt}</small>
+                </span>
+                {item.id === versionId ? <Check size={14} /> : null}
+              </button>
+            ))}
+          </InlineSelect>
+        </header>
+        <div
+          className="qaComparePaneScroll"
+          ref={side === "base" ? leftRef : rightRef}
+          onScroll={linkScroll(side)}
+        >
+          {/* 两栏都是完整的一张纸，不是差异字段表——审批人要看的是
+              "这一版长什么样"，改动只是其中被标出来的那几处。 */}
+          <QaPageSheet versionId={versionId} highlight={highlight} side={side} />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <section className="qaDetachedCanvas qaCompareCanvas">
+      <header className="qaDetachedPanelBar">
+        <span><GitCompare size={14} />文件比对</span>
+        <span className="qaCompareCount">{rows.length} 处差异</span>
+        <span className="qaCompareLegend">
+          <span className="legend-changed">修改 {rows.filter((row) => row.kind === "changed").length}</span>
+          <span className="legend-added">新增 {rows.filter((row) => row.kind === "added").length}</span>
+          <span className="legend-removed">删除 {rows.filter((row) => row.kind === "removed").length}</span>
+        </span>
+        <label className="qaCompareSync">
+          <input type="checkbox" checked={syncScroll} onChange={(event) => onSyncScrollChange(event.target.checked)} />
+          同步滚动
+        </label>
+        <button type="button" aria-label="将文件比对收回右侧面板" title="收回到右侧面板" onClick={onReturn}><Minimize2 size={15} /></button>
+      </header>
+      {rows.length ? null : (
+        <p className="qaPanelHint qaCompareEmpty">这两版之间没有记录在案的差异。换一个基线版本再看。</p>
+      )}
+      <div className="qaCompareStage">
+        {pane("base")}
+        {pane("current")}
+      </div>
+    </section>
+  );
+}
+
 /** 文档收回到 400px panel 后只保留页码和纸张，不再放缩略图轨与缩放工具。 */
-function QaDocumentCompact({ page, onPageChange }: { page: number; onPageChange: (page: number) => void }) {
+function QaDocumentCompact({ page, versionId, onPageChange }: { page: number; versionId: string; onPageChange: (page: number) => void }) {
   return (
     <div className="qaCompactDocument">
       <header>
@@ -382,17 +816,8 @@ function QaDocumentCompact({ page, onPageChange }: { page: number; onPageChange:
         </span>
       </header>
       <div className="qaCompactDocumentScroll">
-        <article className="qaPage">
-          <p className="qaPageNo">报告编号(NO.)： <b>{qaDocument.reportNo}</b></p>
-          <h1>检测报告<small>TEST REPORT</small></h1>
-          <dl className="qaPageFields">
-            <div><dt>样品名称<small>SAMPLE NAME</small></dt><dd>{qaDocument.sampleName}</dd></div>
-            <div><dt>报告编号<small>REPORT NO.</small></dt><dd>{qaDocument.reportNo}</dd></div>
-            <div><dt>检测类别<small>TEST TYPE</small></dt><dd>{qaDocument.testType}</dd></div>
-            <div><dt>委托单位<small>APPLICANT</small></dt><dd>{qaDocument.applicant}</dd></div>
-          </dl>
-          <footer className="qaPageFooter">{qaDocument.issuer}<span>第 {page} 页 / 共 {qaDocument.pageCount} 页</span></footer>
-        </article>
+        {/* 跟主视图共用同一张纸，否则收进面板之后版本又对不上了 */}
+        <QaPageSheet versionId={versionId} />
       </div>
     </div>
   );

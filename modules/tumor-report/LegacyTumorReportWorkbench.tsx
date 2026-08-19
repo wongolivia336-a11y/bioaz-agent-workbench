@@ -123,6 +123,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
   const fileInputRef = useRef<HTMLInputElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
+  const composerStackRef = useRef<HTMLDivElement>(null);
   const chatBottomDistanceRef = useRef(0);
 
   const protocolCount = files.filter((file) => file.kind === "protocol").length;
@@ -289,6 +290,29 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
       resizeObserver.disconnect();
     };
   }, []);
+
+  /* 那摞悬浮 composer 会长高（交接卡、风险决策卡都会加进来），
+     底部留白得跟着它走，否则最后一段回复被压在卡片底下。
+
+     两条路一起上：能改变这摞高度的 state 直接触发一次，ResizeObserver 兜住
+     换行、字体这类量不出来的变化。只靠 RO 是不够的——它在页面不渲染时
+     一次都不回调（与 rAF 冻结同源），那种环境下留白会停在初值。 */
+  useEffect(() => {
+    const stack = composerStackRef.current;
+    const scroller = chatScrollerRef.current;
+    if (!stack || !scroller) return;
+
+    const syncReserve = () => {
+      // 18px 是 .legacyComposerStack 的 bottom，再留一段呼吸
+      scroller.style.setProperty("--tumor-composer-reserve", `${Math.round(stack.getBoundingClientRect().height) + 42}px`);
+    };
+
+    syncReserve();
+    const resizeObserver = new ResizeObserver(syncReserve);
+    resizeObserver.observe(stack);
+    return () => resizeObserver.disconnect();
+  // 决策卡的展开态是 Composer 内部 state，够不着，由 ResizeObserver 兜
+  }, [stage, pendingCoworkerId, files.length, warnings, reviews]);
 
   useEffect(() => {
     if (chatBottomDistanceRef.current >= 120) return;
@@ -500,7 +524,7 @@ export default function LegacyTumorReportWorkbench({ projectName, taskTitle, ini
           )}
         </div>
 
-        <div className="legacyComposerStack">
+        <div className="legacyComposerStack" ref={composerStackRef}>
           {pendingCoworkerId ? <CoworkerSwitchCard from={businessCoworkers.find((item) => item.id === activeCoworkerId)?.name ?? "当前数字同事"} to={businessCoworkers.find((item) => item.id === pendingCoworkerId)?.name ?? "新数字同事"} endingCurrentFlow={stage !== "exported"} onConfirm={() => { onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancel={() => setPendingCoworkerId(null)} /> : null}
           {!["warning", "review", "empty", "uploaded"].includes(stage) ? <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={stage !== "exported"} onChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} /> : null}
           <Composer

@@ -806,6 +806,455 @@
 
 .qaReviewWorkspace .workbenchPanelTab.isActive::after { bottom: -1px; }
 
+/* 决策卡里的入口。它长得像句子里的一段可点文字，不是第四颗按钮——
+   这张卡的动作只有驳回和通过两个，再加一颗同等重量的按钮会稀释它们。 */
+.qaApprovalJump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--bioaz-agent-accent) 34%, transparent);
+  background: transparent;
+  padding: 0;
+  color: color-mix(in srgb, var(--bioaz-agent-accent) 78%, var(--bioaz-text-primary));
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaApprovalJump > svg { flex: none; opacity: 0.75; }
+
+.qaApprovalJump:hover {
+  border-bottom-color: var(--bioaz-agent-accent);
+}
+
+/* ===================================================================
+   划词批注
+   -------------------------------------------------------------------
+   卡片浮在纸面右侧，不占版心——Word 那种页边批注栏在这里行不通，
+   右边已经站着 400px 的面板，再劈一栏出来原件就只剩一条缝。
+   =================================================================== */
+.qaPageScroll { position: relative; }
+
+/* 模式开关：收起是一颗圈住的加号，开着长出「正在注释」。
+   模式类控件必须自报状态——只把图标点亮，用户过两分钟就忘了自己开着。 */
+.qaAnnotateToggle {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 0 8px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
+    background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
+    color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaAnnotateToggle:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
+
+.qaAnnotateToggle.isOn {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  font-weight: 600;
+}
+
+/* 开着的时候纸面自己也要说话：光标变十字，选中色换成批注色 */
+.qaPageScroll.isAnnotating { cursor: crosshair; }
+.qaPageScroll.isAnnotating .qaPage { cursor: crosshair; }
+.qaPageScroll.isAnnotating ::selection {
+  background: color-mix(in srgb, var(--bioaz-agent-accent) 26%, transparent);
+}
+
+.qaAnnotationCard {
+  position: absolute;
+  z-index: 30;
+  right: 16px;
+  display: grid;
+  width: 268px;
+  gap: 7px;
+  border: 1px solid var(--bioaz-agent-accent-border, var(--bioaz-border));
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  padding: 10px;
+  box-shadow: var(--bioaz-shadow-floating);
+  animation: qaAnnotationIn 140ms var(--bioaz-ease-standard, ease) both;
+}
+
+/* 输入行：一行高，自己长；右边一颗确认键 */
+.qaAnnotationRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: end;
+  gap: 6px;
+}
+
+.qaAnnotationRow textarea {
+  width: 100%;
+  min-height: 30px;
+  max-height: 120px;
+  box-sizing: border-box;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 6px 9px;
+  color: var(--bioaz-text-primary);
+  font: inherit;
+  font-size: var(--bioaz-type-label-size);
+  line-height: 1.45;
+  resize: none;
+  field-sizing: content;
+}
+
+.qaAnnotationRow textarea:focus-visible {
+  outline: 0;
+  border-color: var(--bioaz-agent-accent);
+  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
+}
+
+.qaAnnotationSend {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-agent-accent);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaAnnotationSend:disabled { background: var(--bioaz-border-strong); cursor: default; }
+
+@keyframes qaAnnotationIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* 引文是这条批注的锚，得看得出是"文档里的原话"而不是你写的 */
+.qaAnnotationQuote {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-left: 2px solid var(--bioaz-agent-accent);
+  margin: 0;
+  padding: 0 0 0 7px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: 1.5;
+}
+
+.qaAnnotationQuote > em {
+  flex: none;
+  margin-left: auto;
+  color: var(--bioaz-text-tertiary);
+  font-size: 10px;
+  font-style: normal;
+}
+
+/* 去向是两个小字，不是半张卡 */
+.qaAnnotationKind {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.qaAnnotationKind > button {
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-full);
+  background: transparent;
+  padding: 2px 8px;
+  color: var(--bioaz-text-tertiary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.qaAnnotationKind > button:hover { color: var(--bioaz-text-primary); }
+
+.qaAnnotationKind > button.isOn {
+  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 30%, transparent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+  font-weight: 600;
+}
+
+/* 提交前就说清楚它会去哪儿——两个去处的后果完全不同 */
+.qaAnnotationKind > small {
+  margin-left: auto;
+  color: var(--bioaz-text-tertiary);
+  font-size: 10px;
+}
+
+/* 人工提的那条在清单里要认得出来 */
+.qaFindingTag.tone-human {
+  border-color: color-mix(in srgb, var(--bioaz-agent-accent) 30%, transparent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+/* ===================================================================
+   双栏比对
+   =================================================================== */
+.qaCompareCanvas {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.qaCompareCanvas:has(.qaCompareEmpty) {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.qaCompareCount {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+/* 比对头上的图例。三种颜色不注明的话，用户得自己猜哪个是新增 */
+.qaCompareLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+}
+
+.qaCompareLegend > span { display: inline-flex; align-items: center; gap: 4px; }
+
+.qaCompareLegend > span::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  content: "";
+}
+
+.qaCompareLegend > .legend-changed::before { background: #f59e0b; }
+.qaCompareLegend > .legend-added::before { background: #3b82f6; }
+.qaCompareLegend > .legend-removed::before { background: #ef4444; }
+
+.qaCompareSync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  cursor: pointer;
+}
+
+.qaCompareEmpty { margin: 10px 16px 0; }
+
+.qaCompareStage {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--bioaz-border);
+}
+
+.qaComparePane {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--bioaz-canvas);
+}
+
+.qaComparePaneBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--bioaz-border);
+  background: var(--bioaz-surface);
+  padding: 8px 12px;
+}
+
+.qaComparePaneBar > em {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  font-style: normal;
+}
+
+.qaComparePaneScroll {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.qaComparePage { width: 100%; max-width: 520px; margin: 0 auto; }
+
+/* ===================================================================
+   三套颜色，三件不同的事，不能混用同一组色
+   -------------------------------------------------------------------
+   ① 批注来源：AI（琥珀）／人工（品牌紫）——审批人要一眼分出机器说的和人写的
+   ② 比对增删改：新增（蓝）／删除（红）／修改（橙）——沿用旧系统那套，
+      因为审批人已经认得它，换一套等于让他重学
+   ③ 处置状态：已处置一律褪成中性并划掉，不占第三组颜色
+   =================================================================== */
+
+/* ---- ① 纸面上的批注标记 ---- */
+.qaDocMark {
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  padding: 1px 3px;
+  margin: 0 -3px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaDocMark > em {
+  margin-left: 5px;
+  border-radius: var(--bioaz-radius-full);
+  padding: 0 5px;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+/* AI 提的：琥珀。跟"机器初筛"的分量相称，不抢人工那条 */
+.qaDocMark.source-ai { background: color-mix(in srgb, #f59e0b 22%, transparent); }
+.qaDocMark.source-ai > em { background: #f59e0b; color: #fff; }
+.qaDocMark.source-ai:hover { background: color-mix(in srgb, #f59e0b 34%, transparent); }
+
+/* 人工提的：品牌紫。人落的笔要比机器的重 */
+.qaDocMark.source-human { background: var(--bioaz-agent-accent-soft); }
+.qaDocMark.source-human > em { background: var(--bioaz-agent-accent); color: #fff; }
+.qaDocMark.source-human:hover { background: color-mix(in srgb, var(--bioaz-agent-accent) 24%, transparent); }
+
+/* ③ 处置完就退场：划掉、褪灰。它还在（合规不许删），但不再要注意力 */
+.qaDocMark.isSettled {
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  text-decoration: line-through;
+}
+
+.qaDocMark.isSettled > em { background: var(--bioaz-border-strong); color: var(--bioaz-text-secondary); }
+
+.qaDocMark.isActive {
+  outline: 2px solid var(--bioaz-agent-accent);
+  outline-offset: 1px;
+}
+
+/* ---- 逐条处置的进度 ---- */
+.qaReviewProgress {
+  display: grid;
+  gap: 5px;
+  padding: 0 2px 2px;
+}
+
+.qaReviewProgressBar {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+}
+
+.qaReviewProgressBar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--bioaz-agent-accent);
+  transition: width var(--bioaz-motion-standard, 220ms) var(--bioaz-ease-standard, ease);
+}
+
+.qaReviewProgress > small { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
+
+/* 列表里也带一道来源色，跟纸面上那处对得上 */
+.qaFinding.source-human { border-left: 2px solid var(--bioaz-agent-accent); }
+.qaFinding.source-ai { border-left: 2px solid color-mix(in srgb, #f59e0b 70%, transparent); }
+
+/* 处置完的条目：划掉正文、整条褪下去，跟纸面同一套语言 */
+.qaFinding:is(.state-accepted, .state-dismissed) { opacity: 0.62; }
+.qaFinding:is(.state-accepted, .state-dismissed) .qaFindingBody p { text-decoration: line-through; }
+.qaFinding.state-accepted { border-left-color: var(--bioaz-success, #10b981); }
+
+/* 变了的字段就地标在纸上。两栏是同一份版式的两个版本，所以同一字段
+   左右天然同高——不需要额外对齐，扫一眼就知道这一处对应的是哪一处。
+
+   左栏（基线）标的是"改之前"，右栏（当前）标的是"改之后"，
+   所以同一个 kind 在两边给的语义不同：新增在左边其实是"原来没有"。 */
+.qaCompareField {
+  border-radius: var(--bioaz-radius-tool);
+  padding: 3px 6px;
+  margin: 0 -6px;
+  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+/* ② 增删改沿用旧系统的配色：修改=橙、新增=蓝、删除=红且划掉。
+      删除那条必须划掉——只靠底色，红和橙在小面积上分不开。 */
+.qaCompareField.kind-changed { background: color-mix(in srgb, #f59e0b 16%, transparent); }
+.qaCompareField.kind-added.side-current { background: color-mix(in srgb, #3b82f6 16%, transparent); }
+.qaCompareField.kind-removed.side-base { background: color-mix(in srgb, #ef4444 14%, transparent); }
+.qaCompareField.kind-removed.side-base dd { text-decoration: line-through; }
+
+/* 一边有、另一边没有的那种：空的那边给一条虚线，说明"这里本来没有内容"，
+   而不是留一片白让人以为没渲染出来 */
+.qaCompareField.kind-added.side-base,
+.qaCompareField.kind-removed.side-current {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    color-mix(in srgb, var(--bioaz-text-tertiary) 10%, transparent) 6px 12px
+  );
+}
+
+.qaCompareField.kind-added.side-base dd,
+.qaCompareField.kind-removed.side-current dd {
+  color: var(--bioaz-text-disabled);
+}
+
+/* 页脚那条页码标记也会变，它不在 dl 里，单独给 */
+.qaPageFooter > span.qaCompareField { margin: 0; }
+
+/* ---- 版本下拉 ----
+   菜单项原来是裸 button，压根没吃到 .toolMenuItem，于是每条都是浏览器
+   默认按钮：一个大方块、居中文字、自己的边框。套回菜单语言。 */
+.qaVersionOption {
+  align-items: flex-start;
+  padding: 7px 8px;
+}
+
+.qaVersionOption > span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+  text-align: left;
+}
+
+.qaVersionOption > span > b {
+  color: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.qaVersionOption > span > small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+}
+
+.qaVersionOption.active > span > b { font-weight: 600; }
+.qaVersionOption > svg { flex: none; margin-top: 2px; }
+
+@media (max-width: 1023px) {
+  /* 两栏各 50% 在这儿只剩不到 300px，纸张会被压成一条 —— 改成上下叠 */
+  .qaCompareStage { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qaAnnotationCard { animation-duration: 1ms; }
+}
+
 @media (max-width: 900px) {
   .qaChatComposerStack { width: calc(100% - 28px); }
   .qaDetachedPanelBody { padding: 14px 14px 96px; }

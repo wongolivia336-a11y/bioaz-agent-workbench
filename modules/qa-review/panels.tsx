@@ -4,10 +4,11 @@ import { Bot, GitCompare, ListChecks, MessageSquarePlus, Sparkles, User } from "
 import type { ResolvedInspectorPanel } from "../../components/workbench-inspector/WorkbenchInspector";
 import { Button, StatusChip } from "../../components/ui";
 import {
-  qaDiffRows,
+  diffBetween,
+  formatPageRef,
   qaFindingCategoryLabel,
   qaFindingStateLabel,
-  qaFindings,
+  qaVersions,
   type QaFinding,
   type QaFindingCategory,
   type QaFindingState,
@@ -25,10 +26,17 @@ type PanelContext = {
   /* 文档一旦有了结论（提交 / 通过 / 驳回），批注与备注就冻结。
      结论属于文档版本而不是某个查看者，所以换账号也解冻不了。 */
   locked: boolean;
+  /* 问题清单由会话传进来，不再从模块直接 import——审批人划词加的那条
+     是 source: "human" 的 QaFinding，和 AI 提的进同一个清单、同一套状态。
+     直接 import 静态数组的话，新加的那条永远进不来。 */
+  findings: QaFinding[];
   findingStates: Record<string, QaFindingState>;
   activeFindingId: string | null;
   notes: QaNote[];
   noteDraft: string;
+  /** 比对基线。可改，所以「变更」面板的标题和取数都跟着它走 */
+  baseVersionId: string;
+  currentVersionId: string;
   onFindingState: (findingId: string, state: QaFindingState) => void;
   onFocusFinding: (finding: QaFinding) => void;
   onNoteDraftChange: (value: string) => void;
@@ -61,7 +69,7 @@ export function getQaReviewPanels(context: PanelContext): ResolvedInspectorPanel
       isDefault: false,
       primary: true,
       expandable: true,
-      content: <AiDiffPanel />,
+      content: <AiDiffPanel {...context} />,
     },
     {
       id: "notes",
@@ -76,28 +84,39 @@ export function getQaReviewPanels(context: PanelContext): ResolvedInspectorPanel
   ];
 }
 
-function AiReviewPanel({ role, locked, findingStates, activeFindingId, onFindingState, onFocusFinding }: PanelContext) {
+function AiReviewPanel({ role, locked, findings, findingStates, activeFindingId, onFindingState, onFocusFinding }: PanelContext) {
   const groups = (Object.keys(qaFindingCategoryLabel) as QaFindingCategory[])
-    .map((category) => ({ category, items: qaFindings.filter((finding) => finding.category === category) }))
+    .map((category) => ({ category, items: findings.filter((finding) => finding.category === category) }))
     .filter((group) => group.items.length);
-  const open = qaFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
+  const open = findings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
+  const human = findings.filter((finding) => finding.source === "human").length;
+  const reviewed = findings.length - open;
 
   return (
     <div className="qaPanel">
       <header className="qaPanelHead">
         <div>
-          <strong>AI 智能审核结果</strong>
-          <small>{qaFindings.length} 条批注 · {open} 条待处置</small>
+          <strong>审核结果</strong>
+          <small>{findings.length} 条 · AI {findings.length - human} 条 · 人工 {human} 条</small>
         </div>
         <StatusChip tone={open ? "warning" : "success"} dot>{open ? "待处置" : "全部处置完"}</StatusChip>
       </header>
+
+      {/* 逐条走完是有终点的，所以给进度而不是只给一个"还剩几条"。
+          条形本身就是那个终点：走满了才谈得上放行。 */}
+      <div className="qaReviewProgress">
+        <span className="qaReviewProgressBar" aria-hidden="true">
+          <i style={{ width: `${findings.length ? (reviewed / findings.length) * 100 : 0}%` }} />
+        </span>
+        <small>已处置 {reviewed} / {findings.length} 条</small>
+      </div>
 
       {locked ? (
         <p className="qaPanelHint">本版已有审批结论，批注冻结为只读。要再改就得提交新版本。</p>
       ) : role === "author" ? (
         <p className="qaPanelHint">逐条处置后才能提交审批。忽略也算处置，但要在审批备注里说明理由。</p>
       ) : (
-        <p className="qaPanelHint">撰写人的处置结论在每条右侧。你可以采纳，也可以驳回整份。</p>
+        <p className="qaPanelHint">逐条确认或忽略。确认过的会划掉并沉为灰色，剩下的才是还要看的。</p>
       )}
 
       {groups.map((group, index) => (
@@ -107,25 +126,33 @@ function AiReviewPanel({ role, locked, findingStates, activeFindingId, onFinding
             const state = findingStates[finding.id] ?? "open";
             return (
               <article
-                className={`qaFinding state-${state} ${activeFindingId === finding.id ? "isActive" : ""}`}
+                className={`qaFinding state-${state} source-${finding.source} ${activeFindingId === finding.id ? "isActive" : ""}`}
                 key={finding.id}
               >
                 <button className="qaFindingBody" type="button" onClick={() => onFocusFinding(finding)}>
                   <span className="qaFindingTop">
+                    {/* 标签取 category，不再按 severity 二选一——
+                        原来是「error → 逻辑错误 / 其余 → 页码问题」，
+                        于是内容一致性和人工批注全被标成"页码问题"。 */}
                     <em className={`qaFindingTag tone-${finding.severity}`}>
-                      {finding.severity === "error" ? "逻辑错误" : "页码问题"}
+                      {qaFindingCategoryLabel[finding.category]}
                     </em>
-                    <small>
-                      文档第 {finding.docPage} 页{finding.innerPage ? ` / 内部 ${finding.innerPage}` : ""}
-                    </small>
+                    {/* 人工提的要看得出来：审批人事后要知道哪条是自己写的 */}
+                    {finding.source === "human" ? <em className="qaFindingTag tone-human">人工</em> : null}
+                    <small>{formatPageRef(finding.docPage, finding.innerPage)}</small>
                   </span>
                   <p>[{finding.recordId}] {finding.text}</p>
                 </button>
                 <footer className="qaFindingActions">
                   <span className={`qaFindingState state-${state}`}>{qaFindingStateLabel[state]}</span>
-                  {role === "author" && !locked ? (
+                  {/* 审批人也要能逐条落结论。原来只有撰写人有这两颗，审批人只能
+                      整份驳回——于是"哪几条我认、哪几条我不认"没地方表达。
+                      两端用词不同：撰写人是「采纳」这条意见，审批人是「确认」这是个问题。 */}
+                  {role !== "owner" && !locked ? (
                     <span className="qaFindingButtons">
-                      <button type="button" className={state === "accepted" ? "isOn" : ""} onClick={() => onFindingState(finding.id, state === "accepted" ? "open" : "accepted")}>采纳</button>
+                      <button type="button" className={state === "accepted" ? "isOn" : ""} onClick={() => onFindingState(finding.id, state === "accepted" ? "open" : "accepted")}>
+                        {role === "author" ? "采纳" : "确认问题"}
+                      </button>
                       <button type="button" className={state === "dismissed" ? "isOn" : ""} onClick={() => onFindingState(finding.id, state === "dismissed" ? "open" : "dismissed")}>忽略</button>
                     </span>
                   ) : null}
@@ -139,30 +166,52 @@ function AiReviewPanel({ role, locked, findingStates, activeFindingId, onFinding
   );
 }
 
-function AiDiffPanel() {
+function AiDiffPanel({ baseVersionId, currentVersionId }: PanelContext) {
+  const rows = diffBetween(baseVersionId, currentVersionId);
+  const base = qaVersions.find((item) => item.id === baseVersionId);
+  const current = qaVersions.find((item) => item.id === currentVersionId);
+  const summary = {
+    added: rows.filter((row) => row.kind === "added").length,
+    removed: rows.filter((row) => row.kind === "removed").length,
+    changed: rows.filter((row) => row.kind === "changed").length,
+  };
+
   return (
     <div className="qaPanel">
       <header className="qaPanelHead">
         <div>
-          <strong>与上一版的差异</strong>
-          <small>第二版 → 第三版 · {qaDiffRows.length} 处</small>
+          {/* 标题由版本对推出来，不再写死「第二版 → 第三版」——基线是可改的 */}
+          <strong>{base?.label ?? baseVersionId} → {current?.label ?? currentVersionId}</strong>
+          <small>{rows.length} 处差异</small>
         </div>
       </header>
-      <p className="qaPanelHint">审批人只需要看改了什么，不必重读全文。整段新增用绿色，修改左右并排。</p>
-      <div className="qaDiffList">
-        {qaDiffRows.map((row) => (
-          <article className={`qaDiffRow kind-${row.kind}`} key={`${row.page}-${row.field}`}>
-            <header>
-              <strong>{row.field}</strong>
-              <small>第 {row.page} 页</small>
-            </header>
-            <div className="qaDiffPair">
-              <span className="qaDiffBefore">{row.before}</span>
-              <span className="qaDiffAfter">{row.after}</span>
-            </div>
-          </article>
-        ))}
-      </div>
+
+      {rows.length ? (
+        <>
+          <div className="qaDiffSummary">
+            <span className="kind-added">新增 {summary.added}</span>
+            <span className="kind-changed">修改 {summary.changed}</span>
+            <span className="kind-removed">删除 {summary.removed}</span>
+          </div>
+          <div className="qaDiffList">
+            {rows.map((row) => (
+              <article className={`qaDiffRow kind-${row.kind}`} key={row.id}>
+                <header>
+                  <strong>{row.field}</strong>
+                  <small>{formatPageRef(row.page, row.innerPage)}</small>
+                </header>
+                <div className="qaDiffPair">
+                  <span className="qaDiffBefore">{row.before}</span>
+                  <span className="qaDiffAfter">{row.after}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      ) : (
+        /* 老实说没有，不拿别的版本对的数据凑 */
+        <p className="qaPanelHint">这两版之间没有记录在案的差异。换一个基线版本再看。</p>
+      )}
     </div>
   );
 }
