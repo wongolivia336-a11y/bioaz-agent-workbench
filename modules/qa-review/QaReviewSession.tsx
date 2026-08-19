@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Highlighter, Maximize2, Minimize2, Send, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Columns2, Download, FileText, Highlighter, Maximize2, Minimize2, Send, Undo2, X, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
@@ -71,7 +71,7 @@ const roleTitle: Record<QaViewerRole, string> = {
   owner: "负责人端",
 };
 
-export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange }: AgentModuleSessionProps) {
+export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange, onComposeMail }: AgentModuleSessionProps) {
   const role = viewerRole as QaViewerRole;
   const [panelOpen, setPanelOpen] = useState(true);
   const [activePanelId, setActivePanelId] = useState("ai-review");
@@ -96,10 +96,16 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
      想双击选个词，都会被一张卡打断——而读原件的时间远多于写批注的时间。
      进了模式光标变十字、纸面透出一层底色，你知道自己现在在批注。 */
   const [annotateMode, setAnnotateMode] = useState(false);
-  /** 比对基线。默认取这一版该跟谁比，但审批人可以改成任意一版 */
-  const [baseVersionId, setBaseVersionId] = useState(qaVersions.find((item) => item.id === qaCurrentVersionId)?.comparedAgainst ?? "v2");
+  /* 比对不是另一个 tab，是**文档多开了一栏**：版本既然是文档的属性，
+     "跟哪一版比"就只能是文档自己的事。null = 单栏。 */
+  const [compareWith, setCompareWith] = useState<string | null>(null);
   const [syncScroll, setSyncScroll] = useState(true);
+  const baseVersionId = compareWith ?? qaVersions.find((item) => item.id === qaCurrentVersionId)?.comparedAgainst ?? "v2";
   const [outcome, setOutcome] = useState<"submitted" | "approved" | "rejected" | null>(null);
+  /* 驳回必须写理由。GxP 场景下无理由驳回不该能提交——撰写人拿到一句
+     「驳回」什么也做不了，下一版大概率还是错的。 */
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
   const [chatMessages, setChatMessages] = useState<QaChatMessage[]>(initialRequest ? [{
     id: "qa-mail-upload",
     role: "user",
@@ -268,6 +274,34 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [role, outcome, allFindings, findingStates, activeFindingId, notes, noteDraft, baseVersionId, versionId]);
 
+  /* 驳回把这一版的结论打包丢回撰写人。三件事一起做，缺一件逻辑就断：
+       ① 版本状态置为已驳回，Session 进「等待撰写人修改」——这是机制
+       ② 已确认的问题清单 + 理由，作为这次退回的载荷
+       ③ 预填一封邮件草稿——这是通知，人过目再发，不替他发出去
+     只改状态不通知，撰写人不知道轮到自己了；只发信不改状态，下一版回来时
+     系统不知道它在回应哪一次退回，跨版本验证就断了。 */
+  const rejectWithReason = () => {
+    const reason = rejectReason.trim();
+    if (!reason) return;
+    const confirmed = allFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "accepted");
+    const lines = confirmed.map((finding) => `· ${formatPageRef(finding.docPage, finding.innerPage)}：${finding.text}`);
+    resolveWith("rejected", `驳回${version.label}：${reason}${confirmed.length ? `\n随附已确认问题 ${confirmed.length} 条。` : ""}`);
+    setRejectOpen(false);
+    setRejectReason("");
+    onComposeMail?.({
+      to: version.author,
+      subject: `退回修订：${taskTitle}（${version.label}）`,
+      body: [
+        `${version.author} 你好，`,
+        "",
+        `${version.label} 未通过本次审核，请修订后重新提交。`,
+        "",
+        `驳回理由：${reason}`,
+        ...(lines.length ? ["", `需要处理的问题（${confirmed.length} 条）：`, ...lines] : []),
+      ].join("\n"),
+    });
+  };
+
   const resolveWith = (next: "submitted" | "approved" | "rejected", noteText: string) => {
     setNotes((current) => [...current, {
       id: `note-${Date.now()}`,
@@ -293,7 +327,9 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     expandable: true,
     content: <QaDocumentCompact page={page} versionId={versionId} onPageChange={setPage} />,
   };
-  const panels = [documentPanel, ...reviewPanels];
+  /* 「变更」只在真的开着比对时才注册。没有比对却留一个 tab，点进去只能
+     解释"这里现在没东西"——空态解释永远不如不出现。 */
+  const panels = [documentPanel, ...reviewPanels.filter((panel) => panel.id !== "ai-diff" || compareWith !== null)];
   const dockPanels = panels.filter((panel) => panel.id !== poppedPanelId);
   const dockVisibleIds = visiblePanelIds.filter((id) => id !== poppedPanelId);
   const poppedPanel = panels.find((panel) => panel.id === poppedPanelId);
@@ -334,14 +370,9 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
           <em className="qaRoleBadge">{roleTitle[role]}</em>
         </div>
         <div className="qaTopbarTools">
-          <InlineSelect label="版本选择" trigger={<span>{version.label}</span>} align="end">
-            {(close) => qaVersions.map((item) => (
-              <button type="button" key={item.id} onClick={() => { setVersionId(item.id); close(); }}>
-                {item.label}
-                <small>{versionStatusLabel[item.status]} · {item.submittedAt}</small>
-              </button>
-            ))}
-          </InlineSelect>
+          {/* 版本下拉已挪到文档工具栏。它回答的是"我在看哪一版"，那是文档的属性；
+              而这个 Session 从 V1 一路跨到批准，顶栏挂一个版本号会让人以为
+              它只管第三版。这里只留这一版的状态。 */}
           <StatusChip tone={versionTone[version.status]} dot>{versionStatusLabel[version.status]}</StatusChip>
           {outcome ? (
             <StatusChip tone={outcome === "rejected" ? "danger" : "success"}>
@@ -352,9 +383,56 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
         </div>
       </header>
 
-      {poppedPanelId === "document" ? <div className="qaViewer qaDetachedCanvas">
+      {poppedPanelId === "document" ? <div className={`qaViewer qaDetachedCanvas ${compareWith ? "isComparing" : ""}`}>
         <header className="qaViewerBar">
           <span className="qaViewerTitle"><FileText size={14} />{qaDocument.title}</span>
+
+          {/* 「我在看哪一版」跟页码、缩放同一排——它们回答的是同一个问题。 */}
+          <InlineSelect label="选择版本" trigger={<span>{version.label}</span>}>
+            {(close) => qaVersions.map((item) => (
+              <button
+                className={`toolMenuItem qaVersionOption ${item.id === versionId ? "active" : ""}`}
+                type="button"
+                key={item.id}
+                onClick={() => { setVersionId(item.id); close(); }}
+              >
+                <span>
+                  <b>{item.label}</b>
+                  <small>{versionStatusLabel[item.status]} · {item.submittedAt}</small>
+                </span>
+                {item.id === versionId ? <Check size={14} /> : null}
+              </button>
+            ))}
+          </InlineSelect>
+
+          {/* 比对 = 多开一栏，不是另一个 tab。开着时这颗变成 ✕ 收回单栏。 */}
+          {compareWith ? (
+            <button
+              className="qaCompareToggle isOn"
+              type="button"
+              onClick={() => { setCompareWith(null); setActivePanelId("ai-review"); }}
+              aria-label="收起对比栏"
+              title="收起对比栏"
+            >
+              <Columns2 size={14} />对比中<X size={12} />
+            </button>
+          ) : (
+            <button
+              className="qaCompareToggle"
+              type="button"
+              onClick={() => {
+                const fallback = qaVersions.find((item) => item.id === version.comparedAgainst)?.id
+                  ?? qaVersions.find((item) => item.id !== versionId)?.id
+                  ?? versionId;
+                setCompareWith(fallback);
+                setActivePanelId("ai-diff");
+              }}
+              title="并排对比另一版"
+            >
+              <Columns2 size={14} />对比版本
+            </button>
+          )}
+
           <span className="qaViewerPager">
             <button type="button" aria-label="上一页" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}><ChevronLeft size={14} /></button>
             <b>{String(page).padStart(3, "0")}</b>
@@ -434,33 +512,48 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                 onCancel={() => { setAnnotation(null); window.getSelection()?.removeAllRanges(); }}
               />
             ) : null}
-            {/* 纸面跟着顶栏那个版本下拉走——切了版本文档没变的话，那个下拉等于没接上 */}
-            <QaPageSheet
-              versionId={versionId}
-              width={(zoom / 100) * 560}
-              findings={allFindings}
-              findingStates={findingStates}
-              activeFindingId={activeFindingId}
-              onFocusFinding={(finding) => { focusFinding(finding); setActivePanelId("ai-review"); setPanelOpen(true); }}
-              marker={activeFindingId ? (
-                <p className="qaPageMarker">
-                  已定位到第 {page} 页 · {allFindings.find((finding) => finding.id === activeFindingId)?.text.slice(0, 24)}…
-                </p>
-              ) : null}
-            />
+            {/* 单栏：正在审的这一版，带批注标记。
+                双栏：左边是拿来比的那一版，右边仍是正在审的这一版——
+                批注只标在右边，左边那栏是参照物，不是工作面。 */}
+            {compareWith ? (
+              <div className="qaComparePair">
+                <QaComparePane
+                  side="base"
+                  versionId={compareWith}
+                  otherVersionId={versionId}
+                  zoom={zoom}
+                  syncScroll={syncScroll}
+                  onVersionChange={setCompareWith}
+                  onSyncScrollChange={setSyncScroll}
+                />
+                <QaComparePane
+                  side="current"
+                  versionId={versionId}
+                  otherVersionId={compareWith}
+                  zoom={zoom}
+                  syncScroll={syncScroll}
+                  onVersionChange={setVersionId}
+                  onSyncScrollChange={setSyncScroll}
+                />
+              </div>
+            ) : (
+              <QaPageSheet
+                versionId={versionId}
+                width={(zoom / 100) * 560}
+                findings={allFindings}
+                findingStates={findingStates}
+                activeFindingId={activeFindingId}
+                onFocusFinding={(finding) => { focusFinding(finding); setActivePanelId("ai-review"); setPanelOpen(true); }}
+                marker={activeFindingId ? (
+                  <p className="qaPageMarker">
+                    已定位到第 {page} 页 · {allFindings.find((finding) => finding.id === activeFindingId)?.text.slice(0, 24)}…
+                  </p>
+                ) : null}
+              />
+            )}
           </div>
         </div>
-      </div> : poppedPanelId === "ai-diff" ? (
-        <QaCompareCanvas
-          baseVersionId={baseVersionId}
-          currentVersionId={versionId}
-          syncScroll={syncScroll}
-          onBaseChange={setBaseVersionId}
-          onCurrentChange={setVersionId}
-          onSyncScrollChange={setSyncScroll}
-          onReturn={returnPoppedPanel}
-        />
-      ) : (
+      </div> : (
         <section className="qaChatflow">
           <SessionMinimap scrollerRef={chatScrollerRef} />
           <div className="dmpkChatScroller" ref={chatScrollerRef}><div className="dmpkConversation">
@@ -499,7 +592,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                   )}
                 </p></div><small>{role === "owner" ? "只读" : "待确认"}</small></header>
                 {role === "author" ? <div className="warningActions"><Button variant="primary" size="small" disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条 AI 批注未处置` : undefined} onClick={() => resolveWith("submitted", `已逐条处置 ${qaFindings.length} 条 AI 批注，提交${version.label}终审。`)}>提交审批</Button></div>
-                  : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => resolveWith("rejected", "驳回：仍有时间逻辑未修订，请修改后重新提交。")}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => resolveWith("approved", "经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。")}>通过</Button></div> : null}
+                  : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => setRejectOpen(true)}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => resolveWith("approved", "经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。")}>通过</Button></div> : null}
               </section>
             ) : null}
             <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={outcome === null} onChange={onCoworkerChange} />
@@ -534,6 +627,37 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
         autoFocus={false}
         placeholder="问 QA 审核同事，例如：第 8 页那条时间逻辑怎么判的"
       /> : null}
+
+      {rejectOpen ? (
+        <div className="modalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRejectOpen(false); }}>
+          <section className="qaRejectDialog" role="dialog" aria-modal="true" aria-labelledby="qa-reject-title">
+            <header>
+              <h2 id="qa-reject-title">驳回{version.label}</h2>
+              <p>会把已确认的问题连同理由一起退回撰写人，并生成一封邮件草稿供你过目。</p>
+            </header>
+            <label className="qaRejectField">
+              <span>驳回理由<em>必填</em></span>
+              <textarea
+                autoFocus
+                rows={4}
+                value={rejectReason}
+                placeholder="写明这一版为什么不能通过，例如：第 8 页盖章日期仍早于批准时间，流程顺序不成立。"
+                onChange={(event) => setRejectReason(event.target.value)}
+              />
+            </label>
+            <p className="qaRejectSummary">
+              随附已确认问题 <b>{allFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "accepted").length}</b> 条
+              {openFindings ? <em>· 还有 {openFindings} 条未处置，不会随附</em> : null}
+            </p>
+            <footer>
+              <button type="button" onClick={() => setRejectOpen(false)}>取消</button>
+              <Button variant="primary" size="small" disabled={!rejectReason.trim()} leadingIcon={<Undo2 size={14} />} onClick={rejectWithReason}>
+                确认驳回并退回
+              </Button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -700,106 +824,84 @@ function AnnotationCard({
  * 「跟哪一版比」本来就是审批人要自己决定的事，写死成"上一版"
  * 在连提两版、中间没审的情况下会漏掉一半改动。
  */
-function QaCompareCanvas({
-  baseVersionId,
-  currentVersionId,
+function QaComparePane({
+  side,
+  versionId,
+  otherVersionId,
+  zoom,
   syncScroll,
-  onBaseChange,
-  onCurrentChange,
+  onVersionChange,
   onSyncScrollChange,
-  onReturn,
 }: {
-  baseVersionId: string;
-  currentVersionId: string;
+  side: "base" | "current";
+  versionId: string;
+  otherVersionId: string;
+  zoom: number;
   syncScroll: boolean;
-  onBaseChange: (id: string) => void;
-  onCurrentChange: (id: string) => void;
+  onVersionChange: (id: string) => void;
   onSyncScrollChange: (value: boolean) => void;
-  onReturn: () => void;
 }) {
-  const rows = diffBetween(baseVersionId, currentVersionId);
-  const highlight = changedFields(baseVersionId, currentVersionId);
-  const leftRef = useRef<HTMLDivElement>(null);
-  const rightRef = useRef<HTMLDivElement>(null);
-  const syncingRef = useRef(false);
+  /* 差异永远按「基线 → 当前」算，跟这一栏是哪边无关，否则左右两栏
+     会各算一次、把新增说成删除。 */
+  const from = side === "base" ? versionId : otherVersionId;
+  const to = side === "base" ? otherVersionId : versionId;
+  const highlight = changedFields(from, to);
+  const rows = diffBetween(from, to);
+  const version = qaVersions.find((item) => item.id === versionId);
 
-  /* 同步滚动用比例而不是像素：两栏内容高度不一定相等，
-     按像素同步会在长的一边走到底时把短的一边甩在中间。
-
-     ref 必须在事件里读，不能在 render 时当参数传进来——首帧两个 ref 都还是
-     null，闭包会把 null 一直捏在手里，等到某次无关的重渲染才恢复。 */
-  const linkScroll = (side: "base" | "current") => () => {
-    const from = side === "base" ? leftRef.current : rightRef.current;
-    const to = side === "base" ? rightRef.current : leftRef.current;
-    if (!syncScroll || !from || !to || syncingRef.current) return;
-    syncingRef.current = true;
-    const ratio = from.scrollTop / Math.max(1, from.scrollHeight - from.clientHeight);
-    to.scrollTop = ratio * Math.max(0, to.scrollHeight - to.clientHeight);
-    window.requestAnimationFrame(() => { syncingRef.current = false; });
-  };
-
-  const pane = (side: "base" | "current") => {
-    const versionId = side === "base" ? baseVersionId : currentVersionId;
-    const onChange = side === "base" ? onBaseChange : onCurrentChange;
-    const version = qaVersions.find((item) => item.id === versionId);
-    return (
-      <div className="qaComparePane">
-        <header className="qaComparePaneBar">
-          <em>{side === "base" ? "基线版本" : "当前版本"}</em>
-          <InlineSelect label={side === "base" ? "选择基线版本" : "选择当前版本"} trigger={<span>{version?.label ?? versionId}</span>}>
-            {(close) => qaVersions.map((item) => (
-              <button
-                className={`toolMenuItem qaVersionOption ${item.id === versionId ? "active" : ""}`}
-                type="button"
-                key={item.id}
-                onClick={() => { onChange(item.id); close(); }}
-              >
-                <span>
-                  <b>{item.label}</b>
-                  <small>{versionStatusLabel[item.status]} · {item.submittedAt}</small>
-                </span>
-                {item.id === versionId ? <Check size={14} /> : null}
-              </button>
-            ))}
-          </InlineSelect>
-        </header>
-        <div
-          className="qaComparePaneScroll"
-          ref={side === "base" ? leftRef : rightRef}
-          onScroll={linkScroll(side)}
-        >
-          {/* 两栏都是完整的一张纸，不是差异字段表——审批人要看的是
-              "这一版长什么样"，改动只是其中被标出来的那几处。 */}
-          <QaPageSheet versionId={versionId} highlight={highlight} side={side} />
-        </div>
-      </div>
+  /* 同步滚动：两栏都挂 data-compare-pane，滚动时按比例推另一栏。
+     用比例而不是像素——两栏内容高度不一定相等，按像素同步会在长的一边
+     走到底时把短的一边甩在中间。 */
+  const onScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (!syncScroll) return;
+    const self = event.currentTarget;
+    if (self.dataset.syncing === "1") return;
+    const other = self.parentElement?.parentElement?.querySelector<HTMLDivElement>(
+      `[data-compare-pane]:not([data-compare-side="${side}"])`,
     );
+    if (!other) return;
+    other.dataset.syncing = "1";
+    const ratio = self.scrollTop / Math.max(1, self.scrollHeight - self.clientHeight);
+    other.scrollTop = ratio * Math.max(0, other.scrollHeight - other.clientHeight);
+    window.requestAnimationFrame(() => { delete other.dataset.syncing; });
   };
 
   return (
-    <section className="qaDetachedCanvas qaCompareCanvas">
-      <header className="qaDetachedPanelBar">
-        <span><GitCompare size={14} />文件比对</span>
-        <span className="qaCompareCount">{rows.length} 处差异</span>
-        <span className="qaCompareLegend">
-          <span className="legend-changed">修改 {rows.filter((row) => row.kind === "changed").length}</span>
-          <span className="legend-added">新增 {rows.filter((row) => row.kind === "added").length}</span>
-          <span className="legend-removed">删除 {rows.filter((row) => row.kind === "removed").length}</span>
-        </span>
-        <label className="qaCompareSync">
-          <input type="checkbox" checked={syncScroll} onChange={(event) => onSyncScrollChange(event.target.checked)} />
-          同步滚动
-        </label>
-        <button type="button" aria-label="将文件比对收回右侧面板" title="收回到右侧面板" onClick={onReturn}><Minimize2 size={15} /></button>
+    <div className="qaComparePane">
+      <header className="qaComparePaneBar">
+        <em>{side === "base" ? "对比版本" : "正在审"}</em>
+        <InlineSelect label={side === "base" ? "选择对比版本" : "选择正在审的版本"} trigger={<span>{version?.label ?? versionId}</span>}>
+          {(close) => qaVersions.map((item) => (
+            <button
+              className={`toolMenuItem qaVersionOption ${item.id === versionId ? "active" : ""}`}
+              type="button"
+              key={item.id}
+              onClick={() => { onVersionChange(item.id); close(); }}
+            >
+              <span>
+                <b>{item.label}</b>
+                <small>{versionStatusLabel[item.status]} · {item.submittedAt}</small>
+              </span>
+              {item.id === versionId ? <Check size={14} /> : null}
+            </button>
+          ))}
+        </InlineSelect>
+        {/* 同步滚动只在右栏出一次：两栏各挂一个开关会让人以为能分别控制 */}
+        {side === "current" ? (
+          <label className="qaCompareSync">
+            <input type="checkbox" checked={syncScroll} onChange={(event) => onSyncScrollChange(event.target.checked)} />
+            同步滚动
+          </label>
+        ) : (
+          <span className="qaCompareCount">{rows.length} 处差异</span>
+        )}
       </header>
-      {rows.length ? null : (
-        <p className="qaPanelHint qaCompareEmpty">这两版之间没有记录在案的差异。换一个基线版本再看。</p>
-      )}
-      <div className="qaCompareStage">
-        {pane("base")}
-        {pane("current")}
+      <div className="qaComparePaneScroll" data-compare-pane data-compare-side={side} onScroll={onScroll}>
+        {/* 两栏都是完整的一张纸，不是差异字段表——审批人要看的是
+            "这一版长什么样"，改动只是其中被标出来的那几处。 */}
+        <QaPageSheet versionId={versionId} width={(zoom / 100) * 460} highlight={highlight} side={side} />
       </div>
-    </section>
+    </div>
   );
 }
 

@@ -117,6 +117,16 @@ export type AgentModuleSessionProps = {
   /* 当前登录账号的岗位。QA 审核用它决定谁能落笔——撰写人端与审批人端是
      同一个 Session 的两种渲染，不是两个页面。其余 module 忽略即可。 */
   viewerRole?: "author" | "approver" | "owner";
+  /* 让 module 预填一封邮件草稿并跳到邮箱。QA 驳回用它把问题清单退回撰写人：
+     状态变更是机制，这封信是通知——所以只到草稿为止，发不发由人决定。 */
+  onComposeMail?: (draft: MailDraft) => void;
+};
+
+export type MailDraft = {
+  /** 收件人姓名。邮箱那边按名字匹配到人，匹配不上就只填主题和正文 */
+  to?: string;
+  subject: string;
+  body: string;
 };
 
 export type QuotationManagementTarget = {
