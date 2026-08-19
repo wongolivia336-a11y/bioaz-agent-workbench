@@ -171,13 +171,57 @@
   border-top: 1px solid var(--bioaz-border);
 }
 
-/* 最多四行，再多自己滚——它不该把项目挤下去 */
+/* 折叠时只剩一行标题。项目那一栏是每天要用的，资料空间是偶尔引用的，
+   两者常驻同权重会让侧栏下半截被低频的东西长期占着。 */
+.librarySpaceHeader { padding-inline: 0; }
+
+.librarySpaceDisclosure {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  padding: 2px 6px;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.librarySpaceDisclosure:hover { color: var(--bioaz-text-primary); }
+
+.librarySpaceDisclosure > svg {
+  flex: none;
+  transition: transform var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.librarySpaceTree.isOpen .librarySpaceDisclosure > svg { transform: rotate(90deg); }
+
+.librarySpaceDisclosure > em {
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-active);
+  padding: 0 6px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* 展开后最多三行，再多自己滚——它不该把项目挤下去 */
 .librarySpaceScroll {
   display: grid;
-  max-height: 136px;
+  max-height: 102px;
   gap: 2px;
   overflow-y: auto;
   scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .librarySpaceDisclosure > svg { transition: none; }
 }
 
 .librarySpaceRowWrap {

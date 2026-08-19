@@ -900,16 +900,17 @@ button { -webkit-tap-highlight-color: transparent; }
   background: transparent !important;
 }
 
-/* The workspace Panel toggle is a strong global control, not a Chatflow status. */
+/* 面板开关是工作区级控件，但它坐在 agent 会话里，所以用 agent accent。
+   logo 蓝只留给 logo——一个到处都是的品牌色等于没有品牌色。 */
 .tumor-reportModuleShell .tumorInspectorToggle:hover {
-  border-color: rgba(41, 0, 255, 0.12);
-  background: rgba(41, 0, 255, 0.08);
-  color: var(--bioaz-brand-primary);
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
 }
 .tumor-reportModuleShell .tumorInspectorToggle.isActive,
 .tumor-reportModuleShell .tumorInspectorToggle.isActive:hover {
-  border-color: var(--bioaz-brand-primary);
-  background: var(--bioaz-brand-primary);
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent);
   color: #fff;
 }
 
@@ -1323,14 +1324,14 @@ button { -webkit-tap-highlight-color: transparent; }
     color var(--bioaz-motion-fast) var(--bioaz-ease-standard);
 }
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle:hover {
-  border-color: rgba(41, 0, 255, 0.12);
-  background: rgba(41, 0, 255, 0.08);
-  color: var(--bioaz-brand-primary);
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
 }
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle.isActive,
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle.isActive:hover {
-  border-color: var(--bioaz-brand-primary);
-  background: var(--bioaz-brand-primary);
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent);
   color: #fff;
 }
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle.suppressHover,
@@ -6194,7 +6195,8 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 5px;
   flex: none;
   border-radius: 50%;
-  background: var(--bioaz-brand-primary, #2943ff);
+  /* 「这个 tab 有更新」是 agent 推进出来的状态，不是品牌入口 */
+  background: var(--bioaz-agent-accent);
 }
 
 .workbenchPanelAdd { position: relative; flex: none; }
@@ -7336,13 +7338,14 @@ button { -webkit-tap-highlight-color: transparent; }
   content: "";
 }
 
+/* 发送键属于 agent 界面，用 agent accent 不用 logo 蓝 */
 .floatingChatSend {
-  background: var(--bioaz-brand-primary);
+  background: var(--bioaz-agent-accent);
   color: #fff;
 }
 
 .floatingChatSend:hover:not(:disabled) {
-  background: var(--bioaz-brand-primary-hover);
+  background: color-mix(in srgb, var(--bioaz-agent-accent) 84%, #000);
 }
 
 .floatingChatSend:disabled {
@@ -7459,10 +7462,14 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-primary);
 }
 
+/* 跟主对话流那颗用户气泡同一副长相。它原来是实心 logo 蓝反白字——
+   既违反「brand-primary 只给 logo」，又让同一个用户说的同一句话，
+   在展开的会话里是浅灰底、收进浮层就变成一块深蓝。 */
 .floatingChatList p.isUser {
   justify-self: end;
-  background: var(--bioaz-brand-primary);
-  color: #fff;
+  border: 1px solid var(--bioaz-border);
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-primary);
 }
 
 /* 窄屏：面板本来就是盖在对话上的抽屉，全屏没有额外意义 */
