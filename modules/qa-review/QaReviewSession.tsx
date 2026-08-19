@@ -31,6 +31,7 @@ import {
   type QaFindingState,
   type QaNote,
 } from "./reviewData";
+import type { SessionOutcome } from "../types";
 
 /* 人工批注默认落在纸面的哪个字段上。划词时没有真 PDF 的坐标，
    所以按当前页给一个锚点，让它跟 AI 那批一样能在纸上被标出来。 */
@@ -71,7 +72,7 @@ const roleTitle: Record<QaViewerRole, string> = {
   owner: "负责人端",
 };
 
-export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange, onComposeMail }: AgentModuleSessionProps) {
+export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange, onComposeMail, sessionOutcome, onSessionOutcomeChange }: AgentModuleSessionProps) {
   const role = viewerRole as QaViewerRole;
   const [panelOpen, setPanelOpen] = useState(true);
   const [activePanelId, setActivePanelId] = useState("ai-review");
@@ -101,7 +102,11 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const [compareWith, setCompareWith] = useState<string | null>(null);
   const [syncScroll, setSyncScroll] = useState(true);
   const baseVersionId = compareWith ?? qaVersions.find((item) => item.id === qaCurrentVersionId)?.comparedAgainst ?? "v2";
-  const [outcome, setOutcome] = useState<"submitted" | "approved" | "rejected" | null>(null);
+  /* 结论存在 shell 上，按任务保存。切走再切回时组件会重新挂载——
+     结论留在本地 state 里等于点完就没了，而回到会话第一眼要看的
+     恰恰是"这一版审完了没有"。 */
+  const outcome = sessionOutcome ?? null;
+  const setOutcome = (next: SessionOutcome) => onSessionOutcomeChange?.(next);
   /* 驳回必须写理由。GxP 场景下无理由驳回不该能提交——撰写人拿到一句
      「驳回」什么也做不了，下一版大概率还是错的。 */
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -256,13 +261,31 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     setNoteDraft("");
   };
 
+  /* 结论跨重挂载活着，但备注是本地的。切走再回来会出现"顶栏说已通过、
+     备注里却没有任何结论"的空档，所以缺的时候补一条通用的。
+     本轮内落定的那条是原话（驳回理由是人打的字），补的这条只是兜底。 */
+  const notesWithOutcome = useMemo(() => {
+    if (!outcome || notes.some((note) => note.source === "human")) return notes;
+    return [...notes, {
+      id: "note-outcome-restored",
+      source: "human" as const,
+      author: role === "author" ? "林一一" : "王林彬",
+      time: "本轮",
+      text: outcome === "approved"
+        ? "经最终审核，同意通过本次终审。"
+        : outcome === "rejected"
+          ? "本版已驳回，问题清单与理由已退回撰写人。"
+          : "已提交审批，等待审批人处理。",
+    }];
+  }, [notes, outcome, role]);
+
   const reviewPanels = useMemo(() => getQaReviewPanels({
     role,
     locked: outcome !== null,
     findings: allFindings,
     findingStates,
     activeFindingId,
-    notes,
+    notes: notesWithOutcome,
     noteDraft,
     baseVersionId,
     currentVersionId: versionId,
@@ -272,7 +295,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     onAddNote: addNote,
   // focusFinding / addNote 只读上面这些 state，跟着它们一起失效即可
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [role, outcome, allFindings, findingStates, activeFindingId, notes, noteDraft, baseVersionId, versionId]);
+  }), [role, outcome, allFindings, findingStates, activeFindingId, notesWithOutcome, noteDraft, baseVersionId, versionId]);
 
   /* 驳回把这一版的结论打包丢回撰写人。三件事一起做，缺一件逻辑就断：
        ① 版本状态置为已驳回，Session 进「等待撰写人修改」——这是机制
@@ -373,12 +396,17 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
           {/* 版本下拉已挪到文档工具栏。它回答的是"我在看哪一版"，那是文档的属性；
               而这个 Session 从 V1 一路跨到批准，顶栏挂一个版本号会让人以为
               它只管第三版。这里只留这一版的状态。 */}
-          <StatusChip tone={versionTone[version.status]} dot>{versionStatusLabel[version.status]}</StatusChip>
+          {/* 一个状态只能有一个说法。原来这里并排挂两颗——一颗是版本里存的
+              「待审批」，一颗是本次落定的「已通过」，同屏说着互相矛盾的两句话。
+              落了结论就以结论为准，它取代版本状态，不跟它并列。 */}
           {outcome ? (
-            <StatusChip tone={outcome === "rejected" ? "danger" : "success"}>
+            <StatusChip tone={outcome === "rejected" ? "danger" : "success"} dot>
               {outcome === "submitted" ? "已提交审批" : outcome === "approved" ? "已通过" : "已驳回"}
             </StatusChip>
-          ) : role === "owner" ? <StatusChip tone="neutral">只读</StatusChip> : null}
+          ) : (
+            <StatusChip tone={versionTone[version.status]} dot>{versionStatusLabel[version.status]}</StatusChip>
+          )}
+          {role === "owner" && !outcome ? <StatusChip tone="neutral">只读</StatusChip> : null}
           <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </div>
       </header>
