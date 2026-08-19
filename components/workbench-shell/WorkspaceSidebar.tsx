@@ -54,6 +54,9 @@ export function WorkspaceSidebar(props: Props) {
   const accountRef = useDismissableLayer<HTMLDivElement>(accountMenuOpen, () => setAccountMenuOpen(false));
   const activeProject = props.activeTaskId ? props.currentProject : null;
   const visibleProjects = props.projects.filter((project) => !props.deletedProjectIds.includes(project.id));
+  const librarySpaces = visibleProjects.filter((project) => project.type === "library");
+  /* 默认折叠。正在看某个资料空间时自动展开——否则当前位置在侧栏上没有着落点。 */
+  const [librarySpaceOpen, setLibrarySpaceOpen] = useState(Boolean(props.activeLibrarySpace));
   const originalProjectNameById = new Map(workspaceProjects.map((project) => [project.id, project.name]));
   const currentProjectNameByOriginal = new Map(visibleProjects.map((project) => [originalProjectNameById.get(project.id) ?? project.name, project.name]));
   const projectNameById = new Map(visibleProjects.map((project) => [project.id, project.name]));
@@ -200,24 +203,41 @@ export function WorkspaceSidebar(props: Props) {
 
           两组的能力必须对等。原来只有「项目」那组能建能改，资料空间只能点开看，
           可它们明明是同一种容器——一个能管一个不能管，层级就说不通了。 */}
-      <nav className="navBlock librarySpaceTree" aria-label="资料空间">
-        <div className="navSectionHeader">
-          <span>资料空间</span>
-          <button type="button" aria-label="新建资料空间" title="新建资料空间" onClick={() => openCreate("library")}><Plus size={14} /></button>
+      {/* 资料空间默认折叠。它跟项目是同一种容器，但**不是同一种节奏**：
+          项目每天开好几次，资料空间一年建几次、平时只是被引用。
+          常驻展开等于让一件低频的事天天占着侧栏的下半截。
+          折叠之后它退成一行，标题右边挂个数字——需要的时候一点就开。 */}
+      <nav className={`navBlock librarySpaceTree ${librarySpaceOpen ? "isOpen" : ""}`} aria-label="资料空间">
+        <div className="navSectionHeader librarySpaceHeader">
+          <button
+            className="librarySpaceDisclosure"
+            type="button"
+            aria-expanded={librarySpaceOpen}
+            onClick={() => setLibrarySpaceOpen((value) => !value)}
+          >
+            <ChevronRight size={13} />
+            <span>资料空间</span>
+            <em>{librarySpaces.length}</em>
+          </button>
+          <button type="button" aria-label="新建资料空间" title="新建资料空间" onClick={() => { setLibrarySpaceOpen(true); openCreate("library"); }}><Plus size={14} /></button>
         </div>
-        {createType === "library" ? <ContainerCreateRow type="library" value={projectDraft} onChange={setProjectDraft} onCommit={commitProject} onCancel={closeProjectCreate} /> : null}
-        <div className="librarySpaceScroll">
-          {visibleProjects.filter((project) => project.type === "library").map((project) => (
-            <SidebarLibrarySpace
-              key={project.id}
-              title={project.name}
-              active={props.activeLibrarySpace === project.name}
-              onOpen={() => props.onOpenLibraryFolder(project.name, null)}
-              onRename={(name) => props.onRenameProject(project.id, name)}
-              onDelete={() => props.onDeleteProject(project.id)}
-            />
-          ))}
-        </div>
+        {librarySpaceOpen ? (
+          <>
+            {createType === "library" ? <ContainerCreateRow type="library" value={projectDraft} onChange={setProjectDraft} onCommit={commitProject} onCancel={closeProjectCreate} /> : null}
+            <div className="librarySpaceScroll">
+              {librarySpaces.map((project) => (
+                <SidebarLibrarySpace
+                  key={project.id}
+                  title={project.name}
+                  active={props.activeLibrarySpace === project.name}
+                  onOpen={() => props.onOpenLibraryFolder(project.name, null)}
+                  onRename={(name) => props.onRenameProject(project.id, name)}
+                  onDelete={() => props.onDeleteProject(project.id)}
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
       </nav>
 
       <div ref={accountRef} className={`account accountMenuTrigger ${accountMenuOpen ? "menuOpen" : ""}`}>
