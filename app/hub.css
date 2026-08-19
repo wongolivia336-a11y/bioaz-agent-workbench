@@ -492,6 +492,37 @@
   .knowledgeAskWindow { animation-duration: 1ms; }
 }
 
+/* 轻量保存：藏在答案末尾，不抢出处的位置——出处是这条答案能不能用的前提，
+   存不存是用完之后的事。 */
+.knowledgeAnswerSave {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
+  padding: 4px 11px;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  cursor: pointer;
+  transition:
+    border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
+    color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+}
+
+.knowledgeAnswerSave:hover:not(:disabled) {
+  border-color: var(--bioaz-agent-accent);
+  color: var(--bioaz-agent-accent);
+}
+
+.knowledgeAnswerSave.isSaved {
+  border-color: transparent;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: default;
+}
+
 .knowledgeAskFull {
   display: grid;
   width: 26px;
