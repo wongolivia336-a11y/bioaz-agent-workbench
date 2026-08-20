@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useState } from "react";
+import { useModalDismiss } from "../../../components/ui/useModalDismiss";
 import type { DetectionScenario } from "../dmpk/catalog";
 import { ScenarioPicker } from "./ScenarioPicker";
 
@@ -114,9 +115,10 @@ export default function ManagementDialogView({ dialog, onClose }: { dialog: Mana
   };
 
   const current = content[dialog];
+  const dismiss = useModalDismiss(onClose);
   return (
-    <div className="managementDialogBackdrop" role="dialog" aria-modal="true">
-      <section className="managementDialog">
+    <div className="managementDialogBackdrop" role="presentation" {...dismiss}>
+      <section className="managementDialog" role="dialog" aria-modal="true" aria-label={current.title}>
         {/* 关闭键用 lucide 的 X，跟 Dialog / Drawer 一致——手打的 × 字号和字重都跟图标对不上 */}
         <header><h2>{current.title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>
         {current.body}

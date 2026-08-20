@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
+import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { inboxAccounts, type InboxAccount } from "../../lib/workbench/mockInbox";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
@@ -16,6 +16,8 @@ type Props = {
   projects: WorkbenchProject[];
   runtimeTasks: WorkbenchTask[];
   pinnedItemIds: string[];
+  /** agent 在你离开之后才交付的任务。侧栏用一个蓝点提示，点开即清。 */
+  unreadTaskIds: string[];
   deletedProjectIds: string[];
   deletedTaskIds: string[];
   renamedTaskTitles: Record<string, string>;
@@ -134,7 +136,9 @@ export function WorkspaceSidebar(props: Props) {
       </div>
 
       <nav className="navBlock workspaceViews" aria-label="工作区">
-        <button className={`workspaceViewRow ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>数据中枢</span></button>
+        {/* Orbit 画的就是轨道，hover 时让它走一圈是顺着图标本身的意思。
+            点击不转——点击的反馈应该是「页面到了」，再转一下是重复反馈。 */}
+        <button className={`workspaceViewRow hasOrbitIcon ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>数据中枢</span></button>
         <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
       </nav>
 
@@ -147,6 +151,7 @@ export function WorkspaceSidebar(props: Props) {
               item={item}
               active={props.activeTaskId === item.id}
               pinned
+              unread={props.unreadTaskIds.includes(item.id)}
               onClick={() => props.onOpenTask(toTask(item))}
               onRename={(title) => props.onRenameTask(item.id, title)}
               onDelete={() => props.onDeleteTask(item.id)}
@@ -188,6 +193,7 @@ export function WorkspaceSidebar(props: Props) {
                 item={item}
                 active={props.activeTaskId === item.id}
                 pinned={props.pinnedItemIds.includes(item.id)}
+                unread={props.unreadTaskIds.includes(item.id)}
                 onPinToggle={() => props.onTogglePinnedItem(item.id)}
                 onClick={() => props.onOpenTask(toTask(item))}
                 onRename={(title) => props.onRenameTask(item.id, title)}
@@ -356,10 +362,16 @@ function SidebarProject({ title, highlighted = false, open, onToggle, onRename, 
           </div>
         ) : (
           <>
-            <button className="projectRow" type="button" onClick={onToggle}>
-              <Folder size={14} />
+            {/* 开合由文件夹自己表达，右边那个 chevron 已经撤掉——两个图标说同
+                一件事是浪费。lucide 的 Folder 和 FolderOpen 是两条结构不同的
+                path，插值不了，所以用交叉淡入模拟「翻开」；为一个图标引一个
+                SVG morph 库不划算。 */}
+            <button className="projectRow" type="button" onClick={onToggle} aria-expanded={open}>
+              <span className="projectFolderIcon" data-open={open}>
+                <Folder size={14} />
+                <FolderOpen size={14} />
+              </span>
               <strong>{title}</strong>
-              <ChevronRight className={open ? "isOpen" : ""} size={14} />
             </button>
             <div className="projectHoverActions isActionOnly">
               <button type="button" aria-label={`${title}更多操作`} onClick={(event) => { event.stopPropagation(); setMenuOpen((value) => !value); }}><MoreHorizontal size={14} /></button>
@@ -380,7 +392,20 @@ function SidebarProject({ title, highlighted = false, open, onToggle, onRename, 
   );
 }
 
-function SidebarTask({ item, active = false, pinned = false, onClick, onPinToggle, onRename, onDelete }: { item: PinItem; active?: boolean; pinned?: boolean; onClick: () => void; onPinToggle: () => void; onRename: (title: string) => void; onDelete: () => void }) {
+/* 侧栏是分诊面板，不是仪表盘——它只回答「哪几条需要我现在动手」。
+   所以 running / done 一律不上色：done 永远是列表里最多的一类，给它上色
+   等于给多数行上色，真正紧急的那条反而被淹进一片彩色里。
+
+   两种点撞在一起时黄盖蓝，一行永远只显一个：「要你确认」已经隐含
+   「有新内容」，蓝点在那时候不多说任何事。 */
+function taskDotTone(status: string | undefined, unread: boolean): "attention" | "unread" | null {
+  if (status === "pending" || status === "blocked") return "attention";
+  if (unread) return "unread";
+  return null;
+}
+
+function SidebarTask({ item, active = false, pinned = false, unread = false, onClick, onPinToggle, onRename, onDelete }: { item: PinItem; active?: boolean; pinned?: boolean; unread?: boolean; onClick: () => void; onPinToggle: () => void; onRename: (title: string) => void; onDelete: () => void }) {
+  const tone = taskDotTone(item.status, unread);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.title);
@@ -400,8 +425,14 @@ function SidebarTask({ item, active = false, pinned = false, onClick, onPinToggl
       ) : (
         <>
           <button className="chatRowMain" type="button" onClick={onClick}>
-            <FileText className="sidebarIcon" size={14} />
+            {/* 图标只管「这是什么」，点只管「要不要你管」。原来是把状态染在
+                图标笔画上——14px 线稿的有效着色面积太小，色值再准也扫不到。 */}
+            <span className="chatRowIcon">
+              <FileText size={14} />
+              {tone ? <i className={`chatRowDot is-${tone}`} aria-hidden="true" /> : null}
+            </span>
             <strong>{item.title}</strong>
+            {tone ? <span className="visuallyHidden">{tone === "attention" ? "，待你确认" : "，有未读更新"}</span> : null}
             <small>{item.time}</small>
           </button>
           <button className="chatMoreButton" type="button" aria-label={`${item.title}更多操作`} onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal size={14} /></button>

@@ -2,6 +2,8 @@
 
 import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { ScrollTopButton } from "../../components/ui/ScrollTopButton";
+import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
@@ -327,11 +329,18 @@ export function DmpkParameterPanel({ fields, activeGroup, openGroups, completedC
 }
 
 export function DmpkQuotationPreviewModal({ fields, onClose }: { fields: DmpkField[]; onClose: () => void }) {
-  return <div className="modalBackdrop" role="dialog" aria-modal="true"><section className="previewModal"><header><div><span>报价前确认</span><h2>完整参数与计价规则预览</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button></header><div className="previewBody"><div className="previewContent"><PreviewTable title="报价参数" rows={fields.map((field) => [getDmpkGroupTitle(field.group), field.label, field.value])} /><div className="previewNotice"><Check size={17} /><span>计价关键字段已齐全。Word 报价单使用 30% 管理费，Excel 报价明细使用 15% 管理费，生成后将进行金额一致性校验。</span></div></div></div></section></div>;
+  const dismiss = useModalDismiss(onClose);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  /* role="dialog" 归面板，遮罩是 presentation——原来两个都挂在遮罩上，
+     读屏软件会把整个背景层当成对话框。 */
+  return <div className="modalBackdrop" role="presentation" {...dismiss}><section className="previewModal" role="dialog" aria-modal="true" aria-label="完整参数与计价规则预览"><header><div><span>报价前确认</span><h2>完整参数与计价规则预览</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button></header><div className="previewBody"><div className="previewContent" ref={scrollRef}><PreviewTable title="报价参数" rows={fields.map((field) => [getDmpkGroupTitle(field.group), field.label, field.value])} /><div className="previewNotice"><Check size={17} /><span>计价关键字段已齐全。Word 报价单使用 30% 管理费，Excel 报价明细使用 15% 管理费，生成后将进行金额一致性校验。</span></div></div></div><ScrollTopButton targetRef={scrollRef} /></section></div>;
 }
 
 export function DmpkArtifactPreviewModal({ kind, onClose }: { kind: "word" | "excel"; onClose: () => void }) {
-  return <div className="modalBackdrop" role="dialog" aria-modal="true"><section className="previewModal artifactPreviewModal"><header><div><span>产物预览</span><h2>{kind === "word" ? "中文 Word 报价单" : "Excel 报价明细"}</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button></header><div className="previewContent"><PreviewTable title={kind === "word" ? "Word 报价单预览" : "Excel 报价明细预览"} rows={[["检测类型", "PK检测", "DMPK 业务线已确认"], ["动物实验", "SD大鼠 · 2组 · 每组2只 · 1周", "已匹配动物实验计价规则"], ["生物分析", "LC-MS/MS · 血浆 · 3点 · 1个待测物", "已匹配生物分析计价规则"], ["金额校验", "页面 / Word / Excel 一致", kind === "word" ? "中文编码与表格边框已校验" : "管理费 15% 已应用"]]} /></div></section></div>;
+  const dismiss = useModalDismiss(onClose);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const title = kind === "word" ? "中文 Word 报价单" : "Excel 报价明细";
+  return <div className="modalBackdrop" role="presentation" {...dismiss}><section className="previewModal artifactPreviewModal" role="dialog" aria-modal="true" aria-label={title}><header><div><span>产物预览</span><h2>{title}</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button></header><div className="previewContent" ref={scrollRef}><PreviewTable title={kind === "word" ? "Word 报价单预览" : "Excel 报价明细预览"} rows={[["检测类型", "PK检测", "DMPK 业务线已确认"], ["动物实验", "SD大鼠 · 2组 · 每组2只 · 1周", "已匹配动物实验计价规则"], ["生物分析", "LC-MS/MS · 血浆 · 3点 · 1个待测物", "已匹配生物分析计价规则"], ["金额校验", "页面 / Word / Excel 一致", kind === "word" ? "中文编码与表格边框已校验" : "管理费 15% 已应用"]]} /></div><ScrollTopButton targetRef={scrollRef} /></section></div>;
 }
 
 function PreviewTable({ title, rows }: { title: string; rows: string[][] }) {
