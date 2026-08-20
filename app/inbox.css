@@ -70,7 +70,11 @@
    而它们要你做的事完全不同。改成跟侧栏同一套：黄 = 要你动手，蓝 = 有新的但
    不用你动手，黄盖蓝。 */
 .mailboxRow.hasDot::after { position:absolute; top:19px; right:12px; width:6px; height:6px; border-radius:var(--bioaz-radius-full); content:""; }
-.mailboxRow.dot-attention::after { background:var(--sidebar-dot-attention); }
+/* 侧栏的黄点在 .55↔1 之间呼吸，肉眼读到的是那个偏淡的平均值。这里不呼吸
+   （理由见下），所以要把静态值压到同一个平均值上，两处才是同一颗点——
+   照搬 1.0 的话，同一个色号在邮箱里会显得又黑又实。
+   蓝点两边都是静态 1.0，本来就对得上，不动。 */
+.mailboxRow.dot-attention::after { background:var(--sidebar-dot-attention); opacity:.78; }
 .mailboxRow.dot-unread::after { background:var(--sidebar-dot-unread); }
 /* 侧栏的黄点会呼吸，这里不会：侧栏在余光里，要靠运动才抓得住；邮件列表本来
    就是你正盯着看的东西，再动就是跟内容抢注意力。 */
