@@ -139,7 +139,9 @@ export function WorkspaceSidebar(props: Props) {
         {/* Orbit 画的就是轨道，hover 时让它走一圈是顺着图标本身的意思。
             点击不转——点击的反馈应该是「页面到了」，再转一下是重复反馈。 */}
         <button className={`workspaceViewRow hasOrbitIcon ${props.activeRoute === "library" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("library")}><Orbit size={14} /><span>数据中枢</span></button>
-        <button className={`workspaceViewRow ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
+        {/* Users 画的是两个人，后面那位只露半边。hover 时让他往外站半步——
+            「团队」要说的就是它不止一个人。 */}
+        <button className={`workspaceViewRow hasTeamIcon ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
       </nav>
 
       {pinnedItems.length ? (
