@@ -10,6 +10,7 @@ import { InlineSelect } from "../../components/workbench-shell/InlineSelect";
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import { Button, StatusChip, type StatusTone } from "../../components/ui";
+import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
 import { getQaReviewPanels, type QaViewerRole } from "./panels";
@@ -32,6 +33,7 @@ import {
   type QaNote,
 } from "./reviewData";
 import type { SessionOutcome } from "../types";
+import { inboxAccounts } from "../../lib/workbench/mockInbox";
 
 /* 人工批注默认落在纸面的哪个字段上。划词时没有真 PDF 的坐标，
    所以按当前页给一个锚点，让它跟 AI 那批一样能在纸上被标出来。 */
@@ -65,6 +67,10 @@ const versionStatusLabel: Record<string, string> = {
   approved: "已通过",
   archived: "已归档",
 };
+
+/* 归档那一棒交给谁。从账号表里取，不写死名字——名字改了这里会跟着改，
+   而"负责人"这个岗位是稳定的。 */
+const qaOwnerName = inboxAccounts.find((item) => item.role === "owner")?.name ?? "负责人";
 
 const roleTitle: Record<QaViewerRole, string> = {
   author: "撰写人端",
@@ -107,10 +113,17 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
      恰恰是"这一版审完了没有"。 */
   const outcome = sessionOutcome ?? null;
   const setOutcome = (next: SessionOutcome) => onSessionOutcomeChange?.(next);
-  /* 驳回必须写理由。GxP 场景下无理由驳回不该能提交——撰写人拿到一句
-     「驳回」什么也做不了，下一版大概率还是错的。 */
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
+  /* 通过和驳回是同一条流转的两个方向，只是下一棒交给谁不同：
+       驳回 → 撰写人，请他修订
+       通过 → 负责人，请他做最终确认与归档
+     所以共用一个对话框。区别只在默认文案：驳回的理由必须自己写——
+     撰写人拿到一句光秃秃的「驳回」什么也做不了；通过有合理的默认结论，
+     预填好让人改，不逼他每次重打一遍。 */
+  const [decision, setDecision] = useState<"approve" | "reject" | null>(null);
+  const [decisionNote, setDecisionNote] = useState("");
+  /* 开关状态在这一层，弹窗本身不随挂载卸载出现——所以要显式告诉 hook
+     什么时候它才算「在栈上」。 */
+  const decisionDismiss = useModalDismiss(() => setDecision(null), Boolean(decision));
   const [chatMessages, setChatMessages] = useState<QaChatMessage[]>(initialRequest ? [{
     id: "qa-mail-upload",
     role: "user",
@@ -167,12 +180,14 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     if (!annotateMode) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      /* 决策弹窗开着的时候它是最上面那层，Esc 归它——这里让开。 */
+      if (decision) return;
       if (annotation) { setAnnotation(null); window.getSelection()?.removeAllRanges(); return; }
       setAnnotateMode(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [annotateMode, annotation]);
+  }, [annotateMode, annotation, decision]);
 
   const sendChat = () => {
     const question = chatText.trim();
@@ -297,32 +312,54 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [role, outcome, allFindings, findingStates, activeFindingId, notesWithOutcome, noteDraft, baseVersionId, versionId]);
 
-  /* 驳回把这一版的结论打包丢回撰写人。三件事一起做，缺一件逻辑就断：
-       ① 版本状态置为已驳回，Session 进「等待撰写人修改」——这是机制
-       ② 已确认的问题清单 + 理由，作为这次退回的载荷
+  /* 落定一个结论。三件事一起做，缺一件逻辑就断：
+       ① 版本状态改掉，Session 进入下一个状态——这是机制
+       ② 载荷：驳回带已确认的问题清单，通过带这一轮的处置结果
        ③ 预填一封邮件草稿——这是通知，人过目再发，不替他发出去
-     只改状态不通知，撰写人不知道轮到自己了；只发信不改状态，下一版回来时
-     系统不知道它在回应哪一次退回，跨版本验证就断了。 */
-  const rejectWithReason = () => {
-    const reason = rejectReason.trim();
-    if (!reason) return;
+     只改状态不通知，下一棒不知道轮到自己了；只发信不改状态，
+     系统就不知道这一版走到哪儿了，跨版本验证会断。 */
+  const submitDecision = () => {
+    const text = decisionNote.trim();
+    if (!text || !decision) return;
     const confirmed = allFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "accepted");
     const lines = confirmed.map((finding) => `· ${formatPageRef(finding.docPage, finding.innerPage)}：${finding.text}`);
-    resolveWith("rejected", `驳回${version.label}：${reason}${confirmed.length ? `\n随附已确认问题 ${confirmed.length} 条。` : ""}`);
-    setRejectOpen(false);
-    setRejectReason("");
-    onComposeMail?.({
-      to: version.author,
-      subject: `退回修订：${taskTitle}（${version.label}）`,
-      body: [
-        `${version.author} 你好，`,
-        "",
-        `${version.label} 未通过本次审核，请修订后重新提交。`,
-        "",
-        `驳回理由：${reason}`,
-        ...(lines.length ? ["", `需要处理的问题（${confirmed.length} 条）：`, ...lines] : []),
-      ].join("\n"),
-    });
+
+    if (decision === "reject") {
+      resolveWith("rejected", `驳回${version.label}：${text}${confirmed.length ? `\n随附已确认问题 ${confirmed.length} 条。` : ""}`);
+      onComposeMail?.({
+        to: version.author,
+        subject: `退回修订：${taskTitle}（${version.label}）`,
+        body: [
+          `${version.author} 你好，`,
+          "",
+          `${version.label} 未通过本次审核，请修订后重新提交。`,
+          "",
+          `驳回理由：${text}`,
+          ...(lines.length ? ["", `需要处理的问题（${confirmed.length} 条）：`, ...lines] : []),
+        ].join("\n"),
+      });
+    } else {
+      /* 通过不是终点，是把这一版交给负责人做最终确认与归档。
+         审批人签的是"内容我看过了"，负责人签的是"这一版可以入库"。 */
+      resolveWith("approved", `${text}\n已送 ${qaOwnerName} 做最终确认与归档。`);
+      onComposeMail?.({
+        to: qaOwnerName,
+        subject: `请归档：${taskTitle}（${version.label}）`,
+        body: [
+          `${qaOwnerName} 你好，`,
+          "",
+          `${version.label} 已通过审批人复核，现送交最终确认与归档。`,
+          "",
+          `审核结论：${text}`,
+          "",
+          `本轮共 ${allFindings.length} 条批注（AI ${allFindings.filter((item) => item.source === "ai").length} 条 · 人工 ${allFindings.filter((item) => item.source === "human").length} 条），已全部处置。`,
+          ...(lines.length ? ["", `其中确认成立并已修订 ${confirmed.length} 条：`, ...lines] : []),
+        ].join("\n"),
+      });
+    }
+
+    setDecision(null);
+    setDecisionNote("");
   };
 
   const resolveWith = (next: "submitted" | "approved" | "rejected", noteText: string) => {
@@ -620,7 +657,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                   )}
                 </p></div><small>{role === "owner" ? "只读" : "待确认"}</small></header>
                 {role === "author" ? <div className="warningActions"><Button variant="primary" size="small" disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条 AI 批注未处置` : undefined} onClick={() => resolveWith("submitted", `已逐条处置 ${qaFindings.length} 条 AI 批注，提交${version.label}终审。`)}>提交审批</Button></div>
-                  : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => setRejectOpen(true)}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => resolveWith("approved", "经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。")}>通过</Button></div> : null}
+                  : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => { setDecision("reject"); setDecisionNote(""); }}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条批注未处置，逐条处置后才能通过` : undefined} onClick={() => { setDecision("approve"); setDecisionNote("经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。"); }}>通过</Button></div> : null}
               </section>
             ) : null}
             <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={outcome === null} onChange={onCoworkerChange} />
@@ -656,31 +693,59 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
         placeholder="问 QA 审核同事，例如：第 8 页那条时间逻辑怎么判的"
       /> : null}
 
-      {rejectOpen ? (
-        <div className="modalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRejectOpen(false); }}>
-          <section className="qaRejectDialog" role="dialog" aria-modal="true" aria-labelledby="qa-reject-title">
+      {decision ? (
+        <div className="modalBackdrop" role="presentation" {...decisionDismiss}>
+          <section className="qaRejectDialog" role="dialog" aria-modal="true" aria-labelledby="qa-decision-title">
             <header>
-              <h2 id="qa-reject-title">驳回{version.label}</h2>
-              <p>会把已确认的问题连同理由一起退回撰写人，并生成一封邮件草稿供你过目。</p>
+              <h2 id="qa-decision-title">
+                {decision === "reject" ? `驳回${version.label}` : `通过${version.label}`}
+              </h2>
+              {/* 说清楚下一棒是谁。这两个动作真正的区别不在"同意与否"，
+                  在"接下来谁拿到它" */}
+              <p>
+                {decision === "reject"
+                  ? `会把已确认的问题连同理由一起退回撰写人 ${version.author}，并生成一封邮件草稿供你过目。`
+                  : `会把本轮结论送交负责人 ${qaOwnerName} 做最终确认与归档，并生成一封邮件草稿供你过目。`}
+              </p>
             </header>
             <label className="qaRejectField">
-              <span>驳回理由<em>必填</em></span>
+              <span>
+                {decision === "reject" ? "驳回理由" : "审核结论"}
+                <em>{decision === "reject" ? "必填" : "会写入审计轨迹"}</em>
+              </span>
               <textarea
                 autoFocus
                 rows={4}
-                value={rejectReason}
-                placeholder="写明这一版为什么不能通过，例如：第 8 页盖章日期仍早于批准时间，流程顺序不成立。"
-                onChange={(event) => setRejectReason(event.target.value)}
+                value={decisionNote}
+                placeholder={decision === "reject"
+                  ? "写明这一版为什么不能通过，例如：第 8 页盖章日期仍早于批准时间，流程顺序不成立。"
+                  : "写明通过的依据。"}
+                onChange={(event) => setDecisionNote(event.target.value)}
               />
             </label>
             <p className="qaRejectSummary">
-              随附已确认问题 <b>{allFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "accepted").length}</b> 条
-              {openFindings ? <em>· 还有 {openFindings} 条未处置，不会随附</em> : null}
+              {decision === "reject" ? (
+                <>
+                  随附已确认问题 <b>{allFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "accepted").length}</b> 条
+                  {openFindings ? <em>· 还有 {openFindings} 条未处置，不会随附</em> : null}
+                </>
+              ) : (
+                <>
+                  随附本轮 <b>{allFindings.length}</b> 条批注的处置结果
+                  <em>· AI {allFindings.filter((item) => item.source === "ai").length} 条 · 人工 {allFindings.filter((item) => item.source === "human").length} 条</em>
+                </>
+              )}
             </p>
             <footer>
-              <button type="button" onClick={() => setRejectOpen(false)}>取消</button>
-              <Button variant="primary" size="small" disabled={!rejectReason.trim()} leadingIcon={<Undo2 size={14} />} onClick={rejectWithReason}>
-                确认驳回并退回
+              <button type="button" onClick={() => setDecision(null)}>取消</button>
+              <Button
+                variant="primary"
+                size="small"
+                disabled={!decisionNote.trim()}
+                leadingIcon={decision === "reject" ? <Undo2 size={14} /> : <Check size={14} />}
+                onClick={submitDecision}
+              >
+                {decision === "reject" ? "确认驳回并退回" : "确认通过并送归档"}
               </Button>
             </footer>
           </section>

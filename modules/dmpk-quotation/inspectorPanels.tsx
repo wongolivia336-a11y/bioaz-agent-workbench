@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import {
   resolveInspectorPanels,
   type InspectorContentState,
@@ -298,11 +299,13 @@ const globalRuleSources = [
 ];
 
 function StrategyDialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return <div className="strategyDialogBackdrop" role="dialog" aria-modal="true"><section className="strategyDialog"><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
+  const dismiss = useModalDismiss(onClose);
+  return <div className="strategyDialogBackdrop" role="presentation" {...dismiss}><section className="strategyDialog" role="dialog" aria-modal="true" aria-label={title}><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
 }
 
 function StrategyDrawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return <div className="strategyDrawerBackdrop" role="dialog" aria-modal="true"><section className="strategyDrawer"><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
+  const dismiss = useModalDismiss(onClose);
+  return <div className="strategyDrawerBackdrop" role="presentation" {...dismiss}><section className="strategyDrawer" role="dialog" aria-modal="true" aria-label={title}><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
 }
 
 function MaterialsPanel({ context }: { context: DmpkInspectorContext }) {

@@ -1,6 +1,8 @@
 "use client";
 
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { ScrollTopButton } from "../../components/ui/ScrollTopButton";
+import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import {
   Check,
   ChevronDown,
@@ -2554,13 +2556,19 @@ function ValidationPreviewModal({
         { id: "context", label: "分析上下文", desc: "允许 Agent 解释的事实" },
       ];
 
+  const dismiss = useModalDismiss(onClose);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const heading = isReview ? "专家建议预览" : "校验预览";
+
   return (
-    <div className="modalBackdrop" role="dialog" aria-modal="true">
-      <section className="previewModal">
+    /* role="dialog" 归面板，遮罩是 presentation——原来两个都挂在遮罩上，
+       读屏软件会把整个背景层当成对话框。 */
+    <div className="modalBackdrop" role="presentation" {...dismiss}>
+      <section className="previewModal" role="dialog" aria-modal="true" aria-label={heading}>
         <header>
           <div>
             <span>{isReview ? "专家建议" : "校验预览"}</span>
-            <h2>{isReview ? "专家建议预览" : "校验预览"}</h2>
+            <h2>{heading}</h2>
           </div>
           <button className="iconButton" type="button" onClick={onClose} aria-label="关闭">
             <X size={18} />
@@ -2580,7 +2588,7 @@ function ValidationPreviewModal({
               </button>
             ))}
           </nav>
-          <div className="previewContent">
+          <div className="previewContent" ref={scrollRef}>
             {isReview ? (
               <>
                 {section === "recognized" ? <ReviewExpertsTable /> : null}
@@ -2598,6 +2606,7 @@ function ValidationPreviewModal({
             )}
           </div>
         </div>
+        <ScrollTopButton targetRef={scrollRef} />
       </section>
     </div>
   );
@@ -2796,13 +2805,17 @@ function ArtifactPreviewModal({
     { id: "review-doc", label: "专家建议文档", desc: "用户确认后的审核交付" },
   ];
 
+  const dismiss = useModalDismiss(onClose);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const heading = sections.find((item) => item.id === kind)?.label ?? "产物预览";
+
   return (
-    <div className="modalBackdrop" role="dialog" aria-modal="true">
-      <section className="previewModal artifactPreviewModal">
+    <div className="modalBackdrop" role="presentation" {...dismiss}>
+      <section className="previewModal artifactPreviewModal" role="dialog" aria-modal="true" aria-label={heading}>
         <header>
           <div>
             <span>产物预览</span>
-            <h2>{sections.find((item) => item.id === kind)?.label ?? "产物预览"}</h2>
+            <h2>{heading}</h2>
           </div>
           <button className="iconButton" type="button" onClick={onClose} aria-label="关闭">
             <X size={18} />
@@ -2822,7 +2835,7 @@ function ArtifactPreviewModal({
               </button>
             ))}
           </nav>
-          <div className="previewContent">
+          <div className="previewContent" ref={scrollRef}>
             {kind === "word" ? <WordArtifactPreview /> : null}
             {kind === "package" ? <PackageArtifactPreview /> : null}
             {kind === "prism" ? <PrismArtifactPreview /> : null}
@@ -2832,6 +2845,7 @@ function ArtifactPreviewModal({
             {kind === "review-doc" ? <ReviewDocArtifactPreview /> : null}
           </div>
         </div>
+        <ScrollTopButton targetRef={scrollRef} />
       </section>
     </div>
   );

@@ -6703,3 +6703,181 @@ button {
     max-height: calc(100dvh - 32px);
   }
 }
+
+/* ═══ 侧栏状态点与图标动效 ═══════════════════════════════════════════════
+   侧栏是分诊面板，不是仪表盘：只回答「哪几条需要我现在动手」。
+   所以 running / done 一律不上色——done 永远是列表里最多的一类，给它上色
+   等于给多数行上色，真正紧急的那条反而被淹进一片彩色里。 */
+
+.chatRow {
+  /* 描边要跟行底色一致，否则 7px 的点贴着图标笔画会糊成一团。
+     hover / active 时行背景会变，所以用变量跟着走。 */
+  --sidebar-row-bg: #fff;
+}
+
+.chatRow:hover { --sidebar-row-bg: #fafbfc; }
+.chatRow.active { --sidebar-row-bg: #f7f8fb; }
+
+.chatRowIcon {
+  position: relative;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: #344054;
+  transition: transform 60ms ease-out;
+}
+
+/* 按压反馈。掀角那种形变 lucide 做不了（path 固定，要 SVG morph 库），
+   而且 14px 下形变会糊成一团；缩一下是同样的「按到了」，成本为零。 */
+.chatRowMain:active .chatRowIcon {
+  transform: scale(0.9);
+}
+
+.chatRowDot {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px var(--sidebar-row-bg);
+}
+
+/* 待你确认。色值沿用 .status-pending 一直以来的 #9a7a3a：在 #fafbfc 上
+   对比度 3.89:1，图形元素要求 3:1。原来读不出来不是色值不够——是 5161 行
+   那个 neutral icon pass 早就把它盖成了 #344054，侧栏其实一直没有状态色。
+   （提亮只会更糟：黄色在浅底上越亮越沉，#c89b41 只剩 2.47:1。） */
+.chatRowDot.is-attention {
+  background: var(--sidebar-dot-attention, #9a7a3a);
+  animation: sidebarDotBreath 2400ms ease-in-out infinite;
+}
+
+/* 未读：agent 在你不在场时交付的。低饱和 logo 蓝，对比度 5.31:1。
+   指向 agent accent 而不是写死，将来那个色因为别的页面调整时这里能断开。 */
+.chatRowDot.is-unread {
+  background: var(--sidebar-dot-unread, var(--bioaz-agent-accent, #5c60b8));
+}
+
+/* 用运动换饱和度：静止的低饱和小点在余光里约等于不存在，缓慢运动的东西
+   视网膜周边区天生就会捕捉。只有「要你动手」的黄点呼吸，未读蓝点静止——
+   两者靠动/不动区分，比在 7px 上靠色相区分可靠得多，也天然色盲友好。 */
+@keyframes sidebarDotBreath {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* 关掉动画不能只是关掉——那样低饱和的点就真的看不见了。
+   退化成加深 + 放大，把靠运动换来的注意力用静态强度还回去。 */
+@media (prefers-reduced-motion: reduce) {
+  .chatRowDot.is-attention {
+    width: 8px;
+    height: 8px;
+    background: #7d6229;
+    animation: none;
+  }
+  .chatRowIcon,
+  .projectFolderIcon svg,
+  .workspaceViewRow.hasOrbitIcon svg,
+  .scrollTopButton {
+    transition: none;
+  }
+  .workspaceViewRow.hasOrbitIcon:hover svg {
+    animation: none;
+  }
+}
+
+/* ─── 项目行：文件夹自己表达开合 ─────────────────────────────────────────
+   右边的 chevron 已经撤掉——两个图标说同一件事是浪费。
+   lucide 的 Folder 和 FolderOpen 是两条结构不同的 path，插值不了，
+   所以用交叉淡入模拟「翻开」；为一个图标引一个 SVG morph 库不划算。 */
+.projectFolderIcon {
+  position: relative;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: #344054;
+}
+
+.projectFolderIcon svg {
+  grid-area: 1 / 1;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.projectFolderIcon[data-open="false"] svg:last-child,
+.projectFolderIcon[data-open="true"] svg:first-child {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.projectFolderIcon[data-open="false"] svg:first-child,
+.projectFolderIcon[data-open="true"] svg:last-child {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ─── 数据中枢：Orbit 顺着自己的意思转 ───────────────────────────────────
+   中心圆同心不动，只有两个卫星和轨道在走，所以整体 rotate 是物理正确的。 */
+.workspaceViewRow.hasOrbitIcon svg {
+  transition: transform 200ms ease-out;
+}
+
+.workspaceViewRow.hasOrbitIcon:hover svg {
+  animation: orbitSweep 2600ms linear infinite;
+}
+
+@keyframes orbitSweep {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══ 长内容回顶按钮 ═════════════════════════════════════════════════════
+   只在真的滚下去之后才出现。常驻按钮在还没滚动时是纯噪音，而且会一直压在
+   右下角，挡住的恰恰是表格最后一列。 */
+.scrollTopButton {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  z-index: 4;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--body);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  /* 藏起来时不能只是透明：还留在原地会拦住底下内容的点击 */
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), color 160ms ease, border-color 160ms ease;
+}
+
+.scrollTopButton.isVisible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.scrollTopButton:hover {
+  border-color: #cfd6e2;
+  color: var(--ink);
+}
+
+.scrollTopButton:active {
+  transform: translateY(0) scale(0.94);
+}
+
+.scrollTopButton:focus-visible {
+  outline: 2px solid rgba(41, 0, 255, 0.22);
+  outline-offset: 2px;
+}
+
+/* 回顶按钮浮在滚动容器之上，所以它的定位父级是弹窗本身，不是滚动区——
+   放进滚动区里它会跟着内容滚走，正好在你最需要它的时候消失。 */
+.previewModal {
+  position: relative;
+}
