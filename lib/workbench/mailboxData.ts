@@ -84,6 +84,9 @@ export const initialMail: MailItem[] = [
     preview: "请从本周起使用新的归档命名规则。",
     body: "本周起归档包统一使用“报告编号_版本_日期”的命名格式，请知悉。",
     time: "昨天",
+    /* 没看过，但也不用你做什么——这正是蓝点存在的意义：它跟上面两封
+       「待处理」的黄点不是同一件事。 */
+    unread: true,
     action: "none",
     attachments: [],
   },
