@@ -6844,6 +6844,52 @@ button {
   to { transform: rotate(360deg); }
 }
 
+/* ─── 数字团队：后面那个人往外站半步 ─────────────────────────────────────
+   lucide 的 Users 画的是两个人：前面一个完整的（第 1 条 path + circle），
+   后面一个只露半边（第 2、3 条 path）。推的就是后面那位——「团队」要说的
+   是它不止一个人，这句话只有这个图标能说。 */
+.workspaceViewRow.hasTeamIcon svg { overflow: visible; }
+
+.workspaceViewRow.hasTeamIcon svg path {
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-box: view-box;
+}
+
+.workspaceViewRow.hasTeamIcon:hover svg path:nth-of-type(2),
+.workspaceViewRow.hasTeamIcon:hover svg path:nth-of-type(3) {
+  transform: translate(1.4px, -0.5px);
+}
+
+/* ─── 搜索：镜片凑近 ─────────────────────────────────────────────────────
+   Search 是镜片（circle）+ 握柄（path）。这里缩放是对的，跟收件箱那次相反：
+   在那儿缩放换成任何图标都一样，等于装饰；而放大镜的本职**就是**放大，
+   所以镜片变大说的是这个物件正在做的事。
+   只缩镜片，握柄沿自己的对角线往外让半步，两者才还连着。 */
+.sidebarSearchButton svg circle,
+.sidebarSearchButton svg path {
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-box: view-box;
+}
+
+/* 圆心在 viewBox 的 (11,11)，不是图标中心——从错的原点放大会让镜片朝握柄滑过去 */
+.sidebarSearchButton svg circle { transform-origin: 11px 11px; }
+
+.sidebarSearchButton:hover svg circle { transform: scale(1.12); }
+.sidebarSearchButton:hover svg path { transform: translate(0.7px, 0.7px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .workspaceViewRow.hasTeamIcon svg path,
+  .workspaceViewRow.hasTeamIcon:hover svg path:nth-of-type(2),
+  .workspaceViewRow.hasTeamIcon:hover svg path:nth-of-type(3),
+  .sidebarSearchButton svg circle,
+  .sidebarSearchButton svg path,
+  .sidebarSearchButton:hover svg circle,
+  .sidebarSearchButton:hover svg path {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* ═══ 长内容回顶按钮 ═════════════════════════════════════════════════════
    只在真的滚下去之后才出现。常驻按钮在还没滚动时是纯噪音，而且会一直压在
    右下角，挡住的恰恰是表格最后一列。 */
