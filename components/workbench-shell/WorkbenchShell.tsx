@@ -269,19 +269,35 @@ export default function WorkbenchShell() {
   const runtimeTasksRef = useRef(runtimeTasks);
   runtimeTasksRef.current = runtimeTasks;
   const previousTaskRef = useRef<string | null>(null);
+  /* 计时按任务存，不能挂在下面那个 effect 的 cleanup 上。挂上去的话依赖是
+     activeTaskId，于是「离开 A、又切去 C」会在切 C 时把 A 的计时清掉——
+     只有离开一条之后原地不动，它才等得到自己跑完。 */
+  const pendingFinishRef = useRef(new Map<string, number>());
   useEffect(() => {
     const left = previousTaskRef.current;
     previousTaskRef.current = activeTaskId;
     if (!left || left === activeTaskId) return;
+    if (pendingFinishRef.current.has(left)) return;
     if (!runtimeTasksRef.current.some((task) => task.id === left && task.status === "running")) return;
     const timer = window.setTimeout(() => {
+      pendingFinishRef.current.delete(left);
       setRuntimeTasks((tasks) => tasks.map((task) => task.id === left ? { ...task, status: "done", time: "刚刚" } : task));
       setUnreadTaskIds((ids) => ids.includes(left) ? ids : [...ids, left]);
     }, 6000);
-    return () => window.clearTimeout(timer);
+    pendingFinishRef.current.set(left, timer);
   }, [activeTaskId]);
 
+  /* 只在整个工作台卸载时统一清干净。 */
+  useEffect(() => {
+    const timers = pendingFinishRef.current;
+    return () => { timers.forEach((id) => window.clearTimeout(id)); timers.clear(); };
+  }, []);
+
   const openTask = (task: WorkbenchTask) => {
+    /* 回到这条任务就取消它那笔待落地的「跑完」——否则你正看着它的时候它翻成
+       未读，而未读的前提是你不在场。 */
+    const pending = pendingFinishRef.current.get(task.id);
+    if (pending !== undefined) { window.clearTimeout(pending); pendingFinishRef.current.delete(task.id); }
     setUnreadTaskIds((ids) => ids.filter((id) => id !== task.id));
     setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setInitialRequest(undefined); setHandoffNotice(undefined);
     if (task.moduleId === "bioaz-helper") {

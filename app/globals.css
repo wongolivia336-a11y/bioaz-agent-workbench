@@ -600,25 +600,13 @@ button {
   color: var(--muted);
 }
 
-.chatRow.status-pending .sidebarIcon,
-.sidebarIcon.pending {
-  color: #9a7a3a;
-}
-
-.chatRow.status-blocked .sidebarIcon,
-.sidebarIcon.blocked {
-  color: #a46560;
-}
-
-.chatRow.status-done .sidebarIcon,
-.sidebarIcon.done {
-  color: #5f846f;
-}
-
-.chatRow.status-running .sidebarIcon,
-.sidebarIcon.running {
-  color: #6f7886;
-}
+/* 这里原本有四条给 .chatRow.status-* .sidebarIcon 上状态色的规则。它们**一条都没
+   生效**——本文件后面那一遍「Neutral icon pass」把同样的选择器又写了一次并压成
+   #344054，写在后面就赢。这套色死了很久，留着的唯一作用是骗人:读到这儿会以为
+   侧栏有状态色,于是去别处找它为什么看不见。
+   状态现在由 .chatRowDot 那颗点表达,见文件末尾「状态点」一节。
+   注意 .sidebarRow.status-*（下面几十行）不在此列,那套是 legacy 药效报告侧栏在
+   用的,neutral pass 没有覆盖它,仍然活着。 */
 
 .sidebarRow {
   position: relative;
@@ -5159,15 +5147,9 @@ button {
 }
 
 /* Neutral icon pass: keep sidebar and menus quiet, small, and consistent. */
+/* 原来这里还列了 8 条 .chatRow.status-* / .sidebarIcon.* 的变体,是专门用来压住
+   上面那批状态色的。那批已经删了,这些也就没有对手了——单靠 .sidebarIcon 就够。 */
 .sidebarIcon,
-.chatRow.status-pending .sidebarIcon,
-.chatRow.status-blocked .sidebarIcon,
-.chatRow.status-done .sidebarIcon,
-.chatRow.status-running .sidebarIcon,
-.sidebarIcon.pending,
-.sidebarIcon.blocked,
-.sidebarIcon.done,
-.sidebarIcon.running,
 .newChatMenu button svg,
 .projectRow > svg:first-child,
 .workspaceViewRow svg,
