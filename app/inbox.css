@@ -66,8 +66,17 @@
    注意它跟「待处理」是两回事，读过不等于处理完，徽标数看的是后者。 */
 .mailboxRow.isUnread .mailboxRowMain > b { font-weight:700; }
 .mailboxRow.isUnread .mailboxRowMain > div strong { color:var(--bioaz-text-primary); font-weight:700; }
-.mailboxRow.isUnread::after { position:absolute; top:19px; right:12px; width:6px; height:6px; border-radius:var(--bioaz-radius-full); background:var(--bioaz-agent-accent); content:""; }
-.mailboxRow.isUnread:hover::after, .mailboxRow.active.isUnread::after { display:none; }
+/* 这颗点原来挂在 unread 上，所以一封「待处理」的信和一封纯通知长得一模一样——
+   而它们要你做的事完全不同。改成跟侧栏同一套：黄 = 要你动手，蓝 = 有新的但
+   不用你动手，黄盖蓝。 */
+.mailboxRow.hasDot::after { position:absolute; top:19px; right:12px; width:6px; height:6px; border-radius:var(--bioaz-radius-full); content:""; }
+.mailboxRow.dot-attention::after { background:var(--sidebar-dot-attention); }
+.mailboxRow.dot-unread::after { background:var(--sidebar-dot-unread); }
+/* 侧栏的黄点会呼吸，这里不会：侧栏在余光里，要靠运动才抓得住；邮件列表本来
+   就是你正盯着看的东西，再动就是跟内容抢注意力。 */
+/* 未读的蓝点 hover 即让位——鼠标停上来基本等于要读了。待处理的黄点不让：
+   悬停不会让一件待办消失。两者都在这封信被打开时收起。 */
+.mailboxRow.dot-unread:hover::after, .mailboxRow.active.hasDot::after { display:none; }
 
 /* 「加入对话」常驻占位、hover 才显形：扫列表时不该被一排图标干扰，
    但也不能等 hover 才占位——那样每行都会在鼠标经过时抖一下。 */
@@ -343,6 +352,31 @@
 }
 
 .sidebarInboxButton:hover { background: var(--bioaz-surface-hover); color: var(--bioaz-text-primary); }
+
+/* lucide 的 Inbox 是两个独立元素：一条带缺口的开口线（polyline）和一个托盘
+   身体（path）。图标自己就画出了「东西从这里进去」的结构，所以 hover 时只掀
+   开口那条线——这句话只有收件箱能说，整体缩放换成任何图标都一样，等于没说。
+   身体反向沉 0.5px，把「掀开」那一下的间距做实。 */
+.sidebarInboxButton svg { overflow: visible; }
+
+.sidebarInboxButton svg polyline,
+.sidebarInboxButton svg path {
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: center;
+}
+
+.sidebarInboxButton:hover svg polyline { transform: translateY(-2px); }
+.sidebarInboxButton:hover svg path { transform: translateY(0.5px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebarInboxButton svg polyline,
+  .sidebarInboxButton svg path,
+  .sidebarInboxButton:hover svg polyline,
+  .sidebarInboxButton:hover svg path {
+    transition: none;
+    transform: none;
+  }
+}
 
 .sidebarInboxBadge {
   position: absolute;

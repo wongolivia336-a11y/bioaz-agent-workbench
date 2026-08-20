@@ -23,7 +23,15 @@ export const workspacePinCatalog: PinItem[] = [
   { id: "task-report-7", type: "task", title: "样本 7 单批次报告", project: workspaceProjects[0].name, moduleId: "tumor-report", coworkerId: "tumor-report-coworker", coworkerName: "药效报告同事", time: "1 小时前", status: "done", priority: "low" },
   { id: "task-new-quote", type: "task", title: "新建报价任务", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "刚刚", status: "running", priority: "high" },
   { id: "task-ba", type: "task", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done", priority: "low" },
+  /* ZZ 项目原本一条任务都没有，展开是空的。给它一条待确认的，顺便让「要你动手」
+     这件事在侧栏出现在两个不同项目下——只有一条时，看的人会以为那是那条任务的
+     特例，而不是一种状态。 */
+  { id: "task-ct26-quote", type: "task", title: "CT26 模型评价报价", project: workspaceProjects[2].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "1 天前", status: "pending", priority: "medium" },
 ];
+
+/* agent 在你不在场时交付、你还没点开的任务。运行时也会往里加（离开一条还在
+   跑的任务，它跑完就落进来），这里先种一条，好让侧栏一打开就能同时看见两种点。 */
+export const seededUnreadTaskIds = ["task-report-7"];
 
 export const workspaceTasks: TaskCollection = {
   actionRequired: [],

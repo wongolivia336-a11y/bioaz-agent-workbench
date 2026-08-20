@@ -12,7 +12,7 @@ import { DigitalTeamPage } from "./DigitalTeamPage";
 import { KnowledgeBasePage } from "../knowledge-base/KnowledgeBasePage";
 import { inboxAccounts } from "../../lib/workbench/mockInbox";
 import { mailboxTodoCount } from "../../lib/workbench/mailboxData";
-import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
+import { seededUnreadTaskIds, workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { MailDraft, ProjectType, QuotationManagementTarget, SessionOutcome, WorkbenchProject } from "../../modules/types";
@@ -41,9 +41,9 @@ export default function WorkbenchShell() {
   const [handoffNotice, setHandoffNotice] = useState<string | undefined>();
   const [pinnedItemIds, setPinnedItemIds] = useState<string[]>([]);
   const [runtimeTasks, setRuntimeTasks] = useState<WorkbenchTask[]>([]);
-  /* 未读 = agent 在你不在场的时候把活干完了。挂在真实的状态翻转上，
-     而不是挂一个静态字段——否则那个点永远只是布景，不会「亮起来」。 */
-  const [unreadTaskIds, setUnreadTaskIds] = useState<string[]>([]);
+  /* 未读 = agent 在你不在场的时候把活干完了。运行时靠真实的状态翻转产生
+     （见下面那个 effect），初值种一条，好让侧栏一打开就能同时看见两种点。 */
+  const [unreadTaskIds, setUnreadTaskIds] = useState<string[]>(seededUnreadTaskIds);
   const [projects, setProjects] = useState<WorkbenchProject[]>(workspaceProjects);
   const [deletedProjectIds, setDeletedProjectIds] = useState<string[]>([]);
   const [deletedTaskIds, setDeletedTaskIds] = useState<string[]>([]);

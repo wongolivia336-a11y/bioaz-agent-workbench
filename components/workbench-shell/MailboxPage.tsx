@@ -33,6 +33,17 @@ import { Button, Dialog, EmptyState, Menu, MenuGroup, MenuItem, NavTabs, Segment
 
 type MailFilter = "all" | "todo" | "done";
 
+/* 行右上那颗点。跟侧栏任务行同一套规则，因为它们回答的是同一个问题：
+     黄 = 要你动手（待处理）
+     蓝 = 有新东西没看，但不用你动手（纯通知）
+   黄盖蓝——一封待处理的信同时也未读时只显黄，「要你处理」已经隐含
+   「有新内容」。原来这颗点挂在 unread 上，于是一封待办和一封公告长得一样。 */
+function mailDotTone(item: MailItem): "attention" | "unread" | null {
+  if (item.action === "open") return "attention";
+  if (item.unread) return "unread";
+  return null;
+}
+
 /** 收件人只有真人。要把活交给数字同事，走「进入处理会话」，不走邮件。 */
 export type MailRecipient = { id: string; name: string; role: string };
 
@@ -278,7 +289,7 @@ export function MailboxPage({ account, tasks, onStartTask, draft, onDraftConsume
             /* 行是 div 不是 button：右边那颗「加入对话」是行内的第二个动作，
                button 套 button 是非法嵌套，菜单也会被行的点击吃掉。 */
             <div
-              className={`mailboxRow ${pane === "read" && selected?.id === item.id ? "active" : ""} ${item.unread ? "isUnread" : ""}`}
+              className={`mailboxRow ${pane === "read" && selected?.id === item.id ? "active" : ""} ${item.unread ? "isUnread" : ""} ${mailDotTone(item) ? `hasDot dot-${mailDotTone(item)}` : ""}`}
               key={item.id}
             >
               <button className="mailboxRowMain" type="button" onClick={() => openMail(item.id)}>
