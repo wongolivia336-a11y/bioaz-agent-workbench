@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
+import { BadgeDollarSign, Check, ChevronRight, ChevronUp, ClipboardList, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { inboxAccounts, type InboxAccount } from "../../lib/workbench/mockInbox";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
@@ -142,6 +142,10 @@ export function WorkspaceSidebar(props: Props) {
         {/* Users 画的是两个人，后面那位只露半边。hover 时让他往外站半步——
             「团队」要说的就是它不止一个人。 */}
         <button className={`workspaceViewRow hasTeamIcon ${props.activeRoute === "digitalTeam" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("digitalTeam")}><Users size={14} /><span>数字团队</span></button>
+        {/* 工单进一级入口,站内信留在上面那排图标里——通知是图标,工作才是入口。
+            这里不挂数字:工单不是未读消息,没有「看过就消掉」这回事,常驻一个数字
+            会变成读不掉的背景噪音。数量放在页内「待我处理」那一档上就够了。 */}
+        <button className={`workspaceViewRow ${props.activeRoute === "tickets" ? "active" : ""}`} type="button" onClick={() => props.onRouteChange("tickets")}><ClipboardList size={14} /><span>工单</span></button>
       </nav>
 
       {pinnedItems.length ? (

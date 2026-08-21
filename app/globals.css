@@ -7060,3 +7060,342 @@ button {
   outline: 2px solid rgba(41, 0, 255, 0.22);
   outline-offset: 1px;
 }
+
+/* ═══ 工单 ═══════════════════════════════════════════════════════════════
+   表格而不是卡片流:工单是台账,人来这儿是为了扫和查——「哪几条待我处理」
+   「样本 9 那份现在在谁手上」。卡片一屏放三条,答不了第二个问题。 */
+.ticketsView {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  gap: 14px;
+  padding: 22px 26px 18px;
+}
+
+/* 标题、状态 tab、主按钮都 portal 进顶栏,跟数据中枢/数字团队/邮箱同一套,
+   所以这里不再有页内 h1——顶栏面包屑本来就在说「工单」。 */
+.ticketsCreateButton { display: inline-flex; align-items: center; gap: 6px; }
+
+.ticketsFilters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticketsSearch {
+  display: flex;
+  min-width: 260px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 9px;
+  color: var(--muted);
+  min-height: 32px;
+}
+
+.ticketsSearch input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  outline: 0;
+}
+
+.ticketsSearch button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 2px;
+  cursor: pointer;
+}
+
+.ticketsTableWrap {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.ticketsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ticketsTable th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid var(--line);
+  background: var(--soft, #f7f8fb);
+  padding: 10px 12px;
+  color: var(--body);
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ticketsTable td {
+  border-bottom: 1px solid var(--line);
+  padding: 11px 12px;
+  color: var(--ink-soft);
+  vertical-align: middle;
+}
+
+.ticketsTable tbody tr:last-child td { border-bottom: 0; }
+.ticketsTable tbody tr:hover { background: #fafbfc; }
+
+.ticketsId { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ticketsTime { color: var(--muted); white-space: nowrap; }
+.ticketsProject { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ticketsTitle { max-width: 340px; }
+.ticketsTitle strong { display: block; overflow: hidden; color: var(--ink); font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 附件名跟标题同格:决定「要不要现在点开」的,往往是随单那份产物是什么。 */
+.ticketsAttach {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticketsActions { white-space: nowrap; }
+
+.ticketsActions button {
+  border: 0;
+  background: transparent;
+  padding: 0 6px;
+  color: var(--bioaz-agent-accent);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ticketsActions button:first-child { padding-left: 0; }
+
+/* 球不在你手上时「处理」不可点。给个点不动的按钮比不给更让人困惑,
+   所以它变灰而不是消失——位置还在,说明这一列一直有两个动作。 */
+.ticketsActions button:disabled { color: var(--muted); cursor: not-allowed; }
+
+.ticketsEmpty { padding: 40px 12px; color: var(--muted); text-align: center; }
+
+.ticketsPager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.ticketsPager > div { display: flex; align-items: center; gap: 4px; }
+
+.ticketsPager button {
+  display: grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  padding: 0 7px;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ticketsPager button.active {
+  border-color: var(--bioaz-agent-accent);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+.ticketsPager button:disabled { color: var(--muted); cursor: not-allowed; opacity: .55; }
+
+/* ─── 工单详情 ─────────────────────────────────────────────────────────── */
+.previewModal.ticketDetailModal {
+  width: min(680px, calc(100vw - 40px));
+  height: auto;
+  max-height: min(720px, calc(100dvh - 40px));
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.ticketDetailBody { min-height: 0; overflow-y: auto; padding: 20px 24px 24px; }
+
+.ticketDetailMeta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin: 0 0 22px;
+}
+
+.ticketDetailMeta > div { display: grid; gap: 3px; }
+.ticketDetailMeta dt { color: var(--muted); font-size: 11.5px; }
+.ticketDetailMeta dd { margin: 0; color: var(--ink); font-size: 13px; }
+
+.ticketDetailFiles h3,
+.ticketDetailFlow h3 {
+  margin: 0 0 10px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 7px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.ticketDetailFiles { margin-bottom: 22px; }
+
+.ticketDetailFiles article {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 11px;
+  color: var(--muted);
+}
+
+.ticketDetailFiles strong { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
+.ticketDetailFiles small { color: var(--muted); font-size: 11.5px; }
+
+/* 流转记录是工单相对邮件多出来的那样东西:同一份报告来回三轮,邮件里是三封信、
+   谁也拼不出全貌,这里它是一条。所以画成一条竖线上的节点,不是一堆卡片。 */
+.ticketDetailFlow ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticketDetailFlow li {
+  position: relative;
+  border-left: 1px solid var(--line);
+  padding: 0 0 16px 18px;
+}
+
+.ticketDetailFlow li:last-child { border-left-color: transparent; padding-bottom: 0; }
+
+.ticketDetailFlow li::before {
+  position: absolute;
+  top: 4px;
+  left: -4.5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line-strong, #d0d5dd);
+  content: "";
+}
+
+.ticketDetailFlow li:first-child::before { background: var(--bioaz-agent-accent); }
+
+.ticketDetailFlow li > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ticketDetailFlow strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+.ticketDetailFlow time { flex: none; color: var(--muted); font-size: 11.5px; }
+.ticketDetailFlow small { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
+.ticketDetailFlow p { margin: 6px 0 0; border-radius: 8px; background: var(--soft, #f7f8fb); padding: 8px 10px; color: var(--ink-soft); font-size: 12.5px; line-height: 1.65; }
+
+/* ─── 交接对话框 ───────────────────────────────────────────────────────── */
+.previewModal.ticketHandoffModal {
+  width: min(620px, calc(100vw - 40px));
+  height: auto;
+  max-height: min(760px, calc(100dvh - 40px));
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.ticketHandoffBody {
+  display: grid;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 16px;
+  padding: 20px 24px 24px;
+}
+
+.ticketHandoffField { display: grid; gap: 6px; }
+.ticketHandoffField > span { color: var(--body); font-size: 12px; font-weight: 600; }
+
+.ticketHandoffField input,
+.ticketHandoffField textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 9px 11px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.ticketHandoffField input:focus,
+.ticketHandoffField textarea:focus {
+  border-color: var(--bioaz-agent-accent);
+  outline: 0;
+}
+
+.ticketHandoffRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ticketHandoffFiles { display: grid; gap: 7px; }
+
+.ticketHandoffFiles article {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 10px;
+  color: var(--muted);
+}
+
+.ticketHandoffFiles article > div { min-width: 0; flex: 1; }
+.ticketHandoffFiles strong { display: block; overflow: hidden; color: var(--ink); font-size: 12.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.ticketHandoffFiles small { color: var(--muted); font-size: 11px; }
+.ticketHandoffFiles article > button { display: grid; flex: none; place-items: center; border: 0; background: transparent; color: var(--muted); padding: 2px; cursor: pointer; }
+
+.ticketHandoffUpload {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed var(--line-strong, #d0d5dd);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--body);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ticketHandoffUpload:hover { border-color: var(--bioaz-agent-accent); color: var(--bioaz-agent-accent); }
+
+.ticketHandoffFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  padding: 13px 24px;
+}
+
+/* 先说清楚交出去之后会怎样,再让人点确认。交接是有后果的动作,
+   不该让人点完才发现东西从自己列表里消失了。 */
+.ticketHandoffFoot p { margin: 0; color: var(--muted); font-size: 12px; }
+.ticketHandoffFoot strong { color: var(--ink); font-weight: 600; }
+.ticketHandoffFoot > div { display: flex; flex: none; gap: 8px; }
