@@ -6,7 +6,8 @@
    =================================================================== */
 
 /* 原生滚动条自己就是一条一直可见、且随滚动变化的竖条，和 minimap 的
-   默认隐身互相矛盾。会话流交给 minimap 独占右边缘。 */
+   默认隐身互相矛盾。minimap 移到左边缘之后右边空了出来，但这里仍然不放
+   滚动条回来:那条一直亮着的竖条正是当初要躲开的东西,跟边缘无关。 */
 .dmpkChatScroller,
 .chatScroller {
   scrollbar-width: none;
@@ -24,22 +25,24 @@
   transition: opacity var(--bioaz-motion-standard) var(--bioaz-ease-out-2);
 }
 
-/* 刻度全部右端对齐在 right:14px 这条隐含线上，波峰向左长出去。
-   这里曾经画过一条 1px 实脊线，已删——它和面板左边框相距 14.5px、
-   宽度相同、颜色相近，两条并排会被读成一条线画歪了。 */
+/* 刻度全部左端对齐在 left:14px 这条隐含线上，波峰向右长出去。
+   走左边缘是因为右边紧挨着信息面板:面板边框、滚动条位置和 minimap 的
+   活动带三者叠在十几像素里互相干扰。左边是会话与侧栏之间的空档。
+   这里曾经画过一条 1px 实脊线，已删——它和面板边框宽度相同、颜色相近，
+   两条并排会被读成一条线画歪了。 */
 
 /* 纹理线：纯装饰，不可点、不进无障碍树。
    它负责密度和轮廓，语义仍然只由下面的实刻度承担。 */
 .sessionMinimapGrain {
   position: absolute;
-  right: 14px;
+  left: 14px;
   display: block;
   width: 34px;
   height: 2px;
   /* 高度 2px，用负 margin 对中比 translateY(-50%) 省一次变换合成 */
   margin-top: -1px;
   border-radius: var(--bioaz-radius-full);
-  transform-origin: right center;
+  transform-origin: left center;
   background: rgba(17, 19, 24, 0.22);
   pointer-events: none;
   will-change: transform, opacity;
@@ -47,10 +50,10 @@
 
 .sessionMinimapTick {
   position: absolute;
-  right: 14px;
+  left: 14px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   width: 34px;
   /* 刻度本身只有 2px 高，靠这 14px 的透明盒子才点得中 */
   height: 14px;
@@ -68,7 +71,7 @@
   height: 2px;
   border-radius: var(--bioaz-radius-full);
   /* 每帧改的是 transform 和 opacity，不动 width——合成器能直接接管 */
-  transform-origin: right center;
+  transform-origin: left center;
   background: rgba(17, 19, 24, 0.34);
   will-change: transform, opacity;
 }
@@ -91,7 +94,7 @@
 .sessionMinimapLabel {
   position: absolute;
   /* 让开刻度的最大长度（14 + 34）再留 8px 呼吸 */
-  right: 56px;
+  left: 56px;
   max-width: 240px;
   padding: 4px 9px;
   overflow: hidden;

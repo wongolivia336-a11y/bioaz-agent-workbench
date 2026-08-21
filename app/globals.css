@@ -600,25 +600,13 @@ button {
   color: var(--muted);
 }
 
-.chatRow.status-pending .sidebarIcon,
-.sidebarIcon.pending {
-  color: #9a7a3a;
-}
-
-.chatRow.status-blocked .sidebarIcon,
-.sidebarIcon.blocked {
-  color: #a46560;
-}
-
-.chatRow.status-done .sidebarIcon,
-.sidebarIcon.done {
-  color: #5f846f;
-}
-
-.chatRow.status-running .sidebarIcon,
-.sidebarIcon.running {
-  color: #6f7886;
-}
+/* 这里原本有四条给 .chatRow.status-* .sidebarIcon 上状态色的规则。它们**一条都没
+   生效**——本文件后面那一遍「Neutral icon pass」把同样的选择器又写了一次并压成
+   #344054，写在后面就赢。这套色死了很久，留着的唯一作用是骗人:读到这儿会以为
+   侧栏有状态色,于是去别处找它为什么看不见。
+   状态现在由 .chatRowDot 那颗点表达,见文件末尾「状态点」一节。
+   注意 .sidebarRow.status-*（下面几十行）不在此列,那套是 legacy 药效报告侧栏在
+   用的,neutral pass 没有覆盖它,仍然活着。 */
 
 .sidebarRow {
   position: relative;
@@ -5159,15 +5147,9 @@ button {
 }
 
 /* Neutral icon pass: keep sidebar and menus quiet, small, and consistent. */
+/* 原来这里还列了 8 条 .chatRow.status-* / .sidebarIcon.* 的变体,是专门用来压住
+   上面那批状态色的。那批已经删了,这些也就没有对手了——单靠 .sidebarIcon 就够。 */
 .sidebarIcon,
-.chatRow.status-pending .sidebarIcon,
-.chatRow.status-blocked .sidebarIcon,
-.chatRow.status-done .sidebarIcon,
-.chatRow.status-running .sidebarIcon,
-.sidebarIcon.pending,
-.sidebarIcon.blocked,
-.sidebarIcon.done,
-.sidebarIcon.running,
 .newChatMenu button svg,
 .projectRow > svg:first-child,
 .workspaceViewRow svg,
@@ -6915,6 +6897,23 @@ button {
   transition: opacity 160ms ease, transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), color 160ms ease, border-color 160ms ease;
 }
 
+/* 重复类名是为了赢下特异性,不是手滑。design-system.css 有一条全局按压反馈
+   `:where(button, …):not(:disabled) { transition: transform 120ms }`——:where()
+   零特异性,整条只算 (0,1,0),跟单个 .scrollTopButton 打平,而它加载在后面,
+   于是把上面那条 transition 整个换掉,淡入淡出就没了(按钮硬闪)。
+   这里用 (0,2,0) 明确说明:这颗按钮的进出自己管。 */
+.scrollTopButton.scrollTopButton {
+  transition: opacity 160ms ease, transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), color 160ms ease, border-color 160ms ease;
+}
+
+/* 上面那条抬到了 (0,2,0),于是前面 reduced-motion 块里的 `.scrollTopButton`
+   (0,1,0) 就压不住它了——媒体查询不增加特异性。降级必须在这儿配平地写一遍。 */
+@media (prefers-reduced-motion: reduce) {
+  .scrollTopButton.scrollTopButton {
+    transition: none;
+  }
+}
+
 .scrollTopButton.isVisible {
   opacity: 1;
   transform: translateY(0);
@@ -6939,4 +6938,125 @@ button {
    放进滚动区里它会跟着内容滚走，正好在你最需要它的时候消失。 */
 .previewModal {
   position: relative;
+}
+
+/* ═══ 参数补全的全屏面板 ═══════════════════════════════════════════════════
+   行内卡把 14 项参数切成四页,是为了在 composer 那点高度里放得下——不是因为
+   这些参数该被分批问。代价是后面的页在你填完前是禁用的,想先填「报告与报价」
+   那三项做不到。全屏取消分页,四组一次列全,哪一项都能先填。 */
+.previewModal.dmpkParamModal {
+  width: min(880px, calc(100vw - 40px));
+  height: min(720px, calc(100dvh - 40px));
+  max-height: none;
+  /* 头、可滚动的身体、脚。previewModal 原本只有两行。 */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.dmpkParamModalBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+}
+
+.dmpkParamModalGroup + .dmpkParamModalGroup {
+  margin-top: 26px;
+}
+
+.dmpkParamModalGroup > h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* 每组自己报还差几项。滚到一半时,顶部那个总数已经看不见了。 */
+.dmpkParamModalGroup > h3 em {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.dmpkParamModalGroup .decisionRow + .decisionRow {
+  margin-top: 8px;
+}
+
+.dmpkParamModalFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding: 14px 24px;
+}
+
+.dmpkParamModalFoot p {
+  margin: 0;
+  color: var(--body);
+  font-size: 13px;
+}
+
+/* 黑色而不是品牌蓝。--brand 在这套系统里是「可点」的意思,到处都是;
+   这颗是这一屏唯一的落定动作,用中性的动作色把它跟满屏的选项按钮分开。 */
+.dmpkParamModalFoot .primaryButton {
+  background: var(--bioaz-action-primary);
+  border-color: var(--bioaz-action-primary);
+}
+
+.dmpkParamModalFoot .primaryButton:hover {
+  background: var(--bioaz-action-primary-hover);
+  border-color: var(--bioaz-action-primary-hover);
+}
+
+/* 回顶按钮要让开页脚,否则正好压在「完成」上。 */
+.dmpkParamModal .scrollTopButton {
+  bottom: 78px;
+}
+
+/* 计数和全屏入口平排一行,图标在右端。
+   带上父级选择器是为了赢过 `.warningDecisionHeader div { display: grid }`——
+   那条是 (0,1,1),单独一个 .parameterCardHeadActions 只有 (0,1,0),会被它按成
+   单列 grid,两个孩子就上下堆起来了。 */
+.warningDecisionHeader .parameterCardHeadActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* 整张卡可点开全屏,所以光标要说实话。选项按钮自己是 button,不受影响。 */
+.parameterTaskCard.canExpand {
+  cursor: pointer;
+}
+
+.parameterExpandButton {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--body);
+  padding: 0;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.parameterExpandButton:hover {
+  border-color: #cfd6e2;
+  background: #fafbfc;
+  color: var(--ink);
+}
+
+.parameterExpandButton:focus-visible {
+  outline: 2px solid rgba(41, 0, 255, 0.22);
+  outline-offset: 1px;
 }

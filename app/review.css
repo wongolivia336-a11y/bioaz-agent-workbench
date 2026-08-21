@@ -4970,7 +4970,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .gateDecision,
 .gateDecision *,
 .parameterTaskCard,
-.parameterTaskCard * {
+.parameterTaskCard *,
+.dmpkParamModalBody,
+.dmpkParamModalBody * {
   transition: none;
   animation: none;
   transform: none;
@@ -5600,9 +5602,27 @@ button { -webkit-tap-highlight-color: transparent; }
   --bioaz-chat-width: min(920px, 100%);
 }
 
+/* 左边留一条车道给 minimap。会话列是 min(920px, 100%) 居中的,在 794px 宽的
+   scroller 里 100% 胜出、列就是满宽,两边一点空档都没有——刻度最长伸到
+   14 + 34 = 48px,不让位就会压在 agent 头像和段落起点上。
+   原来 minimap 在右边时压的是用户气泡的尾部,同样有重叠,只是压在读完的一侧
+   不容易被察觉;既然搬到阅读起点这一侧,就得真的把位置腾出来。 */
+.tumor-reportModuleShell,
+.dmpk-quotationModuleShell {
+  --bioaz-minimap-lane: 52px;
+}
+
+/* 没有精确指针就不挂载 minimap（见 SessionMinimap.tsx），车道也就不该占宽 */
+@media (hover: none), (pointer: coarse) {
+  .tumor-reportModuleShell,
+  .dmpk-quotationModuleShell {
+    --bioaz-minimap-lane: 0px;
+  }
+}
+
 .tumor-reportModuleShell .chatScroller,
 .dmpk-quotationModuleShell .dmpkChatScroller {
-  padding-inline: 0;
+  padding-inline: var(--bioaz-minimap-lane, 52px) 0;
 }
 .tumor-reportModuleShell .chatScroller > *,
 .dmpk-quotationModuleShell .dmpkChatScroller > * {
@@ -5619,7 +5639,9 @@ button { -webkit-tap-highlight-color: transparent; }
   left: 0;
   width: var(--bioaz-chat-width);
   max-width: none;
-  padding-inline: 0;
+  /* 车道不在这里给——这条规则打不过后面那条 padding-inline: 0。
+     dmpk 的在 .dmpkComposerWrap 那条单独给,legacy 的见下。 */
+  padding-inline: var(--bioaz-minimap-lane, 52px) 0;
   margin-inline: auto;
 }
 .tumor-reportModuleShell .composerShell {
@@ -5984,7 +6006,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 12px;
   line-height: 1;
 }
-.parameterTaskCard .decisionRow {
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow {
   position: static;
   border: 1px solid var(--bioaz-border);
   border-radius: 8px;
@@ -6008,10 +6030,10 @@ button { -webkit-tap-highlight-color: transparent; }
   transform: none;
 }
 
-.parameterTaskCard .decisionRow,
-.parameterTaskCard:hover .decisionRow,
-.parameterTaskCard .decisionRow:hover,
-.parameterTaskCard .decisionRow:focus-within {
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow,
+:is(.parameterTaskCard, .dmpkParamModalBody):hover .decisionRow,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:focus-within {
   display: block;
   min-height: 62px;
   padding: 8px 11px;
@@ -6020,9 +6042,9 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* 字号同样锁死：同一组值在静止 / 悬停 / 聚焦三种状态下重复一遍，
    这样后来者再写 :hover { font-size } 也顶不过去。 */
-.parameterTaskCard .decisionCopy strong,
-.parameterTaskCard:hover .decisionCopy strong,
-.parameterTaskCard .decisionRow:hover .decisionCopy strong,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionCopy strong,
+:is(.parameterTaskCard, .dmpkParamModalBody):hover .decisionCopy strong,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover .decisionCopy strong,
 .parameterTaskCard .warningDecisionHeader strong,
 .parameterTaskCard:hover .warningDecisionHeader strong {
   font-size: 14px;
@@ -6030,9 +6052,9 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 21px;
 }
 
-.parameterTaskCard .decisionCopy span,
-.parameterTaskCard:hover .decisionCopy span,
-.parameterTaskCard .decisionRow:hover .decisionCopy span,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionCopy span,
+:is(.parameterTaskCard, .dmpkParamModalBody):hover .decisionCopy span,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover .decisionCopy span,
 .parameterTaskCard .warningDecisionHeader span,
 .parameterTaskCard:hover .warningDecisionHeader span {
   font-size: 12px;
@@ -6040,20 +6062,20 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 18px;
 }
 
-.parameterTaskCard .parameterPages button,
-.parameterTaskCard .parameterPages button:hover,
-.parameterTaskCard .optionGrid button,
-.parameterTaskCard .optionGrid button:hover {
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button:hover {
   font-size: 12px;
   font-weight: 600;
   line-height: 1;
 }
 
 /* 唯一的指针反馈留给可点的选项，且只改颜色 */
-.parameterTaskCard .optionGrid button {
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button {
   transition: background-color 120ms ease, border-color 120ms ease;
 }
-.parameterTaskCard .optionGrid button:hover {
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button:hover {
   border-color: var(--bioaz-border-strong);
   background: var(--bioaz-surface-hover);
 }
@@ -6451,9 +6473,9 @@ button { -webkit-tap-highlight-color: transparent; }
    agent accent #5c60b8。两个模块并排看时前者刺眼得多。
    这里把 DMPK chatflow 与参数卡里的强调蓝统一到 agent accent。
    =================================================================== */
-.dmpk-quotationModuleShell .optionGrid button:hover,
-.dmpk-quotationModuleShell .optionGrid button.selected,
-.dmpk-quotationModuleShell .customOptionInput:focus {
+:is(.dmpk-quotationModuleShell, .dmpkParamModal) .optionGrid button:hover,
+:is(.dmpk-quotationModuleShell, .dmpkParamModal) .optionGrid button.selected,
+:is(.dmpk-quotationModuleShell, .dmpkParamModal) .customOptionInput:focus {
   border-color: color-mix(in srgb, var(--bioaz-agent-accent) 30%, transparent);
   background: var(--bioaz-agent-accent-soft);
   color: var(--bioaz-agent-accent);
@@ -6728,12 +6750,12 @@ button { -webkit-tap-highlight-color: transparent; }
    box-shadow，也没覆盖后代，所以卡内仍有元素能在 hover 时动起来。
    这里按风险确认卡的同一套办法下正面禁令。
    =================================================================== */
-.parameterTaskCard,
-.parameterTaskCard:hover,
-.parameterTaskCard:focus-within,
-.parameterTaskCard *,
-.parameterTaskCard *:hover,
-.parameterTaskCard *:focus-within {
+:is(.parameterTaskCard, .dmpkParamModalBody),
+:is(.parameterTaskCard, .dmpkParamModalBody):hover,
+:is(.parameterTaskCard, .dmpkParamModalBody):focus-within,
+:is(.parameterTaskCard, .dmpkParamModalBody) *,
+:is(.parameterTaskCard, .dmpkParamModalBody) *:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) *:focus-within {
   transform: none;
   animation: none;
   transition: none;
@@ -6745,29 +6767,29 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
 }
 
-.parameterTaskCard .decisionRow,
-.parameterTaskCard .decisionRow:hover,
-.parameterTaskCard .decisionRow:focus-within {
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:focus-within {
   box-shadow: none;
   background: var(--bioaz-surface);
 }
 
 /* 唯一保留的指针反馈：可点选项的颜色过渡。它不产生位移，
    是必要的可点性提示，所以在禁令之后重新声明回来。 */
-.parameterTaskCard .optionGrid button,
-.parameterTaskCard .parameterPages button {
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button {
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
 /* 分页 tab 与选项芯片：连颜色过渡也一并去掉，hover 只做瞬时换色，
    不再有任何时间维度上的变化；同时把盒模型在三种状态下钉死，
    避免 hover 改变字重或内边距把相邻 tab 推着走。 */
-.parameterTaskCard .optionGrid button,
-.parameterTaskCard .optionGrid button:hover,
-.parameterTaskCard .parameterPages button,
-.parameterTaskCard .parameterPages button:hover,
-.parameterTaskCard .parameterPages button.active,
-.parameterTaskCard .parameterPages button.active:hover {
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button.active,
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button.active:hover {
   transition: none;
   animation: none;
   transform: none;
@@ -6796,10 +6818,10 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
 }
 
-.parameterTaskCard .optionGrid button,
-.parameterTaskCard .optionGrid button:hover,
-.parameterTaskCard .optionGrid button.selected,
-.parameterTaskCard .optionGrid button.selected:hover {
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button.selected,
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button.selected:hover {
   min-height: 28px;
   height: 28px;
   padding: 0 9px;
@@ -6870,8 +6892,20 @@ button { -webkit-tap-highlight-color: transparent; }
   padding-inline: 0;
 }
 
+/* 上面这条同时管对话列和 composer,但两者的 100% 量的不是同一个盒子:
+   对话列在 scroller 的内容盒里,那个盒子已经被 minimap 车道的 padding 缩过;
+   composer 是绝对定位,包含块是整个工作区,没缩。所以 composer 这一半要单独
+   再让一次,否则它会比对话列宽出一整条车道、左缘也更靠左。
+   走内边距而不是改 left:绝对定位下 width 的百分比量的是包含块整宽,挪 left
+   只会把右缘顶出去,还得再跟另外几条宽度规则打架。子元素本来就是 width:100%,
+   外层缩一条 padding 它们自然跟着缩。 */
+.dmpk-quotationModuleShell .dmpkComposerWrap {
+  padding-inline: var(--bioaz-minimap-lane, 52px) 0;
+}
+
 /* 面板收起时 composer 也要和对话列同一个盒子，否则 36px 的左右内缩
-   会让它比对话列窄 72px。 */
+   会让它比对话列窄 72px。
+ */
 .dmpk-quotationModuleShell > .dmpkWorkspace > .dmpkComposerWrap {
   right: 0;
   left: 0;

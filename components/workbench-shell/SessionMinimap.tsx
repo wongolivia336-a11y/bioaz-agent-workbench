@@ -10,8 +10,11 @@ import { createPortal } from "react-dom";
  *   1. Stable Scroll State —— 滚动**不**改变它的视觉状态。它只对指针的横向距离
  *      有反应，不对 scrollTop 有反应。所以下面的 reveal 只由 pointermove 算，
  *      scroll 事件只在已经露出来的时候才用来重算波峰位置。
- *   2. Proximity Reveal —— 指针进入右边缘 120px 才开始淡入，32px 内全显。
+ *   2. Proximity Reveal —— 指针进入左边缘 120px 才开始淡入，32px 内全显。
  *      不是 hover 在某个元素上，是「靠近边缘」这件事本身。
+ *      走左边缘是因为右边紧挨着信息面板：贴着面板的那条边同时是面板的边框、
+ *      滚动条位置和 minimap 的活动带，三者叠在十几像素里互相干扰。
+ *      左边是会话与侧栏之间的空档，没有别的东西在争。
  *   3. Fisheye —— 离指针越近的刻度越长，形成一条波峰。用 transform: scaleX
  *      做，不动 width，否则每帧都要重排。
  *
@@ -23,11 +26,11 @@ export type MinimapKind = "user" | "agent" | "activity" | "artifact" | "divider"
 
 type MinimapNode = { key: string; kind: MinimapKind; label: string; top: number; height: number };
 type Layout = { nodes: MinimapNode[]; contentStart: number; contentSpan: number; scrollHeight: number; clientHeight: number };
-type Frame = { top: number; right: number; height: number };
+type Frame = { top: number; left: number; height: number };
 
-/** 指针离右边缘多远开始淡入 */
+/** 指针离左边缘多远开始淡入 */
 const BAND_START = 120;
-/** 指针离右边缘多近算全显 */
+/** 指针离左边缘多近算全显 */
 const BAND_FULL = 32;
 /** 波峰的高斯半径：离指针这么远时刻度基本回到基准长度 */
 const FISHEYE_RADIUS = 110;
@@ -145,7 +148,7 @@ export function SessionMinimap({ scrollerRef }: { scrollerRef: RefObject<HTMLEle
     const hostStyle = window.getComputedStyle(ancestor);
     const nextFrame: Frame = {
       top: scrollerRect.top - (hostRect.top + parseFloat(hostStyle.borderTopWidth || "0")) + ancestor.scrollTop,
-      right: hostRect.right - parseFloat(hostStyle.borderRightWidth || "0") - scrollerRect.right,
+      left: scrollerRect.left - (hostRect.left + parseFloat(hostStyle.borderLeftWidth || "0")) + ancestor.scrollLeft,
       height: scrollerRect.height,
     };
 
@@ -155,7 +158,7 @@ export function SessionMinimap({ scrollerRef }: { scrollerRef: RefObject<HTMLEle
       Math.round(scroller.scrollHeight),
       Math.round(scroller.clientHeight),
       Math.round(nextFrame.top),
-      Math.round(nextFrame.right),
+      Math.round(nextFrame.left),
       Math.round(nextFrame.height),
     ].join("#");
     if (signature === signatureRef.current) return;
@@ -184,7 +187,7 @@ export function SessionMinimap({ scrollerRef }: { scrollerRef: RefObject<HTMLEle
       let reveal = 0;
       let pointerY = -1;
       if (pointer.inside) {
-        const distance = rect.right - pointer.x;
+        const distance = pointer.x - rect.left;
         reveal = clamp((BAND_START - distance) / (BAND_START - BAND_FULL), 0, 1);
         pointerY = pointer.y - rect.top;
       }
@@ -306,7 +309,7 @@ export function SessionMinimap({ scrollerRef }: { scrollerRef: RefObject<HTMLEle
       aria-hidden="true"
       style={{
         top: frame.top,
-        right: frame.right,
+        left: frame.left,
         height: frame.height,
         opacity: view.reveal,
         pointerEvents: view.reveal > INTERACTIVE_REVEAL ? "auto" : "none",
