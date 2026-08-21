@@ -5,7 +5,7 @@ import type { ComposerAttachment } from "../lib/workbench/composerAttachments";
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
 /* 收件箱承载跨任务的正式文件流转，因此是独立路由；邮件上的行动请求才进入待办。 */
-export type WorkbenchRoute = "newTask" | "tasks" | "inbox" | "library" | "knowledgeBase" | "module" | "digitalTeam";
+export type WorkbenchRoute = "newTask" | "tasks" | "tickets" | "inbox" | "library" | "knowledgeBase" | "module" | "digitalTeam";
 
 /* 容器类型。两者共用同一套实现（文件 + 助手 + 成员），只在「显示哪些 tab」
    和「默认可见性」上分叉。分成两类而不是共用「项目」一个词，是因为项目在
