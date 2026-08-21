@@ -4970,7 +4970,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .gateDecision,
 .gateDecision *,
 .parameterTaskCard,
-.parameterTaskCard * {
+.parameterTaskCard *,
+.dmpkParamModalBody,
+.dmpkParamModalBody * {
   transition: none;
   animation: none;
   transform: none;
@@ -5600,9 +5602,27 @@ button { -webkit-tap-highlight-color: transparent; }
   --bioaz-chat-width: min(920px, 100%);
 }
 
+/* 左边留一条车道给 minimap。会话列是 min(920px, 100%) 居中的,在 794px 宽的
+   scroller 里 100% 胜出、列就是满宽,两边一点空档都没有——刻度最长伸到
+   14 + 34 = 48px,不让位就会压在 agent 头像和段落起点上。
+   原来 minimap 在右边时压的是用户气泡的尾部,同样有重叠,只是压在读完的一侧
+   不容易被察觉;既然搬到阅读起点这一侧,就得真的把位置腾出来。 */
+.tumor-reportModuleShell,
+.dmpk-quotationModuleShell {
+  --bioaz-minimap-lane: 52px;
+}
+
+/* 没有精确指针就不挂载 minimap（见 SessionMinimap.tsx），车道也就不该占宽 */
+@media (hover: none), (pointer: coarse) {
+  .tumor-reportModuleShell,
+  .dmpk-quotationModuleShell {
+    --bioaz-minimap-lane: 0px;
+  }
+}
+
 .tumor-reportModuleShell .chatScroller,
 .dmpk-quotationModuleShell .dmpkChatScroller {
-  padding-inline: 0;
+  padding-inline: var(--bioaz-minimap-lane, 52px) 0;
 }
 .tumor-reportModuleShell .chatScroller > *,
 .dmpk-quotationModuleShell .dmpkChatScroller > * {
@@ -5984,7 +6004,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 12px;
   line-height: 1;
 }
-.parameterTaskCard .decisionRow {
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow {
   position: static;
   border: 1px solid var(--bioaz-border);
   border-radius: 8px;
@@ -6008,10 +6028,10 @@ button { -webkit-tap-highlight-color: transparent; }
   transform: none;
 }
 
-.parameterTaskCard .decisionRow,
-.parameterTaskCard:hover .decisionRow,
-.parameterTaskCard .decisionRow:hover,
-.parameterTaskCard .decisionRow:focus-within {
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow,
+:is(.parameterTaskCard, .dmpkParamModalBody):hover .decisionRow,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:focus-within {
   display: block;
   min-height: 62px;
   padding: 8px 11px;
@@ -6020,9 +6040,9 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* 字号同样锁死：同一组值在静止 / 悬停 / 聚焦三种状态下重复一遍，
    这样后来者再写 :hover { font-size } 也顶不过去。 */
-.parameterTaskCard .decisionCopy strong,
-.parameterTaskCard:hover .decisionCopy strong,
-.parameterTaskCard .decisionRow:hover .decisionCopy strong,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionCopy strong,
+:is(.parameterTaskCard, .dmpkParamModalBody):hover .decisionCopy strong,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover .decisionCopy strong,
 .parameterTaskCard .warningDecisionHeader strong,
 .parameterTaskCard:hover .warningDecisionHeader strong {
   font-size: 14px;
@@ -6030,9 +6050,9 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 21px;
 }
 
-.parameterTaskCard .decisionCopy span,
-.parameterTaskCard:hover .decisionCopy span,
-.parameterTaskCard .decisionRow:hover .decisionCopy span,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionCopy span,
+:is(.parameterTaskCard, .dmpkParamModalBody):hover .decisionCopy span,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover .decisionCopy span,
 .parameterTaskCard .warningDecisionHeader span,
 .parameterTaskCard:hover .warningDecisionHeader span {
   font-size: 12px;
@@ -6728,12 +6748,12 @@ button { -webkit-tap-highlight-color: transparent; }
    box-shadow，也没覆盖后代，所以卡内仍有元素能在 hover 时动起来。
    这里按风险确认卡的同一套办法下正面禁令。
    =================================================================== */
-.parameterTaskCard,
-.parameterTaskCard:hover,
-.parameterTaskCard:focus-within,
-.parameterTaskCard *,
-.parameterTaskCard *:hover,
-.parameterTaskCard *:focus-within {
+:is(.parameterTaskCard, .dmpkParamModalBody),
+:is(.parameterTaskCard, .dmpkParamModalBody):hover,
+:is(.parameterTaskCard, .dmpkParamModalBody):focus-within,
+:is(.parameterTaskCard, .dmpkParamModalBody) *,
+:is(.parameterTaskCard, .dmpkParamModalBody) *:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) *:focus-within {
   transform: none;
   animation: none;
   transition: none;
@@ -6745,17 +6765,17 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: none;
 }
 
-.parameterTaskCard .decisionRow,
-.parameterTaskCard .decisionRow:hover,
-.parameterTaskCard .decisionRow:focus-within {
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:hover,
+:is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow:focus-within {
   box-shadow: none;
   background: var(--bioaz-surface);
 }
 
 /* 唯一保留的指针反馈：可点选项的颜色过渡。它不产生位移，
    是必要的可点性提示，所以在禁令之后重新声明回来。 */
-.parameterTaskCard .optionGrid button,
-.parameterTaskCard .parameterPages button {
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button {
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 

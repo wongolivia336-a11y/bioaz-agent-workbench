@@ -1,7 +1,8 @@
 ﻿"use client";
 
-import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Send, Sparkles, TriangleAlert, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ScrollTopButton } from "../../components/ui/ScrollTopButton";
 import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
@@ -150,7 +151,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ editProposal, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { editProposal?: DmpkEditProposal | null; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
+export function DmpkComposer({ editProposal, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { editProposal?: DmpkEditProposal | null; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -163,7 +164,7 @@ export function DmpkComposer({ editProposal, onConfirmCurrentPrice, onOpenRuleMa
   return (
     <footer ref={wrapRef} className={`dmpkComposerWrap ${attention ? "needsAttention" : ""}`}>
       {editProposal ? <DmpkEditProposalCard proposal={editProposal} onConfirmCurrentPrice={onConfirmCurrentPrice} onOpenRuleManagement={onOpenRuleManagement} /> : null}
-      {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} draftTabs={draftTabs} mode={mode} onSelect={onSelect} /> : null}
+      {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} allFields={allFields} draftTabs={draftTabs} mode={mode} onSelect={onSelect} /> : null}
       {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       {stage !== "collecting" && stage !== "ready" ? <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} locked={coworkerLocked} onChange={onCoworkerChange} /> : null}
@@ -277,9 +278,60 @@ function ComposerChipTray({ tabs, onRemove }: { tabs: DmpkDraftTab[]; onRemove: 
   );
 }
 
-function DmpkParameterTaskCard({ activeGroup, fields, draftTabs, mode, onSelect }: { activeGroup: DmpkGroupId; fields: DmpkField[]; draftTabs: DmpkDraftTab[]; mode: "collect" | "edit"; onSelect: (field: DmpkField, value: string) => void }) {
+/** 一项参数的选项行。行内卡和全屏弹窗共用一份——两套实现迟早会分叉。 */
+function ParameterOptionRow({ field, index, selectedValue, editingCustom, customValue, onPick, onCustomOpen, onCustomChange, onCustomCommit, onCustomCancel }: {
+  field: DmpkField;
+  index: number;
+  selectedValue: string;
+  editingCustom: boolean;
+  customValue: string;
+  onPick: (value: string) => void;
+  onCustomOpen: () => void;
+  onCustomChange: (value: string) => void;
+  onCustomCommit: () => void;
+  onCustomCancel: () => void;
+}) {
+  return (
+    <article className={`decisionRow ${selectedValue ? "done" : ""}`}>
+      <div className="decisionCopy">
+        <div className="decisionTitleRow">
+          <span className="decisionIndex">{selectedValue ? <Check size={15} /> : index}</span>
+          <strong>{field.label}</strong>
+          <span className="requiredTag">{field.required ? "必填" : "可选"}</span>
+        </div>
+        <div className="optionGrid">
+          {(dmpkFieldOptions[field.id] ?? ["1", "2", "3"]).map((option) => option === "自定义" && editingCustom ? (
+            <input
+              autoFocus
+              className="customOptionInput"
+              key={option}
+              value={customValue}
+              placeholder="输入"
+              onBlur={onCustomCommit}
+              onChange={(event) => onCustomChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") onCustomCommit();
+                if (event.key === "Escape") {
+                  /* 全屏时 Esc 是关弹窗的。这里必须拦住,否则想取消一个自定义输入,
+                     会连整张弹窗一起关掉——把人填到一半的东西收走。 */
+                  event.stopPropagation();
+                  onCustomCancel();
+                }
+              }}
+            />
+          ) : (
+            <button className={selectedValue === option ? "selected" : ""} type="button" key={option} onClick={() => option === "自定义" ? onCustomOpen() : onPick(option)}>{option}</button>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function DmpkParameterTaskCard({ activeGroup, fields, allFields, draftTabs, mode, onSelect }: { activeGroup: DmpkGroupId; fields: DmpkField[]; allFields: DmpkField[]; draftTabs: DmpkDraftTab[]; mode: "collect" | "edit"; onSelect: (field: DmpkField, value: string) => void }) {
   const [editingCustom, setEditingCustom] = useState<string | null>(null);
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  const [fullscreen, setFullscreen] = useState(false);
   const [page, setPage] = useState(() => Math.max(0, dmpkGroups.findIndex((group) => group.id === activeGroup)));
   const safePage = Math.min(page, dmpkGroups.length - 1);
   const pageGroup = dmpkGroups[safePage];
@@ -299,19 +351,119 @@ function DmpkParameterTaskCard({ activeGroup, fields, draftTabs, mode, onSelect 
     if (value) selectValue(field, value);
     setEditingCustom(null);
   };
-  if (!fields.length) return null;
+  /* 待发草稿优先于已落库的值:同一项被改过,行内要显示的是那个改动,不是旧值。 */
+  const valueOf = (field: DmpkField) => draftTabs.find((tab) => tab.fieldId === field.id)?.value ?? field.value ?? "";
+
+  const row = (field: DmpkField, index: number, onPick: (value: string) => void) => (
+    <ParameterOptionRow
+      key={field.id}
+      field={field}
+      index={index}
+      selectedValue={valueOf(field)}
+      editingCustom={editingCustom === field.id}
+      customValue={customValues[field.id] ?? ""}
+      onPick={onPick}
+      onCustomOpen={() => setEditingCustom(field.id)}
+      onCustomChange={(value) => setCustomValues((current) => ({ ...current, [field.id]: value }))}
+      onCustomCommit={() => commitCustom(field)}
+      onCustomCancel={() => setEditingCustom(null)}
+    />
+  );
+
+  const modal = fullscreen ? (
+    <DmpkParameterFullscreenModal
+      allFields={allFields}
+      draftTabs={draftTabs}
+      renderRow={row}
+      onSelect={onSelect}
+      onClose={() => { setEditingCustom(null); setFullscreen(false); }}
+    />
+  ) : null;
+
+  /* 行内卡在没有待填项时收起,但**弹窗开着的时候不能跟着消失**——在全屏里填完
+     最后一项,整个面板凭空蒸发会让人以为出错了。让它留到你自己点关闭。 */
+  if (!fields.length) return modal;
+
   return (
-    <section className="warningDecision parameterTaskCard">
-      <header className="warningDecisionHeader"><div><span>参数补全</span><strong>{mode === "edit" ? `修改${fields[0]?.label ?? "参数"}` : "请补全报价参数"}</strong>{mode === "edit" ? <p>选择新值后发送，即可更新右侧参数。</p> : null}</div><small>还需填写 {fields.length} 项</small></header>
-      {mode === "collect" ? <div className="parameterPages">{dmpkGroups.map((group, index) => <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > safePage} onClick={() => setPage(index)}>{group.title}</button>)}</div> : null}
-      <div className="warningDecisionList">
-        {pageFields.length ? pageFields.map((field, index) => {
-          const selected = draftTabs.find((tab) => tab.fieldId === field.id);
-          return <article className={`decisionRow ${selected ? "done" : ""}`} key={field.id}><div className="decisionCopy"><div className="decisionTitleRow"><span className="decisionIndex">{selected ? <Check size={15} /> : index + 1}</span><strong>{field.label}</strong><span className="requiredTag">{field.required ? "必填" : "可选"}</span></div><div className="optionGrid">{(dmpkFieldOptions[field.id] ?? ["1", "2", "3"]).map((option) => option === "自定义" && editingCustom === field.id ? <input autoFocus className="customOptionInput" key={option} onBlur={() => commitCustom(field)} onChange={(event) => setCustomValues((current) => ({ ...current, [field.id]: event.target.value }))} onKeyDown={(event) => { if (event.key === "Enter") commitCustom(field); if (event.key === "Escape") setEditingCustom(null); }} placeholder="输入" value={customValues[field.id] ?? ""} /> : <button className={selected?.value === option ? "selected" : ""} type="button" key={option} onClick={() => { if (option === "自定义") setEditingCustom(field.id); else selectValue(field, option); }}>{option}</button>)}</div></div></article>;
-        }) : <p className="emptyPageNote">{pageGroup.title}参数已齐全，可切换下一页继续补全。</p>}
-      </div>
-      <div className="parameterPager"><p className="responsibilityNote">还需填写 {fields.length} 项</p>{mode === "collect" && safePage > 0 ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))}>上一页</button></div> : null}</div>
-    </section>
+    <>
+      <section
+        className={`warningDecision parameterTaskCard ${mode === "collect" ? "canExpand" : ""}`}
+        /* 整张卡的空白处都能展开,不只是那颗图标——参数一多,人会先去点卡片
+           本身。选项、分页 tab、上一页这些自己有事做的元素要放行,否则选一个
+           值会顺手把弹窗也开了。 */
+        onClick={mode === "collect" ? (event) => {
+          if ((event.target as HTMLElement).closest("button, input, a, label")) return;
+          setFullscreen(true);
+        } : undefined}
+      >
+        <header className="warningDecisionHeader">
+          <div><span>参数补全</span><strong>{mode === "edit" ? `修改${fields[0]?.label ?? "参数"}` : "请补全报价参数"}</strong>{mode === "edit" ? <p>选择新值后发送，即可更新右侧参数。</p> : null}</div>
+          {/* 计数和入口平排一行,图标在右端。上下堆两行会在卡片右上角叠出
+              一块比标题还高的方块,把「参数补全 / 请补全报价参数」压偏。 */}
+          <div className="parameterCardHeadActions">
+            <small>还需填写 {fields.length} 项</small>
+            {/* 分页是为了在这个高度里放得下,不是因为这些参数该被分批问。
+                参数一多,「先填后面那组」在行内卡里是做不到的——后面的页在你
+                填完前是禁用的。全屏的价值就在这儿:一屏看全,哪项都能先填。 */}
+            {mode === "collect" ? <button className="parameterExpandButton" type="button" onClick={() => setFullscreen(true)} aria-label="全屏填写全部参数" title="全屏填写全部参数"><Maximize2 size={15} /></button> : null}
+          </div>
+        </header>
+        {mode === "collect" ? <div className="parameterPages">{dmpkGroups.map((group, index) => <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > safePage} onClick={() => setPage(index)}>{group.title}</button>)}</div> : null}
+        <div className="warningDecisionList">
+          {pageFields.length
+            ? pageFields.map((field, index) => row(field, index + 1, (value) => selectValue(field, value)))
+            : <p className="emptyPageNote">{pageGroup.title}参数已齐全，可切换下一页继续补全。</p>}
+        </div>
+        <div className="parameterPager"><p className="responsibilityNote">还需填写 {fields.length} 项</p>{mode === "collect" && safePage > 0 ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))}>上一页</button></div> : null}</div>
+      </section>
+      {modal}
+    </>
+  );
+}
+
+/** 全屏参数面板。取消分页,四组一次列全,哪一项都能先填。 */
+function DmpkParameterFullscreenModal({ allFields, draftTabs, renderRow, onSelect, onClose }: {
+  allFields: DmpkField[];
+  draftTabs: DmpkDraftTab[];
+  renderRow: (field: DmpkField, index: number, onPick: (value: string) => void) => ReactNode;
+  onSelect: (field: DmpkField, value: string) => void;
+  onClose: () => void;
+}) {
+  const dismiss = useModalDismiss(onClose);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const remaining = allFields.filter((field) => field.required && !field.value && !draftTabs.some((tab) => tab.fieldId === field.id)).length;
+
+  /* 挂到 body 上,不留在参数卡子树里——review.css 有一条
+     `.parameterTaskCard *` 把 transition / transform 全清零,留在里面
+     回顶按钮的进出动画会被那条一起清掉。 */
+  return createPortal(
+    <div className="modalBackdrop" role="presentation" {...dismiss}>
+      <section className="previewModal dmpkParamModal" role="dialog" aria-modal="true" aria-label="报价参数">
+        <header>
+          <div><span>参数补全</span><h2>报价参数</h2></div>
+          <button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button>
+        </header>
+        <div className="dmpkParamModalBody" ref={scrollRef}>
+          {dmpkGroups.map((group) => {
+            const groupFields = allFields.filter((field) => field.group === group.id);
+            if (!groupFields.length) return null;
+            const groupLeft = groupFields.filter((field) => field.required && !field.value && !draftTabs.some((tab) => tab.fieldId === field.id)).length;
+            return (
+              <section className="dmpkParamModalGroup" key={group.id}>
+                <h3>{group.title}<em>{groupLeft ? `还需 ${groupLeft} 项` : "已齐全"}</em></h3>
+                {groupFields.map((field, index) => renderRow(field, index + 1, (value) => onSelect(field, value)))}
+              </section>
+            );
+          })}
+        </div>
+        <footer className="dmpkParamModalFoot">
+          <p>{remaining ? `还需填写 ${remaining} 项` : "参数已齐全，关闭后发送即可"}</p>
+          <button className="primaryButton compact" type="button" onClick={onClose}>完成</button>
+        </footer>
+        <ScrollTopButton targetRef={scrollRef} />
+      </section>
+    </div>,
+    document.body,
   );
 }
 
