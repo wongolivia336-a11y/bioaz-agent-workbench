@@ -78,7 +78,7 @@ const roleTitle: Record<QaViewerRole, string> = {
   owner: "负责人端",
 };
 
-export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange, onComposeMail, sessionOutcome, onSessionOutcomeChange }: AgentModuleSessionProps) {
+export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange, onHandoff, sessionOutcome, onSessionOutcomeChange }: AgentModuleSessionProps) {
   const role = viewerRole as QaViewerRole;
   const [panelOpen, setPanelOpen] = useState(true);
   const [activePanelId, setActivePanelId] = useState("ai-review");
@@ -312,12 +312,15 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [role, outcome, allFindings, findingStates, activeFindingId, notesWithOutcome, noteDraft, baseVersionId, versionId]);
 
-  /* 落定一个结论。三件事一起做，缺一件逻辑就断：
-       ① 版本状态改掉，Session 进入下一个状态——这是机制
-       ② 载荷：驳回带已确认的问题清单，通过带这一轮的处置结果
-       ③ 预填一封邮件草稿——这是通知，人过目再发，不替他发出去
-     只改状态不通知，下一棒不知道轮到自己了；只发信不改状态，
-     系统就不知道这一版走到哪儿了，跨版本验证会断。 */
+  /* 落定一个结论。两件事一起做，缺一件逻辑就断：
+       ① 版本状态改掉，Session 进入下一个状态
+       ② 交给下一棒，载荷是这一轮的处置结果——驳回带已确认的问题清单
+     只改状态不交接，下一棒不知道轮到自己了；只交接不改状态，
+     系统就不知道这一版走到哪儿了，跨版本验证会断。
+
+     这里原来还有第三件事：预填一封邮件草稿，等人过目再发。去掉了——
+     那样一来**交接存不存在取决于有没有人记得点发送**，而这一版到底在谁
+     手上是要被审计的事实，不能挂在某个人的记性上。工单不需要被发送。 */
   const submitDecision = () => {
     const text = decisionNote.trim();
     if (!text || !decision) return;
@@ -326,34 +329,29 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
 
     if (decision === "reject") {
       resolveWith("rejected", `驳回${version.label}：${text}${confirmed.length ? `\n随附已确认问题 ${confirmed.length} 条。` : ""}`);
-      onComposeMail?.({
+      onHandoff?.({
         to: version.author,
-        subject: `退回修订：${taskTitle}（${version.label}）`,
-        body: [
-          `${version.author} 你好，`,
-          "",
-          `${version.label} 未通过本次审核，请修订后重新提交。`,
-          "",
+        toRole: "撰写人",
+        kind: "qa-review",
+        title: `退回修订：${taskTitle}（${version.label}）`,
+        note: [
           `驳回理由：${text}`,
-          ...(lines.length ? ["", `需要处理的问题（${confirmed.length} 条）：`, ...lines] : []),
+          ...(lines.length ? [`需要处理的问题（${confirmed.length} 条）：`, ...lines] : []),
         ].join("\n"),
       });
     } else {
       /* 通过不是终点，是把这一版交给负责人做最终确认与归档。
          审批人签的是"内容我看过了"，负责人签的是"这一版可以入库"。 */
       resolveWith("approved", `${text}\n已送 ${qaOwnerName} 做最终确认与归档。`);
-      onComposeMail?.({
+      onHandoff?.({
         to: qaOwnerName,
-        subject: `请归档：${taskTitle}（${version.label}）`,
-        body: [
-          `${qaOwnerName} 你好，`,
-          "",
-          `${version.label} 已通过审批人复核，现送交最终确认与归档。`,
-          "",
+        toRole: "项目负责人",
+        kind: "qa-review",
+        title: `请归档：${taskTitle}（${version.label}）`,
+        note: [
           `审核结论：${text}`,
-          "",
           `本轮共 ${allFindings.length} 条批注（AI ${allFindings.filter((item) => item.source === "ai").length} 条 · 人工 ${allFindings.filter((item) => item.source === "human").length} 条），已全部处置。`,
-          ...(lines.length ? ["", `其中确认成立并已修订 ${confirmed.length} 条：`, ...lines] : []),
+          ...(lines.length ? [`其中确认成立并已修订 ${confirmed.length} 条：`, ...lines] : []),
         ].join("\n"),
       });
     }

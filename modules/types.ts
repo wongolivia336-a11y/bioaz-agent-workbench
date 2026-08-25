@@ -5,7 +5,9 @@ import type { ComposerAttachment } from "../lib/workbench/composerAttachments";
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
 /* 收件箱承载跨任务的正式文件流转，因此是独立路由；邮件上的行动请求才进入待办。 */
-export type WorkbenchRoute = "newTask" | "tasks" | "tickets" | "inbox" | "library" | "knowledgeBase" | "module" | "digitalTeam";
+/* 没有独立的 tickets 路由:工单不再是一级入口,而是站内信点进去的下一级。
+   一个门——第二个队列就是第二个会被忘记去看的地方。 */
+export type WorkbenchRoute = "newTask" | "tasks" | "inbox" | "library" | "knowledgeBase" | "module" | "digitalTeam";
 
 /* 容器类型。两者共用同一套实现（文件 + 助手 + 成员），只在「显示哪些 tab」
    和「默认可见性」上分叉。分成两类而不是共用「项目」一个词，是因为项目在
@@ -117,9 +119,9 @@ export type AgentModuleSessionProps = {
   /* 当前登录账号的岗位。QA 审核用它决定谁能落笔——撰写人端与审批人端是
      同一个 Session 的两种渲染，不是两个页面。其余 module 忽略即可。 */
   viewerRole?: "author" | "approver" | "owner";
-  /* 让 module 预填一封邮件草稿并跳到邮箱。QA 驳回用它把问题清单退回撰写人：
-     状态变更是机制，这封信是通知——所以只到草稿为止，发不发由人决定。 */
-  onComposeMail?: (draft: MailDraft) => void;
+  /* 把这一版交给下一棒。QA 的驳回和通过都走这里：驳回交回撰写人、通过交给
+     负责人做最终确认与归档。载荷落成一张工单，不再是一封等人点发送的草稿。 */
+  onHandoff?: (handoff: SessionHandoff) => void;
   /* 会话级结论（目前是 QA 的提交/通过/驳回）。必须由 shell 按任务保存：
      module 组件在切走再切回时会重新挂载，结论留在组件里就等于点完就没了，
      而"这一版审完了没有"恰恰是回到会话时第一个要看到的东西。 */
@@ -129,11 +131,23 @@ export type AgentModuleSessionProps = {
 
 export type SessionOutcome = "submitted" | "approved" | "rejected" | null;
 
-export type MailDraft = {
-  /** 收件人姓名。邮箱那边按名字匹配到人，匹配不上就只填主题和正文 */
-  to?: string;
-  subject: string;
-  body: string;
+/**
+ * 会话里把活交出去时留下的凭据。
+ *
+ * 这里原来是 MailDraft——生成一封预填邮件，等人过目再发。问题是那样一来
+ * **交接存不存在，取决于有没有人记得点发送**：没点，这一版就悬在半空，
+ * 系统里没有任何地方知道它在谁那儿。工单不需要被发送，状态一变它就存在了。
+ */
+export type SessionHandoff = {
+  /** 下一棒是谁。名字匹配不上人也不影响工单成立，只是处理人显示为原样 */
+  to: string;
+  toRole?: string;
+  title: string;
+  note: string;
+  kind: "qa-review" | "dmpk-quotation";
+  /* 随单产物。一张不带东西的工单等于一句「你去处理一下」,接手的人还得回来问
+     到底审什么——所以交接卡上写了「随单带上产物」,这里就必须真的带。 */
+  attachments?: Array<{ id: string; name: string; meta: string }>;
 };
 
 export type QuotationManagementTarget = {
