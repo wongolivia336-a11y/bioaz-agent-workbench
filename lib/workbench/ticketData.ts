@@ -384,3 +384,68 @@ export const dmpkQuoteLines: QuoteLine[] = [
   { id: "ql-report", group: "报告与报价", label: "报告撰写", detail: "中文 Word + Excel 明细", amount: "¥2,500" },
   { id: "ql-fee", group: "报告与报价", label: "项目管理费", detail: "按 30% 口径计取（Excel 明细为 15%）", amount: "¥15,390" },
 ];
+
+/* ─── 纯通知 ─────────────────────────────────────────────────────────────
+   站内信里不是每条都要你动手。机机协作本身不产生站内信——否则收件箱会被
+   机器人的交谈填满;只有当一件事需要一个人时它才浮上来。剩下这些是「知会」:
+   你不必做什么,但不知道会出事。
+
+   跟工单的分野就一条:通知没有归属、没有状态、没有流转链,看过就翻篇。 */
+export type NoticeSource = "coworker" | "system";
+
+export type Notice = {
+  id: string;
+  source: NoticeSource;
+  from: string;
+  fromRole: string;
+  title: string;
+  body: string;
+  project?: string;
+  at: string;
+};
+
+export const noticeSourceLabel: Record<NoticeSource, string> = {
+  coworker: "数字同事",
+  system: "系统",
+};
+
+export const initialNotices: Notice[] = [
+  {
+    id: "NT-118", source: "coworker", from: "DMPK报价同事", fromRole: "数字同事",
+    title: "已把 CT26 报价产物交给 QA 审核同事预检",
+    body: "CT26 模型评价的报价单与明细已生成，已按规则交 QA 审核同事做交付前预检。预检通过后会直接进入你的待办；如果预检发现问题，会连同问题清单一起退回给我重做。此条仅知会，你现在不需要做任何事。",
+    project: "ZZ药业-CT26模型评价", at: "18 分钟前",
+  },
+  {
+    id: "NT-117", source: "system", from: "规则管理员", fromRole: "系统",
+    title: "DMPK 计价规则已发布 v1.0.14",
+    body: "本次变更：PK 检测样品数少于 6 个时按 6 个计费；生物分析方法学确认价格上调 8%。新规则对本次发布之后创建的报价生效，已生成的报价单不受影响。",
+    project: "组织规则", at: "昨天",
+  },
+  {
+    id: "NT-115", source: "coworker", from: "药效报告同事", fromRole: "数字同事",
+    title: "样本 7 的原始数据解析完成，未发现阻断项",
+    body: "batch7_raw.xlsx 已完成结构解析与统计口径核对，未发现阻断项。报告生成会在你确认实验方案版本后开始。",
+    project: "XX药业-PD1临床前评价", at: "2 天前",
+  },
+  {
+    id: "NT-112", source: "system", from: "系统", fromRole: "系统",
+    title: "本周起归档包统一使用新的命名规则",
+    body: "归档包命名统一为「报告编号_版本_日期」。历史归档不做追溯修改，新归档请遵循此格式。",
+    project: "组织规则", at: "5 天前",
+  },
+];
+
+/* 「12 分钟前」这类标签排不了序,但列表要按时间倒着排。这里把标签折回分钟数——
+   数据本来就是这么写的,与其给每条再加一个时间戳、让两处各说各的,不如从
+   唯一那份事实里算出来。 */
+export function minutesFromLabel(label: string) {
+  if (/刚刚/.test(label)) return 0;
+  const value = Number(label.match(/\d+/)?.[0] ?? 0);
+  if (/分钟/.test(label)) return value;
+  if (/小时/.test(label)) return value * 60;
+  if (/昨天/.test(label)) return 1440;
+  if (/天/.test(label)) return value * 1440;
+  if (/今天/.test(label)) return 60;
+  return 99999;
+}

@@ -387,8 +387,13 @@ export default function WorkbenchShell() {
     const targetProject = contextProject && projects.some((item) => item.name === contextProject) ? contextProject : project;
     const module = moduleId ? getAgentModule(moduleId) : null;
     /* 有关联会话就接着上次说，不在侧栏再堆一条同名任务——同一件事来回三轮
-       会变成三条任务，而它们本来是一条。 */
-    if (joinTaskId) {
+       会变成三条任务，而它们本来是一条。
+
+       但只在**同一个工作台**时才接得上。QA 审核工单挂的关联任务是产物的出处
+       （那份报告是药效报告任务做出来的），不是审核发生的地方；照着任务的 module
+       走，点「进入会话处理」会掉进药效报告工作台，审核台根本进不去。
+       规则：工单的类型决定打开哪个工作台，关联任务只说明产物从哪来。 */
+    if (joinTaskId && (!moduleId || libraryTasks.find((item) => item.id === joinTaskId)?.moduleId === moduleId)) {
       const target = libraryTasks.find((item) => item.id === joinTaskId);
       if (target) {
         const targetModule = getAgentModule(target.moduleId);
