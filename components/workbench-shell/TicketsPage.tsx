@@ -293,14 +293,14 @@ function NoticeDetailView({ notice }: { notice: Notice }) {
   const Icon = sourceIcon[notice.source];
   return (
     <section className="workbenchView ticketDetailView">
-      <header className="ticketDetailHead">
+      <div className="ticketDetailHead">
         <div className="ticketDetailTitle">
           <span><Icon size={12} /> {notice.from}（{noticeSourceLabel[notice.source]}） · {notice.at}</span>
           <h1>{notice.title}</h1>
           {notice.project ? <p>{notice.project}</p> : null}
         </div>
         <em className="messageNoticeTag">知会</em>
-      </header>
+      </div>
       <section className="noticeBody"><p>{notice.body}</p></section>
     </section>
   );
@@ -347,13 +347,13 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
     <section className="workbenchView ticketDetailView">
       {/* 工单号和类型已经在面包屑里,这儿不再重复一遍。标题 + 一行元信息就够,
           之前是「眉标 + 大标题 + 元信息 + 一大片留白」,占掉小半屏说的却是同一件事。 */}
-      <header className="ticketDetailHead">
+      <div className="ticketDetailHead">
         <div className="ticketDetailTitle">
           <h1>{ticket.title}</h1>
           <p>{ticketKindLabel[ticket.kind]} · {ticket.from} → {ticket.assignee} · {ticket.project}</p>
         </div>
         <StatusChip tone={ticketStatusTone[ticket.status]} dot>{ticketStatusLabel[ticket.status]}</StatusChip>
-      </header>
+      </div>
 
       <TicketStageBar status={ticket.status} />
 

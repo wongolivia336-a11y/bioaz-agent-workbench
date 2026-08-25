@@ -83,7 +83,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
     <section className="workbenchView quoteReviewCanvas">
       {/* 返回交给面包屑（站内信 › TK-2046 › 报价复核），页内不再放按钮——
           同一个动作两个入口，只会让人怀疑它们做的是不是同一件事。 */}
-      <header className="quoteReviewHead">
+      <div className="quoteReviewHead">
         <div className="quoteReviewHeadMain">
           <div className="ticketDetailTitle">
             <span>{ticket.id} · 报价复核 · 全程人工</span>
@@ -100,7 +100,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="quoteReviewBody">
         <div className="quoteDocPane">

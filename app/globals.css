@@ -7692,9 +7692,28 @@ button {
 .ticketDetailHead .ticketDetailTitle { grid-column: 1; }
 
 /* 流转记录:一条竖线穿到底,每格三件事排一行读完。
-   之前动作和时间被推到两端、中间一片空白,眼睛要横跳才拼得出一句话。 */
-.ticketDetailFlow ol { position: relative; gap: 0; }
-.ticketDetailFlow li { position: relative; grid-template-columns: 22px minmax(0, 1fr); padding-bottom: 16px; }
+   之前动作和时间被推到两端、中间一片空白,眼睛要横跳才拼得出一句话。
+
+   这一块必须自足。上一版我把重复的三份删到只剩一份,但留下的是**覆盖规则**、
+   删掉的才是基础——于是 ol 退回浏览器默认:display:block、list-style:decimal、
+   padding-left:40px,列表左边冒出 1. 2.,li 也不再是 grid,
+   grid-template-columns 一个字都没生效。删重复之前得先确认留下的那份自己站得住。 */
+.ticketDetailFlow ol {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ticketDetailFlow li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  padding-bottom: 16px;
+  list-style: none;
+}
 .ticketDetailFlow li:last-child { padding-bottom: 0; }
 /* 竖线画在圆点这一列上,最后一格不画——线的意义是"还有下一步"。 */
 .ticketDetailFlow li:not(:last-child)::before {
@@ -7791,7 +7810,22 @@ button {
 /* 头部收窄:工单号和类型已经在面包屑里,页内不再重复。 */
 .ticketDetailTitle h1 { margin: 0; font-size: 19px; line-height: 1.35; }
 .ticketDetailTitle p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
-.ticketDetailHead { align-items: center; gap: 12px 16px; padding-bottom: 2px; }
+
+/* 这两个头改用 div 而不是 header,是为了**不去匹配** `.workbenchView > header`。
+   那个选择器上挂着一整族为旧式标题栏写的规则:width min(920/1180/1240/--content-max)、
+   margin:0 auto、外加一条 border-bottom,净效果是宽度被钉成 1200px 再居中——
+   比下面的卡片左缩 102px、右短 101px,还白送一条横线。
+   最具体的那条是 `.dmpkWorkspace.workbenchMode .workbenchView > header` (0,3,1),
+   想靠特异性压过去就得再叠一层,而这个文件正是被这样叠坏的。换个标签,
+   四条规则一起绕开——h1 仍然承担标题语义,视图内部的 header landmark 可以不要。 */
+.ticketDetailHead,
+.quoteReviewHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 4px;
+}
 
 @media (max-width: 860px) {
   .ticketStageBar { flex-wrap: wrap; gap: 8px 12px; }
