@@ -7272,42 +7272,9 @@ button {
 .ticketDetailFiles strong { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
 .ticketDetailFiles small { color: var(--muted); font-size: 11.5px; }
 
-/* 流转记录是工单相对邮件多出来的那样东西:同一份报告来回三轮,邮件里是三封信、
-   谁也拼不出全貌,这里它是一条。所以画成一条竖线上的节点,不是一堆卡片。 */
-.ticketDetailFlow ol {
-  display: grid;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ticketDetailFlow li {
-  position: relative;
-  border-left: 1px solid var(--line);
-  padding: 0 0 16px 18px;
-}
-
-.ticketDetailFlow li:last-child { border-left-color: transparent; padding-bottom: 0; }
-
-.ticketDetailFlow li::before {
-  position: absolute;
-  top: 4px;
-  left: -4.5px;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--line-strong, #d0d5dd);
-  content: "";
-}
-
-.ticketDetailFlow li:first-child::before { background: var(--bioaz-agent-accent); }
-
-.ticketDetailFlow li > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.ticketDetailFlow strong { color: var(--ink); font-size: 13px; font-weight: 600; }
-.ticketDetailFlow time { flex: none; color: var(--muted); font-size: 11.5px; }
-.ticketDetailFlow small { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
-.ticketDetailFlow p { margin: 6px 0 0; border-radius: 8px; background: var(--soft, #f7f8fb); padding: 8px 10px; color: var(--ink-soft); font-size: 12.5px; line-height: 1.65; }
+/* 流转记录的样式统一定义在文件末尾「工单二级页」那一节。
+   这里原本还有一份,给 li 加 border-left 画线、::before 画点,跟后面那份叠在一起,
+   于是屏幕上出现了两条竖线两个圆点。删掉——同一个组件不该有两处定义。 */
 
 /* ─── 交接对话框 ───────────────────────────────────────────────────────── */
 .previewModal.ticketHandoffModal {
@@ -7517,12 +7484,7 @@ button {
 .ticketDetailFiles strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .ticketDetailFiles small { color: var(--muted); font-size: 12px; }
 
-.ticketDetailFlow ol { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
-.ticketDetailFlow li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; }
-.ticketFlowDot { width: 7px; height: 7px; margin-top: 6px; border-radius: 999px; background: var(--bioaz-agent-accent, #5c60b8); }
-.ticketDetailFlow strong { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
-.ticketDetailFlow small { color: var(--muted); font-size: 12px; }
-.ticketDetailFlow p { margin: 6px 0 0; border-left: 2px solid var(--line); padding-left: 10px; color: var(--body); font-size: 12.5px; line-height: 1.7; white-space: pre-line; }
+
 
 .ticketDetailActions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .ticketDetailHint { margin: 0 auto 0 0; color: var(--muted); font-size: 12.5px; }
@@ -7769,3 +7731,70 @@ button {
 /* 会话里那张交接卡:动作靠右,跟 composer 同宽——它就长在 composer 上方,
    两者不同宽会看成两个不相干的东西。 */
 .dmpkHandoffCard .warningActions { display: flex; justify-content: flex-end; }
+
+/* ═══ 工单状态条 ═══════════════════════════════════════════════════════════
+   它跟流转记录不是一回事,之前混成一个组件才显得奇怪:
+   状态条答「这件事走到哪了」——只有四格,且永远只有四格;
+   流转记录答「都发生过什么」——随轮次增长。一个是位置,一个是历史。
+   驳回不占第五格,它是被打回到「审核」那一格,所以只把当前格子染红。 */
+.ticketStageBar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticketStageBar li {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+/* 连接线画在格子之间,最后一格右边不画——线的意思是「还有下一步」。 */
+.ticketStageBar li:not(:last-child)::after {
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+  content: "";
+}
+.ticketStageBar li.is-done::after { background: var(--bioaz-agent-accent, #5c60b8); }
+
+.ticketStageDot {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.ticketStageLabel { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+
+.ticketStageBar li.is-done .ticketStageDot { border-color: transparent; background: var(--bioaz-agent-accent, #5c60b8); color: #fff; }
+.ticketStageBar li.is-done .ticketStageLabel { color: var(--body); }
+.ticketStageBar li.is-current .ticketStageDot { border-color: var(--bioaz-agent-accent, #5c60b8); color: var(--bioaz-agent-accent, #5c60b8); box-shadow: 0 0 0 3px var(--bioaz-agent-accent-soft, #f3f3fb); }
+.ticketStageBar li.is-current .ticketStageLabel { color: var(--ink); font-weight: 600; }
+/* 驳回不是一个新阶段,是当前这一格出了问题——用色不用位置来说这件事。 */
+.ticketStageBar li.is-rejected .ticketStageDot { border-color: var(--sidebar-dot-attention, #9a7a3a); color: var(--sidebar-dot-attention, #9a7a3a); box-shadow: 0 0 0 3px rgba(154, 122, 58, .12); }
+.ticketStageBar li.is-rejected .ticketStageLabel { color: var(--sidebar-dot-attention, #9a7a3a); font-weight: 600; }
+
+/* 头部收窄:工单号和类型已经在面包屑里,页内不再重复。 */
+.ticketDetailTitle h1 { margin: 0; font-size: 19px; line-height: 1.35; }
+.ticketDetailTitle p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+.ticketDetailHead { align-items: center; gap: 12px 16px; padding-bottom: 2px; }
+
+@media (max-width: 860px) {
+  .ticketStageBar { flex-wrap: wrap; gap: 8px 12px; }
+  .ticketStageBar li { flex: 0 0 auto; }
+  .ticketStageBar li:not(:last-child)::after { display: none; }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Bot, ChevronLeft, ChevronRight, Highlighter, Paperclip, Search, Settings, Upload, User, X } from "lucide-react";
+import { ArrowLeft, Bot, Check, ChevronLeft, ChevronRight, Highlighter, Paperclip, Search, Settings, Upload, User, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { StatusChip } from "../ui";
@@ -255,6 +255,35 @@ export function TicketsPage({
   );
 }
 
+/* 一张工单的生命周期就这四步,来回多少轮都还是这四步。
+   驳回不是第五步,是被打回到「审核」那一格——所以它不占位置,只把当前格子染红。 */
+const TICKET_STAGES = ["提交", "审核", "通过", "归档"] as const;
+
+/**
+ * 状态条:现在到哪一步。
+ *
+ * 它跟下面那条流转记录**不是一回事**,之前混成一个组件才会显得奇怪——
+ * 状态条答的是「这件事走到哪了」,流转记录答的是「都发生过什么」。
+ * 一个是位置,一个是历史;前者只有四格且永远只有四格,后者随轮次增长。
+ */
+function TicketStageBar({ status }: { status: Ticket["status"] }) {
+  const current = status === "done" ? 3 : status === "dropped" ? 1 : status === "open" ? 1 : 1;
+  const rejected = status === "rejected";
+  return (
+    <ol className="ticketStageBar" aria-label="工单进度">
+      {TICKET_STAGES.map((stage, index) => {
+        const state = index < current ? "done" : index === current ? (rejected ? "rejected" : "current") : "todo";
+        return (
+          <li key={stage} className={`is-${state}`}>
+            <span className="ticketStageDot" aria-hidden="true">{index < current ? <Check size={11} /> : index + 1}</span>
+            <span className="ticketStageLabel">{rejected && index === current ? "审核 · 已驳回" : stage}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /**
  * 纯通知的详情。没有归属、没有状态、没有流转链——看过就翻篇。
  * 刻意做得比工单详情单薄:它单薄是因为它本来就该单薄,给它配上处置按钮
@@ -316,14 +345,17 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
 
   return (
     <section className="workbenchView ticketDetailView">
+      {/* 工单号和类型已经在面包屑里,这儿不再重复一遍。标题 + 一行元信息就够,
+          之前是「眉标 + 大标题 + 元信息 + 一大片留白」,占掉小半屏说的却是同一件事。 */}
       <header className="ticketDetailHead">
         <div className="ticketDetailTitle">
-          <span>{ticket.id} · {ticketKindLabel[ticket.kind]}</span>
           <h1>{ticket.title}</h1>
-          <p>{ticket.from}（{ticket.fromRole}）交接给 {ticket.assignee} · {ticket.project}</p>
+          <p>{ticketKindLabel[ticket.kind]} · {ticket.from} → {ticket.assignee} · {ticket.project}</p>
         </div>
         <StatusChip tone={ticketStatusTone[ticket.status]} dot>{ticketStatusLabel[ticket.status]}</StatusChip>
       </header>
+
+      <TicketStageBar status={ticket.status} />
 
       {ticket.attachments.length ? (
         <section className="ticketDetailFiles">
