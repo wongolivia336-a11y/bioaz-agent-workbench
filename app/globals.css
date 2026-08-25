@@ -7637,3 +7637,73 @@ button {
   .messageRow { grid-template-columns: 14px minmax(0, 1fr) auto; }
   .messageFrom, .messageState { display: none; }
 }
+
+/* ═══ 报价审核画布 · 双形态 ═══════════════════════════════════════════════
+   同一张报价两种形态,共用一套锚点:切视图不丢批注,因为批注锚的是条目 id
+   而不是屏幕位置。审核在计算表那一侧做——Word 里没有单价也没有参数,
+   看不出数是怎么算出来的。 */
+.quoteReviewHeadMain { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; grid-column: 1 / -1; }
+
+.quoteFormSwitch { display: inline-flex; flex: none; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--soft, #f7f8fb); padding: 3px; }
+.quoteFormSwitch button {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px;
+  border: 0; border-radius: 999px; background: transparent; padding: 0 12px;
+  color: var(--body); font-size: 12.5px; cursor: pointer; transition: background 140ms ease, color 140ms ease;
+}
+.quoteFormSwitch button.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(15, 23, 42, .1); }
+
+.quoteSheet, .quoteDoc { max-width: 900px; margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 22px 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
+.quoteSheet > header, .quoteDoc > header { display: grid; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 14px; }
+.quoteSheet > header strong, .quoteDoc > header strong { font-size: 15px; }
+.quoteSheet > header small, .quoteDoc > header small { color: var(--muted); font-size: 12px; }
+
+.quoteSheetGrid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; }
+.quoteSheetGrid table, .quoteDocTable { width: 100%; border-collapse: collapse; }
+.quoteSheetGrid th, .quoteDocTable th { border-bottom: 1px solid var(--line); padding: 6px 8px; color: var(--muted); font-size: 11px; font-weight: 600; text-align: left; }
+.quoteSheetGrid td, .quoteDocTable td { border-bottom: 1px solid var(--line); padding: 4px 8px; vertical-align: top; font-size: 12.5px; }
+.quoteSheetParams h4 { margin: 0 0 6px; color: var(--body); font-size: 11.5px; font-weight: 700; }
+.quoteSheetParams h4 + table { margin-bottom: 16px; }
+
+.quoteCellButton { display: grid; width: 100%; gap: 2px; border: 0; background: transparent; padding: 3px 0; text-align: left; cursor: pointer; }
+.quoteCellButton strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.quoteCellButton small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.quoteCategoryCell { color: var(--body); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.quoteNum { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+/* 原表里那批「可编辑」的黄格子。它们是人能改的,也就是最该被核的。 */
+.quoteEditable { background: rgba(154, 122, 58, .1); font-weight: 600; }
+.quoteTotalRow td { border-top: 1px solid var(--line-strong, var(--line)); font-weight: 700; }
+.quoteDocDesc { color: var(--body); font-size: 12px; line-height: 1.6; }
+.quoteDocNote { margin: 14px 0 0; border-top: 1px dashed var(--line); padding-top: 10px; color: var(--muted); font-size: 12px; }
+
+/* 批注在原件上的记号:阻断项是黄的,提醒是灰的——严重度必须在原件上就读得出,
+   不能只写在右边清单里,否则扫一遍原件不知道哪儿卡着。 */
+.quoteSheetGrid tr.hasNote td, .quoteDocTable tr.hasNote td { background: rgba(154, 122, 58, .08); }
+.quoteSheetGrid tr.hasNote.is-advisory td, .quoteDocTable tr.hasNote.is-advisory td { background: rgba(17, 19, 24, .04); }
+.quoteSheetGrid tr.isActive td, .quoteDocTable tr.isActive td { background: var(--bioaz-agent-accent-soft, #f3f3fb); box-shadow: inset 2px 0 0 var(--bioaz-agent-accent, #5c60b8); }
+
+/* 批注编辑器。分类做成选项而不是自由文本:报价复核的改法就那么几类,
+   固定下来,下一版才能按类核验。 */
+.quoteNoteAnchor { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.quoteNoteCurrent { color: var(--muted); font-size: 11.5px; }
+.quoteNoteCats { display: flex; flex-wrap: wrap; gap: 5px; }
+.quoteNoteCats button { min-height: 26px; border: 1px solid var(--line); border-radius: 999px; background: #fff; padding: 0 9px; color: var(--body); font-size: 11.5px; cursor: pointer; }
+.quoteNoteCats button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
+.quoteNoteSuggest { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 8px; }
+.quoteNoteSuggest span { color: var(--body); font-size: 12px; font-weight: 600; }
+.quoteNoteSuggest input { min-height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 9px; font-size: 12.5px; }
+.quoteNoteSeverity { display: flex; gap: 14px; }
+.quoteNoteSeverity label { display: inline-flex; align-items: center; gap: 5px; color: var(--body); font-size: 12px; cursor: pointer; }
+.quoteNoteActions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.quoteNoteList li { position: relative; }
+.quoteNoteList li.is-advisory button { border-left-color: var(--muted); }
+.quoteNoteTags { display: flex; align-items: center; gap: 6px; }
+.quoteNoteTags em { color: var(--muted); font-size: 11px; font-style: normal; }
+.quoteNoteBlock { border-radius: 4px; background: rgba(154, 122, 58, .16); padding: 1px 5px; color: #7d6229; font-size: 10.5px; font-style: normal; }
+.quoteNoteList b { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
+.quoteNoteRemove { position: absolute; top: 8px; right: 8px; display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+.quoteNoteRemove:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
+
+@media (max-width: 1240px) {
+  .quoteSheetGrid { grid-template-columns: minmax(0, 1fr); }
+}

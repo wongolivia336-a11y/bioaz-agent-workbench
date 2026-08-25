@@ -4,8 +4,9 @@ import { ArrowLeft, Bot, ChevronLeft, ChevronRight, Highlighter, Paperclip, Sear
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { StatusChip } from "../ui";
+import { QuoteReviewCanvas } from "./QuoteReviewCanvas";
+import type { QuoteNote } from "../../lib/workbench/quoteData";
 import {
-  dmpkQuoteLines,
   initialNotices,
   minutesFromLabel,
   noticeSourceLabel,
@@ -73,7 +74,7 @@ export function TicketsPage({
   const [readIds, setReadIds] = useState<string[]>([]);
   /* 批注按工单存。放在这一层而不是详情组件里,是因为详情会随返回列表卸载——
      写了一半的批注不该因为回去看一眼列表就没了。 */
-  const [notesByTicket, setNotesByTicket] = useState<Record<string, Record<string, string>>>({});
+  const [notesByTicket, setNotesByTicket] = useState<Record<string, Record<string, QuoteNote>>>({});
   /* 顶栏不再挂 tab——列表只有一个,没有视图可切。待我处理的数量在侧栏那颗徽标上。 */
   const [topbarPrimaryHost, setTopbarPrimaryHost] = useState<HTMLElement | null>(null);
   useEffect(() => {
@@ -128,7 +129,7 @@ export function TicketsPage({
         ticket={open}
         isMine={open.assignee === currentUser}
         notes={notesByTicket[open.id] ?? {}}
-        onNoteChange={(lineId, value) => setNotesByTicket((current) => ({ ...current, [open.id]: { ...(current[open.id] ?? {}), [lineId]: value } }))}
+        onNotesChange={(next) => setNotesByTicket((current) => ({ ...current, [open.id]: next }))}
         onBack={() => setOpenId(null)}
         onHandle={() => onHandle(open)}
         onAccept={() => onAccept(open)}
@@ -269,11 +270,11 @@ function NoticeDetailView({ notice, onBack }: { notice: Notice; onBack: () => vo
  *   DMPK 报价 —— 全程人工,进本页自己的审核画布。它不需要 agent 介入,
  *               拉一个对话区进来只会凭空长出「这里能问 AI 吗」的期待。
  */
-function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandle, onAccept }: {
+function TicketDetailView({ ticket, isMine, notes, onNotesChange, onBack, onHandle, onAccept }: {
   ticket: Ticket;
   isMine: boolean;
-  notes: Record<string, string>;
-  onNoteChange: (lineId: string, value: string) => void;
+  notes: Record<string, QuoteNote>;
+  onNotesChange: (next: Record<string, QuoteNote>) => void;
   onBack: () => void;
   onHandle: () => void;
   onAccept: () => void;
@@ -288,10 +289,10 @@ function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandl
 
   if (isQuotation && reviewing) {
     return (
-      <QuotationReviewCanvas
+      <QuoteReviewCanvas
         ticket={ticket}
         notes={notes}
-        onNoteChange={onNoteChange}
+        onNotesChange={onNotesChange}
         onBack={() => setReviewing(false)}
       />
     );
@@ -362,130 +363,3 @@ function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandl
   );
 }
 
-/**
- * 报价审核画布。跟 QA 审核台同一个骨架:左边是原件、右边是批注清单,
- * 点批注定位到原件,点原件给它加批注。
- *
- * 差别只有一处——这里没有对话区。报价复核全程人工,拉一个 chatflow 进来
- * 只会长出「这里能问 AI 吗」的期待,而它确实不能。
- *
- * 锚点是**计价条目**而不是文档里的一段选区:报价单本来就是结构化的,
- * 有名字的行比一段坐标好定位,下一版也更容易验证「那一条改了没有」。
- * 这跟 QA 把批注锚在「收检日期」这类字段上是同一套办法。
- */
-function QuotationReviewCanvas({ ticket, notes, onNoteChange, onBack }: {
-  ticket: Ticket;
-  notes: Record<string, string>;
-  onNoteChange: (lineId: string, value: string) => void;
-  onBack: () => void;
-}) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
-  const noted = dmpkQuoteLines.filter((line) => (notes[line.id] ?? "").trim());
-  const groups = dmpkQuoteLines.map((line) => line.group).filter((group, index, list) => list.indexOf(group) === index);
-  const active = activeId ? dmpkQuoteLines.find((line) => line.id === activeId) ?? null : null;
-
-  const pick = (lineId: string) => {
-    setActiveId(lineId);
-    setDraft(notes[lineId] ?? "");
-  };
-  const commit = () => {
-    if (!activeId) return;
-    onNoteChange(activeId, draft);
-    setActiveId(null);
-    setDraft("");
-  };
-
-  return (
-    <section className="workbenchView quoteReviewCanvas">
-      <header className="quoteReviewHead">
-        <button className="ticketDetailBack" type="button" onClick={onBack}><ArrowLeft size={15} />返回工单</button>
-        <div className="ticketDetailTitle">
-          <span>{ticket.id} · 报价复核</span>
-          <h1>{ticket.title}</h1>
-        </div>
-        <StatusChip tone="warning" dot>人工复核</StatusChip>
-      </header>
-
-      <div className="quoteReviewBody">
-        {/* 左栏:原件。点哪一行就给哪一行写批注——锚点是行,不是坐标。 */}
-        <div className="quoteDocPane">
-          <article className="quoteDoc">
-            <header>
-              <strong>DMPK 检测报价单</strong>
-              <small>{ticket.project} · 提交人 {ticket.from}</small>
-            </header>
-            {groups.map((group) => (
-              <section key={group}>
-                <h3>{group}</h3>
-                {dmpkQuoteLines.filter((line) => line.group === group).map((line) => {
-                  const note = (notes[line.id] ?? "").trim();
-                  return (
-                    <button
-                      key={line.id}
-                      className={`quoteDocLine ${note ? "hasNote" : ""} ${activeId === line.id ? "isActive" : ""}`}
-                      type="button"
-                      onClick={() => pick(line.id)}
-                    >
-                      <span className="quoteDocLabel">
-                        <strong>{line.label}</strong>
-                        <small>{line.detail}</small>
-                      </span>
-                      <b>{line.amount}</b>
-                      {note ? <i className="quoteDocMark" aria-label="已批注" /> : null}
-                    </button>
-                  );
-                })}
-              </section>
-            ))}
-          </article>
-        </div>
-
-        {/* 右栏:批注清单。跟 QA 那边一样,清单给结论、原件给证据。 */}
-        <aside className="quoteNotePane">
-          <header>
-            <strong>人工批注</strong>
-            <small>{noted.length} 条</small>
-          </header>
-
-          {active ? (
-            <div className="quoteNoteEditor">
-              <span>{active.label}</span>
-              <textarea
-                autoFocus
-                value={draft}
-                placeholder="写下这一条的问题，留空表示无异议"
-                aria-label={`${active.label}的批注`}
-                onChange={(event) => setDraft(event.target.value)}
-              />
-              <div>
-                <button className="secondaryButton compact" type="button" onClick={() => { setActiveId(null); setDraft(""); }}>取消</button>
-                <button className="primaryButton compact" type="button" onClick={commit}>保存批注</button>
-              </div>
-            </div>
-          ) : (
-            <p className="quoteNoteHint">点左边任意一条计价项，给它写批注。</p>
-          )}
-
-          <ul className="quoteNoteList">
-            {noted.map((line) => (
-              <li key={line.id}>
-                <button type="button" onClick={() => pick(line.id)}>
-                  <strong>{line.label}</strong>
-                  <p>{notes[line.id]}</p>
-                </button>
-              </li>
-            ))}
-            {!noted.length ? <li className="quoteNoteEmpty">还没有批注。没有批注就通过，表示这一版你全部认可。</li> : null}
-          </ul>
-        </aside>
-      </div>
-
-      <footer className="ticketDetailActions">
-        <p className="ticketDetailHint">已批注 {noted.length} 条</p>
-        <button className="secondaryButton compact" type="button" disabled={!noted.length}>驳回并退回 {ticket.from}</button>
-        <button className="primaryButton compact" type="button">通过并归档到数据中枢</button>
-      </footer>
-    </section>
-  );
-}
