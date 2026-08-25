@@ -55,6 +55,9 @@ export function TicketsPage({
   onOpenNoticeChange,
   reviewing,
   onReviewingChange,
+  reviewerRole,
+  onReject,
+  onArchive,
 }: {
   tickets: Ticket[];
   /** 当前账号。侧栏那个切换器一换，「待我处理」跟着换——同一张单在不同角色眼里是不同的事。 */
@@ -76,6 +79,12 @@ export function TicketsPage({
   onOpenNoticeChange: (title: string | null) => void;
   reviewing: boolean;
   onReviewingChange: (value: boolean) => void;
+  /** 批注要署名——一条不署名的批注答不了「这句话该问谁」,而追问原提出人
+      正是审核来回时最常做的事。 */
+  reviewerRole: string;
+  /** 驳回 = 打回上一棒（工单里不用猜,提交人就写在单子上）;归档 = 落进数据中枢并收到终态。 */
+  onReject: (ticket: Ticket, summary: string) => void;
+  onArchive: (ticket: Ticket) => void;
 }) {
   const [status, setStatus] = useState<string>("待我处理");
   const [keyword, setKeyword] = useState("");
@@ -150,6 +159,10 @@ export function TicketsPage({
         onAccept={() => onAccept(open)}
         reviewing={reviewing}
         onReviewingChange={onReviewingChange}
+        currentUser={currentUser}
+        reviewerRole={reviewerRole}
+        onReject={(summary) => { onReject(open, summary); onReviewingChange(false); onOpenTicketChange(null); }}
+        onArchive={() => { onArchive(open); onReviewingChange(false); onOpenTicketChange(null); }}
       />
     );
   }
@@ -315,7 +328,7 @@ function NoticeDetailView({ notice }: { notice: Notice }) {
  *   DMPK 报价 —— 全程人工,进本页自己的审核画布。它不需要 agent 介入,
  *               拉一个对话区进来只会凭空长出「这里能问 AI 吗」的期待。
  */
-function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAccept, reviewing, onReviewingChange }: {
+function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAccept, reviewing, onReviewingChange, currentUser, reviewerRole, onReject, onArchive }: {
   ticket: Ticket;
   isMine: boolean;
   notes: Record<string, QuoteNote>;
@@ -324,6 +337,10 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
   onAccept: () => void;
   reviewing: boolean;
   onReviewingChange: (value: boolean) => void;
+  currentUser: string;
+  reviewerRole: string;
+  onReject: (summary: string) => void;
+  onArchive: () => void;
 }) {
   /* 已经接手过的单直接进画布。不这样的话,回列表看一眼再进来,画布退回详情、
      按钮还写着「开始审核」——可你明明已经开始了,状态也已经是处理中。 */
@@ -339,6 +356,10 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
         ticket={ticket}
         notes={notes}
         onNotesChange={onNotesChange}
+        reviewer={currentUser}
+        reviewerRole={reviewerRole}
+        onReject={onReject}
+        onArchive={onArchive}
       />
     );
   }

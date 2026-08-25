@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowLeft, FileSpreadsheet, FileText, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { StatusChip } from "../ui";
 import {
   quoteItems,
@@ -17,34 +17,45 @@ import type { Ticket } from "../../lib/workbench/ticketData";
 
 const money = (value: number) => value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+/** 草稿:还没落盘的一条批注,连同它在纸面上的纵向位置。 */
+type Draft = { anchorId: string; quote: string; top: number; note: QuoteNote };
+
 /**
- * 报价审核画布。
+ * 报价审核画布。跟 QA 审核台同构,不是另起一套:
  *
- * 骨架跟 QA 审核台一样:左边原件、右边批注清单,点原件给它加批注、点批注回到原件。
- * 三处不同,每一处都有原因:
+ *   批注是一个**模式**,不是"选中就弹"。不分模式的话,想复制一段文字、想双击选个词,
+ *   都会被一张卡打断——而读原件的时间远多于写批注的时间。
+ *   进了模式,纸面透出一层底色,你知道自己现在在批注。
  *
+ *   选中文字 → 就地弹一张气泡卡。选中这个动作本身已经说了「我要说这一处」,
+ *   再要求先点右侧再回来找位置,等于让人把同一件事说两遍。
+ *
+ *   右栏只做**记录**:已落盘的批注在那儿排着,点一条回到原文并可改写。
+ *   录入发生在纸面上,不在右栏。
+ *
+ * 跟 QA 的两处差别,各有原因:
  *   1. 没有对话区。报价复核全程人工,拉一个 chatflow 进来只会长出「这里能问 AI 吗」
  *      的期待,而它确实不能。
- *   2. 锚点是**行**不是选区。报价单本来就是结构化的,有名字的行比一段坐标好定位,
- *      下一版也更容易验证「那一条改了没有」。
- *   3. 批注带**建议值**。报价复核是算术:「这个数应该是 6 不是 2」是能写下来、
+ *   2. 批注带**建议值**。报价复核是算术:「这个数应该是 6 不是 2」是能写下来、
  *      也能被下一版直接核验的断言,而不是一句要人再读一遍的评语。
- *
- * 两种形态共用一套锚点:Excel 是内部计算表(有单价和参数),Word 是对外报价书
- * (只有条目和描述)。切视图不丢批注,因为批注锚的是条目 id,不是屏幕位置。
  */
-export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
+export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, reviewerRole, onReject, onArchive }: {
   ticket: Ticket;
   notes: Record<string, QuoteNote>;
   onNotesChange: (next: Record<string, QuoteNote>) => void;
+  reviewer: string;
+  reviewerRole: string;
+  onReject: (summary: string) => void;
+  onArchive: () => void;
 }) {
   const [form, setForm] = useState<"sheet" | "doc">("sheet");
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<QuoteNote | null>(null);
+  const [annotateMode, setAnnotateMode] = useState(true);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const paneRef = useRef<HTMLDivElement>(null);
 
   const noted = Object.values(notes);
   const blocking = noted.filter((note) => note.severity === "blocking").length;
-  const categories = [...quoteItems.map((item) => item.category)].filter((value, index, list) => list.indexOf(value) === index);
+  const categories = quoteItems.map((item) => item.category).filter((value, index, list) => list.indexOf(value) === index);
 
   const anchorLabel = (id: string) =>
     quoteParams.find((param) => param.id === id)?.label
@@ -56,41 +67,97 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
     const param = quoteParams.find((item) => item.id === id);
     if (param) return param.value;
     const item = quoteItems.find((entry) => entry.id === id);
-    if (item?.unitPrice !== undefined) return money(item.unitPrice);
-    return "";
+    return item?.unitPrice === undefined ? "" : money(item.unitPrice);
   };
 
-  const pick = (id: string) => {
-    setActiveId(id);
-    setDraft(notes[id] ?? { anchorId: id, category: "param", severity: "blocking", text: "" });
+  /* Esc 先收卡片、再退模式。一次退两层会让人以为自己点错了。 */
+  useEffect(() => {
+    if (!annotateMode) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (draft) { setDraft(null); window.getSelection()?.removeAllRanges(); return; }
+      setAnnotateMode(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [annotateMode, draft]);
+
+  /* 选中文字即批注。锚点从选区往上找最近那一行——选中说的是「这一处」,
+     而「这一处」在报价单里天然就是一行:参数或计价项。 */
+  const captureSelection = () => {
+    if (!annotateMode) return;
+    const selection = window.getSelection();
+    const quote = selection?.toString().trim() ?? "";
+    if (!quote || !selection?.rangeCount) return;
+    const node = selection.anchorNode;
+    const host = (node instanceof Element ? node : node?.parentElement)?.closest<HTMLElement>("[data-anchor]");
+    if (!host) return;
+    const anchorId = host.dataset.anchor!;
+    const pane = paneRef.current;
+    if (!pane) return;
+    const top = host.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+    setDraft({
+      anchorId,
+      quote,
+      top,
+      note: notes[anchorId] ?? {
+        anchorId, category: "param", severity: "blocking", text: "",
+        author: reviewer, authorRole: reviewerRole, at: "刚刚",
+      },
+    });
   };
+
+  /** 从右栏点一条:回到原文位置改写它。录入始终发生在纸面上。 */
+  const editNote = (note: QuoteNote) => {
+    const pane = paneRef.current;
+    const host = pane?.querySelector<HTMLElement>(`[data-anchor="${note.anchorId}"]`);
+    if (!pane || !host) return;
+    const top = host.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+    host.scrollIntoView({ block: "center", behavior: "smooth" });
+    setAnnotateMode(true);
+    setDraft({ anchorId: note.anchorId, quote: note.quote ?? anchorLabel(note.anchorId), top, note });
+  };
+
   const commit = () => {
-    if (!draft || !draft.text.trim()) return;
-    onNotesChange({ ...notes, [draft.anchorId]: draft });
-    setActiveId(null);
+    if (!draft || !draft.note.text.trim()) return;
+    onNotesChange({ ...notes, [draft.anchorId]: { ...draft.note, quote: draft.quote, author: reviewer, authorRole: reviewerRole, at: "刚刚" } });
     setDraft(null);
+    window.getSelection()?.removeAllRanges();
   };
   const remove = (id: string) => {
     const next = { ...notes };
     delete next[id];
     onNotesChange(next);
-    if (activeId === id) { setActiveId(null); setDraft(null); }
+    if (draft?.anchorId === id) setDraft(null);
   };
 
-  const marked = (id: string) => notes[id] ? `hasNote is-${notes[id].severity}` : "";
+  /* 有批注的行留个记号。阻断是琥珀、提醒是灰——严重度必须在原件上就读得出,
+     不能只写在右栏,否则扫一遍原件不知道哪儿卡着。 */
+  const rowClass = (id: string) => {
+    const note = notes[id];
+    const active = draft?.anchorId === id;
+    return `${note ? `hasNote is-${note.severity}` : ""} ${active ? "isActive" : ""}`.trim();
+  };
+  const bubble = (id: string) => notes[id] ? <i className="quoteRowBubble" aria-label="已批注"><MessageSquare size={10} /></i> : null;
 
   return (
     <section className="workbenchView quoteReviewCanvas">
-      {/* 返回交给面包屑（站内信 › TK-2046 › 报价复核），页内不再放按钮——
-          同一个动作两个入口，只会让人怀疑它们做的是不是同一件事。 */}
       <div className="quoteReviewHead">
-        <div className="quoteReviewHeadMain">
-          <div className="ticketDetailTitle">
-            <span>{ticket.id} · 报价复核 · 全程人工</span>
-            <h1>{quoteMeta.title}</h1>
-          </div>
-          {/* 同一张报价的两种形态。审核在计算表这一侧做——Word 里没有单价也没有
-              参数,看不出数是怎么算出来的。 */}
+        <div className="ticketDetailTitle">
+          <h1>{quoteMeta.title}</h1>
+          <p>{ticket.id} · 报价复核 · 全程人工 · 复核人 {reviewer}</p>
+        </div>
+        <div className="quoteHeadTools">
+          {/* 批注是模式。跟 QA 一样给一个明确的开关,而不是"选中就弹"。 */}
+          <button
+            className={`quoteAnnotateToggle ${annotateMode ? "isOn" : ""}`}
+            type="button"
+            aria-pressed={annotateMode}
+            onClick={() => { setAnnotateMode((value) => !value); setDraft(null); }}
+          >
+            <Highlighter size={14} />{annotateMode ? "正在批注" : "开始批注"}
+          </button>
+          {/* 同一张报价的两种形态,共用一套锚点——切视图不丢批注。 */}
           <div className="quoteFormSwitch" role="tablist" aria-label="报价形态">
             <button type="button" role="tab" aria-selected={form === "sheet"} className={form === "sheet" ? "active" : ""} onClick={() => setForm("sheet")}>
               <FileSpreadsheet size={14} />计算表
@@ -103,29 +170,19 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
       </div>
 
       <div className="quoteReviewBody">
-        <div className="quoteDocPane">
+        <div className={`quoteDocPane ${annotateMode ? "isAnnotating" : ""}`} ref={paneRef} onMouseUp={captureSelection}>
           {form === "sheet" ? (
             <article className="quoteSheet">
-              <header>
-                <strong>{quoteMeta.title}</strong>
-                <small>内部计算表 · {quoteMeta.currency}</small>
-              </header>
-
+              <header><strong>{quoteMeta.title}</strong><small>内部计算表 · {quoteMeta.currency}</small></header>
               <div className="quoteSheetGrid">
-                {/* 左半边:计价明细。单价可批注（走错档是常见问题）。 */}
                 <section className="quoteSheetItems">
                   <table>
                     <thead><tr><th>Category</th><th>Item</th><th>Unit Price</th></tr></thead>
                     <tbody>
                       {categories.map((category) => quoteItems.filter((item) => item.category === category).map((item, index) => (
-                        <tr key={item.id} className={`${marked(item.id)} ${activeId === item.id ? "isActive" : ""}`}>
+                        <tr key={item.id} data-anchor={item.id} className={rowClass(item.id)}>
                           <td className="quoteCategoryCell">{index === 0 ? category : ""}</td>
-                          <td>
-                            <button type="button" className="quoteCellButton" onClick={() => pick(item.id)}>
-                              <strong>{item.item}</strong>
-                              <small>{item.description}</small>
-                            </button>
-                          </td>
+                          <td><strong>{item.item}</strong><small>{item.description}</small>{bubble(item.id)}</td>
                           <td className="quoteNum">{item.unitPrice === undefined ? "—" : money(item.unitPrice)}</td>
                         </tr>
                       )))}
@@ -133,33 +190,25 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
                   </table>
                 </section>
 
-                {/* 右半边:参数与小计。原表里那句「Yellow-highlighted fields are
-                    editable」就是在说这一批——它们是人可以改的,也就是最该被核的。 */}
+                {/* 原表里那句「Yellow-highlighted fields are editable」说的就是这一批——
+                    它们是人可以改的,也就是最该被核的。 */}
                 <section className="quoteSheetParams">
                   <h4>可编辑参数</h4>
                   <table>
                     <tbody>
                       {quoteParams.map((param) => (
-                        <tr key={param.id} className={`${marked(param.id)} ${activeId === param.id ? "isActive" : ""}`}>
-                          <td>
-                            <button type="button" className="quoteCellButton" onClick={() => pick(param.id)}>
-                              <strong>{param.label}</strong>
-                            </button>
-                          </td>
+                        <tr key={param.id} data-anchor={param.id} className={rowClass(param.id)}>
+                          <td><strong>{param.label}</strong>{bubble(param.id)}</td>
                           <td className="quoteNum quoteEditable">{param.value}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-
                   <h4>小计</h4>
                   <table>
                     <tbody>
                       {quoteSubtotals.map((sub) => (
-                        <tr key={sub.id}>
-                          <td>{sub.label}</td>
-                          <td className="quoteNum">{money(sub.amount)}</td>
-                        </tr>
+                        <tr key={sub.id}><td>{sub.label}</td><td className="quoteNum">{money(sub.amount)}</td></tr>
                       ))}
                       <tr className="quoteTotalRow"><td>Standard Price</td><td className="quoteNum">{money(quoteMeta.standardPrice)}</td></tr>
                       <tr className="quoteTotalRow"><td>Discounted Price</td><td className="quoteNum">{money(quoteMeta.discountedPrice)}</td></tr>
@@ -170,21 +219,14 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
             </article>
           ) : (
             <article className="quoteDoc">
-              <header>
-                <strong>{quoteMeta.docTitle}</strong>
-                <small>{quoteMeta.validity}</small>
-              </header>
+              <header><strong>{quoteMeta.docTitle}</strong><small>{quoteMeta.validity}</small></header>
               <table className="quoteDocTable">
                 <thead><tr><th>Category</th><th>Item</th><th>Description</th></tr></thead>
                 <tbody>
                   {categories.map((category) => quoteItems.filter((item) => item.category === category).map((item, index) => (
-                    <tr key={item.id} className={`${marked(item.id)} ${activeId === item.id ? "isActive" : ""}`}>
+                    <tr key={item.id} data-anchor={item.id} className={rowClass(item.id)}>
                       <td className="quoteCategoryCell">{index === 0 ? category : ""}</td>
-                      <td>
-                        <button type="button" className="quoteCellButton" onClick={() => pick(item.id)}>
-                          <strong>{item.item}</strong>
-                        </button>
-                      </td>
+                      <td><strong>{item.item}</strong>{bubble(item.id)}</td>
                       <td className="quoteDocDesc">{item.description}</td>
                     </tr>
                   )))}
@@ -192,75 +234,76 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
                   <tr className="quoteTotalRow"><td colSpan={2}>Total Price ({quoteMeta.currency})</td><td className="quoteNum">{money(quoteMeta.totalPrice)}</td></tr>
                 </tbody>
               </table>
-              {/* 参数不在这一份里。审核人要核数怎么来的,得切到计算表。 */}
               <p className="quoteDocNote">这一份是给客户的，不含单价与参数。要核算法请切到「计算表」。</p>
             </article>
           )}
-        </div>
 
-        <aside className="quoteNotePane">
-          <header>
-            <strong>人工批注</strong>
-            <small>{noted.length} 条{blocking ? ` · ${blocking} 条阻断` : ""}</small>
-          </header>
-
+          {/* 就地气泡卡。跟 QA 一个量级:引用 + 一行输入 + 去向,批注多数是一句话,
+              给三行文本域等于暗示"你得写一段"。 */}
           {draft ? (
-            <div className="quoteNoteEditor">
-              <span className="quoteNoteAnchor">{anchorLabel(draft.anchorId)}</span>
-              {currentValue(draft.anchorId) ? <small className="quoteNoteCurrent">当前值 {currentValue(draft.anchorId)}</small> : null}
+            <aside className="quoteNoteBubble" style={{ top: draft.top }} aria-label="批注">
+              <blockquote>{draft.quote}<em>{anchorLabel(draft.anchorId)}</em></blockquote>
 
-              {/* 报价复核的改法就那么几类,做成选项而不是让人每次自己组织语言——
-                  分类固定下来,下一版才能按类核验。 */}
               <div className="quoteNoteCats">
                 {(Object.keys(quoteNoteCategoryLabel) as QuoteNoteCategory[]).map((category) => (
                   <button
                     key={category}
                     type="button"
-                    className={draft.category === category ? "active" : ""}
-                    onClick={() => setDraft({ ...draft, category, suggested: quoteNoteNeedsValue[category] ? draft.suggested : undefined })}
+                    className={draft.note.category === category ? "active" : ""}
+                    onClick={() => setDraft({ ...draft, note: { ...draft.note, category, suggested: quoteNoteNeedsValue[category] ? draft.note.suggested : undefined } })}
                   >
                     {quoteNoteCategoryLabel[category]}
                   </button>
                 ))}
               </div>
 
-              {quoteNoteNeedsValue[draft.category] ? (
+              {quoteNoteNeedsValue[draft.note.category] ? (
                 <label className="quoteNoteSuggest">
-                  <span>应为</span>
+                  <span>{currentValue(draft.anchorId) || "现值"} →</span>
                   <input
-                    value={draft.suggested ?? ""}
-                    placeholder="填一个值，下一版会照这个核"
-                    onChange={(event) => setDraft({ ...draft, suggested: event.target.value })}
+                    value={draft.note.suggested ?? ""}
+                    placeholder="应为"
+                    onChange={(event) => setDraft({ ...draft, note: { ...draft.note, suggested: event.target.value } })}
                   />
                 </label>
               ) : null}
 
-              <textarea
-                autoFocus
-                value={draft.text}
-                placeholder="说明理由"
-                aria-label="批注说明"
-                onChange={(event) => setDraft({ ...draft, text: event.target.value })}
-              />
-
-              <div className="quoteNoteSeverity">
-                <label><input type="radio" checked={draft.severity === "blocking"} onChange={() => setDraft({ ...draft, severity: "blocking" })} />不改不能过</label>
-                <label><input type="radio" checked={draft.severity === "advisory"} onChange={() => setDraft({ ...draft, severity: "advisory" })} />仅提醒</label>
+              <div className="quoteNoteRow">
+                <textarea
+                  autoFocus
+                  rows={1}
+                  value={draft.note.text}
+                  placeholder="添加批注…"
+                  onChange={(event) => setDraft({ ...draft, note: { ...draft.note, text: event.target.value } })}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); commit(); }
+                    if (event.key === "Escape") { event.stopPropagation(); setDraft(null); }
+                  }}
+                />
+                <button className="quoteNoteSend" type="button" disabled={!draft.note.text.trim()} onClick={commit} aria-label="提交批注" title="提交批注（Enter）">
+                  <Check size={14} />
+                </button>
               </div>
 
-              <div className="quoteNoteActions">
-                <button className="secondaryButton compact" type="button" onClick={() => { setActiveId(null); setDraft(null); }}>取消</button>
-                <button className="primaryButton compact" type="button" disabled={!draft.text.trim()} onClick={commit}>保存批注</button>
+              <div className="quoteNoteKind" role="radiogroup" aria-label="批注去向">
+                <button type="button" role="radio" aria-checked={draft.note.severity === "blocking"} className={draft.note.severity === "blocking" ? "isOn" : ""} onClick={() => setDraft({ ...draft, note: { ...draft.note, severity: "blocking" } })}>不改不能过</button>
+                <button type="button" role="radio" aria-checked={draft.note.severity === "advisory"} className={draft.note.severity === "advisory" ? "isOn" : ""} onClick={() => setDraft({ ...draft, note: { ...draft.note, severity: "advisory" } })}>仅提醒</button>
+                <small>{draft.note.severity === "blocking" ? "退回后逐条验证" : "只留痕，不挡通过"}</small>
               </div>
-            </div>
-          ) : (
-            <p className="quoteNoteHint">点左边任意一条参数或计价项，给它写批注。</p>
-          )}
+            </aside>
+          ) : null}
+        </div>
 
+        {/* 右栏只做记录。录入在纸面上发生,这里排的是已落盘的那些。 */}
+        <aside className="quoteNotePane">
+          <header>
+            <strong>人工批注</strong>
+            <small>{noted.length} 条{blocking ? ` · ${blocking} 条阻断` : ""}</small>
+          </header>
           <ul className="quoteNoteList">
             {noted.map((note) => (
               <li key={note.anchorId} className={`is-${note.severity}`}>
-                <button type="button" onClick={() => pick(note.anchorId)}>
+                <button type="button" onClick={() => editNote(note)}>
                   <span className="quoteNoteTags">
                     <em>{quoteNoteCategoryLabel[note.category]}</em>
                     {note.severity === "blocking" ? <i className="quoteNoteBlock">阻断</i> : null}
@@ -268,21 +311,32 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
                   <strong>{anchorLabel(note.anchorId)}</strong>
                   {note.suggested ? <b>{currentValue(note.anchorId)} → {note.suggested}</b> : null}
                   <p>{note.text}</p>
+                  <span className="quoteNoteBy">{note.author}<i>{note.authorRole}</i> · {note.at}</span>
                 </button>
                 <button className="quoteNoteRemove" type="button" aria-label="删除批注" onClick={() => remove(note.anchorId)}><Trash2 size={13} /></button>
               </li>
             ))}
-            {!noted.length ? <li className="quoteNoteEmpty">还没有批注。没有批注就通过，表示这一版你全部认可。</li> : null}
+            {!noted.length ? (
+              <li className="quoteNoteEmpty">
+                {annotateMode ? "在左边选中一段文字就能批注。没有批注直接归档，表示这一版你全部认可。" : "点右上角「开始批注」，然后在左边选中文字。"}
+              </li>
+            ) : null}
           </ul>
         </aside>
       </div>
 
       <footer className="ticketDetailActions">
         <p className="ticketDetailHint">
-          {blocking ? `${blocking} 条阻断项，通过前需要先退回修订` : noted.length ? `${noted.length} 条提醒，不影响通过` : "尚无批注"}
+          {blocking ? `${blocking} 条阻断项，需退回 ${ticket.from} 修订` : noted.length ? `${noted.length} 条提醒，不挡归档` : "尚无批注"}
         </p>
-        <button className="secondaryButton compact" type="button" disabled={!noted.length}>驳回并退回 {ticket.from}</button>
-        <button className="primaryButton compact" type="button" disabled={blocking > 0}>通过并归档到数据中枢</button>
+        {/* 驳回就是打回给上一棒——工单里「上一棒」不用猜,提交人就写在单子上。 */}
+        <button className="secondaryButton compact" type="button" disabled={!noted.length}
+          onClick={() => onReject(`${noted.length} 条批注，其中 ${blocking} 条阻断`)}>
+          退回 {ticket.from} 修订
+        </button>
+        <button className="primaryButton compact" type="button" disabled={blocking > 0} onClick={onArchive}>
+          通过并归档到数据中枢
+        </button>
       </footer>
     </section>
   );

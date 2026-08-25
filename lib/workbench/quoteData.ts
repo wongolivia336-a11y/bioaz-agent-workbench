@@ -131,4 +131,11 @@ export type QuoteNote = {
   text: string;
   /** 建议值。下一版据此核验「改了没有」。 */
   suggested?: string;
+  /* 谁写的、什么时候。一份报价可能来回几轮、经手几个人,一条批注不署名就答不了
+     「这句话该问谁」——而追问原提出人正是审核来回时最常做的事。 */
+  author: string;
+  authorRole: string;
+  at: string;
+  /** 选中的那段原文。跟 QA 一样把它带上:清单给结论,引用给证据。 */
+  quote?: string;
 };
