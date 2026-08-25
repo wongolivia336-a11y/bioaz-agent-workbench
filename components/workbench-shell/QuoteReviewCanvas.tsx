@@ -33,11 +33,10 @@ const money = (value: number) => value.toLocaleString("en-US", { minimumFraction
  * 两种形态共用一套锚点:Excel 是内部计算表(有单价和参数),Word 是对外报价书
  * (只有条目和描述)。切视图不丢批注,因为批注锚的是条目 id,不是屏幕位置。
  */
-export function QuoteReviewCanvas({ ticket, notes, onNotesChange, onBack }: {
+export function QuoteReviewCanvas({ ticket, notes, onNotesChange }: {
   ticket: Ticket;
   notes: Record<string, QuoteNote>;
   onNotesChange: (next: Record<string, QuoteNote>) => void;
-  onBack: () => void;
 }) {
   const [form, setForm] = useState<"sheet" | "doc">("sheet");
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -82,8 +81,9 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, onBack }: {
 
   return (
     <section className="workbenchView quoteReviewCanvas">
+      {/* 返回交给面包屑（站内信 › TK-2046 › 报价复核），页内不再放按钮——
+          同一个动作两个入口，只会让人怀疑它们做的是不是同一件事。 */}
       <header className="quoteReviewHead">
-        <button className="ticketDetailBack" type="button" onClick={onBack}><ArrowLeft size={15} />返回工单</button>
         <div className="quoteReviewHeadMain">
           <div className="ticketDetailTitle">
             <span>{ticket.id} · 报价复核 · 全程人工</span>

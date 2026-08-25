@@ -7707,3 +7707,59 @@ button {
 @media (max-width: 1240px) {
   .quoteSheetGrid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ═══ 收件箱二级页 · 版式统一 ═══════════════════════════════════════════════
+   跟数据中枢、会话列共用同一条列宽与居中轴。之前详情页自带一套内距和宽度,
+   从列表点进去整块会横向跳一下——同一个空间不该有两套盒子。 */
+/* 列表和详情用同一个盒子:都铺满 workbenchView。之前给详情单独限了一道列宽,
+   结果从列表点进去整块横向跳 97px——同一个空间里不该有两套宽度。
+   审核画布更需要这个宽度:它要并排放原件和批注两栏。 */
+.ticketDetailView, .quoteReviewCanvas {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.ticketDetailHead { grid-template-columns: minmax(0, 1fr) auto; }
+.ticketDetailHead .ticketDetailTitle { grid-column: 1; }
+
+/* 流转记录:一条竖线穿到底,每格三件事排一行读完。
+   之前动作和时间被推到两端、中间一片空白,眼睛要横跳才拼得出一句话。 */
+.ticketDetailFlow ol { position: relative; gap: 0; }
+.ticketDetailFlow li { position: relative; grid-template-columns: 22px minmax(0, 1fr); padding-bottom: 16px; }
+.ticketDetailFlow li:last-child { padding-bottom: 0; }
+/* 竖线画在圆点这一列上,最后一格不画——线的意义是"还有下一步"。 */
+.ticketDetailFlow li:not(:last-child)::before {
+  position: absolute; top: 16px; bottom: 0; left: 6px;
+  width: 1px; background: var(--line); content: "";
+}
+.ticketFlowDot {
+  position: relative; z-index: 1; width: 9px; height: 9px; margin-top: 5px;
+  border: 2px solid #fff; border-radius: 999px; background: var(--line-strong, #cfd6e2);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.ticketDetailFlow li.isLatest .ticketFlowDot { background: var(--bioaz-agent-accent, #5c60b8); box-shadow: 0 0 0 1px var(--bioaz-agent-accent, #5c60b8); }
+.ticketFlowMain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ticketFlowMain strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+.ticketFlowMain small { color: var(--body); font-size: 12px; }
+.ticketFlowMain small i { margin-left: 4px; color: var(--muted); font-style: normal; }
+.ticketFlowMain time { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.ticketFlowNote {
+  margin: 6px 0 0; grid-column: 2; border-left: 2px solid var(--line);
+  padding: 2px 0 2px 10px; color: var(--body); font-size: 12.5px; line-height: 1.7; white-space: pre-line;
+}
+
+/* 处置按钮靠右,提示文字占左边剩下的空间——动作在右是这一屏其他地方的规矩。 */
+.ticketDetailActions { flex-wrap: wrap; }
+.ticketDetailHint { flex: 1 1 220px; }
+
+@media (max-width: 860px) {
+  .ticketDetailHead { grid-template-columns: minmax(0, 1fr); }
+  .ticketFlowMain time { margin-left: 0; flex-basis: 100%; }
+  .ticketDetailActions { flex-direction: column; align-items: stretch; }
+  .ticketDetailActions button { width: 100%; }
+}
+
+/* 会话里那张交接卡:动作靠右,跟 composer 同宽——它就长在 composer 上方,
+   两者不同宽会看成两个不相干的东西。 */
+.dmpkHandoffCard .warningActions { display: flex; justify-content: flex-end; }

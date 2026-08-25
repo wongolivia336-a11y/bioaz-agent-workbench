@@ -49,6 +49,12 @@ export function TicketsPage({
   onHandle,
   onAccept,
   onCreate,
+  openTicketId,
+  onOpenTicketChange,
+  openNoticeTitle,
+  onOpenNoticeChange,
+  reviewing,
+  onReviewingChange,
 }: {
   tickets: Ticket[];
   /** 当前账号。侧栏那个切换器一换，「待我处理」跟着换——同一张单在不同角色眼里是不同的事。 */
@@ -61,14 +67,23 @@ export function TicketsPage({
   /* 交接入口已经搬进会话（干完活那一下顺手交出去）。这里留成可选:工单不是
      「新建」出来的,在一个收信的页面上放「发出去」的按钮语义也拧。 */
   onCreate?: () => void;
+  /* 当前停在第几层由 shell 持有——面包屑要画出「站内信 › TK-2046 › 报价复核」,
+     顶栏就得够得着这个位置。留在页内的话返回只能靠页内再放一个按钮,
+     而那正是面包屑该做的事。 */
+  openTicketId: string | null;
+  onOpenTicketChange: (id: string | null) => void;
+  openNoticeTitle: string | null;
+  onOpenNoticeChange: (title: string | null) => void;
+  reviewing: boolean;
+  onReviewingChange: (value: boolean) => void;
 }) {
   const [status, setStatus] = useState<string>("待我处理");
   const [keyword, setKeyword] = useState("");
-  const [openNotice, setOpenNotice] = useState<Notice | null>(null);
+
   const [kind, setKind] = useState("全部类型");
   const [project, setProject] = useState("全部项目");
   const [page, setPage] = useState(1);
-  const [openId, setOpenId] = useState<string | null>(null);
+
   /* 读过哪几条。站内信是通知,通知只有「看没看过」这一个状态——
      它跟工单自己的状态是两回事,所以存在这一层,不写进 Ticket。 */
   const [readIds, setReadIds] = useState<string[]>([]);
@@ -121,7 +136,8 @@ export function TicketsPage({
   const rows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   const reset = <T,>(setter: (value: T) => void) => (value: T) => { setter(value); setPage(1); };
 
-  const open = openId ? tickets.find((ticket) => ticket.id === openId) ?? null : null;
+  const open = openTicketId ? tickets.find((ticket) => ticket.id === openTicketId) ?? null : null;
+  const openNotice = openNoticeTitle ? initialNotices.find((item) => item.title === openNoticeTitle) ?? null : null;
 
   if (open) {
     return (
@@ -130,20 +146,21 @@ export function TicketsPage({
         isMine={open.assignee === currentUser}
         notes={notesByTicket[open.id] ?? {}}
         onNotesChange={(next) => setNotesByTicket((current) => ({ ...current, [open.id]: next }))}
-        onBack={() => setOpenId(null)}
         onHandle={() => onHandle(open)}
         onAccept={() => onAccept(open)}
+        reviewing={reviewing}
+        onReviewingChange={onReviewingChange}
       />
     );
   }
 
   const openTicket = (ticket: Ticket) => {
-    setOpenId(ticket.id);
+    onOpenTicketChange(ticket.id);
     setReadIds((ids) => ids.includes(ticket.id) ? ids : [...ids, ticket.id]);
   };
 
   if (openNotice) {
-    return <NoticeDetailView notice={openNotice} onBack={() => setOpenNotice(null)} />;
+    return <NoticeDetailView notice={openNotice} />;
   }
 
   return (
@@ -181,7 +198,7 @@ export function TicketsPage({
                 <button
                   className={`messageRow isNotice ${unread ? "isUnread" : ""}`}
                   type="button"
-                  onClick={() => { setOpenNotice(notice); setReadIds((ids) => ids.includes(notice.id) ? ids : [...ids, notice.id]); }}
+                  onClick={() => { onOpenNoticeChange(notice.title); setReadIds((ids) => ids.includes(notice.id) ? ids : [...ids, notice.id]); }}
                 >
                   <span className="messageDot" aria-hidden="true" />
                   <span className="messageFrom"><Icon size={13} />{notice.from}</span>
@@ -243,12 +260,11 @@ export function TicketsPage({
  * 刻意做得比工单详情单薄:它单薄是因为它本来就该单薄,给它配上处置按钮
  * 只会让人以为自己漏了一件该做的事。
  */
-function NoticeDetailView({ notice, onBack }: { notice: Notice; onBack: () => void }) {
+function NoticeDetailView({ notice }: { notice: Notice }) {
   const Icon = sourceIcon[notice.source];
   return (
     <section className="workbenchView ticketDetailView">
       <header className="ticketDetailHead">
-        <button className="ticketDetailBack" type="button" onClick={onBack}><ArrowLeft size={15} />返回收件箱</button>
         <div className="ticketDetailTitle">
           <span><Icon size={12} /> {notice.from}（{noticeSourceLabel[notice.source]}） · {notice.at}</span>
           <h1>{notice.title}</h1>
@@ -270,18 +286,19 @@ function NoticeDetailView({ notice, onBack }: { notice: Notice; onBack: () => vo
  *   DMPK 报价 —— 全程人工,进本页自己的审核画布。它不需要 agent 介入,
  *               拉一个对话区进来只会凭空长出「这里能问 AI 吗」的期待。
  */
-function TicketDetailView({ ticket, isMine, notes, onNotesChange, onBack, onHandle, onAccept }: {
+function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAccept, reviewing, onReviewingChange }: {
   ticket: Ticket;
   isMine: boolean;
   notes: Record<string, QuoteNote>;
   onNotesChange: (next: Record<string, QuoteNote>) => void;
-  onBack: () => void;
   onHandle: () => void;
   onAccept: () => void;
+  reviewing: boolean;
+  onReviewingChange: (value: boolean) => void;
 }) {
   /* 已经接手过的单直接进画布。不这样的话,回列表看一眼再进来,画布退回详情、
      按钮还写着「开始审核」——可你明明已经开始了,状态也已经是处理中。 */
-  const [reviewing, setReviewing] = useState(ticket.status === "inProgress" && ticket.kind === "dmpk-quotation");
+
   /* 只有球还在你手上时才谈处置。已驳回是球在上一棒那儿,已完成和已作废是终态——
      给一个点不动的按钮,比不给更让人困惑。 */
   const actionable = (ticket.status === "open" || ticket.status === "inProgress") && isMine;
@@ -293,7 +310,6 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onBack, onHand
         ticket={ticket}
         notes={notes}
         onNotesChange={onNotesChange}
-        onBack={() => setReviewing(false)}
       />
     );
   }
@@ -301,7 +317,6 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onBack, onHand
   return (
     <section className="workbenchView ticketDetailView">
       <header className="ticketDetailHead">
-        <button className="ticketDetailBack" type="button" onClick={onBack}><ArrowLeft size={15} />返回收件箱</button>
         <div className="ticketDetailTitle">
           <span>{ticket.id} · {ticketKindLabel[ticket.kind]}</span>
           <h1>{ticket.title}</h1>
@@ -324,17 +339,20 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onBack, onHand
 
       {/* 这条链就是工单相对邮件多出来的那样东西。邮件里同一份报告来回三轮,
           是三封孤立的信;工单里它是一条链,谁在什么时候做了什么一目了然。 */}
+      {/* 一条竖线穿到底,每一格「谁 · 做了什么 · 什么时候」三件事排在同一行读完。
+          之前动作和时间被推到两端,中间一大片空白,眼睛要来回横跳才拼得出一句话。 */}
       <section className="ticketDetailFlow">
         <h2>流转记录</h2>
         <ol>
-          {ticket.steps.map((step) => (
-            <li key={step.id}>
+          {ticket.steps.map((step, index) => (
+            <li key={step.id} className={index === ticket.steps.length - 1 ? "isLatest" : ""}>
               <span className="ticketFlowDot" aria-hidden="true" />
-              <div>
+              <div className="ticketFlowMain">
                 <strong>{step.action}</strong>
-                <small>{step.actor}（{step.actorRole}） · {step.at}</small>
-                {step.note ? <p>{step.note}</p> : null}
+                <small>{step.actor}<i>{step.actorRole}</i></small>
+                <time>{step.at}</time>
               </div>
+              {step.note ? <p className="ticketFlowNote">{step.note}</p> : null}
             </li>
           ))}
         </ol>
@@ -348,7 +366,7 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onBack, onHand
         ) : isQuotation ? (
           <>
             <p className="ticketDetailHint">这一单全程人工复核，不经过数字同事。</p>
-            <button className="primaryButton compact" type="button" onClick={() => { onAccept(); setReviewing(true); }}>
+            <button className="primaryButton compact" type="button" onClick={() => { onAccept(); onReviewingChange(true); }}>
               <Highlighter size={15} />开始审核
             </button>
           </>
