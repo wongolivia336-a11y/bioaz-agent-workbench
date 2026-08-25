@@ -7441,6 +7441,12 @@ button {
    要点进去才谈——摊在第一屏等于要求人先读懂一张台账才知道今天有什么事。 */
 .messageList {
   display: grid;
+  /* 行按内容高度靠顶排。外层给了这一格固定高（grid 的 1fr），不写 align-content
+     的话三条消息会把整格高度平分——65px 的行之间空出 127px，看起来像列表坏了。
+     多出来的高度该留给滚动，不该摊进行距里。 */
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
   margin: 0;
   border-top: 1px solid var(--line);
   padding: 0;
