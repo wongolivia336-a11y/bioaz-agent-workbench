@@ -7399,3 +7399,138 @@ button {
 .ticketHandoffFoot p { margin: 0; color: var(--muted); font-size: 12px; }
 .ticketHandoffFoot strong { color: var(--ink); font-weight: 600; }
 .ticketHandoffFoot > div { display: flex; flex: none; gap: 8px; }
+
+/* 会话里的交接卡。工单不是「新建」出来的,是干完活交出去那一下留下的凭据——
+   所以入口长在活刚干完的地方,不在某个列表页的顶栏。 */
+.dmpkHandoffFields {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.dmpkHandoffFields label {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.dmpkHandoffFields label > span {
+  color: var(--body);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dmpkHandoffFields input {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 10px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.dmpkHandoffFields input:focus-visible {
+  border-color: var(--bioaz-agent-accent);
+  outline: 0;
+}
+
+/* ═══ 站内信:消息列表 ═════════════════════════════════════════════════════
+   到达面只回答「有人给了你一件事」。状态、处理人、流转链是那件事自己的属性,
+   要点进去才谈——摊在第一屏等于要求人先读懂一张台账才知道今天有什么事。 */
+.messageList {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding: 0;
+  list-style: none;
+}
+
+.messageRow {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 14px 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 14px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.messageRow:hover { background: #fafbfc; }
+
+.messageDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+/* 未读只有「看没看过」这一个状态,跟工单自己的状态是两回事。
+   用侧栏那颗未读蓝,不用黄——黄是「要你动手」,而列表这一层还没到动手。 */
+.messageRow.isUnread .messageDot { background: var(--sidebar-dot-unread, var(--bioaz-agent-accent, #5c60b8)); }
+.messageRow.isUnread strong { font-weight: 700; }
+
+.messageFrom {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messageBody { display: grid; min-width: 0; gap: 3px; }
+.messageBody strong { overflow: hidden; color: var(--ink); font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.messageBody small { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+.messageBody small em { display: inline-flex; align-items: center; gap: 4px; font-style: normal; }
+.messageTime { flex: none; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.messageEmpty { border-bottom: 1px solid var(--line); padding: 40px 12px; color: var(--muted); font-size: 13px; text-align: center; }
+
+/* ═══ 二级:工单详情 ═══════════════════════════════════════════════════════
+   走整页而不是抽屉:DMPK 要在里面逐条批注、后面还要并排比对两版报价,
+   抽屉那点宽度放不下。 */
+.ticketDetailView { display: grid; align-content: start; gap: 18px; padding: 22px 4px 40px; }
+
+.ticketDetailHead { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 12px; }
+.ticketDetailBack { display: inline-flex; width: fit-content; align-items: center; gap: 6px; grid-column: 1 / -1; border: 0; background: transparent; padding: 0; color: var(--body); font-size: 13px; cursor: pointer; }
+.ticketDetailBack:hover { color: var(--ink); }
+.ticketDetailTitle { display: grid; gap: 4px; }
+.ticketDetailTitle > span { color: var(--muted); font-size: 12px; font-weight: 600; }
+.ticketDetailTitle h1 { margin: 0; font-size: 20px; }
+.ticketDetailTitle p { margin: 0; color: var(--body); font-size: 13px; }
+
+.ticketDetailFiles, .ticketDetailFlow, .quotationReviewPane { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 16px 18px; }
+.ticketDetailFiles h2, .ticketDetailFlow h2, .quotationReviewPane h2 { margin: 0 0 12px; font-size: 13px; font-weight: 700; }
+.ticketDetailFiles article { display: flex; align-items: center; gap: 9px; padding: 7px 0; color: var(--body); }
+.ticketDetailFiles article div { display: grid; gap: 2px; }
+.ticketDetailFiles strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+.ticketDetailFiles small { color: var(--muted); font-size: 12px; }
+
+.ticketDetailFlow ol { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.ticketDetailFlow li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; }
+.ticketFlowDot { width: 7px; height: 7px; margin-top: 6px; border-radius: 999px; background: var(--bioaz-agent-accent, #5c60b8); }
+.ticketDetailFlow strong { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
+.ticketDetailFlow small { color: var(--muted); font-size: 12px; }
+.ticketDetailFlow p { margin: 6px 0 0; border-left: 2px solid var(--line); padding-left: 10px; color: var(--body); font-size: 12.5px; line-height: 1.7; white-space: pre-line; }
+
+.ticketDetailActions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.ticketDetailHint { margin: 0 auto 0 0; color: var(--muted); font-size: 12.5px; }
+
+/* 报价复核:锚点是计价条目,不是文档里的一段选区。报价单本来就是结构化的,
+   有名字的行比一段坐标更好定位,下一版也更容易验证「那一条改了没有」。 */
+.quotationReviewGroup + .quotationReviewGroup { margin-top: 18px; }
+.quotationReviewGroup h3 { margin: 0 0 8px; color: var(--body); font-size: 12px; font-weight: 700; }
+.quotationReviewLine { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.quotationReviewLine + .quotationReviewLine { margin-top: 8px; }
+.quotationReviewLine.hasNote { border-color: color-mix(in srgb, var(--bioaz-agent-accent, #5c60b8) 34%, transparent); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.quotationReviewMeta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 12px; }
+.quotationReviewMeta strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+.quotationReviewMeta small { grid-column: 1; color: var(--muted); font-size: 12px; }
+.quotationReviewMeta b { grid-row: 1 / 3; grid-column: 2; color: var(--ink); font-size: 14px; font-weight: 700; }
+.quotationReviewLine input { min-height: 32px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 10px; color: var(--ink); font-size: 13px; }
+.quotationReviewLine input:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }

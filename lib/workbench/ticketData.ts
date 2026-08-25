@@ -364,3 +364,23 @@ export const initialTickets: Ticket[] = [
 export function pendingTicketCount(tickets: Ticket[], assignee: string) {
   return tickets.filter((ticket) => ticket.assignee === assignee && ticket.status !== "done" && ticket.status !== "dropped").length;
 }
+
+/* 报价单的计价条目。DMPK 的审核就是逐条看这些数——所以批注的锚点是「哪一条」,
+   不是文档里的一段文字。跟 QA 那边 anchorField 锚在「收检日期」上是同一回事:
+   有名字的字段本来就比一段选区更好定位,也更容易在下一版里被验证改没改。 */
+export type QuoteLine = {
+  id: string;
+  group: string;
+  label: string;
+  detail: string;
+  amount: string;
+};
+
+export const dmpkQuoteLines: QuoteLine[] = [
+  { id: "ql-animal", group: "动物实验", label: "SD 大鼠 · 2 组 · 每组 2 只", detail: "试验周期 1 周，含饲养与给药操作", amount: "¥12,800" },
+  { id: "ql-dosing", group: "动物实验", label: "给药与采血操作", detail: "周期内 3 个非加班时间点", amount: "¥6,400" },
+  { id: "ql-plasma", group: "生物分析", label: "血浆样品检测", detail: "LC-MS/MS · 12 个样品", amount: "¥21,600" },
+  { id: "ql-method", group: "生物分析", label: "方法学确认", detail: "普通小分子，沿用已验证方法", amount: "¥8,000" },
+  { id: "ql-report", group: "报告与报价", label: "报告撰写", detail: "中文 Word + Excel 明细", amount: "¥2,500" },
+  { id: "ql-fee", group: "报告与报价", label: "项目管理费", detail: "按 30% 口径计取（Excel 明细为 15%）", amount: "¥15,390" },
+];
