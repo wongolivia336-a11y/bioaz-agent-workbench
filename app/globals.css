@@ -7064,16 +7064,42 @@ button {
 /* ═══ 工单 ═══════════════════════════════════════════════════════════════
    表格而不是卡片流:工单是台账,人来这儿是为了扫和查——「哪几条待我处理」
    「样本 9 那份现在在谁手上」。卡片一屏放三条,答不了第二个问题。 */
-/* 四行:筛选栏、列名、列表、分页。行数必须跟子元素个数对上——
-   原本只声明三行,后加的列名就占走了 minmax(0,1fr) 那格、列表掉进隐式 auto 行:
-   列名被撑成两百像素高又垂直居中,于是标题浮在半空,而列表反倒不滚动了。 */
+/* 两行:筛选栏、列表面板。列名和分页都收进面板里了。 */
 .ticketsView {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   gap: 14px;
   padding: 22px 26px 18px;
 }
+
+/* 列名 + 列表 + 分页 = 一个面板。
+   这一屏原本是三条互不相干的横条浮在白底上,分页孤零零钉在屏幕最底、
+   离最后一行 400px——而那片空白不是页面留白,是列表容器自己撑出来的。
+
+   align-self: start 让面板按内容定高(三条消息就三条高,分页紧跟在下面,
+   剩下的才是真正的页面留白);max-height: 100% 又给它封了顶,条数多了
+   面板长到满高为止,行在中间那格里滚,分页钉在卡底不动。
+
+   底色跟页面一样是白的,所以这张卡完全靠 1px 边框 + 圆角立住——
+   跟工单详情里「随单产物」「流转记录」是同一套。 */
+.messageListPanel {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-self: start;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* 列名和行必须在同一个滚动容器里。分成两个 grid 行的话,列表一出滚动条,
+   行的可用宽度就比列名少一条滚动条(实测差 15.2px),两边的列宽再也对不上——
+   而列名的全部意义就是逐格对齐。所以列名进来自己 sticky 住:不跟着滚,
+   又跟行共享同一个宽度上下文。 */
+.messageListScroll { min-height: 0; overflow-y: auto; }
 
 /* 标题、状态 tab、主按钮都 portal 进顶栏,跟数据中枢/数字团队/邮箱同一套,
    所以这里不再有页内 h1——顶栏面包屑本来就在说「工单」。 */
@@ -7197,11 +7223,14 @@ button {
 
 .ticketsEmpty { padding: 40px 12px; color: var(--muted); text-align: center; }
 
+/* 分页在面板底,不再是这一页的页脚——它是这个列表的分页。 */
 .ticketsPager {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  border-top: 1px solid var(--line);
+  padding: 10px 14px;
   color: var(--muted);
   font-size: 12.5px;
 }
@@ -7397,16 +7426,12 @@ button {
 /* ═══ 站内信:消息列表 ═════════════════════════════════════════════════════
    到达面只回答「有人给了你一件事」。状态、处理人、流转链是那件事自己的属性,
    要点进去才谈——摊在第一屏等于要求人先读懂一张台账才知道今天有什么事。 */
+/* 滚动归外面那层 .messageListScroll,这里只负责把行排下去。
+   上边线归列名画(border-bottom),两边都画就是双线。 */
 .messageList {
   display: grid;
-  /* 行按内容高度靠顶排。外层给了这一格固定高（grid 的 1fr），不写 align-content
-     的话三条消息会把整格高度平分——65px 的行之间空出 127px，看起来像列表坏了。
-     多出来的高度该留给滚动，不该摊进行距里。 */
   align-content: start;
-  min-height: 0;
-  overflow-y: auto;
   margin: 0;
-  border-top: 1px solid var(--line);
   padding: 0;
   list-style: none;
 }
@@ -7430,7 +7455,13 @@ button {
 }
 
 .messageListHead {
-  padding: 0 12px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  /* 不透明底色是 sticky 的前提:透明的话滚上来的行会从列名底下透出来。 */
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 14px;
   color: var(--muted);
   font-size: 11.5px;
   font-weight: 600;
@@ -7444,11 +7475,16 @@ button {
   border: 0;
   border-bottom: 1px solid var(--line);
   background: transparent;
-  padding: 14px 12px;
+  padding: 14px;
   text-align: left;
   cursor: pointer;
   transition: background 140ms ease;
 }
+
+/* 最后一行不画下边线:面板自己的边框(或分页那条上边线)已经在那儿了,
+   两条挨着就成了双线。 */
+.messageList > li:last-child .messageRow,
+.messageList > li:last-child.messageEmpty { border-bottom: 0; }
 
 .messageRow:hover { background: #fafbfc; }
 
