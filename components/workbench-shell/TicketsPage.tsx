@@ -17,6 +17,7 @@ import {
   ticketStatusTone,
   type Notice,
   type Ticket,
+  type TicketStatus,
 } from "../../lib/workbench/ticketData";
 import { CompactSelect } from "./ShellControls";
 
@@ -24,8 +25,34 @@ const PAGE_SIZE = 10;
 
 /* 状态是筛选,不是视图。分成「站内信 / 工单」两栏曾经让同一批东西看起来像两批,
    而它们本来就是一批:一条消息,背后可能挂着一件要你办的事,也可能只是知会。
-   所以列表只有一个,状态收进筛选栏——台账没被删,是化进列表了。 */
-const STATUS_OPTIONS = ["待我处理", "全部", "待处理", "处理中", "已驳回", "已完成", "已作废", "仅通知"] as const;
+   所以列表只有一个,状态收进筛选栏——台账没被删,是化进列表了。
+
+   筛选分三轴,每一轴只回答一个问题:
+     类型  这是什么    —— 工单的两类 + 通知的两类
+     状态  走到哪一步  —— 只对工单成立
+     项目  哪个项目
+   ------------------------------------------------------------------
+   状态那个下拉以前混了三种东西:「待我处理」量的是归属(assignee)、「仅通知」
+   量的是类型、其余才是状态。两个都搬走了:类型归类型轴;而归属根本不需要一个
+   筛子——收件箱本来就是你的,装的就是到你手上的东西(见 filtered)。
+   未读与否由行首那颗点指示,也不必再多一个筛子。 */
+const STATUS_OPTIONS = ["全部状态", "待处理", "已驳回", "已完成", "已作废"] as const;
+
+const STATUS_MATCH: Record<string, TicketStatus[]> = {
+  "待处理": ["open"],
+  "已驳回": ["rejected"],
+  "已完成": ["done"],
+  "已作废": ["dropped"],
+};
+
+/* 类型拆到底。通知在数据里本来就分两类(Notice.source),而「系统发布了新的计价
+   规则」和「数字同事把产物交给下一棒了」不是一回事:前者要你知道规矩变了,
+   后者只是告诉你机器之间的进度。以前这两类连同工单混在一个「仅通知」里筛。 */
+const KIND_OPTIONS = ["全部类型", "QA 审核", "DMPK 报价", "数字同事知会", "系统通知"] as const;
+const NOTICE_KIND: Record<string, "coworker" | "system"> = {
+  "数字同事知会": "coworker",
+  "系统通知": "system",
+};
 
 /** 一行要么是一张工单（有人欠着一件事），要么是一条纯通知（知会，看过就翻篇）。 */
 type Row =
@@ -88,7 +115,7 @@ export function TicketsPage({
   onReject: (ticket: Ticket, summary: string) => void;
   onArchive: (ticket: Ticket) => void;
 }) {
-  const [status, setStatus] = useState<string>("待我处理");
+  const [status, setStatus] = useState<string>("全部状态");
   const [keyword, setKeyword] = useState("");
 
   const [kind, setKind] = useState("全部类型");
@@ -113,14 +140,11 @@ export function TicketsPage({
     const text = keyword.trim().toLowerCase();
     const ticketRows: Row[] = tickets
       .filter((ticket) => {
-        if (status === "仅通知") return false;
-        if (status === "待我处理") {
-          /* 判据是 assignee,不是状态名。「已驳回」是从审批人视角起的名字,可球这时候
-             正在撰写人手上——他要改完重交,那就是他的待办。用状态名筛会让撰写人
-             看到一片空白,而他其实欠着一件事。 */
-          if (ticket.assignee !== currentUser) return false;
-          if (ticket.status === "done" || ticket.status === "dropped") return false;
-        } else if (status !== "全部" && ticketStatusLabel[ticket.status] !== status) return false;
+        /* 收件箱只装到你手上的东西。这不是一个可关掉的筛子,是这个页面的定义——
+           球一换手,那张单就出现在对方的收件箱里、从你这儿消失(驳回把 assignee
+           设回提交人,归档则留在你名下收终态)。判据跟侧栏那颗徽标一致。 */
+        if (ticket.assignee !== currentUser) return false;
+        if (status !== "全部状态" && !(STATUS_MATCH[status] ?? []).includes(ticket.status)) return false;
         if (kind !== "全部类型" && ticketKindLabel[ticket.kind] !== kind) return false;
         if (project !== "全部项目" && ticket.project !== project) return false;
         if (text && !`${ticket.id}${ticket.title}${ticket.from}`.toLowerCase().includes(text)) return false;
@@ -128,11 +152,15 @@ export function TicketsPage({
       })
       .map((ticket) => ({ kind: "ticket" as const, at: minutesFromLabel(ticket.updatedAt), ticket }));
 
-    /* 通知没有状态,所以除了「全部」和「仅通知」,任何状态筛选都把它们排除掉——
-       在「已驳回」里混进一条规则发布公告,那一档就答不了它该答的问题了。 */
-    const noticeRows: Row[] = (status === "全部" || status === "仅通知" ? initialNotices : [])
+    const noticeRows: Row[] = initialNotices
       .filter((notice) => {
-        if (kind !== "全部类型") return false;
+        /* 知会没有状态。一选具体状态就把它们排除掉——在「已驳回」里混进一条
+           规则发布公告,那一档就答不了它该答的问题了。 */
+        if (status !== "全部状态") return false;
+        if (kind !== "全部类型") {
+          const wanted = NOTICE_KIND[kind];
+          if (!wanted || notice.source !== wanted) return false;
+        }
         if (project !== "全部项目" && notice.project !== project) return false;
         if (text && !`${notice.title}${notice.from}`.toLowerCase().includes(text)) return false;
         return true;
@@ -193,10 +221,9 @@ export function TicketsPage({
           <input value={keyword} placeholder="搜索标题、发件人或工单号" onChange={(event) => { setKeyword(event.target.value); setPage(1); }} />
           {keyword ? <button type="button" aria-label="清空搜索" onClick={() => { setKeyword(""); setPage(1); }}><X size={13} /></button> : null}
         </label>
-        {/* 状态跟类型、项目并排,因为它们是同一种东西:缩小这一屏的三把尺子。
-            之前它是一排独立的胶囊,看起来像视图切换,可它从来就只是筛选。 */}
+        {/* 类型、状态、项目并排:它们是同一种东西,缩小这一屏的三把尺子。 */}
+        <CompactSelect value={kind} options={[...KIND_OPTIONS]} onChange={reset(setKind)} />
         <CompactSelect value={status} options={[...STATUS_OPTIONS]} onChange={reset(setStatus)} />
-        <CompactSelect value={kind} options={["全部类型", "QA 审核", "DMPK 报价"]} onChange={reset(setKind)} />
         <CompactSelect value={project} options={["全部项目", ...projects]} onChange={reset(setProject)} />
       </div>
 
@@ -374,12 +401,9 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
   onReject: (summary: string) => void;
   onArchive: () => void;
 }) {
-  /* 已经接手过的单直接进画布。不这样的话,回列表看一眼再进来,画布退回详情、
-     按钮还写着「开始审核」——可你明明已经开始了,状态也已经是处理中。 */
-
   /* 只有球还在你手上时才谈处置。已驳回是球在上一棒那儿,已完成和已作废是终态——
      给一个点不动的按钮,比不给更让人困惑。 */
-  const actionable = (ticket.status === "open" || ticket.status === "inProgress") && isMine;
+  const actionable = ticket.status === "open" && isMine;
   const isQuotation = ticket.kind === "dmpk-quotation";
   const [preview, setPreview] = useState<{ file: MailResourceRef; view: TicketFileView } | null>(null);
 
