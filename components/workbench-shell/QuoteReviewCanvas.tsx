@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRight, Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2, X } from "lucide-react";
+import { ArrowRight, Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useModalDismiss } from "../ui/useModalDismiss";
+import { Dialog } from "../ui";
 import { QuoteDocPaper, QuoteSheetPaper, money, quoteCategories } from "./QuotePaper";
 import { useDismissableLayer } from "./useDismissableLayer";
 import {
@@ -35,60 +35,56 @@ function QuoteDecisionDialog({ kind, ticket, notes, reviewer, anchorLabel, onClo
   onClose: () => void;
   onConfirm: () => void;
 }) {
-  const dismiss = useModalDismiss(onClose);
   const reject = kind === "reject";
   const blocking = notes.filter((note) => note.severity === "blocking");
   const title = reject ? "退回修订" : "通过并归档";
 
+  /* 用 components/ui 的 Dialog。这张卡曾经是整份手抄的 backdrop + header +
+     footer,跟 Dialog 渲染的一模一样——手抄的代价是 Esc 层栈、遮罩用
+     mousedown 还是 click 这些行为,每处都要重新做对一遍。 */
   return (
-    <div className="modalBackdrop" role="presentation" {...dismiss}>
-      <section className="bioazUiDialog quoteDecisionDialog" role="dialog" aria-modal="true" aria-label={title}>
-        <header className="bioazUiDialogHeader">
-          <div>
-            <h2>{title}</h2>
-            <p>{ticket.id} · {ticket.title}</p>
-          </div>
-          <button className="bioazUiDialogClose" type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button>
-        </header>
-
-        <div className="bioazUiDialogBody">
-          <dl className="quoteDecisionFacts">
-            <div><dt>交接给</dt><dd>{reject ? `${ticket.from}（${ticket.fromRole}）` : "数据中枢"}</dd></div>
-            <div><dt>操作人</dt><dd>{reviewer}</dd></div>
-            <div><dt>工单状态</dt><dd>{reject ? "待处理 → 已驳回" : "处理中 → 已完成"}</dd></div>
-            <div><dt>随单产物</dt><dd>{ticket.attachments.map((file) => file.name).join("、") || "无"}</dd></div>
-          </dl>
-
-          {reject ? (
-            <section className="quoteDecisionNotes">
-              <h3>随单退回的批注（{notes.length} 条，其中必须修订 {blocking.length} 条）</h3>
-              <ul>
-                {notes.map((note) => (
-                  <li key={note.anchorId}>
-                    <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
-                    {/* 分类要跟着退回去。自定义那一类尤其:复核人特意起的名字,
-                        正是这条批注的分类本身,summary 里丢掉它就只剩一句白话。 */}
-                    <em className="quoteNoteCat">{quoteNoteLabel(note)}</em>
-                    <strong>{anchorLabel(note.anchorId)}</strong>
-                    {note.suggested ? <b>建议值 {note.suggested}</b> : null}
-                    <p>{note.text}</p>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : (
-            <p className="quoteDecisionNote">
-              {notes.length ? `${notes.length} 条建议修订随工单留档，不影响归档。` : "本次复核未提出批注。"}
-            </p>
-          )}
-        </div>
-
-        <footer className="bioazUiDialogFooter">
+    <Dialog
+      title={title}
+      description={`${ticket.id} · ${ticket.title}`}
+      className="quoteDecisionDialog"
+      onClose={onClose}
+      footer={
+        <>
           <button className="secondaryButton compact" type="button" onClick={onClose}>取消</button>
           <button className="primaryButton compact" type="button" onClick={onConfirm}>{reject ? `确认退回 ${ticket.from}` : "确认归档"}</button>
-        </footer>
-      </section>
-    </div>
+        </>
+      }
+    >
+      <dl className="quoteDecisionFacts">
+        <div><dt>交接给</dt><dd>{reject ? `${ticket.from}（${ticket.fromRole}）` : "数据中枢"}</dd></div>
+        <div><dt>操作人</dt><dd>{reviewer}</dd></div>
+        <div><dt>工单状态</dt><dd>{reject ? "待处理 → 已驳回" : "待处理 → 已完成"}</dd></div>
+        <div><dt>随单产物</dt><dd>{ticket.attachments.map((file) => file.name).join("、") || "无"}</dd></div>
+      </dl>
+
+      {reject ? (
+        <section className="quoteDecisionNotes">
+          <h3>随单退回的批注（{notes.length} 条，其中必须修订 {blocking.length} 条）</h3>
+          <ul>
+            {notes.map((note) => (
+              <li key={note.anchorId}>
+                <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
+                {/* 分类要跟着退回去。自定义那一类尤其:复核人特意起的名字,
+                    正是这条批注的分类本身,summary 里丢掉它就只剩一句白话。 */}
+                <em className="quoteNoteCat">{quoteNoteLabel(note)}</em>
+                <strong>{anchorLabel(note.anchorId)}</strong>
+                {note.suggested ? <b>建议值 {note.suggested}</b> : null}
+                <p>{note.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <p className="quoteDecisionNote">
+          {notes.length ? `${notes.length} 条建议修订随工单留档，不影响归档。` : "本次复核未提出批注。"}
+        </p>
+      )}
+    </Dialog>
   );
 }
 

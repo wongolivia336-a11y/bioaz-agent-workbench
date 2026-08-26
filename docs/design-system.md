@@ -206,9 +206,37 @@ Escape 与点击遮罩都能关闭。底部按钮由 `.bioazUiDialogFooter > but
 
 ## 还没做的
 
-- `app/` 的 12 个 CSS 文件（约 1.5 万行）尚未按模块拆分
-- Chip 除 StatusChip 外还有 SelectableChip（可点选筛选项）、RemovableChip（已生效条件带 ×）、MetaTag（只读元信息）三类待抽取
-- 肿瘤报告与 DMPK 的 preview modal 结构差异大、业务耦合深，未纳入 Dialog
+这一节以前是几句定性描述，现在改成**可复算的数字**——散文会被跳过，数字不会。
+跑 `npm run audit:ui` 得到当前值，`npm run audit:ui -- --full` 看明细。
+
+基线（2026-08-26 实测）：
+
+| 指标 | 值 | 说明 |
+|---|---|---|
+| 全局加载的样式表 | 23 | 全部平铺进 `layout.tsx` 的同一个级联 |
+| 选择器（去重） | 3,827 | |
+| 被定义多次的选择器 | 595 | 占 15.5% |
+| **跨文件重复** | **193** | 谁生效取决于 import 顺序。`.taskExampleGrid` 定义了 12 遍、`.newTaskIntro` 11 遍、`.dmpkShell` 10 遍 |
+| 疑似死类名 | 382 | 删前必须逐个确认没有动态拼接 |
+| 手写弹窗 | 5 | vs `<Dialog>` 6 处 |
+| 裸按钮类 | 53 | vs `<Button>` 只有 5 个文件在用 |
+| 各自造的空态类名 | 13 种 | vs `<EmptyState>` 10 处 |
+
+按价值/风险排序的待办：
+
+1. **`.primaryButton` → `<Button>`**（53 处）。收益最大，但会改视觉（内距/字号/圆角
+   都不同），必须逐个 `getComputedStyle` 比对，一次迁一个模块。
+2. **空态收敛到 `<EmptyState>`**（13 种类名）。同上，有视觉差。
+3. **`app/inbox.css` 大幅瘦身**。54 个类里 39 个属于已被「站内信」替换掉的旧邮箱
+   （`mailboxPage` / `mailboxRow` / `mailboxListPane` …）。真正还活着的只有
+   `accountMenu*`、`sidebarInbox*`、`mailAttachment*`、`composerChipRow`。
+4. **`review.css` / `iteration.css` 的覆盖层**。这两个文件是历次"新建文件追加修补"
+   堆出来的后覆盖层，跨文件重复的大头在这里。拆解风险高，建议按模块逐块搬回原处
+   并删除重复定义，每搬一块跑一次 audit。
+5. Chip 除 StatusChip 外还有 SelectableChip（可点选筛选项）、RemovableChip（已生效
+   条件带 ×）、MetaTag（只读元信息）三类待抽取。
+6. 肿瘤报告与 DMPK 的 `previewModal`、QA 的 `qaRejectDialog` 结构差异大、业务耦合深，
+   未纳入 Dialog。**留在原地可以，但不要再新增第四套弹窗皮肤。**
 
 ### 已清理的死代码
 
@@ -232,7 +260,12 @@ Escape 与点击遮罩都能关闭。底部按钮由 `.bioazUiDialogFooter > but
 3. 组件 CSS 不新增十六进制、RGB 或 HSL 色值。优先消费 `styles/tokens.css` 中的全局 `--bioaz-*` Token。
 4. 业务特有颜色先在模块根节点声明语义化局部 Token，例如 `--tumor-evidence-highlight`，内部组件只消费变量。
 5. 第三方品牌色、科学图表数据色和外部内容渲染可以例外，但需要用简短注释注明来源与作用范围。
-6. 这些规则用于代码评审和 Agent 决策，当前不阻断 typecheck、build 或 CI。
+6. 这些规则不阻断 typecheck 或 build，但 **`npm run audit:ui` 会报数**。开工前跑一次、
+   改完再跑一次；数字比基线差就说明这次动作在往下滑。这一条是 2026-08-26 补上的：
+   在此之前规范全靠自觉，结果是 159 行正确的规范对着 5 处手写弹窗、53 处裸按钮类、
+   13 种空态、595 个重复选择器。缺的从来不是文档。
+7. Agent 开工前应加载 `.claude/skills/bioaz-workbench/SKILL.md`，那里有这个代码库
+   特有的 CSS 陷阱和验证方法（都是实测踩出来的）。
 
 ## 可视化与 Token 清单
 

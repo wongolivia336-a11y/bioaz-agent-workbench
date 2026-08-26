@@ -1,0 +1,10 @@
+{
+  "stylesheets": 23,
+  "selectors": 3827,
+  "duplicateSelectors": 595,
+  "crossFileDuplicates": 193,
+  "suspectDeadClasses": 382,
+  "handRolledModals": 5,
+  "rawButtonClasses": 53,
+  "adHocEmptyStates": 13
+}
