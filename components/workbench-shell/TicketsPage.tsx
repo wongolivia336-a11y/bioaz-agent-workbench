@@ -200,88 +200,102 @@ export function TicketsPage({
         <CompactSelect value={project} options={["全部项目", ...projects]} onChange={reset(setProject)} />
       </div>
 
-      {/* 列名。行里那几格排得整齐,但整齐本身不说明它们是什么——尤其右边那两格,
-          「已驳回 / 赵敏」并排时,不标注就看不出后者是当前处理人还是提出人。 */}
-      <div className="messageListHead" aria-hidden="true">
-        <span />
-        <span>发件人</span>
-        <span>主题 · 所属项目</span>
-        <span>状态 · 当前处理人</span>
-        <span>更新时间</span>
-      </div>
+      {/* 列名、列表、分页收进同一张卡。之前是三条互不相干的横条浮在白底上,
+          分页孤零零钉在屏幕最底、离最后一行 400px——那片空白不是页面留白,
+          是列表容器自己撑出来的。合成一个面板之后:卡随内容收缩(三条就三条高),
+          条数多了才长到满高、行在卡内滚。
 
-      <ul className="messageList">
-        {rows.map((row) => {
-          if (row.kind === "notice") {
-            const notice = row.notice;
-            const Icon = sourceIcon[notice.source];
-            const unread = !readIds.includes(notice.id);
-            return (
-              <li key={notice.id}>
-                <button
-                  className={`messageRow isNotice ${unread ? "isUnread" : ""}`}
-                  type="button"
-                  onClick={() => { onOpenNoticeChange(notice.title); setReadIds((ids) => ids.includes(notice.id) ? ids : [...ids, notice.id]); }}
-                >
-                  <span className="messageDot" aria-hidden="true" />
-                  <span className="messageFrom"><Icon size={13} />{notice.from}</span>
-                  <span className="messageBody">
-                    <strong>{notice.title}</strong>
-                    <small>{notice.project ?? noticeSourceLabel[notice.source]}</small>
-                  </span>
-                  <span className="messageState"><em className="messageNoticeTag">知会</em></span>
-                  <span className="messageTime">{notice.at}</span>
-                  {unread ? <span className="visuallyHidden">，未读</span> : null}
-                </button>
-              </li>
-            );
-          }
-          const ticket = row.ticket;
-          const unread = !readIds.includes(ticket.id);
-          const Icon = ticket.fromRole.includes("数字同事") ? Bot : User;
-          return (
-            <li key={ticket.id}>
-              <button className={`messageRow ${unread ? "isUnread" : ""}`} type="button" onClick={() => openTicket(ticket)}>
-                <span className="messageDot" aria-hidden="true" />
-                <span className="messageFrom"><Icon size={13} />{ticket.from}</span>
-                <span className="messageBody">
-                  <strong>{ticket.title}</strong>
-                  <small>
-                    {ticket.project}
-                    {/* 多份产物时补一个计数。只报第一个的名字会让人以为随单就这一份,
-                        而复核前得知道要看几样东西。 */}
-                    {ticket.attachments.length ? (
-                      <em>
-                        <Paperclip size={11} />
-                        {ticket.attachments[0].name}
-                        {ticket.attachments.length > 1 ? ` 等 ${ticket.attachments.length} 份` : ""}
-                      </em>
-                    ) : null}
-                  </small>
-                </span>
-                <span className="messageState">
-                  <StatusChip tone={ticketStatusTone[ticket.status]} dot>{ticketStatusLabel[ticket.status]}</StatusChip>
-                  {ticket.assignee !== currentUser ? <em className="messageAssignee">{ticket.assignee}</em> : null}
-                </span>
-                <span className="messageTime">{ticket.updatedAt}</span>
-                {unread ? <span className="visuallyHidden">，未读</span> : null}
-              </button>
-            </li>
-          );
-        })}
-        {!rows.length ? <li className="messageEmpty">没有符合当前筛选条件的消息</li> : null}
-      </ul>
+          列名必须跟行待在同一个滚动容器里(自己 sticky 住),不能各占一个 grid 行。
+          分开放的话,列表一出滚动条,行的可用宽度就比列名少了一条滚动条,
+          两边的列宽再也对不上——差的正好是那 15px。
 
-      <footer className="ticketsPager">
-        <span>共 {filtered.length} 条</span>
-        <div>
-          <button type="button" aria-label="上一页" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)}><ChevronLeft size={14} /></button>
-          {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
-            <button key={number} className={number === safePage ? "active" : ""} type="button" onClick={() => setPage(number)}>{number}</button>
-          ))}
-          <button type="button" aria-label="下一页" disabled={safePage >= pageCount} onClick={() => setPage(safePage + 1)}><ChevronRight size={14} /></button>
+          筛选栏留在卡外:它作用于列表,但不是列表的一部分。 */}
+      <div className="messageListPanel">
+        <div className="messageListScroll">
+          {/* 行里那几格排得整齐,但整齐本身不说明它们是什么——尤其右边那两格,
+              「已驳回 / 赵敏」并排时,不标注就看不出后者是当前处理人还是提出人。 */}
+          <div className="messageListHead" aria-hidden="true">
+            <span />
+            <span>发件人</span>
+            <span>主题 · 所属项目</span>
+            <span>状态 · 当前处理人</span>
+            <span>更新时间</span>
+          </div>
+
+          <ul className="messageList">
+            {rows.map((row) => {
+              if (row.kind === "notice") {
+                const notice = row.notice;
+                const Icon = sourceIcon[notice.source];
+                const unread = !readIds.includes(notice.id);
+                return (
+                  <li key={notice.id}>
+                    <button
+                      className={`messageRow isNotice ${unread ? "isUnread" : ""}`}
+                      type="button"
+                      onClick={() => { onOpenNoticeChange(notice.title); setReadIds((ids) => ids.includes(notice.id) ? ids : [...ids, notice.id]); }}
+                    >
+                      <span className="messageDot" aria-hidden="true" />
+                      <span className="messageFrom"><Icon size={13} />{notice.from}</span>
+                      <span className="messageBody">
+                        <strong>{notice.title}</strong>
+                        <small>{notice.project ?? noticeSourceLabel[notice.source]}</small>
+                      </span>
+                      <span className="messageState"><em className="messageNoticeTag">知会</em></span>
+                      <span className="messageTime">{notice.at}</span>
+                      {unread ? <span className="visuallyHidden">，未读</span> : null}
+                    </button>
+                  </li>
+                );
+              }
+              const ticket = row.ticket;
+              const unread = !readIds.includes(ticket.id);
+              const Icon = ticket.fromRole.includes("数字同事") ? Bot : User;
+              return (
+                <li key={ticket.id}>
+                  <button className={`messageRow ${unread ? "isUnread" : ""}`} type="button" onClick={() => openTicket(ticket)}>
+                    <span className="messageDot" aria-hidden="true" />
+                    <span className="messageFrom"><Icon size={13} />{ticket.from}</span>
+                    <span className="messageBody">
+                      <strong>{ticket.title}</strong>
+                      <small>
+                        {ticket.project}
+                        {/* 多份产物时补一个计数。只报第一个的名字会让人以为随单就这一份,
+                            而复核前得知道要看几样东西。 */}
+                        {ticket.attachments.length ? (
+                          <em>
+                            <Paperclip size={11} />
+                            {ticket.attachments[0].name}
+                            {ticket.attachments.length > 1 ? ` 等 ${ticket.attachments.length} 份` : ""}
+                          </em>
+                        ) : null}
+                      </small>
+                    </span>
+                    <span className="messageState">
+                      <StatusChip tone={ticketStatusTone[ticket.status]} dot>{ticketStatusLabel[ticket.status]}</StatusChip>
+                      {ticket.assignee !== currentUser ? <em className="messageAssignee">{ticket.assignee}</em> : null}
+                    </span>
+                    <span className="messageTime">{ticket.updatedAt}</span>
+                    {unread ? <span className="visuallyHidden">，未读</span> : null}
+                  </button>
+                </li>
+              );
+            })}
+            {!rows.length ? <li className="messageEmpty">没有符合当前筛选条件的消息</li> : null}
+          </ul>
         </div>
-      </footer>
+
+        <footer className="ticketsPager">
+          <span>共 {filtered.length} 条</span>
+          <div>
+            <button type="button" aria-label="上一页" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)}><ChevronLeft size={14} /></button>
+            {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
+              <button key={number} className={number === safePage ? "active" : ""} type="button" onClick={() => setPage(number)}>{number}</button>
+            ))}
+            <button type="button" aria-label="下一页" disabled={safePage >= pageCount} onClick={() => setPage(safePage + 1)}><ChevronRight size={14} /></button>
+          </div>
+        </footer>
+      </div>
     </section>
   );
 }
