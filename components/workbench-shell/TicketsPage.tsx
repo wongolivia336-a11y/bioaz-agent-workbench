@@ -38,11 +38,8 @@ const PAGE_SIZE = 10;
    未读与否由行首那颗点指示,也不必再多一个筛子。 */
 const STATUS_OPTIONS = ["全部状态", "待处理", "已驳回", "已完成", "已作废"] as const;
 
-/* 「处理中」其实还是「待处理」:你点了开始审,这件事就还欠着——从待办的角度
-   两者是同一件事,所以筛选里合成一档。行上的状态 chip 仍然分开显示,
-   「已经开始了」对排今天的顺序有用,但它不构成另一个要单独去筛的类别。 */
 const STATUS_MATCH: Record<string, TicketStatus[]> = {
-  "待处理": ["open", "inProgress"],
+  "待处理": ["open"],
   "已驳回": ["rejected"],
   "已完成": ["done"],
   "已作废": ["dropped"],
@@ -404,12 +401,9 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
   onReject: (summary: string) => void;
   onArchive: () => void;
 }) {
-  /* 已经接手过的单直接进画布。不这样的话,回列表看一眼再进来,画布退回详情、
-     按钮还写着「开始审核」——可你明明已经开始了,状态也已经是处理中。 */
-
   /* 只有球还在你手上时才谈处置。已驳回是球在上一棒那儿,已完成和已作废是终态——
      给一个点不动的按钮,比不给更让人困惑。 */
-  const actionable = (ticket.status === "open" || ticket.status === "inProgress") && isMine;
+  const actionable = ticket.status === "open" && isMine;
   const isQuotation = ticket.kind === "dmpk-quotation";
   const [preview, setPreview] = useState<{ file: MailResourceRef; view: TicketFileView } | null>(null);
 

@@ -349,13 +349,16 @@ export default function WorkbenchShell() {
     }, ...items]);
   };
 
-  /* 接手 = 我开始看了，状态落成处理中并记一笔。工单跟邮件的分野就在这里：
+  /* 接手 = 我开始看了，记一笔流转。工单跟邮件的分野就在这里：
      邮件里「我开始看了」这件事没有任何地方知道，工单里它是一条流转记录。
+
+     不再翻状态。开始看并不代表这件事了结了，它还欠着，还是「待处理」——
+     「什么时候开始看的」属于流转记录，不属于状态：流转记录说发生过什么，
+     状态说现在欠着什么。
      跳不跳会话是另一回事——DMPK 全程人工，接手之后就地审，不离开站内信。 */
   const acceptTicket = (ticket: Ticket) => {
     setTickets((items) => items.map((item) => item.id !== ticket.id || item.status !== "open" ? item : {
       ...item,
-      status: "inProgress",
       updatedAt: "刚刚",
       steps: [...item.steps, { id: `s-${Date.now()}`, at: "刚刚", actor: account.name, actorRole: account.roleLabel, action: "开始审核" }],
     }));
@@ -568,7 +571,7 @@ export default function WorkbenchShell() {
      口径跟邮箱读同一份数据：之前侧栏按旧的 inboxItems 算、邮箱按自己的
      initialMail 算，两个数字碰巧都是 2，改任一边就会当场对不上。 */
   /* 徽标数 = 待我处理的工单。收件箱这颗图标现在通向站内信，数字必须跟着它指向的东西走。 */
-  const inboxCount = tickets.filter((item) => item.assignee === account.name && (item.status === "open" || item.status === "inProgress")).length;
+  const inboxCount = tickets.filter((item) => item.assignee === account.name && item.status === "open").length;
   const activeLibraryFolder = libraryFolders.find((folder) => folder.id === libraryFolderId) ?? null;
   const librarySectionLabel = libraryView === "inputs"
     ? "项目资料"

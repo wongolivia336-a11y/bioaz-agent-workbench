@@ -13,9 +13,15 @@ import type { MailResourceRef, MailModuleId } from "./mailboxData";
    原型只画审批人(王林彬)视角,但工单本身是共享的:他驳回之后状态变「已驳回」,
    撰写人那边看到的是同一张单。侧栏的账号切换器可以把这件事演出来。 */
 
-/** open 交到手上还没动 / inProgress 正在处理 / rejected 已驳回,球在上一棒
- *  / done 这一棒结束(通过并已流转) / dropped 作废 */
-export type TicketStatus = "open" | "inProgress" | "rejected" | "done" | "dropped";
+/** open 球在当前处理人手上,这件事还欠着 / rejected 已驳回,球回到上一棒
+ *  / done 这一棒结束(通过并已流转) / dropped 作废
+ *
+ *  曾经还有一个 inProgress(「处理中」),接手时从 open 翻过去。删了:开始看
+ *  并不代表这件事了结,从待办的角度它跟 open 是同一个状态,而代码里每一处
+ *  也都把两者当同一件事(侧栏计数、可处置判断、状态筛选无一例外)。
+ *  「我什么时候开始看的」不会因此丢失——它记在 steps 里,那才是它该待的地方:
+ *  流转记录说的是发生过什么,状态说的是现在欠着什么。 */
+export type TicketStatus = "open" | "rejected" | "done" | "dropped";
 
 export type TicketKind = "qa-review" | "dmpk-quotation";
 
@@ -53,7 +59,6 @@ export type Ticket = {
 
 export const ticketStatusLabel: Record<TicketStatus, string> = {
   open: "待处理",
-  inProgress: "处理中",
   rejected: "已驳回",
   done: "已完成",
   dropped: "已废弃",
@@ -63,7 +68,6 @@ export const ticketStatusLabel: Record<TicketStatus, string> = {
    但在扫列表时它需要和「待处理」区分开,所以给 danger 而不是 warning。 */
 export const ticketStatusTone: Record<TicketStatus, "neutral" | "running" | "warning" | "success" | "danger"> = {
   open: "warning",
-  inProgress: "running",
   rejected: "danger",
   done: "success",
   dropped: "neutral",
@@ -129,7 +133,7 @@ export const initialTickets: Ticket[] = [
     id: "TK-2044",
     title: "请审批：样本 9 双批次报告（第三版）",
     kind: "qa-review",
-    status: "inProgress",
+    status: "open",
     project: "XX药业-PD1临床前评价",
     from: "林一一",
     fromRole: "一线实验员",
