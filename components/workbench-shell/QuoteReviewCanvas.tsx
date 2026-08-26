@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2 } from "lucide-react";
+import { ArrowRight, Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { StatusChip } from "../ui";
+import { useModalDismiss } from "../ui/useModalDismiss";
 import {
   quoteItems,
   quoteMeta,
@@ -16,6 +16,76 @@ import {
 import type { Ticket } from "../../lib/workbench/ticketData";
 
 const money = (value: number) => value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/**
+ * 落定前的确认。
+ *
+ * 这两个动作都改变工单归属并写进流转记录:退回之后单子在对方手上,归档之后
+ * 产物已入库、工单收到终态——当场都撤不回来。所以先把「交给谁、随单带什么、
+ * 之后会发生什么」摆一遍,而不是点一下就走。
+ */
+function QuoteDecisionDialog({ kind, ticket, notes, reviewer, anchorLabel, onClose, onConfirm }: {
+  kind: "reject" | "archive";
+  ticket: Ticket;
+  notes: QuoteNote[];
+  reviewer: string;
+  anchorLabel: (id: string) => string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const dismiss = useModalDismiss(onClose);
+  const reject = kind === "reject";
+  const blocking = notes.filter((note) => note.severity === "blocking");
+  const title = reject ? "退回修订" : "通过并归档";
+
+  return (
+    <div className="modalBackdrop" role="presentation" {...dismiss}>
+      <section className="bioazUiDialog quoteDecisionDialog" role="dialog" aria-modal="true" aria-label={title}>
+        <header className="bioazUiDialogHeader">
+          <div>
+            <h2>{title}</h2>
+            <p>{ticket.id} · {ticket.title}</p>
+          </div>
+          <button className="bioazUiDialogClose" type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button>
+        </header>
+
+        <div className="bioazUiDialogBody">
+          <dl className="quoteDecisionFacts">
+            <div><dt>交接给</dt><dd>{reject ? `${ticket.from}（${ticket.fromRole}）` : "数据中枢"}</dd></div>
+            <div><dt>操作人</dt><dd>{reviewer}</dd></div>
+            <div><dt>工单状态</dt><dd>{reject ? "待处理 → 已驳回" : "处理中 → 已完成"}</dd></div>
+            <div><dt>随单产物</dt><dd>{ticket.attachments.map((file) => file.name).join("、") || "无"}</dd></div>
+          </dl>
+
+          {reject ? (
+            <section className="quoteDecisionNotes">
+              <h3>随单退回的批注（{notes.length} 条，其中阻断 {blocking.length} 条）</h3>
+              <ul>
+                {notes.map((note) => (
+                  <li key={note.anchorId}>
+                    <i className={`quoteNoteSev is-${note.severity}`}>{note.severity === "blocking" ? "阻断" : "提醒"}</i>
+                    <strong>{anchorLabel(note.anchorId)}</strong>
+                    {note.suggested ? <b>应为 {note.suggested}</b> : null}
+                    <p>{note.text}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : (
+            <p className="quoteDecisionNote">
+              {notes.length ? `${notes.length} 条提醒项随工单留档，不影响归档。` : "本次复核未提出批注。"}
+            </p>
+          )}
+        </div>
+
+        <footer className="bioazUiDialogFooter">
+          <button className="secondaryButton compact" type="button" onClick={onClose}>取消</button>
+          <button className="primaryButton compact" type="button" onClick={onConfirm}>{reject ? `确认退回 ${ticket.from}` : "确认归档"}</button>
+        </footer>
+      </section>
+    </div>
+  );
+}
 
 /** 草稿:还没落盘的一条批注,连同它在纸面上的纵向位置。 */
 type Draft = { anchorId: string; quote: string; top: number; note: QuoteNote };
@@ -51,6 +121,8 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
   const [form, setForm] = useState<"sheet" | "doc">("sheet");
   const [annotateMode, setAnnotateMode] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
+  /* 待确认的处置。不叫 confirm——那个名字会跟全局的 window.confirm 撞上。 */
+  const [pendingDecision, setPendingDecision] = useState<"reject" | "archive" | null>(null);
   const paneRef = useRef<HTMLDivElement>(null);
 
   const noted = Object.values(notes);
@@ -234,7 +306,6 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
                   <tr className="quoteTotalRow"><td colSpan={2}>Total Price ({quoteMeta.currency})</td><td className="quoteNum">{money(quoteMeta.totalPrice)}</td></tr>
                 </tbody>
               </table>
-              <p className="quoteDocNote">这一份是给客户的，不含单价与参数。要核算法请切到「计算表」。</p>
             </article>
           )}
 
@@ -288,7 +359,6 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
               <div className="quoteNoteKind" role="radiogroup" aria-label="批注去向">
                 <button type="button" role="radio" aria-checked={draft.note.severity === "blocking"} className={draft.note.severity === "blocking" ? "isOn" : ""} onClick={() => setDraft({ ...draft, note: { ...draft.note, severity: "blocking" } })}>不改不能过</button>
                 <button type="button" role="radio" aria-checked={draft.note.severity === "advisory"} className={draft.note.severity === "advisory" ? "isOn" : ""} onClick={() => setDraft({ ...draft, note: { ...draft.note, severity: "advisory" } })}>仅提醒</button>
-                <small>{draft.note.severity === "blocking" ? "退回后逐条验证" : "只留痕，不挡通过"}</small>
               </div>
             </aside>
           ) : null}
@@ -303,39 +373,55 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
           <ul className="quoteNoteList">
             {noted.map((note) => (
               <li key={note.anchorId} className={`is-${note.severity}`}>
-                <button type="button" onClick={() => editNote(note)}>
-                  <span className="quoteNoteTags">
-                    <em>{quoteNoteCategoryLabel[note.category]}</em>
-                    {note.severity === "blocking" ? <i className="quoteNoteBlock">阻断</i> : null}
-                  </span>
+                {/* 删除跟标签同排,不再绝对定位压在卡上——它是这条批注的一个操作,
+                    不是浮在上面的另一层。 */}
+                <div className="quoteNoteHead">
+                  <em className="quoteNoteCat">{quoteNoteCategoryLabel[note.category]}</em>
+                  <i className={`quoteNoteSev is-${note.severity}`}>{note.severity === "blocking" ? "阻断" : "提醒"}</i>
+                  <button className="quoteNoteRemove" type="button" aria-label={`删除对「${anchorLabel(note.anchorId)}」的批注`} onClick={() => remove(note.anchorId)}><Trash2 size={13} /></button>
+                </div>
+                <button className="quoteNoteOpen" type="button" onClick={() => editNote(note)}>
                   <strong>{anchorLabel(note.anchorId)}</strong>
-                  {note.suggested ? <b>{currentValue(note.anchorId)} → {note.suggested}</b> : null}
+                  {note.suggested ? (
+                    <span className="quoteNoteDiff"><s>{currentValue(note.anchorId) || "—"}</s><ArrowRight size={11} /><b>{note.suggested}</b></span>
+                  ) : null}
                   <p>{note.text}</p>
-                  <span className="quoteNoteBy">{note.author}<i>{note.authorRole}</i> · {note.at}</span>
+                  <span className="quoteNoteBy">{note.author} · {note.authorRole} · {note.at}</span>
                 </button>
-                <button className="quoteNoteRemove" type="button" aria-label="删除批注" onClick={() => remove(note.anchorId)}><Trash2 size={13} /></button>
               </li>
             ))}
-            {!noted.length ? (
-              <li className="quoteNoteEmpty">
-                {annotateMode ? "在左边选中一段文字就能批注。没有批注直接归档，表示这一版你全部认可。" : "点右上角「开始批注」，然后在左边选中文字。"}
-              </li>
-            ) : null}
+            {!noted.length ? <li className="quoteNoteEmpty">尚无批注</li> : null}
           </ul>
         </aside>
       </div>
 
+      {/* 二次确认。这两个动作都改变工单归属并留痕,落定之后要么在对方手上、
+          要么已入库,当场撤不回来——所以先把「交给谁、带什么、之后怎样」摆一遍。 */}
+      {pendingDecision ? (
+        <QuoteDecisionDialog
+          kind={pendingDecision}
+          ticket={ticket}
+          notes={noted}
+          reviewer={reviewer}
+          anchorLabel={anchorLabel}
+          onClose={() => setPendingDecision(null)}
+          onConfirm={() => {
+            if (pendingDecision === "reject") onReject(`批注 ${noted.length} 条，其中阻断 ${blocking} 条`);
+            else onArchive();
+            setPendingDecision(null);
+          }}
+        />
+      ) : null}
+
       <footer className="ticketDetailActions">
         <p className="ticketDetailHint">
-          {blocking ? `${blocking} 条阻断项，需退回 ${ticket.from} 修订` : noted.length ? `${noted.length} 条提醒，不挡归档` : "尚无批注"}
+          {blocking ? `阻断项 ${blocking} 条` : noted.length ? `提醒项 ${noted.length} 条` : "尚无批注"}
         </p>
-        {/* 驳回就是打回给上一棒——工单里「上一棒」不用猜,提交人就写在单子上。 */}
-        <button className="secondaryButton compact" type="button" disabled={!noted.length}
-          onClick={() => onReject(`${noted.length} 条批注，其中 ${blocking} 条阻断`)}>
-          退回 {ticket.from} 修订
+        <button className="secondaryButton compact" type="button" disabled={!noted.length} onClick={() => setPendingDecision("reject")}>
+          退回修订
         </button>
-        <button className="primaryButton compact" type="button" disabled={blocking > 0} onClick={onArchive}>
-          通过并归档到数据中枢
+        <button className="primaryButton compact" type="button" disabled={blocking > 0} onClick={() => setPendingDecision("archive")}>
+          通过并归档
         </button>
       </footer>
     </section>

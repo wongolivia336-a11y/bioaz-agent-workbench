@@ -198,8 +198,16 @@ export function TicketsPage({
         <CompactSelect value={project} options={["全部项目", ...projects]} onChange={reset(setProject)} />
       </div>
 
-      {/* 一个列表。工单行右边挂状态,通知行不挂——「这件事在谁那儿」不用切视图
-          就能读出来,而知会本来就没有状态可读。 */}
+      {/* 列名。行里那几格排得整齐,但整齐本身不说明它们是什么——尤其右边那两格,
+          「已驳回 / 赵敏」并排时,不标注就看不出后者是当前处理人还是提出人。 */}
+      <div className="messageListHead" aria-hidden="true">
+        <span />
+        <span>发件人</span>
+        <span>主题 · 所属项目</span>
+        <span>状态 · 当前处理人</span>
+        <span>更新时间</span>
+      </div>
+
       <ul className="messageList">
         {rows.map((row) => {
           if (row.kind === "notice") {
