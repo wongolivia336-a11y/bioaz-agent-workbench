@@ -9,6 +9,7 @@ import {
   quoteItems,
   quoteMeta,
   quoteNoteCategoryLabel,
+  quoteNoteLabel,
   quoteNoteNeedsValue,
   quoteNoteSeverityLabel,
   quoteParams,
@@ -65,6 +66,9 @@ function QuoteDecisionDialog({ kind, ticket, notes, reviewer, anchorLabel, onClo
                 {notes.map((note) => (
                   <li key={note.anchorId}>
                     <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
+                    {/* 分类要跟着退回去。自定义那一类尤其:复核人特意起的名字,
+                        正是这条批注的分类本身,summary 里丢掉它就只剩一句白话。 */}
+                    <em className="quoteNoteCat">{quoteNoteLabel(note)}</em>
                     <strong>{anchorLabel(note.anchorId)}</strong>
                     {note.suggested ? <b>建议值 {note.suggested}</b> : null}
                     <p>{note.text}</p>
@@ -137,6 +141,10 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
   const noted = Object.values(notes);
   const blocking = noted.filter((note) => note.severity === "blocking").length;
   const categories = quoteCategories;
+  /** 本单已经用过的自定义分类名,给输入框做候选。 */
+  const usedCustomLabels = Array.from(new Set(
+    noted.map((note) => note.customLabel?.trim()).filter((label): label is string => Boolean(label)),
+  ));
 
   const anchorLabel = (id: string) =>
     quoteParams.find((param) => param.id === id)?.label
@@ -199,9 +207,19 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
     setDraft({ anchorId: note.anchorId, quote: note.quote ?? anchorLabel(note.anchorId), top, note });
   };
 
+  /* 「其他」必须带名字才算一条批注。这是这个开口唯一的约束,也是它跟一个
+     纯倾倒口的全部区别——分类名空着,右栏那条就只写着「其他」,读的人得点开
+     正文才知道说的是什么。 */
+  const draftReady = Boolean(
+    draft?.note.text.trim()
+    && (draft.note.category !== "custom" || draft.note.customLabel?.trim()),
+  );
+
   const commit = () => {
-    if (!draft || !draft.note.text.trim()) return;
-    onNotesChange({ ...notes, [draft.anchorId]: { ...draft.note, quote: draft.quote, author: reviewer, authorRole: reviewerRole, at: "刚刚" } });
+    if (!draft || !draftReady) return;
+    const note = { ...draft.note, quote: draft.quote, author: reviewer, authorRole: reviewerRole, at: "刚刚" };
+    if (note.category === "custom") note.customLabel = note.customLabel?.trim();
+    onNotesChange({ ...notes, [draft.anchorId]: note });
     setDraft(null);
     window.getSelection()?.removeAllRanges();
   };
@@ -268,12 +286,38 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
                     key={category}
                     type="button"
                     className={draft.note.category === category ? "active" : ""}
-                    onClick={() => setDraft({ ...draft, note: { ...draft.note, category, suggested: quoteNoteNeedsValue[category] ? draft.note.suggested : undefined } })}
+                    onClick={() => setDraft({ ...draft, note: {
+                      ...draft.note,
+                      category,
+                      suggested: quoteNoteNeedsValue[category] ? draft.note.suggested : undefined,
+                      /* 切走就把自定义名清掉,跟 suggested 一个道理:留着它,提交出去的
+                         就是一条自己用不上、下一个人看不懂的字段。 */
+                      customLabel: category === "custom" ? draft.note.customLabel : undefined,
+                    } })}
                   >
                     {quoteNoteCategoryLabel[category]}
                   </button>
                 ))}
               </div>
+
+              {/* 选了「其他」就得给它起个名字,否则不让提交。没名字的「其他」正是
+                  那个会被塞满、最后没人看的桶;有名字的「交付周期未写」跟固定
+                  那五类一样好读。候选项是本单已经用过的标签——同一件事被两个人
+                  写成「描述有误」和「表述不清」,分类照样作废。 */}
+              {draft.note.category === "custom" ? (
+                <label className="quoteNoteCustom">
+                  <span>分类名</span>
+                  <input
+                    value={draft.note.customLabel ?? ""}
+                    placeholder="例如：表述有误、条款缺失"
+                    list="quoteNoteCustomLabels"
+                    onChange={(event) => setDraft({ ...draft, note: { ...draft.note, customLabel: event.target.value } })}
+                  />
+                  <datalist id="quoteNoteCustomLabels">
+                    {usedCustomLabels.map((label) => <option key={label} value={label} />)}
+                  </datalist>
+                </label>
+              ) : null}
 
               {/* 「现值 X → [建议值]」排成一行。原先只写了个光秃秃的数字加一个箭头,
                   两样都没有名字:那个数是现值还是建议值,得靠猜。而且它挤在一格
@@ -302,7 +346,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
                     if (event.key === "Escape") { event.stopPropagation(); setDraft(null); }
                   }}
                 />
-                <button className="quoteNoteSend" type="button" disabled={!draft.note.text.trim()} onClick={commit} aria-label="提交批注" title="提交批注（Enter）">
+                <button className="quoteNoteSend" type="button" disabled={!draftReady} onClick={commit} aria-label="提交批注" title="提交批注（Enter）">
                   <Check size={14} />
                 </button>
               </div>
@@ -339,7 +383,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
                 {/* 删除跟标签同排,不再绝对定位压在卡上——它是这条批注的一个操作,
                     不是浮在上面的另一层。 */}
                 <div className="quoteNoteHead">
-                  <em className="quoteNoteCat">{quoteNoteCategoryLabel[note.category]}</em>
+                  <em className="quoteNoteCat">{quoteNoteLabel(note)}</em>
                   <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
                   <button className="quoteNoteRemove" type="button" aria-label={`删除对「${anchorLabel(note.anchorId)}」的批注`} onClick={() => remove(note.anchorId)}><Trash2 size={13} /></button>
                 </div>

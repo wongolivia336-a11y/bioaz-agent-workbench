@@ -108,7 +108,7 @@ export const quoteSubtotals: QuoteSubtotal[] = [
    不用人肉比对。没有它,同一张报价来回三轮还是靠记性。
 
    source 恒为人工:报价复核不带 AI,所以 QA 那一维（AI/人工两色）在这里天然为空。 */
-export type QuoteNoteCategory = "param" | "price" | "basis" | "missing" | "notApplicable";
+export type QuoteNoteCategory = "param" | "price" | "basis" | "missing" | "notApplicable" | "custom";
 
 /* 五个分类要能把「这一条哪里不对」分干净,而且各自指向一个明确的处置动作:
    前三个是「数改一下」,后两个是「这条该增/该删」。
@@ -124,12 +124,33 @@ export const quoteNoteCategoryLabel: Record<QuoteNoteCategory, string> = {
   basis: "计价口径有误",
   missing: "缺漏项",
   notApplicable: "不应计费",
+  custom: "其他",
 };
 
-/** 哪些分类需要填建议值。缺漏项和不应计费没有值可改——一个是还没有,一个是要去掉。 */
+/* 前五类都在说「这条的数或范围错了」。可复核真实报价时还会写别的:
+   「Description 这句客户看不懂」「交付周期没写进条款」「这条跟上一版比变了
+   但没说明原因」——硬塞进「参数取值有误」,退回去的人会照着改一个本来没错的数。
+   所以留一个开口。
+
+   开口的代价是它会变成默认倾倒口:这类工具里的 Other 桶通常吃掉三到五成条目,
+   因为它永远是最省事的那个选项,然后分类就作废了。这里只压一条约束——
+   **必须给它起个名字才能提交**(见 quoteNoteLabel / commit)。没名字的「其他」
+   正是那个会烂掉的桶;有名字的「交付周期未写」跟固定那五类一样好读。 */
+export const QUOTE_NOTE_CUSTOM: QuoteNoteCategory = "custom";
+
+/** 哪些分类需要填建议值。缺漏项和不应计费没有值可改——一个是还没有,一个是要去掉。
+ *  custom 给字段但不强制:自定义的那一类可能是数字问题,也可能不是,
+ *  留空时卡片本来就不画那行 diff。 */
 export const quoteNoteNeedsValue: Record<QuoteNoteCategory, boolean> = {
-  param: true, price: true, basis: true, missing: false, notApplicable: false,
+  param: true, price: true, basis: true, missing: false, notApplicable: false, custom: true,
 };
+
+/** 一条批注对外显示的分类名。自定义的显示它自己的标签,而不是「其他」——
+ *  「其他」对读的人没有任何信息量,而这条批注的价值恰恰在那个名字里。 */
+export function quoteNoteLabel(note: Pick<QuoteNote, "category" | "customLabel">) {
+  if (note.category === "custom") return note.customLabel?.trim() || quoteNoteCategoryLabel.custom;
+  return quoteNoteCategoryLabel[note.category];
+}
 
 /* 严重度的说法定义在这里,不散在三个组件里各写各的。
    「不改不能过 / 仅提醒」是口语,写进要随工单留痕的记录里不合适;而且它说的是
@@ -145,6 +166,8 @@ export type QuoteNote = {
   category: QuoteNoteCategory;
   /** blocking = 必须修订,阻止归档;advisory = 建议修订,随单留档不拦 */
   severity: "blocking" | "advisory";
+  /** category 为 custom 时,复核人自己起的分类名。不填不让提交。 */
+  customLabel?: string;
   text: string;
   /** 建议值。下一版据此核验「改了没有」。 */
   suggested?: string;

@@ -7716,6 +7716,11 @@ button {
 .quoteNoteCats { display: flex; flex-wrap: wrap; gap: 5px; }
 .quoteNoteCats button { min-height: 26px; border: 1px solid var(--line); border-radius: 999px; background: #fff; padding: 0 9px; color: var(--body); font-size: 11.5px; cursor: pointer; }
 .quoteNoteCats button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
+/* 自定义分类名。跟「现值 → 建议值」同一种排法:左边一个说明,右边一个输入框。 */
+.quoteNoteCustom { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 7px; }
+.quoteNoteCustom > span { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.quoteNoteCustom input { min-height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 9px; font-size: 12.5px; }
+
 /* 现值按内容宽,别给它一格定死的窄列——「50.00」在 34px 里会跟箭头折成两行。 */
 .quoteNoteSuggest { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 7px; }
 .quoteNoteSuggest > svg { color: var(--muted); }
@@ -8016,7 +8021,9 @@ button {
 .quoteDecisionNotes { margin-top: 14px; }
 .quoteDecisionNotes h3 { margin: 0 0 8px; color: var(--body); font-size: 12px; font-weight: 700; }
 .quoteDecisionNotes ul { display: grid; gap: 8px; max-height: 220px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
-.quoteDecisionNotes li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: 6px 8px; border-radius: 8px; background: var(--soft, #f7f8fb); padding: 8px 10px; }
+/* 四列:严重度、分类、锚点、建议值。列数必须跟子元素个数对上,少一列的话
+   最后那个会掉进隐式行——收件箱那条列名浮在半空就是这么来的。 */
+.quoteDecisionNotes li { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: baseline; gap: 6px 8px; border-radius: 8px; background: var(--soft, #f7f8fb); padding: 8px 10px; }
 .quoteDecisionNotes strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteDecisionNotes b { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
 .quoteDecisionNotes p { grid-column: 1 / -1; margin: 0; color: var(--body); font-size: 12px; line-height: 1.6; }
