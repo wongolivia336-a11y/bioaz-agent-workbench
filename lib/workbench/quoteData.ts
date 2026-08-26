@@ -110,23 +110,40 @@ export const quoteSubtotals: QuoteSubtotal[] = [
    source 恒为人工:报价复核不带 AI,所以 QA 那一维（AI/人工两色）在这里天然为空。 */
 export type QuoteNoteCategory = "param" | "price" | "basis" | "missing" | "notApplicable";
 
+/* 五个分类要能把「这一条哪里不对」分干净,而且各自指向一个明确的处置动作:
+   前三个是「数改一下」,后两个是「这条该增/该删」。
+
+   notApplicable 原先叫「此项不适用」——只说了状态,没说该怎么办,读的人还得
+   自己推一步(不适用……所以呢?)。叫「不应计费」就把结论写在标签上了,而且跟
+   「缺漏项」正好成一对:一个是少报了,一个是多报了。
+   basis 原先写「口径/折扣有误」,斜杠是把两件事塞进一个标签;折扣本来就是计价
+   口径的一种,合并成「计价口径有误」。 */
 export const quoteNoteCategoryLabel: Record<QuoteNoteCategory, string> = {
-  param: "参数有误",
+  param: "参数取值有误",
   price: "单价有误",
-  basis: "口径/折扣有误",
-  missing: "漏项",
-  notApplicable: "此项不适用",
+  basis: "计价口径有误",
+  missing: "缺漏项",
+  notApplicable: "不应计费",
 };
 
-/** 哪些分类需要填「应为」。漏项和不适用没有值可写。 */
+/** 哪些分类需要填建议值。缺漏项和不应计费没有值可改——一个是还没有,一个是要去掉。 */
 export const quoteNoteNeedsValue: Record<QuoteNoteCategory, boolean> = {
   param: true, price: true, basis: true, missing: false, notApplicable: false,
+};
+
+/* 严重度的说法定义在这里,不散在三个组件里各写各的。
+   「不改不能过 / 仅提醒」是口语,写进要随工单留痕的记录里不合适;而且它说的是
+   审批人的态度,不是给撰写人的指令。改成「必须修订 / 建议修订」——对方看到的是
+   自己要做什么,而这两条正是退回时唯一要区分的事。 */
+export const quoteNoteSeverityLabel: Record<QuoteNote["severity"], string> = {
+  blocking: "必须修订",
+  advisory: "建议修订",
 };
 
 export type QuoteNote = {
   anchorId: string;
   category: QuoteNoteCategory;
-  /** blocking = 不改不能过;advisory = 提醒一下 */
+  /** blocking = 必须修订,阻止归档;advisory = 建议修订,随单留档不拦 */
   severity: "blocking" | "advisory";
   text: string;
   /** 建议值。下一版据此核验「改了没有」。 */

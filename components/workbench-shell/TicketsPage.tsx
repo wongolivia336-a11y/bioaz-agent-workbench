@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { StatusChip } from "../ui";
 import { QuoteReviewCanvas } from "./QuoteReviewCanvas";
+import { TicketFilePreview, downloadTicketFile, ticketFileView, type TicketFileView } from "./TicketFilePreview";
+import type { MailResourceRef } from "../../lib/workbench/mailboxData";
 import type { QuoteNote } from "../../lib/workbench/quoteData";
 import {
   initialNotices,
@@ -246,7 +248,15 @@ export function TicketsPage({
                   <strong>{ticket.title}</strong>
                   <small>
                     {ticket.project}
-                    {ticket.attachments.length ? <em><Paperclip size={11} />{ticket.attachments[0].name}</em> : null}
+                    {/* 多份产物时补一个计数。只报第一个的名字会让人以为随单就这一份,
+                        而复核前得知道要看几样东西。 */}
+                    {ticket.attachments.length ? (
+                      <em>
+                        <Paperclip size={11} />
+                        {ticket.attachments[0].name}
+                        {ticket.attachments.length > 1 ? ` 等 ${ticket.attachments.length} 份` : ""}
+                      </em>
+                    ) : null}
                   </small>
                 </span>
                 <span className="messageState">
@@ -357,6 +367,7 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
      给一个点不动的按钮,比不给更让人困惑。 */
   const actionable = (ticket.status === "open" || ticket.status === "inProgress") && isMine;
   const isQuotation = ticket.kind === "dmpk-quotation";
+  const [preview, setPreview] = useState<{ file: MailResourceRef; view: TicketFileView } | null>(null);
 
   if (isQuotation && reviewing) {
     return (
@@ -389,13 +400,28 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
       {ticket.attachments.length ? (
         <section className="ticketDetailFiles">
           <h2>随单产物</h2>
-          {ticket.attachments.map((file) => (
-            <article key={file.id}>
-              <Paperclip size={13} />
-              <div><strong>{file.name}</strong><small>{file.meta}</small></div>
-            </article>
-          ))}
+          {ticket.attachments.map((file) => {
+            const view = ticketFileView(ticket, file);
+            return (
+              <article key={file.id}>
+                <Paperclip size={13} />
+                <div className="ticketFileMeta"><strong>{file.name}</strong><small>{file.meta}</small></div>
+                {/* 动作只给原型确实有内容的那些文件。摆两个点了没反应的按钮,
+                    比不摆更糟——按钮存在就是在承诺一件事做得到。 */}
+                {view ? (
+                  <div className="ticketFileActions">
+                    <button type="button" onClick={() => setPreview({ file, view })}>预览</button>
+                    <button type="button" onClick={() => downloadTicketFile(file, view)}>下载</button>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
         </section>
+      ) : null}
+
+      {preview ? (
+        <TicketFilePreview file={preview.file} view={preview.view} onClose={() => setPreview(null)} />
       ) : null}
 
       {/* 这条链就是工单相对邮件多出来的那样东西。邮件里同一份报告来回三轮,

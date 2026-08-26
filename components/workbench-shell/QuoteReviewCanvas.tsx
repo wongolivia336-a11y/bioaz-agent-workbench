@@ -3,20 +3,20 @@
 import { ArrowRight, Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useModalDismiss } from "../ui/useModalDismiss";
+import { QuoteDocPaper, QuoteSheetPaper, money, quoteCategories } from "./QuotePaper";
 import { useDismissableLayer } from "./useDismissableLayer";
 import {
   quoteItems,
   quoteMeta,
   quoteNoteCategoryLabel,
   quoteNoteNeedsValue,
+  quoteNoteSeverityLabel,
   quoteParams,
   quoteSubtotals,
   type QuoteNote,
   type QuoteNoteCategory,
 } from "../../lib/workbench/quoteData";
 import type { Ticket } from "../../lib/workbench/ticketData";
-
-const money = (value: number) => value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /**
  * 落定前的确认。
@@ -60,13 +60,13 @@ function QuoteDecisionDialog({ kind, ticket, notes, reviewer, anchorLabel, onClo
 
           {reject ? (
             <section className="quoteDecisionNotes">
-              <h3>随单退回的批注（{notes.length} 条，其中阻断 {blocking.length} 条）</h3>
+              <h3>随单退回的批注（{notes.length} 条，其中必须修订 {blocking.length} 条）</h3>
               <ul>
                 {notes.map((note) => (
                   <li key={note.anchorId}>
-                    <i className={`quoteNoteSev is-${note.severity}`}>{note.severity === "blocking" ? "阻断" : "提醒"}</i>
+                    <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
                     <strong>{anchorLabel(note.anchorId)}</strong>
-                    {note.suggested ? <b>应为 {note.suggested}</b> : null}
+                    {note.suggested ? <b>建议值 {note.suggested}</b> : null}
                     <p>{note.text}</p>
                   </li>
                 ))}
@@ -74,7 +74,7 @@ function QuoteDecisionDialog({ kind, ticket, notes, reviewer, anchorLabel, onClo
             </section>
           ) : (
             <p className="quoteDecisionNote">
-              {notes.length ? `${notes.length} 条提醒项随工单留档，不影响归档。` : "本次复核未提出批注。"}
+              {notes.length ? `${notes.length} 条建议修订随工单留档，不影响归档。` : "本次复核未提出批注。"}
             </p>
           )}
         </div>
@@ -136,7 +136,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
 
   const noted = Object.values(notes);
   const blocking = noted.filter((note) => note.severity === "blocking").length;
-  const categories = quoteItems.map((item) => item.category).filter((value, index, list) => list.indexOf(value) === index);
+  const categories = quoteCategories;
 
   const anchorLabel = (id: string) =>
     quoteParams.find((param) => param.id === id)?.label
@@ -252,71 +252,9 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
 
       <div className="quoteReviewBody">
         <div className={`quoteDocPane ${annotateMode ? "isAnnotating" : ""}`} ref={paneRef} onMouseUp={captureSelection}>
-          {form === "sheet" ? (
-            <article className="quoteSheet">
-              <header><strong>{quoteMeta.title}</strong><small>内部计算表 · {quoteMeta.currency}</small></header>
-              <div className="quoteSheetGrid">
-                <section className="quoteSheetItems">
-                  <table>
-                    <thead><tr><th>Category</th><th>Item</th><th>Unit Price</th></tr></thead>
-                    <tbody>
-                      {categories.map((category) => quoteItems.filter((item) => item.category === category).map((item, index) => (
-                        <tr key={item.id} data-anchor={item.id} className={rowClass(item.id)}>
-                          <td className="quoteCategoryCell">{index === 0 ? category : ""}</td>
-                          <td><strong>{item.item}</strong><small>{item.description}</small>{bubble(item.id)}</td>
-                          <td className="quoteNum">{item.unitPrice === undefined ? "—" : money(item.unitPrice)}</td>
-                        </tr>
-                      )))}
-                    </tbody>
-                  </table>
-                </section>
-
-                {/* 原表里那句「Yellow-highlighted fields are editable」说的就是这一批——
-                    它们是人可以改的,也就是最该被核的。 */}
-                <section className="quoteSheetParams">
-                  <h4>可编辑参数</h4>
-                  <table>
-                    <tbody>
-                      {quoteParams.map((param) => (
-                        <tr key={param.id} data-anchor={param.id} className={rowClass(param.id)}>
-                          <td><strong>{param.label}</strong>{bubble(param.id)}</td>
-                          <td className="quoteNum quoteEditable">{param.value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <h4>小计</h4>
-                  <table>
-                    <tbody>
-                      {quoteSubtotals.map((sub) => (
-                        <tr key={sub.id}><td>{sub.label}</td><td className="quoteNum">{money(sub.amount)}</td></tr>
-                      ))}
-                      <tr className="quoteTotalRow"><td>Standard Price</td><td className="quoteNum">{money(quoteMeta.standardPrice)}</td></tr>
-                      <tr className="quoteTotalRow"><td>Discounted Price</td><td className="quoteNum">{money(quoteMeta.discountedPrice)}</td></tr>
-                    </tbody>
-                  </table>
-                </section>
-              </div>
-            </article>
-          ) : (
-            <article className="quoteDoc">
-              <header><strong>{quoteMeta.docTitle}</strong><small>{quoteMeta.validity}</small></header>
-              <table className="quoteDocTable">
-                <thead><tr><th>Category</th><th>Item</th><th>Description</th></tr></thead>
-                <tbody>
-                  {categories.map((category) => quoteItems.filter((item) => item.category === category).map((item, index) => (
-                    <tr key={item.id} data-anchor={item.id} className={rowClass(item.id)}>
-                      <td className="quoteCategoryCell">{index === 0 ? category : ""}</td>
-                      <td><strong>{item.item}</strong>{bubble(item.id)}</td>
-                      <td className="quoteDocDesc">{item.description}</td>
-                    </tr>
-                  )))}
-                  <tr className="quoteTotalRow"><td colSpan={2}>Package Price ({quoteMeta.currency})</td><td className="quoteNum">{money(quoteMeta.packagePrice)}</td></tr>
-                  <tr className="quoteTotalRow"><td colSpan={2}>Total Price ({quoteMeta.currency})</td><td className="quoteNum">{money(quoteMeta.totalPrice)}</td></tr>
-                </tbody>
-              </table>
-            </article>
-          )}
+          {form === "sheet"
+            ? <QuoteSheetPaper rowClass={rowClass} bubble={bubble} />
+            : <QuoteDocPaper rowClass={rowClass} bubble={bubble} />}
 
           {/* 就地气泡卡。跟 QA 一个量级:引用 + 一行输入 + 去向,批注多数是一句话,
               给三行文本域等于暗示"你得写一段"。 */}
@@ -337,12 +275,16 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
                 ))}
               </div>
 
+              {/* 「现值 X → [建议值]」排成一行。原先只写了个光秃秃的数字加一个箭头,
+                  两样都没有名字:那个数是现值还是建议值,得靠猜。而且它挤在一格
+                  定死的窄列里,数字和箭头被折成上下两行,看着像排版坏了。 */}
               {quoteNoteNeedsValue[draft.note.category] ? (
                 <label className="quoteNoteSuggest">
-                  <span>{currentValue(draft.anchorId) || "现值"} →</span>
+                  <span className="quoteNoteSuggestFrom">现值 <b>{currentValue(draft.anchorId) || "—"}</b></span>
+                  <ArrowRight size={12} aria-hidden="true" />
                   <input
                     value={draft.note.suggested ?? ""}
-                    placeholder="应为"
+                    placeholder="建议值"
                     onChange={(event) => setDraft({ ...draft, note: { ...draft.note, suggested: event.target.value } })}
                   />
                 </label>
@@ -365,9 +307,21 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
                 </button>
               </div>
 
-              <div className="quoteNoteKind" role="radiogroup" aria-label="批注去向">
-                <button type="button" role="radio" aria-checked={draft.note.severity === "blocking"} className={draft.note.severity === "blocking" ? "isOn" : ""} onClick={() => setDraft({ ...draft, note: { ...draft.note, severity: "blocking" } })}>不改不能过</button>
-                <button type="button" role="radio" aria-checked={draft.note.severity === "advisory"} className={draft.note.severity === "advisory" ? "isOn" : ""} onClick={() => setDraft({ ...draft, note: { ...draft.note, severity: "advisory" } })}>仅提醒</button>
+              {/* 两档说的是「对方要做什么」,不是「我多生气」——必须修订会挡住归档,
+                  建议修订随单留档但不拦。 */}
+              <div className="quoteNoteKind" role="radiogroup" aria-label="处置要求">
+                {(["blocking", "advisory"] as const).map((severity) => (
+                  <button
+                    key={severity}
+                    type="button"
+                    role="radio"
+                    aria-checked={draft.note.severity === severity}
+                    className={draft.note.severity === severity ? "isOn" : ""}
+                    onClick={() => setDraft({ ...draft, note: { ...draft.note, severity } })}
+                  >
+                    {quoteNoteSeverityLabel[severity]}
+                  </button>
+                ))}
               </div>
             </aside>
           ) : null}
@@ -377,7 +331,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
         <aside className="quoteNotePane">
           <header>
             <strong>人工批注</strong>
-            <small>{noted.length} 条{blocking ? ` · ${blocking} 条阻断` : ""}</small>
+            <small>{noted.length} 条{blocking ? ` · 必须修订 ${blocking} 条` : ""}</small>
           </header>
           <ul className="quoteNoteList">
             {noted.map((note) => (
@@ -386,7 +340,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
                     不是浮在上面的另一层。 */}
                 <div className="quoteNoteHead">
                   <em className="quoteNoteCat">{quoteNoteCategoryLabel[note.category]}</em>
-                  <i className={`quoteNoteSev is-${note.severity}`}>{note.severity === "blocking" ? "阻断" : "提醒"}</i>
+                  <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
                   <button className="quoteNoteRemove" type="button" aria-label={`删除对「${anchorLabel(note.anchorId)}」的批注`} onClick={() => remove(note.anchorId)}><Trash2 size={13} /></button>
                 </div>
                 <button className="quoteNoteOpen" type="button" onClick={() => editNote(note)}>
@@ -415,7 +369,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
           anchorLabel={anchorLabel}
           onClose={() => setPendingDecision(null)}
           onConfirm={() => {
-            if (pendingDecision === "reject") onReject(`批注 ${noted.length} 条，其中阻断 ${blocking} 条`);
+            if (pendingDecision === "reject") onReject(`批注 ${noted.length} 条，其中必须修订 ${blocking} 条`);
             else onArchive();
             setPendingDecision(null);
           }}
@@ -424,7 +378,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
 
       <footer className="ticketDetailActions">
         <p className="ticketDetailHint">
-          {blocking ? `阻断项 ${blocking} 条` : noted.length ? `提醒项 ${noted.length} 条` : "尚无批注"}
+          {blocking ? `必须修订 ${blocking} 条` : noted.length ? `建议修订 ${noted.length} 条` : "尚无批注"}
         </p>
         <button className="secondaryButton compact" type="button" disabled={!noted.length} onClick={() => setPendingDecision("reject")}>
           退回修订

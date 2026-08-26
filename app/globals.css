@@ -7064,9 +7064,12 @@ button {
 /* ═══ 工单 ═══════════════════════════════════════════════════════════════
    表格而不是卡片流:工单是台账,人来这儿是为了扫和查——「哪几条待我处理」
    「样本 9 那份现在在谁手上」。卡片一屏放三条,答不了第二个问题。 */
+/* 四行:筛选栏、列名、列表、分页。行数必须跟子元素个数对上——
+   原本只声明三行,后加的列名就占走了 minmax(0,1fr) 那格、列表掉进隐式 auto 行:
+   列名被撑成两百像素高又垂直居中,于是标题浮在半空,而列表反倒不滚动了。 */
 .ticketsView {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   min-height: 0;
   gap: 14px;
   padding: 22px 26px 18px;
@@ -7248,7 +7251,10 @@ button {
 .ticketDetailMeta dt { color: var(--muted); font-size: 11.5px; }
 .ticketDetailMeta dd { margin: 0; color: var(--ink); font-size: 13px; }
 
-.ticketDetailFiles h3,
+/* 这里原本还有一份 .ticketDetailFiles / .ticketDetailFlow 的定义,是工单还做成
+   弹窗那会儿留下的。详情改成整页之后,末尾那份接手了布局,但这份的 border 没人
+   覆盖、仍然生效——于是「随单产物」的卡片里又套出一层框。删掉:同一个组件不该
+   有两处定义,留着的那份迟早只剩几条属性还在偷偷生效。 */
 .ticketDetailFlow h3 {
   margin: 0 0 10px;
   border-bottom: 1px solid var(--line);
@@ -7256,21 +7262,6 @@ button {
   font-size: 13px;
   font-weight: 650;
 }
-
-.ticketDetailFiles { margin-bottom: 22px; }
-
-.ticketDetailFiles article {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 9px 11px;
-  color: var(--muted);
-}
-
-.ticketDetailFiles strong { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
-.ticketDetailFiles small { color: var(--muted); font-size: 11.5px; }
 
 /* 流转记录的样式统一定义在文件末尾「工单二级页」那一节。
    这里原本还有一份,给 li 加 border-left 画线、::before 画点,跟后面那份叠在一起,
@@ -7507,10 +7498,37 @@ button {
 
 .ticketDetailFiles, .ticketDetailFlow, .quotationReviewPane { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 16px 18px; }
 .ticketDetailFiles h2, .ticketDetailFlow h2, .quotationReviewPane h2 { margin: 0 0 12px; font-size: 13px; font-weight: 700; }
-.ticketDetailFiles article { display: flex; align-items: center; gap: 9px; padding: 7px 0; color: var(--body); }
-.ticketDetailFiles article div { display: grid; gap: 2px; }
+
+/* 附件行不再自带边框:外面这张卡已经把「随单产物」圈出来了,里面每条再描一圈
+   就成了框套框——两层框说的是同一件事,而第二层只是把行挤窄。
+   多条时用分隔线区分,一条时连线也不要。 */
+.ticketDetailFiles article { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 0; color: var(--body); }
+.ticketDetailFiles article + article { border-top: 1px solid var(--line); }
+.ticketDetailFiles article > svg { color: var(--muted); }
+/* 按名字选,不要写成「article 里的 div」——那样后来加进来的动作区(也是个 div)
+   会被一起套上 display:grid,两个按钮就竖着摞起来了。 */
+.ticketFileMeta { display: grid; gap: 2px; }
 .ticketDetailFiles strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .ticketDetailFiles small { color: var(--muted); font-size: 12px; }
+
+.ticketFileActions { display: flex; align-items: center; gap: 4px; }
+.ticketFileActions button {
+  min-height: 26px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+  padding: 0 9px; color: var(--body); font-size: 12.5px; cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.ticketFileActions button:hover { border-color: var(--line); background: var(--soft, #f7f8fb); color: var(--ink); }
+
+/* 预览弹窗。纸面本身可能很长,所以给弹窗一个上限高度、让正文自己滚,
+   而不是把弹窗撑出屏幕。 */
+.bioazUiDialog.ticketFilePreview {
+  width: min(1040px, calc(100vw - 48px));
+  max-height: min(860px, calc(100dvh - 48px));
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.ticketFilePreviewBody { min-height: 0; overflow: auto; background: var(--soft, #f7f8fb); padding: 18px; }
+.ticketFilePreviewBody .quoteSheet,
+.ticketFilePreviewBody .quoteDoc { margin: 0 auto; }
 
 
 
@@ -7698,8 +7716,11 @@ button {
 .quoteNoteCats { display: flex; flex-wrap: wrap; gap: 5px; }
 .quoteNoteCats button { min-height: 26px; border: 1px solid var(--line); border-radius: 999px; background: #fff; padding: 0 9px; color: var(--body); font-size: 11.5px; cursor: pointer; }
 .quoteNoteCats button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
-.quoteNoteSuggest { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 8px; }
-.quoteNoteSuggest span { color: var(--body); font-size: 12px; font-weight: 600; }
+/* 现值按内容宽,别给它一格定死的窄列——「50.00」在 34px 里会跟箭头折成两行。 */
+.quoteNoteSuggest { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 7px; }
+.quoteNoteSuggest > svg { color: var(--muted); }
+.quoteNoteSuggestFrom { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.quoteNoteSuggestFrom b { color: var(--body); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .quoteNoteSuggest input { min-height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 9px; font-size: 12.5px; }
 
 /* 提醒项收掉左侧那道琥珀,退回中性色:全都标成琥珀,「阻断」就不再是个信号。 */

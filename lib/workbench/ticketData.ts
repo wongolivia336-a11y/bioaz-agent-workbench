@@ -110,7 +110,14 @@ export const initialTickets: Ticket[] = [
     assigneeRole: "审批人",
     createdAt: "今天 08:10",
     updatedAt: "2 小时前",
-    attachments: [pkg("tk-2046-a", "Balbc_nude_报价交付包.zip", "ZIP · 3 个文件 · 5.4 MB")],
+    /* 两份,不是一个压缩包:报价书是给客户的,计算表是内部推导单价的底稿——
+       复核要同时看这两样(「报价书写的这个数,计算表里是怎么算出来的」),
+       打成一个包只会让人先解压再对着两个窗口来回切。
+       打包适合的是交付归档那一类,比如下面 TK-2035 的模型评价交付包。 */
+    attachments: [
+      file("tk-2046-a", "Balbc_nude_报价书.docx", "DOCX · 客户版 · 0.6 MB"),
+      file("tk-2046-b", "Balbc_nude_报价计算表.xlsx", "XLSX · 内部底稿 · 0.3 MB"),
+    ],
     taskId: "task-balbc",
     moduleId: "dmpk-quotation",
     steps: [
