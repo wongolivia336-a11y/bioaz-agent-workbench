@@ -8,6 +8,7 @@ import { ActivityChain, AgentReply, UserBubble } from "../../components/workbenc
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { InlineSelect } from "../../components/workbench-shell/InlineSelect";
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
+import { useDismissableLayer } from "../../components/workbench-shell/useDismissableLayer";
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import { Button, StatusChip, type StatusTone } from "../../components/ui";
 import { useModalDismiss } from "../../components/ui/useModalDismiss";
@@ -867,8 +868,12 @@ function AnnotationCard({
 }) {
   /* 一行式，跟评论气泡一个量级——批注多数是一句话，给一个三行文本域
      等于暗示"你得写一段"。输入框自己会随内容长高。 */
+  /* 点别处就收起，跟侧栏菜单同一套。它是贴在纸面旁边的浮层不是模态，
+     所以用 useDismissableLayer 而不是带遮罩语义的 useModalDismiss。
+     监听的是 pointerdown，而卡片是 mouseup 之后才建的，不会自己关掉自己。 */
+  const cardRef = useDismissableLayer<HTMLElement>(true, onCancel);
   return (
-    <aside className="qaAnnotationCard" style={{ top }} aria-label="新增批注">
+    <aside className="qaAnnotationCard" ref={cardRef} style={{ top }} aria-label="新增批注">
       <blockquote className="qaAnnotationQuote">{quote}<em>{pageRef}</em></blockquote>
 
       <div className="qaAnnotationRow">

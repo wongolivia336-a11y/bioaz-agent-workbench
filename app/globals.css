@@ -7420,12 +7420,36 @@ button {
   list-style: none;
 }
 
-.messageRow {
+/* 列名。行里那几格排得整齐,但整齐本身不说明它们是什么——尤其右边那两格,
+   「已驳回 / 赵敏」并排时,不标注就看不出后者是当前处理人还是提出人。
+
+   两条规则共用同一份列宽,且必须挨着写:窄屏那条 media query 不带额外特异性,
+   谁写在后面谁生效——标题若单独定义在文件末尾,窄屏就只塌行不塌标题,
+   列名指到错的格子上,比没有列名更糟。
+
+   后两列定死宽度,不用 auto。auto 让每格按自己的内容定宽,而「状态 · 当前处理人」
+   这几个字比行里那颗状态 chip 宽得多,两边各算各的就永远对不齐。 */
+.messageRow,
+.messageListHead {
   display: grid;
   width: 100%;
-  grid-template-columns: 14px 92px minmax(0, 1fr) auto;
+  grid-template-columns: 14px 108px minmax(0, 1fr) 132px 64px;
   align-items: center;
   gap: 12px;
+}
+
+.messageListHead {
+  padding: 0 12px 8px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* 标题一律左对齐:行里的状态 chip 和时间都是从格子左边起排的,
+   标题若右对齐,列宽再准也还是错位。 */
+.messageListHead > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.messageRow {
   border: 0;
   border-bottom: 1px solid var(--line);
   background: transparent;
@@ -7450,12 +7474,16 @@ button {
 .messageRow.isUnread strong { font-weight: 700; }
 
 .messageFrom {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   overflow: hidden;
   color: var(--ink);
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.messageFrom svg { flex: none; color: var(--muted); }
 
 .messageBody { display: grid; min-width: 0; gap: 3px; }
 .messageBody strong { overflow: hidden; color: var(--ink); font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -7569,8 +7597,21 @@ button {
 .quoteNoteEditor > div { display: flex; justify-content: flex-end; gap: 8px; }
 
 .quoteNoteList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.quoteNoteList button { display: grid; width: 100%; gap: 4px; border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a); border-radius: 8px; background: #fff; padding: 10px; text-align: left; cursor: pointer; }
-.quoteNoteList button:hover { background: #fafbfc; }
+
+/* 外框长在 li 上,不长在 button 上。卡里现在有两个按钮(主体和删除),
+   写成 .quoteNoteList button 会把 width:100% 一并盖到删除图标上——
+   它就从 24px 撑成一整条,点标签旁边的空白都会误删。 */
+.quoteNoteList > li {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+.quoteNoteList > li:hover { background: #fafbfc; }
+.quoteNoteList > li.quoteNoteEmpty { border-left-color: var(--line); background: transparent; color: var(--muted); font-size: 12.5px; }
 .quoteNoteList strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteNoteList p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.6; }
 
@@ -7581,9 +7622,6 @@ button {
 
 /* 一个列表:工单行挂状态,通知行挂「知会」。「这件事在谁那儿」不用切视图就读得出,
    而知会本来就没有状态可读。 */
-.messageRow { grid-template-columns: 14px 108px minmax(0, 1fr) auto auto; }
-.messageFrom { display: inline-flex; align-items: center; gap: 5px; }
-.messageFrom svg { flex: none; color: var(--muted); }
 .messageState { display: inline-flex; align-items: center; gap: 8px; }
 .messageAssignee { color: var(--muted); font-size: 12px; font-style: normal; }
 
@@ -7604,7 +7642,7 @@ button {
 @media (max-width: 900px) {
   /* 标题行必须跟着行一起塌。只塌一边的话,列名会指到错的格子上——
      那比没有列名更糟。 */
-  .messageRow, .messageListHead { grid-template-columns: 14px minmax(0, 1fr) auto; }
+  .messageRow, .messageListHead { grid-template-columns: 14px minmax(0, 1fr) 64px; }
   .messageFrom, .messageState,
   .messageListHead > span:nth-child(2),
   .messageListHead > span:nth-child(4) { display: none; }
@@ -7663,17 +7701,11 @@ button {
 .quoteNoteSuggest { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 8px; }
 .quoteNoteSuggest span { color: var(--body); font-size: 12px; font-weight: 600; }
 .quoteNoteSuggest input { min-height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 9px; font-size: 12.5px; }
-.quoteNoteSeverity { display: flex; gap: 14px; }
-.quoteNoteSeverity label { display: inline-flex; align-items: center; gap: 5px; color: var(--body); font-size: 12px; cursor: pointer; }
-.quoteNoteActions { display: flex; justify-content: flex-end; gap: 8px; }
 
-.quoteNoteList li { position: relative; }
-.quoteNoteList li.is-advisory button { border-left-color: var(--muted); }
-.quoteNoteTags { display: flex; align-items: center; gap: 6px; }
-.quoteNoteTags em { color: var(--muted); font-size: 11px; font-style: normal; }
-.quoteNoteBlock { border-radius: 4px; background: rgba(154, 122, 58, .16); padding: 1px 5px; color: #7d6229; font-size: 10.5px; font-style: normal; }
+/* 提醒项收掉左侧那道琥珀,退回中性色:全都标成琥珀,「阻断」就不再是个信号。 */
+.quoteNoteList > li.is-advisory { border-left-color: var(--line); }
 .quoteNoteList b { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
-.quoteNoteRemove { position: absolute; top: 8px; right: 8px; display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+.quoteNoteRemove { display: grid; flex: none; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: transparent; padding: 0; color: var(--muted); cursor: pointer; }
 .quoteNoteRemove:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
 
 @media (max-width: 1240px) {
@@ -7719,17 +7751,15 @@ button {
   list-style: none;
 }
 .ticketDetailFlow li:last-child { padding-bottom: 0; }
-/* 竖线画在圆点这一列上,最后一格不画——线的意义是"还有下一步"。 */
-.ticketDetailFlow li:not(:last-child)::before {
-  position: absolute; top: 16px; bottom: 0; left: 6px;
-  width: 1px; background: var(--line); content: "";
-}
+/* 这里原本有一条竖线连着各格。删了——上面已经有状态条在表达"走到哪一步",
+   这条线重复了同一件事,而且它跟圆点、跟备注块的左缘怎么都对不齐:三个不同的
+   x 各画一道浅色竖向元素,看起来就是一条线画歪了。
+   顺序由圆点从上到下排列本身表达,不需要再连一条线。 */
 .ticketFlowDot {
-  position: relative; z-index: 1; width: 9px; height: 9px; margin-top: 5px;
-  border: 2px solid #fff; border-radius: 999px; background: var(--line-strong, #cfd6e2);
-  box-shadow: 0 0 0 1px var(--line);
+  position: relative; z-index: 1; width: 7px; height: 7px; margin-top: 6px;
+  border-radius: 999px; background: var(--line-strong, #cfd6e2);
 }
-.ticketDetailFlow li.isLatest .ticketFlowDot { background: var(--bioaz-agent-accent, #5c60b8); box-shadow: 0 0 0 1px var(--bioaz-agent-accent, #5c60b8); }
+.ticketDetailFlow li.isLatest .ticketFlowDot { background: var(--bioaz-agent-accent, #5c60b8); }
 .ticketFlowMain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .ticketFlowMain strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .ticketFlowMain small { color: var(--body); font-size: 12px; }
@@ -7778,6 +7808,11 @@ button {
   padding: 0;
   list-style: none;
 }
+
+/* 末格按内容宽,不参与均分。四格各占 flex:1 时,末格的圆点和文字靠左排在自己
+   那一份里,右边就空出小两百像素——容器明明和卡片同宽,看起来却短了一截。
+   富余让给前面几格的连接线,末格贴住右缘,整条才真的铺满。 */
+.ticketStageBar li:last-child { flex: 0 0 auto; }
 
 .ticketStageBar li {
   position: relative;
@@ -7924,21 +7959,8 @@ button {
 .quoteNoteBy { color: var(--muted); font-size: 11px; }
 .quoteNoteBy i { margin-left: 4px; font-style: normal; }
 
-/* 列名。行里那几格排得整齐,但整齐本身不说明它们是什么——尤其右边那两格,
-   「已驳回 / 赵敏」并排时,不标注就看不出后者是当前处理人还是提出人。
-   列宽必须跟 .messageRow 逐格对齐,不然标题就成了误导。 */
-.messageListHead {
-  display: grid;
-  grid-template-columns: 14px 108px minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 12px;
-  padding: 0 12px 8px;
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-.messageListHead > span:nth-child(4) { text-align: right; }
-.messageListHead > span:last-child { min-width: 64px; text-align: right; }
+/* 列名的规则跟 .messageRow 放在一起,见上方消息列表一节——两者必须逐格同宽,
+   隔开写迟早走散(而且窄屏那条 media query 得排在两者之后才压得住)。 */
 
 /* ═══ 批注卡:操作与内容分层 ═══════════════════════════════════════════════
    删除按钮跟标签同排,不再绝对定位压在卡上——它是这条批注的一个操作,
@@ -7952,7 +7974,7 @@ button {
 .quoteNoteSev { border-radius: 4px; padding: 1px 6px; font-size: 10.5px; font-style: normal; }
 .quoteNoteSev.is-blocking { background: rgba(154, 122, 58, .16); color: #7d6229; }
 .quoteNoteSev.is-advisory { background: var(--soft, #f7f8fb); color: var(--muted); }
-.quoteNoteHead .quoteNoteRemove { position: static; margin-left: auto; }
+.quoteNoteHead .quoteNoteRemove { margin-left: auto; }
 
 .quoteNoteOpen { display: grid; width: 100%; gap: 4px; border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; }
 .quoteNoteOpen strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }

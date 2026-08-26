@@ -3,6 +3,7 @@
 import { ArrowRight, Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useModalDismiss } from "../ui/useModalDismiss";
+import { useDismissableLayer } from "./useDismissableLayer";
 import {
   quoteItems,
   quoteMeta,
@@ -124,6 +125,14 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
   /* 待确认的处置。不叫 confirm——那个名字会跟全局的 window.confirm 撞上。 */
   const [pendingDecision, setPendingDecision] = useState<"reject" | "archive" | null>(null);
   const paneRef = useRef<HTMLDivElement>(null);
+  /* 点别处就收起气泡卡,跟侧栏菜单同一套。用 useDismissableLayer 而不是
+     useModalDismiss:后者带遮罩语义,而这张卡是贴在原文旁边的浮层,不是模态——
+     它不该把整页压暗,也不该拦住你去点下一行。
+     选区是在 mouseup 之后才建卡的,而这里监听 pointerdown,所以不会自己关掉自己。 */
+  const bubbleRef = useDismissableLayer<HTMLElement>(Boolean(draft), () => {
+    setDraft(null);
+    window.getSelection()?.removeAllRanges();
+  });
 
   const noted = Object.values(notes);
   const blocking = noted.filter((note) => note.severity === "blocking").length;
@@ -312,7 +321,7 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
           {/* 就地气泡卡。跟 QA 一个量级:引用 + 一行输入 + 去向,批注多数是一句话,
               给三行文本域等于暗示"你得写一段"。 */}
           {draft ? (
-            <aside className="quoteNoteBubble" style={{ top: draft.top }} aria-label="批注">
+            <aside className="quoteNoteBubble" ref={bubbleRef} style={{ top: draft.top }} aria-label="批注">
               <blockquote>{draft.quote}<em>{anchorLabel(draft.anchorId)}</em></blockquote>
 
               <div className="quoteNoteCats">
