@@ -7272,42 +7272,9 @@ button {
 .ticketDetailFiles strong { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
 .ticketDetailFiles small { color: var(--muted); font-size: 11.5px; }
 
-/* 流转记录是工单相对邮件多出来的那样东西:同一份报告来回三轮,邮件里是三封信、
-   谁也拼不出全貌,这里它是一条。所以画成一条竖线上的节点,不是一堆卡片。 */
-.ticketDetailFlow ol {
-  display: grid;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ticketDetailFlow li {
-  position: relative;
-  border-left: 1px solid var(--line);
-  padding: 0 0 16px 18px;
-}
-
-.ticketDetailFlow li:last-child { border-left-color: transparent; padding-bottom: 0; }
-
-.ticketDetailFlow li::before {
-  position: absolute;
-  top: 4px;
-  left: -4.5px;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--line-strong, #d0d5dd);
-  content: "";
-}
-
-.ticketDetailFlow li:first-child::before { background: var(--bioaz-agent-accent); }
-
-.ticketDetailFlow li > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.ticketDetailFlow strong { color: var(--ink); font-size: 13px; font-weight: 600; }
-.ticketDetailFlow time { flex: none; color: var(--muted); font-size: 11.5px; }
-.ticketDetailFlow small { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
-.ticketDetailFlow p { margin: 6px 0 0; border-radius: 8px; background: var(--soft, #f7f8fb); padding: 8px 10px; color: var(--ink-soft); font-size: 12.5px; line-height: 1.65; }
+/* 流转记录的样式统一定义在文件末尾「工单二级页」那一节。
+   这里原本还有一份,给 li 加 border-left 画线、::before 画点,跟后面那份叠在一起,
+   于是屏幕上出现了两条竖线两个圆点。删掉——同一个组件不该有两处定义。 */
 
 /* ─── 交接对话框 ───────────────────────────────────────────────────────── */
 .previewModal.ticketHandoffModal {
@@ -7441,6 +7408,12 @@ button {
    要点进去才谈——摊在第一屏等于要求人先读懂一张台账才知道今天有什么事。 */
 .messageList {
   display: grid;
+  /* 行按内容高度靠顶排。外层给了这一格固定高（grid 的 1fr），不写 align-content
+     的话三条消息会把整格高度平分——65px 的行之间空出 127px，看起来像列表坏了。
+     多出来的高度该留给滚动，不该摊进行距里。 */
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
   margin: 0;
   border-top: 1px solid var(--line);
   padding: 0;
@@ -7511,12 +7484,7 @@ button {
 .ticketDetailFiles strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .ticketDetailFiles small { color: var(--muted); font-size: 12px; }
 
-.ticketDetailFlow ol { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
-.ticketDetailFlow li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; }
-.ticketFlowDot { width: 7px; height: 7px; margin-top: 6px; border-radius: 999px; background: var(--bioaz-agent-accent, #5c60b8); }
-.ticketDetailFlow strong { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
-.ticketDetailFlow small { color: var(--muted); font-size: 12px; }
-.ticketDetailFlow p { margin: 6px 0 0; border-left: 2px solid var(--line); padding-left: 10px; color: var(--body); font-size: 12.5px; line-height: 1.7; white-space: pre-line; }
+
 
 .ticketDetailActions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .ticketDetailHint { margin: 0 auto 0 0; color: var(--muted); font-size: 12.5px; }
@@ -7637,3 +7605,317 @@ button {
   .messageRow { grid-template-columns: 14px minmax(0, 1fr) auto; }
   .messageFrom, .messageState { display: none; }
 }
+
+/* ═══ 报价审核画布 · 双形态 ═══════════════════════════════════════════════
+   同一张报价两种形态,共用一套锚点:切视图不丢批注,因为批注锚的是条目 id
+   而不是屏幕位置。审核在计算表那一侧做——Word 里没有单价也没有参数,
+   看不出数是怎么算出来的。 */
+.quoteReviewHeadMain { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; grid-column: 1 / -1; }
+
+.quoteFormSwitch { display: inline-flex; flex: none; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--soft, #f7f8fb); padding: 3px; }
+.quoteFormSwitch button {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px;
+  border: 0; border-radius: 999px; background: transparent; padding: 0 12px;
+  color: var(--body); font-size: 12.5px; cursor: pointer; transition: background 140ms ease, color 140ms ease;
+}
+.quoteFormSwitch button.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(15, 23, 42, .1); }
+
+.quoteSheet, .quoteDoc { max-width: 900px; margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 22px 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
+.quoteSheet > header, .quoteDoc > header { display: grid; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 14px; }
+.quoteSheet > header strong, .quoteDoc > header strong { font-size: 15px; }
+.quoteSheet > header small, .quoteDoc > header small { color: var(--muted); font-size: 12px; }
+
+.quoteSheetGrid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; }
+.quoteSheetGrid table, .quoteDocTable { width: 100%; border-collapse: collapse; }
+.quoteSheetGrid th, .quoteDocTable th { border-bottom: 1px solid var(--line); padding: 6px 8px; color: var(--muted); font-size: 11px; font-weight: 600; text-align: left; }
+.quoteSheetGrid td, .quoteDocTable td { border-bottom: 1px solid var(--line); padding: 4px 8px; vertical-align: top; font-size: 12.5px; }
+.quoteSheetParams h4 { margin: 0 0 6px; color: var(--body); font-size: 11.5px; font-weight: 700; }
+.quoteSheetParams h4 + table { margin-bottom: 16px; }
+
+.quoteCellButton { display: grid; width: 100%; gap: 2px; border: 0; background: transparent; padding: 3px 0; text-align: left; cursor: pointer; }
+.quoteCellButton strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.quoteCellButton small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.quoteCategoryCell { color: var(--body); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.quoteNum { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+/* 原表里那批「可编辑」的黄格子。它们是人能改的,也就是最该被核的。 */
+.quoteEditable { background: rgba(154, 122, 58, .1); font-weight: 600; }
+.quoteTotalRow td { border-top: 1px solid var(--line-strong, var(--line)); font-weight: 700; }
+.quoteDocDesc { color: var(--body); font-size: 12px; line-height: 1.6; }
+.quoteDocNote { margin: 14px 0 0; border-top: 1px dashed var(--line); padding-top: 10px; color: var(--muted); font-size: 12px; }
+
+/* 批注在原件上的记号:阻断项是黄的,提醒是灰的——严重度必须在原件上就读得出,
+   不能只写在右边清单里,否则扫一遍原件不知道哪儿卡着。 */
+.quoteSheetGrid tr.hasNote td, .quoteDocTable tr.hasNote td { background: rgba(154, 122, 58, .08); }
+.quoteSheetGrid tr.hasNote.is-advisory td, .quoteDocTable tr.hasNote.is-advisory td { background: rgba(17, 19, 24, .04); }
+.quoteSheetGrid tr.isActive td, .quoteDocTable tr.isActive td { background: var(--bioaz-agent-accent-soft, #f3f3fb); box-shadow: inset 2px 0 0 var(--bioaz-agent-accent, #5c60b8); }
+
+/* 批注编辑器。分类做成选项而不是自由文本:报价复核的改法就那么几类,
+   固定下来,下一版才能按类核验。 */
+.quoteNoteAnchor { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.quoteNoteCurrent { color: var(--muted); font-size: 11.5px; }
+.quoteNoteCats { display: flex; flex-wrap: wrap; gap: 5px; }
+.quoteNoteCats button { min-height: 26px; border: 1px solid var(--line); border-radius: 999px; background: #fff; padding: 0 9px; color: var(--body); font-size: 11.5px; cursor: pointer; }
+.quoteNoteCats button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
+.quoteNoteSuggest { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 8px; }
+.quoteNoteSuggest span { color: var(--body); font-size: 12px; font-weight: 600; }
+.quoteNoteSuggest input { min-height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 9px; font-size: 12.5px; }
+.quoteNoteSeverity { display: flex; gap: 14px; }
+.quoteNoteSeverity label { display: inline-flex; align-items: center; gap: 5px; color: var(--body); font-size: 12px; cursor: pointer; }
+.quoteNoteActions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.quoteNoteList li { position: relative; }
+.quoteNoteList li.is-advisory button { border-left-color: var(--muted); }
+.quoteNoteTags { display: flex; align-items: center; gap: 6px; }
+.quoteNoteTags em { color: var(--muted); font-size: 11px; font-style: normal; }
+.quoteNoteBlock { border-radius: 4px; background: rgba(154, 122, 58, .16); padding: 1px 5px; color: #7d6229; font-size: 10.5px; font-style: normal; }
+.quoteNoteList b { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
+.quoteNoteRemove { position: absolute; top: 8px; right: 8px; display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+.quoteNoteRemove:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
+
+@media (max-width: 1240px) {
+  .quoteSheetGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ═══ 收件箱二级页 · 版式统一 ═══════════════════════════════════════════════
+   跟数据中枢、会话列共用同一条列宽与居中轴。之前详情页自带一套内距和宽度,
+   从列表点进去整块会横向跳一下——同一个空间不该有两套盒子。 */
+/* 列表和详情用同一个盒子:都铺满 workbenchView。之前给详情单独限了一道列宽,
+   结果从列表点进去整块横向跳 97px——同一个空间里不该有两套宽度。
+   审核画布更需要这个宽度:它要并排放原件和批注两栏。 */
+.ticketDetailView, .quoteReviewCanvas {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.ticketDetailHead { grid-template-columns: minmax(0, 1fr) auto; }
+.ticketDetailHead .ticketDetailTitle { grid-column: 1; }
+
+/* 流转记录:一条竖线穿到底,每格三件事排一行读完。
+   之前动作和时间被推到两端、中间一片空白,眼睛要横跳才拼得出一句话。
+
+   这一块必须自足。上一版我把重复的三份删到只剩一份,但留下的是**覆盖规则**、
+   删掉的才是基础——于是 ol 退回浏览器默认:display:block、list-style:decimal、
+   padding-left:40px,列表左边冒出 1. 2.,li 也不再是 grid,
+   grid-template-columns 一个字都没生效。删重复之前得先确认留下的那份自己站得住。 */
+.ticketDetailFlow ol {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ticketDetailFlow li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  padding-bottom: 16px;
+  list-style: none;
+}
+.ticketDetailFlow li:last-child { padding-bottom: 0; }
+/* 竖线画在圆点这一列上,最后一格不画——线的意义是"还有下一步"。 */
+.ticketDetailFlow li:not(:last-child)::before {
+  position: absolute; top: 16px; bottom: 0; left: 6px;
+  width: 1px; background: var(--line); content: "";
+}
+.ticketFlowDot {
+  position: relative; z-index: 1; width: 9px; height: 9px; margin-top: 5px;
+  border: 2px solid #fff; border-radius: 999px; background: var(--line-strong, #cfd6e2);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.ticketDetailFlow li.isLatest .ticketFlowDot { background: var(--bioaz-agent-accent, #5c60b8); box-shadow: 0 0 0 1px var(--bioaz-agent-accent, #5c60b8); }
+.ticketFlowMain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ticketFlowMain strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+.ticketFlowMain small { color: var(--body); font-size: 12px; }
+.ticketFlowMain small i { margin-left: 4px; color: var(--muted); font-style: normal; }
+.ticketFlowMain time { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+/* 备注不再画 border-left。它落在第 2 列,而时间线那条竖线在第 1 列——
+   两条竖线不同 x、又都很淡,看起来就是一条线画歪了。改用浅底色块表示"这是引用",
+   竖线这一屏只留一条,就是时间线自己那条。 */
+.ticketFlowNote {
+  margin: 6px 0 0;
+  grid-column: 2;
+  border-radius: 8px;
+  background: var(--soft, #f7f8fb);
+  padding: 8px 10px;
+  color: var(--body);
+  font-size: 12.5px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* 处置按钮靠右,提示文字占左边剩下的空间——动作在右是这一屏其他地方的规矩。 */
+.ticketDetailActions { flex-wrap: wrap; }
+.ticketDetailHint { flex: 1 1 220px; }
+
+@media (max-width: 860px) {
+  .ticketDetailHead { grid-template-columns: minmax(0, 1fr); }
+  .ticketFlowMain time { margin-left: 0; flex-basis: 100%; }
+  .ticketDetailActions { flex-direction: column; align-items: stretch; }
+  .ticketDetailActions button { width: 100%; }
+}
+
+/* 会话里那张交接卡:动作靠右,跟 composer 同宽——它就长在 composer 上方,
+   两者不同宽会看成两个不相干的东西。 */
+.dmpkHandoffCard .warningActions { display: flex; justify-content: flex-end; }
+
+/* ═══ 工单状态条 ═══════════════════════════════════════════════════════════
+   它跟流转记录不是一回事,之前混成一个组件才显得奇怪:
+   状态条答「这件事走到哪了」——只有四格,且永远只有四格;
+   流转记录答「都发生过什么」——随轮次增长。一个是位置,一个是历史。
+   驳回不占第五格,它是被打回到「审核」那一格,所以只把当前格子染红。 */
+.ticketStageBar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticketStageBar li {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+/* 连接线画在格子之间,最后一格右边不画——线的意思是「还有下一步」。 */
+.ticketStageBar li:not(:last-child)::after {
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+  content: "";
+}
+.ticketStageBar li.is-done::after { background: var(--bioaz-agent-accent, #5c60b8); }
+
+.ticketStageDot {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.ticketStageLabel { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+
+.ticketStageBar li.is-done .ticketStageDot { border-color: transparent; background: var(--bioaz-agent-accent, #5c60b8); color: #fff; }
+.ticketStageBar li.is-done .ticketStageLabel { color: var(--body); }
+.ticketStageBar li.is-current .ticketStageDot { border-color: var(--bioaz-agent-accent, #5c60b8); color: var(--bioaz-agent-accent, #5c60b8); box-shadow: 0 0 0 3px var(--bioaz-agent-accent-soft, #f3f3fb); }
+.ticketStageBar li.is-current .ticketStageLabel { color: var(--ink); font-weight: 600; }
+/* 驳回不是一个新阶段,是当前这一格出了问题——用色不用位置来说这件事。 */
+.ticketStageBar li.is-rejected .ticketStageDot { border-color: var(--sidebar-dot-attention, #9a7a3a); color: var(--sidebar-dot-attention, #9a7a3a); box-shadow: 0 0 0 3px rgba(154, 122, 58, .12); }
+.ticketStageBar li.is-rejected .ticketStageLabel { color: var(--sidebar-dot-attention, #9a7a3a); font-weight: 600; }
+
+/* 头部收窄:工单号和类型已经在面包屑里,页内不再重复。 */
+.ticketDetailTitle h1 { margin: 0; font-size: 19px; line-height: 1.35; }
+.ticketDetailTitle p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+
+/* 这两个头改用 div 而不是 header,是为了**不去匹配** `.workbenchView > header`。
+   那个选择器上挂着一整族为旧式标题栏写的规则:width min(920/1180/1240/--content-max)、
+   margin:0 auto、外加一条 border-bottom,净效果是宽度被钉成 1200px 再居中——
+   比下面的卡片左缩 102px、右短 101px,还白送一条横线。
+   最具体的那条是 `.dmpkWorkspace.workbenchMode .workbenchView > header` (0,3,1),
+   想靠特异性压过去就得再叠一层,而这个文件正是被这样叠坏的。换个标签,
+   四条规则一起绕开——h1 仍然承担标题语义,视图内部的 header landmark 可以不要。 */
+.ticketDetailHead,
+.quoteReviewHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 860px) {
+  .ticketStageBar { flex-wrap: wrap; gap: 8px 12px; }
+  .ticketStageBar li { flex: 0 0 auto; }
+  .ticketStageBar li:not(:last-child)::after { display: none; }
+}
+
+/* ═══ 报价批注:选中即批注 ═════════════════════════════════════════════════
+   跟 QA 一样,批注是个**模式**。进了模式纸面透出一层底色,你知道自己在批注;
+   不分模式的话,想复制一段文字都会被一张卡打断,而读原件的时间远多于写批注。 */
+.quoteHeadTools { display: flex; align-items: center; gap: 10px; }
+.quoteAnnotateToggle {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px;
+  border: 1px solid var(--line); border-radius: 999px; background: #fff;
+  padding: 0 12px; color: var(--body); font-size: 12.5px; cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+.quoteAnnotateToggle.isOn {
+  border-color: transparent;
+  background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  color: var(--bioaz-agent-accent, #5c60b8);
+}
+
+/* 模式态:纸面整体透一层极淡的底,光标变十字。 */
+.quoteDocPane.isAnnotating { position: relative; background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.quoteDocPane.isAnnotating .quoteSheet,
+.quoteDocPane.isAnnotating .quoteDoc { cursor: crosshair; }
+.quoteDocPane.isAnnotating ::selection { background: color-mix(in srgb, var(--bioaz-agent-accent, #5c60b8) 22%, transparent); }
+
+/* 选中的那一行:淡紫蓝底,不要深色线框。线框是"这里有个控件"的语言,
+   而这一行是被指着的原文,不是控件——底色说"就是这一处"就够了。 */
+.quoteSheetGrid tr.isActive td,
+.quoteDocTable tr.isActive td {
+  background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  box-shadow: none;
+}
+
+/* 已批注的行留一枚小气泡。严重度在原件上就读得出——扫一遍原件要能看出哪儿卡着,
+   不该非得跨到右栏才知道。 */
+.quoteRowBubble {
+  display: inline-grid; width: 16px; height: 16px; margin-left: 6px; place-items: center;
+  border-radius: 999px; background: var(--sidebar-dot-attention, #9a7a3a); color: #fff;
+  vertical-align: middle;
+}
+.quoteSheetGrid tr.is-advisory .quoteRowBubble,
+.quoteDocTable tr.is-advisory .quoteRowBubble { background: var(--muted); }
+
+/* 就地气泡卡。跟 QA 的 qaAnnotationCard 一个量级:引用 + 一行输入 + 去向。 */
+.quoteNoteBubble {
+  position: absolute; right: 18px; z-index: 6; display: grid; width: min(300px, 62%); gap: 8px;
+  border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: 12px;
+  background: #fff; padding: 12px; box-shadow: 0 12px 32px rgba(15, 23, 42, .14);
+  animation: quoteBubbleIn 140ms ease both;
+}
+@keyframes quoteBubbleIn { from { opacity: 0; } to { opacity: 1; } }
+.quoteNoteBubble blockquote {
+  display: grid; gap: 3px; margin: 0; border-left: 2px solid var(--bioaz-agent-accent, #5c60b8);
+  padding-left: 8px; color: var(--ink); font-size: 12.5px; line-height: 1.5;
+}
+.quoteNoteBubble blockquote em { color: var(--muted); font-size: 11px; font-style: normal; }
+.quoteNoteRow { display: grid; grid-template-columns: minmax(0, 1fr) 28px; align-items: end; gap: 6px; }
+.quoteNoteRow textarea {
+  min-height: 32px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  padding: 7px 9px; color: var(--ink); font: inherit; font-size: 12.5px; resize: none;
+}
+.quoteNoteRow textarea:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
+.quoteNoteSend {
+  display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 8px;
+  background: var(--bioaz-action-primary, #17191e); color: #fff; cursor: pointer;
+}
+.quoteNoteSend:disabled { background: var(--bioaz-border-strong, #cfd6e2); cursor: default; }
+.quoteNoteKind { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.quoteNoteKind > button {
+  border: 0; border-radius: 6px; background: transparent; padding: 2px 6px;
+  color: var(--muted); font-size: 11.5px; cursor: pointer;
+}
+.quoteNoteKind > button.isOn { background: var(--soft, #f7f8fb); color: var(--ink); font-weight: 600; }
+.quoteNoteKind > small { flex-basis: 100%; color: var(--muted); font-size: 11px; }
+
+/* 批注署名。一条不署名的批注答不了「这句话该问谁」,而追问原提出人正是
+   审核来回时最常做的事。 */
+.quoteNoteBy { color: var(--muted); font-size: 11px; }
+.quoteNoteBy i { margin-left: 4px; font-style: normal; }

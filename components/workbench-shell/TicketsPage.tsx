@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeft, Bot, ChevronLeft, ChevronRight, Highlighter, Paperclip, Search, Settings, Upload, User, X } from "lucide-react";
+import { ArrowLeft, Bot, Check, ChevronLeft, ChevronRight, Highlighter, Paperclip, Search, Settings, Upload, User, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { StatusChip } from "../ui";
+import { QuoteReviewCanvas } from "./QuoteReviewCanvas";
+import type { QuoteNote } from "../../lib/workbench/quoteData";
 import {
-  dmpkQuoteLines,
   initialNotices,
   minutesFromLabel,
   noticeSourceLabel,
@@ -48,6 +49,15 @@ export function TicketsPage({
   onHandle,
   onAccept,
   onCreate,
+  openTicketId,
+  onOpenTicketChange,
+  openNoticeTitle,
+  onOpenNoticeChange,
+  reviewing,
+  onReviewingChange,
+  reviewerRole,
+  onReject,
+  onArchive,
 }: {
   tickets: Ticket[];
   /** 当前账号。侧栏那个切换器一换，「待我处理」跟着换——同一张单在不同角色眼里是不同的事。 */
@@ -60,20 +70,35 @@ export function TicketsPage({
   /* 交接入口已经搬进会话（干完活那一下顺手交出去）。这里留成可选:工单不是
      「新建」出来的,在一个收信的页面上放「发出去」的按钮语义也拧。 */
   onCreate?: () => void;
+  /* 当前停在第几层由 shell 持有——面包屑要画出「站内信 › TK-2046 › 报价复核」,
+     顶栏就得够得着这个位置。留在页内的话返回只能靠页内再放一个按钮,
+     而那正是面包屑该做的事。 */
+  openTicketId: string | null;
+  onOpenTicketChange: (id: string | null) => void;
+  openNoticeTitle: string | null;
+  onOpenNoticeChange: (title: string | null) => void;
+  reviewing: boolean;
+  onReviewingChange: (value: boolean) => void;
+  /** 批注要署名——一条不署名的批注答不了「这句话该问谁」,而追问原提出人
+      正是审核来回时最常做的事。 */
+  reviewerRole: string;
+  /** 驳回 = 打回上一棒（工单里不用猜,提交人就写在单子上）;归档 = 落进数据中枢并收到终态。 */
+  onReject: (ticket: Ticket, summary: string) => void;
+  onArchive: (ticket: Ticket) => void;
 }) {
   const [status, setStatus] = useState<string>("待我处理");
   const [keyword, setKeyword] = useState("");
-  const [openNotice, setOpenNotice] = useState<Notice | null>(null);
+
   const [kind, setKind] = useState("全部类型");
   const [project, setProject] = useState("全部项目");
   const [page, setPage] = useState(1);
-  const [openId, setOpenId] = useState<string | null>(null);
+
   /* 读过哪几条。站内信是通知,通知只有「看没看过」这一个状态——
      它跟工单自己的状态是两回事,所以存在这一层,不写进 Ticket。 */
   const [readIds, setReadIds] = useState<string[]>([]);
   /* 批注按工单存。放在这一层而不是详情组件里,是因为详情会随返回列表卸载——
      写了一半的批注不该因为回去看一眼列表就没了。 */
-  const [notesByTicket, setNotesByTicket] = useState<Record<string, Record<string, string>>>({});
+  const [notesByTicket, setNotesByTicket] = useState<Record<string, Record<string, QuoteNote>>>({});
   /* 顶栏不再挂 tab——列表只有一个,没有视图可切。待我处理的数量在侧栏那颗徽标上。 */
   const [topbarPrimaryHost, setTopbarPrimaryHost] = useState<HTMLElement | null>(null);
   useEffect(() => {
@@ -120,7 +145,8 @@ export function TicketsPage({
   const rows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   const reset = <T,>(setter: (value: T) => void) => (value: T) => { setter(value); setPage(1); };
 
-  const open = openId ? tickets.find((ticket) => ticket.id === openId) ?? null : null;
+  const open = openTicketId ? tickets.find((ticket) => ticket.id === openTicketId) ?? null : null;
+  const openNotice = openNoticeTitle ? initialNotices.find((item) => item.title === openNoticeTitle) ?? null : null;
 
   if (open) {
     return (
@@ -128,21 +154,26 @@ export function TicketsPage({
         ticket={open}
         isMine={open.assignee === currentUser}
         notes={notesByTicket[open.id] ?? {}}
-        onNoteChange={(lineId, value) => setNotesByTicket((current) => ({ ...current, [open.id]: { ...(current[open.id] ?? {}), [lineId]: value } }))}
-        onBack={() => setOpenId(null)}
+        onNotesChange={(next) => setNotesByTicket((current) => ({ ...current, [open.id]: next }))}
         onHandle={() => onHandle(open)}
         onAccept={() => onAccept(open)}
+        reviewing={reviewing}
+        onReviewingChange={onReviewingChange}
+        currentUser={currentUser}
+        reviewerRole={reviewerRole}
+        onReject={(summary) => { onReject(open, summary); onReviewingChange(false); onOpenTicketChange(null); }}
+        onArchive={() => { onArchive(open); onReviewingChange(false); onOpenTicketChange(null); }}
       />
     );
   }
 
   const openTicket = (ticket: Ticket) => {
-    setOpenId(ticket.id);
+    onOpenTicketChange(ticket.id);
     setReadIds((ids) => ids.includes(ticket.id) ? ids : [...ids, ticket.id]);
   };
 
   if (openNotice) {
-    return <NoticeDetailView notice={openNotice} onBack={() => setOpenNotice(null)} />;
+    return <NoticeDetailView notice={openNotice} />;
   }
 
   return (
@@ -180,7 +211,7 @@ export function TicketsPage({
                 <button
                   className={`messageRow isNotice ${unread ? "isUnread" : ""}`}
                   type="button"
-                  onClick={() => { setOpenNotice(notice); setReadIds((ids) => ids.includes(notice.id) ? ids : [...ids, notice.id]); }}
+                  onClick={() => { onOpenNoticeChange(notice.title); setReadIds((ids) => ids.includes(notice.id) ? ids : [...ids, notice.id]); }}
                 >
                   <span className="messageDot" aria-hidden="true" />
                   <span className="messageFrom"><Icon size={13} />{notice.from}</span>
@@ -237,24 +268,52 @@ export function TicketsPage({
   );
 }
 
+/* 一张工单的生命周期就这四步,来回多少轮都还是这四步。
+   驳回不是第五步,是被打回到「审核」那一格——所以它不占位置,只把当前格子染红。 */
+const TICKET_STAGES = ["提交", "审核", "通过", "归档"] as const;
+
+/**
+ * 状态条:现在到哪一步。
+ *
+ * 它跟下面那条流转记录**不是一回事**,之前混成一个组件才会显得奇怪——
+ * 状态条答的是「这件事走到哪了」,流转记录答的是「都发生过什么」。
+ * 一个是位置,一个是历史;前者只有四格且永远只有四格,后者随轮次增长。
+ */
+function TicketStageBar({ status }: { status: Ticket["status"] }) {
+  const current = status === "done" ? 3 : status === "dropped" ? 1 : status === "open" ? 1 : 1;
+  const rejected = status === "rejected";
+  return (
+    <ol className="ticketStageBar" aria-label="工单进度">
+      {TICKET_STAGES.map((stage, index) => {
+        const state = index < current ? "done" : index === current ? (rejected ? "rejected" : "current") : "todo";
+        return (
+          <li key={stage} className={`is-${state}`}>
+            <span className="ticketStageDot" aria-hidden="true">{index < current ? <Check size={11} /> : index + 1}</span>
+            <span className="ticketStageLabel">{rejected && index === current ? "审核 · 已驳回" : stage}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /**
  * 纯通知的详情。没有归属、没有状态、没有流转链——看过就翻篇。
  * 刻意做得比工单详情单薄:它单薄是因为它本来就该单薄,给它配上处置按钮
  * 只会让人以为自己漏了一件该做的事。
  */
-function NoticeDetailView({ notice, onBack }: { notice: Notice; onBack: () => void }) {
+function NoticeDetailView({ notice }: { notice: Notice }) {
   const Icon = sourceIcon[notice.source];
   return (
     <section className="workbenchView ticketDetailView">
-      <header className="ticketDetailHead">
-        <button className="ticketDetailBack" type="button" onClick={onBack}><ArrowLeft size={15} />返回收件箱</button>
+      <div className="ticketDetailHead">
         <div className="ticketDetailTitle">
           <span><Icon size={12} /> {notice.from}（{noticeSourceLabel[notice.source]}） · {notice.at}</span>
           <h1>{notice.title}</h1>
           {notice.project ? <p>{notice.project}</p> : null}
         </div>
         <em className="messageNoticeTag">知会</em>
-      </header>
+      </div>
       <section className="noticeBody"><p>{notice.body}</p></section>
     </section>
   );
@@ -269,18 +328,23 @@ function NoticeDetailView({ notice, onBack }: { notice: Notice; onBack: () => vo
  *   DMPK 报价 —— 全程人工,进本页自己的审核画布。它不需要 agent 介入,
  *               拉一个对话区进来只会凭空长出「这里能问 AI 吗」的期待。
  */
-function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandle, onAccept }: {
+function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAccept, reviewing, onReviewingChange, currentUser, reviewerRole, onReject, onArchive }: {
   ticket: Ticket;
   isMine: boolean;
-  notes: Record<string, string>;
-  onNoteChange: (lineId: string, value: string) => void;
-  onBack: () => void;
+  notes: Record<string, QuoteNote>;
+  onNotesChange: (next: Record<string, QuoteNote>) => void;
   onHandle: () => void;
   onAccept: () => void;
+  reviewing: boolean;
+  onReviewingChange: (value: boolean) => void;
+  currentUser: string;
+  reviewerRole: string;
+  onReject: (summary: string) => void;
+  onArchive: () => void;
 }) {
   /* 已经接手过的单直接进画布。不这样的话,回列表看一眼再进来,画布退回详情、
      按钮还写着「开始审核」——可你明明已经开始了,状态也已经是处理中。 */
-  const [reviewing, setReviewing] = useState(ticket.status === "inProgress" && ticket.kind === "dmpk-quotation");
+
   /* 只有球还在你手上时才谈处置。已驳回是球在上一棒那儿,已完成和已作废是终态——
      给一个点不动的按钮,比不给更让人困惑。 */
   const actionable = (ticket.status === "open" || ticket.status === "inProgress") && isMine;
@@ -288,26 +352,31 @@ function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandl
 
   if (isQuotation && reviewing) {
     return (
-      <QuotationReviewCanvas
+      <QuoteReviewCanvas
         ticket={ticket}
         notes={notes}
-        onNoteChange={onNoteChange}
-        onBack={() => setReviewing(false)}
+        onNotesChange={onNotesChange}
+        reviewer={currentUser}
+        reviewerRole={reviewerRole}
+        onReject={onReject}
+        onArchive={onArchive}
       />
     );
   }
 
   return (
     <section className="workbenchView ticketDetailView">
-      <header className="ticketDetailHead">
-        <button className="ticketDetailBack" type="button" onClick={onBack}><ArrowLeft size={15} />返回收件箱</button>
+      {/* 工单号和类型已经在面包屑里,这儿不再重复一遍。标题 + 一行元信息就够,
+          之前是「眉标 + 大标题 + 元信息 + 一大片留白」,占掉小半屏说的却是同一件事。 */}
+      <div className="ticketDetailHead">
         <div className="ticketDetailTitle">
-          <span>{ticket.id} · {ticketKindLabel[ticket.kind]}</span>
           <h1>{ticket.title}</h1>
-          <p>{ticket.from}（{ticket.fromRole}）交接给 {ticket.assignee} · {ticket.project}</p>
+          <p>{ticketKindLabel[ticket.kind]} · {ticket.from} → {ticket.assignee} · {ticket.project}</p>
         </div>
         <StatusChip tone={ticketStatusTone[ticket.status]} dot>{ticketStatusLabel[ticket.status]}</StatusChip>
-      </header>
+      </div>
+
+      <TicketStageBar status={ticket.status} />
 
       {ticket.attachments.length ? (
         <section className="ticketDetailFiles">
@@ -323,17 +392,20 @@ function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandl
 
       {/* 这条链就是工单相对邮件多出来的那样东西。邮件里同一份报告来回三轮,
           是三封孤立的信;工单里它是一条链,谁在什么时候做了什么一目了然。 */}
+      {/* 一条竖线穿到底,每一格「谁 · 做了什么 · 什么时候」三件事排在同一行读完。
+          之前动作和时间被推到两端,中间一大片空白,眼睛要来回横跳才拼得出一句话。 */}
       <section className="ticketDetailFlow">
         <h2>流转记录</h2>
         <ol>
-          {ticket.steps.map((step) => (
-            <li key={step.id}>
+          {ticket.steps.map((step, index) => (
+            <li key={step.id} className={index === ticket.steps.length - 1 ? "isLatest" : ""}>
               <span className="ticketFlowDot" aria-hidden="true" />
-              <div>
+              <div className="ticketFlowMain">
                 <strong>{step.action}</strong>
-                <small>{step.actor}（{step.actorRole}） · {step.at}</small>
-                {step.note ? <p>{step.note}</p> : null}
+                <small>{step.actor}<i>{step.actorRole}</i></small>
+                <time>{step.at}</time>
               </div>
+              {step.note ? <p className="ticketFlowNote">{step.note}</p> : null}
             </li>
           ))}
         </ol>
@@ -347,7 +419,7 @@ function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandl
         ) : isQuotation ? (
           <>
             <p className="ticketDetailHint">这一单全程人工复核，不经过数字同事。</p>
-            <button className="primaryButton compact" type="button" onClick={() => { onAccept(); setReviewing(true); }}>
+            <button className="primaryButton compact" type="button" onClick={() => { onAccept(); onReviewingChange(true); }}>
               <Highlighter size={15} />开始审核
             </button>
           </>
@@ -362,130 +434,3 @@ function TicketDetailView({ ticket, isMine, notes, onNoteChange, onBack, onHandl
   );
 }
 
-/**
- * 报价审核画布。跟 QA 审核台同一个骨架:左边是原件、右边是批注清单,
- * 点批注定位到原件,点原件给它加批注。
- *
- * 差别只有一处——这里没有对话区。报价复核全程人工,拉一个 chatflow 进来
- * 只会长出「这里能问 AI 吗」的期待,而它确实不能。
- *
- * 锚点是**计价条目**而不是文档里的一段选区:报价单本来就是结构化的,
- * 有名字的行比一段坐标好定位,下一版也更容易验证「那一条改了没有」。
- * 这跟 QA 把批注锚在「收检日期」这类字段上是同一套办法。
- */
-function QuotationReviewCanvas({ ticket, notes, onNoteChange, onBack }: {
-  ticket: Ticket;
-  notes: Record<string, string>;
-  onNoteChange: (lineId: string, value: string) => void;
-  onBack: () => void;
-}) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
-  const noted = dmpkQuoteLines.filter((line) => (notes[line.id] ?? "").trim());
-  const groups = dmpkQuoteLines.map((line) => line.group).filter((group, index, list) => list.indexOf(group) === index);
-  const active = activeId ? dmpkQuoteLines.find((line) => line.id === activeId) ?? null : null;
-
-  const pick = (lineId: string) => {
-    setActiveId(lineId);
-    setDraft(notes[lineId] ?? "");
-  };
-  const commit = () => {
-    if (!activeId) return;
-    onNoteChange(activeId, draft);
-    setActiveId(null);
-    setDraft("");
-  };
-
-  return (
-    <section className="workbenchView quoteReviewCanvas">
-      <header className="quoteReviewHead">
-        <button className="ticketDetailBack" type="button" onClick={onBack}><ArrowLeft size={15} />返回工单</button>
-        <div className="ticketDetailTitle">
-          <span>{ticket.id} · 报价复核</span>
-          <h1>{ticket.title}</h1>
-        </div>
-        <StatusChip tone="warning" dot>人工复核</StatusChip>
-      </header>
-
-      <div className="quoteReviewBody">
-        {/* 左栏:原件。点哪一行就给哪一行写批注——锚点是行,不是坐标。 */}
-        <div className="quoteDocPane">
-          <article className="quoteDoc">
-            <header>
-              <strong>DMPK 检测报价单</strong>
-              <small>{ticket.project} · 提交人 {ticket.from}</small>
-            </header>
-            {groups.map((group) => (
-              <section key={group}>
-                <h3>{group}</h3>
-                {dmpkQuoteLines.filter((line) => line.group === group).map((line) => {
-                  const note = (notes[line.id] ?? "").trim();
-                  return (
-                    <button
-                      key={line.id}
-                      className={`quoteDocLine ${note ? "hasNote" : ""} ${activeId === line.id ? "isActive" : ""}`}
-                      type="button"
-                      onClick={() => pick(line.id)}
-                    >
-                      <span className="quoteDocLabel">
-                        <strong>{line.label}</strong>
-                        <small>{line.detail}</small>
-                      </span>
-                      <b>{line.amount}</b>
-                      {note ? <i className="quoteDocMark" aria-label="已批注" /> : null}
-                    </button>
-                  );
-                })}
-              </section>
-            ))}
-          </article>
-        </div>
-
-        {/* 右栏:批注清单。跟 QA 那边一样,清单给结论、原件给证据。 */}
-        <aside className="quoteNotePane">
-          <header>
-            <strong>人工批注</strong>
-            <small>{noted.length} 条</small>
-          </header>
-
-          {active ? (
-            <div className="quoteNoteEditor">
-              <span>{active.label}</span>
-              <textarea
-                autoFocus
-                value={draft}
-                placeholder="写下这一条的问题，留空表示无异议"
-                aria-label={`${active.label}的批注`}
-                onChange={(event) => setDraft(event.target.value)}
-              />
-              <div>
-                <button className="secondaryButton compact" type="button" onClick={() => { setActiveId(null); setDraft(""); }}>取消</button>
-                <button className="primaryButton compact" type="button" onClick={commit}>保存批注</button>
-              </div>
-            </div>
-          ) : (
-            <p className="quoteNoteHint">点左边任意一条计价项，给它写批注。</p>
-          )}
-
-          <ul className="quoteNoteList">
-            {noted.map((line) => (
-              <li key={line.id}>
-                <button type="button" onClick={() => pick(line.id)}>
-                  <strong>{line.label}</strong>
-                  <p>{notes[line.id]}</p>
-                </button>
-              </li>
-            ))}
-            {!noted.length ? <li className="quoteNoteEmpty">还没有批注。没有批注就通过，表示这一版你全部认可。</li> : null}
-          </ul>
-        </aside>
-      </div>
-
-      <footer className="ticketDetailActions">
-        <p className="ticketDetailHint">已批注 {noted.length} 条</p>
-        <button className="secondaryButton compact" type="button" disabled={!noted.length}>驳回并退回 {ticket.from}</button>
-        <button className="primaryButton compact" type="button">通过并归档到数据中枢</button>
-      </footer>
-    </section>
-  );
-}
