@@ -112,6 +112,14 @@ export type AgentModuleSessionProps = {
   onBackToNewTask: () => void;
   handoffNotice?: string;
   priorSessionSnapshots?: AgentSessionSnapshot[];
+  /* 这条会话自己已经发生过的对话。跟 priorSessionSnapshots 不是一回事:
+     那个是「上一位数字同事聊过的」,用于换人接手时摆前情;这个是本会话的历史,
+     直接还原成消息——滚上去就看得到,而不是折在一个前情块里。 */
+  initialHistory?: SessionHistoryEntry[];
+  /* 那次会话已经收齐的参数(字段 id -> 取值)。跟 initialHistory 配套:
+     光还原对话不够,右侧面板会停在「未开始」,而对话里写着「参数已齐全」——
+     两边互相打脸。上下文要回来就得整个回来。 */
+  initialFields?: Record<string, string>;
   onSessionSnapshotChange?: (snapshot: AgentSessionSnapshot) => void;
   /* 去报价后台走应用内跳转，不走 window.location——整页刷新会把当前这单报价冲掉，
      草稿也会卡在「读参数」和「抹参数」的竞态里。 */
@@ -122,6 +130,10 @@ export type AgentModuleSessionProps = {
   /* 当前登录账号的姓名。交接选择器要用它把自己从候选里去掉——
      交接的定义就是球换一只手，交给自己不是交接。 */
   viewerName?: string;
+  /* 这一版是被退回来的。带着驳回理由和逐条批注回到原会话——
+     只把人送回会话是不够的，**要改什么必须在眼前**，否则他还得切回站内信
+     逐条读、记住哪几行、再切回来改，而那正是这套东西要消灭的来回。 */
+  rework?: SessionRework;
   /* 把这一版交给下一棒。QA 的驳回和通过都走这里：驳回交回撰写人、通过交给
      负责人做最终确认与归档。载荷落成一张工单，不再是一封等人点发送的草稿。 */
   onHandoff?: (handoff: SessionHandoff) => void;
@@ -132,6 +144,22 @@ export type AgentModuleSessionProps = {
   onSessionOutcomeChange?: (outcome: SessionOutcome) => void;
 };
 
+/**
+ * 被退回来的一版。
+ *
+ * notes 用 unknown[] 而不是 QuoteNote[]：modules/types.ts 是壳与模块之间的契约层，
+ * 让它 import 具体业务模块的数据类型会把依赖方向倒过来。消费方（DMPK 会话）
+ * 自己断言成 QuoteNote[]——那本来就是它的领域。
+ */
+export type SessionRework = {
+  /** 驳回时写的总判断。跟逐条批注不是一回事：一个是结论，一组是账。 */
+  reason?: string;
+  by: string;
+  at: string;
+  notes: unknown[];
+  /** 被退回的那份产物，用于「查看退回的报价」。 */
+  attachmentName?: string;
+};
 export type SessionOutcome = "submitted" | "approved" | "rejected" | null;
 
 /**

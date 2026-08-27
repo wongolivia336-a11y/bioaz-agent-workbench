@@ -95,8 +95,9 @@ export function TicketsPage({
   /** 当前账号。侧栏那个切换器一换，「待我处理」跟着换——同一张单在不同角色眼里是不同的事。 */
   currentUser: string;
   projects: string[];
-  /** 带到会话里处理（QA 审核走这条:它要跟数字同事一起看） */
-  onHandle: (ticket: Ticket) => void;
+  /** 带到会话里处理。批注一起带过去——被退回的那一版回到原会话时，
+   *  「要改什么」必须在眼前，否则他还得切回站内信逐条读再切回来。 */
+  onHandle: (ticket: Ticket, notes: QuoteNote[]) => void;
   /** 只接手、不跳走（DMPK 报价复核走这条:全程人工，就在这一页做完） */
   onAccept: (ticket: Ticket) => void;
   /* 交接入口已经搬进会话（干完活那一下顺手交出去）。这里留成可选:工单不是
@@ -191,7 +192,7 @@ export function TicketsPage({
         isMine={open.assignee === currentUser}
         notes={notesByTicket[open.id] ?? {}}
         onNotesChange={(next) => setNotesByTicket((current) => ({ ...current, [open.id]: next }))}
-        onHandle={() => onHandle(open)}
+        onHandle={() => onHandle(open, Object.values(notesByTicket[open.id] ?? {}))}
         onAccept={() => onAccept(open)}
         reviewing={reviewing}
         onReviewingChange={onReviewingChange}

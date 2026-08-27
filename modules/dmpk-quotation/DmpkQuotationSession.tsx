@@ -29,9 +29,12 @@ import {
   type DmpkInspectorPanelId,
 } from "./views";
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, rework, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
   const openingMessage = "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。";
-  const [fields, setFields] = useState<DmpkField[]>(() => initialDmpkFields.map((field) => ({ ...field })));
+  /* 回到旧会话时把参数一起还原。不还原的话,右侧面板停在「未开始」,
+     而对话里写着「参数已齐全、报价单已生成」——一屏之内自相矛盾。 */
+  const [fields, setFields] = useState<DmpkField[]>(() =>
+    initialDmpkFields.map((field) => ({ ...field, value: initialFields?.[field.id] ?? field.value })));
   const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
   const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
   // 一组参数收齐后自动折叠，把注意力交给还缺的那组
@@ -51,9 +54,18 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     });
   }, [fields]);
   const [draftTabs, setDraftTabs] = useState<DmpkDraftTab[]>([]);
-  const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest
-    ? [{ id: "initial-request", role: "user", text: initialRequest, attachments: initialAttachments }, { id: "context", role: "agent", text: openingMessage }]
-    : [{ id: "context", role: "agent", text: openingMessage }]);
+  /* 回到一条已经聊过的会话时，先把它自己的历史还原成消息——滚上去就看得到
+     当初怎么描述的、报价怎么生成的。没有历史才从开场白开始。 */
+  const [messages, setMessages] = useState<DmpkChatMessage[]>(() => {
+    if (initialHistory?.length) {
+      return initialHistory
+        .filter((entry) => entry.role !== "process")
+        .map((entry) => ({ id: entry.id, role: entry.role as DmpkChatMessage["role"], text: entry.text }));
+    }
+    return initialRequest
+      ? [{ id: "initial-request", role: "user", text: initialRequest, attachments: initialAttachments }, { id: "context", role: "agent", text: openingMessage }]
+      : [{ id: "context", role: "agent", text: openingMessage }];
+  });
   /* 这一单交出去了没有。交接是一次性动作,不该留一张还能再点一次的卡在那儿。 */
   const [handedOff, setHandedOff] = useState(false);
   const [composerText, setComposerText] = useState("");
@@ -370,7 +382,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </header>
         <SessionMinimap scrollerRef={chatScrollerRef} />
-        <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
+        <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} rework={rework} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} onOpenQuote={() => setArtifactPreview("excel")} /></div>
         <DmpkComposer editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
