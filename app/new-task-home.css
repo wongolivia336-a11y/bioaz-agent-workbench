@@ -179,45 +179,99 @@
   line-height: 1.5;
 }
 
-/* 未选项目 —— 卡片降为未激活。用的是「安静」而不是「压暗」：
-   压暗读作坏了，安静读作还没轮到。跟禁用卡（虚线边）也要能区分开，
-   那是「永远不可用」，这是「现在不可用」。 */
-.taskExampleGrid button[data-gated="true"] {
-  border-color: var(--bioaz-border);
-  background: var(--bioaz-surface-subtle);
+/* 「未选项目 = 卡片变灰」那一套已经删掉。
+   ----------------------------------------------------------------------
+   它跟上面那条 :disabled 的样子几乎一样（同底色 var(--bioaz-surface-subtle)、
+   同标题色 var(--bioaz-text-tertiary)），差别只剩边框的实线/虚线；而解释那句
+   「需要先选择项目」当时是 hover 才显示的——后果常驻，原因藏着。
+   现在没选项目也照点，点了就地问项目（.quickStartProjectPrompt）。
+   这一屏上唯一淡下去的东西，只有「即将接入」。 */
+
+/* 卡片数量随演示镜头变：DMPK 镜头下只剩一张。列数和整栏宽度都跟着实际张数
+   走——固定四等分的话，一张卡会被拉成 860px 的横条；固定 860px 宽再居中，
+   一张卡又会缩成四分之一。215px 是一张卡该有的宽度，乘以张数就是这一栏。 */
+.newTaskIntro .taskExampleGrid {
+  width: min(calc(var(--quick-start-count, 4) * 215px), 100%);
+  grid-template-columns: repeat(var(--quick-start-count, 4), minmax(0, 1fr));
+  justify-self: center;
 }
 
-.taskExampleGrid button[data-gated="true"] .taskExampleIcon {
-  border-color: var(--bioaz-border);
-  background: var(--bioaz-surface-hover);
-  color: var(--bioaz-text-tertiary);
+/* ---------- 3.5 快捷入口的项目追问 ---------- */
+
+/* 长在卡片正下方：你刚点的那张卡在上面 8px 处，问题问的正是它。
+   弹到 123px 外那颗选择器上去，等于让人重新找一遍自己刚做的事。 */
+.quickStartProjectPrompt {
+  display: grid;
+  width: min(560px, 100%);
+  justify-self: center;
+  gap: 10px;
+  margin-top: 4px;
+  border: 1px solid var(--bioaz-agent-accent-border, #dcddf2);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface, #fff);
+  padding: 14px 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  animation: quickStartPromptIn 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.taskExampleGrid button[data-gated="true"] strong {
-  color: var(--bioaz-text-tertiary);
+@keyframes quickStartPromptIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.taskExampleGrid button[data-gated="true"] .taskExampleTop svg {
-  color: var(--bioaz-text-disabled);
+@media (prefers-reduced-motion: reduce) {
+  .quickStartProjectPrompt { animation: none; }
 }
 
-.taskExampleGate {
-  display: none;
-  color: var(--bioaz-brand-primary);
-  font-size: 11.5px;
-  font-style: normal;
+.quickStartProjectPrompt > p {
+  display: grid;
+  gap: 3px;
+  margin: 0;
 }
 
-/* hover 才说明原因：四张卡同时挂一句一样的话是噪音，
-   但把手放上去的那一刻，人正需要这句话。 */
-.taskExampleGrid button[data-gated="true"]:hover .taskExampleGate,
-.taskExampleGrid button[data-gated="true"]:focus-visible .taskExampleGate {
-  display: block;
+.quickStartProjectPrompt > p strong {
+  color: var(--bioaz-text-primary, #272b33);
+  font-size: 13.5px;
+  font-weight: 650;
 }
 
-.taskExampleGrid button[data-gated="true"]:hover .taskExampleCopy small,
-.taskExampleGrid button[data-gated="true"]:focus-visible .taskExampleCopy small {
-  display: none;
+.quickStartProjectPrompt > p span {
+  color: var(--bioaz-text-tertiary, #7c8593);
+  font-size: 12px;
+}
+
+.quickStartProjectList {
+  display: grid;
+  gap: 4px;
+}
+
+.quickStartProjectList button {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-control);
+  background: transparent;
+  padding: 0 10px;
+  color: var(--bioaz-text-secondary, #4a5261);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.quickStartProjectList button > svg {
+  flex: none;
+  color: var(--bioaz-text-tertiary, #7c8593);
+}
+
+.quickStartProjectList button:hover,
+.quickStartProjectList button:focus-visible {
+  border-color: var(--bioaz-agent-accent-border, #dcddf2);
+  background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  color: var(--bioaz-text-primary, #272b33);
+  outline: 0;
 }
 
 /* ---------- 4. 项目选择器：留在输入框上方，宽度收成 pill ---------- */

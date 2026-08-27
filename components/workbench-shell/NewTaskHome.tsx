@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpRight, Check, ChevronDown, CircleAlert, Folder, Send } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type CSSProperties, type ReactNode, useState } from "react";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition } from "../../modules/types";
 import { LogoAwakening } from "../hero/LogoAwakening";
@@ -11,7 +11,7 @@ import { CoworkerSelector } from "./CoworkerSelector";
 import { MessageAttachments, WorkbenchComposer } from "./WorkbenchComposer";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-export type QuickStartItem = { id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder" };
+export type QuickStartItem = { id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder"; moduleId?: string };
 
 type Props = {
   conversationStarted: boolean;
@@ -29,7 +29,8 @@ type Props = {
   onProjectChange: (project: string) => void;
   onTextChange: (value: string) => void;
   onSubmit: () => void;
-  onQuickStart: (id: string) => void;
+  /** project 是当场选的那个：state 要下一次渲染才生效，得直接递过去。 */
+  onQuickStart: (id: string, project?: string) => void;
   onCoworkerChange: (id: string) => void;
   onConfirm: () => void;
   onCancel: () => void;
@@ -38,6 +39,8 @@ type Props = {
 export function NewTaskHome(props: Props) {
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [sentAttachments, setSentAttachments] = useState<ComposerAttachment[]>([]);
+  /* 点了哪张卡、但还没定项目。项目一选就带着这个 id 直接开跑。 */
+  const [pendingQuickStart, setPendingQuickStart] = useState<string | null>(null);
   const request = props.clarification?.request ?? props.pendingRequest;
   const helperMessage = props.clarification?.question
     ?? (props.pendingRequest && props.suggestedCoworker
@@ -67,21 +70,40 @@ export function NewTaskHome(props: Props) {
         <h1>今天要推进哪项工作？</h1>
         <p>描述目标或从常用流程开始。任务会保留在所属项目中，过程与产物均可追溯。</p>
       </div>
-      {/* 快捷入口和输入框一样需要先选项目——Shell 的 createRuntimeTask 没项目
-          直接 return null 并弹提示。所以这四张卡此前是「看起来可点、点了才报错」。
-          gated 把这个既有约束提前显性化，不增加任何步骤。 */}
-      <div className="taskExampleGrid">{props.quickStarts.slice(0, 4).map((item) => {
+      {/* 快捷入口不再因为「还没选项目」而变灰。
+          ----------------------------------------------------------------
+          上一版把这个前置条件做成了卡片的灰态，结果是：三张能点的卡跟那张
+          「即将接入」长得一模一样（同底色、同标题色），唯一的区别是 1px 边框
+          的实线/虚线——投影仪上根本看不见。而解释那句「需要先选择项目」是
+          hover 才出现的：**后果常驻，原因藏着。**
+
+          现在换个方向：不解释门槛，取消门槛。没选项目时点卡片，就地把项目
+          问出来，选完直接开跑。卡片永远是活的，灰态只留给真正做不了的事。 */}
+      <div className="taskExampleGrid" style={{ "--quick-start-count": Math.min(props.quickStarts.length, 4) } as CSSProperties}>{props.quickStarts.slice(0, 4).map((item) => {
         const placeholder = item.availability === "placeholder";
-        const gated = !placeholder && !props.project;
-        return <ActionCard density="default" data-ability={item.id} data-gated={gated ? "true" : undefined} disabled={placeholder} key={item.id} onClick={() => props.onQuickStart(item.id)}>
+        return <ActionCard density="default" data-ability={item.id} disabled={placeholder} key={item.id} onClick={() => {
+          if (props.project) { props.onQuickStart(item.id); return; }
+          setPendingQuickStart((current) => current === item.id ? null : item.id);
+        }}>
           <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{!placeholder ? <ArrowUpRight size={14} /> : null}</span>
           <span className="taskExampleCopy">
             <strong>{item.label}</strong>
             <small>{placeholder ? "即将接入" : "启动标准流程"}</small>
-            {gated ? <em className="taskExampleGate">需要先选择项目</em> : null}
           </span>
         </ActionCard>;
       })}</div>
+      {pendingQuickStart ? (
+        <QuickStartProjectPrompt
+          label={props.quickStarts.find((item) => item.id === pendingQuickStart)?.label ?? "这项流程"}
+          options={props.projectOptions}
+          onPick={(option) => {
+            props.onProjectChange(option);
+            props.onQuickStart(pendingQuickStart, option);
+            setPendingQuickStart(null);
+          }}
+          onClose={() => setPendingQuickStart(null)}
+        />
+      ) : null}
     </div> : <div className="helperConversationCanvas" aria-live="polite">
       <div className="helperConversationInner">
         {request ? <div className="helperUserMessage"><span>{request}<MessageAttachments items={sentAttachments} /></span></div> : null}
@@ -110,6 +132,34 @@ export function NewTaskHome(props: Props) {
       </WorkbenchComposer>
     </div>
   </section>;
+}
+
+/**
+ * 点了快捷入口、但还没定项目时，就地把项目问出来。
+ *
+ * 长在卡片正下方，不是弹到输入框那边去：你刚点的那张卡在上面 8px 处，
+ * 问题问的正是它。开头先重复一遍你点的是什么——不然选完项目之后，
+ * 直接跳进流程会像是自己冒出来的。
+ */
+function QuickStartProjectPrompt({ label, options, onPick, onClose }: {
+  label: string;
+  options: string[];
+  onPick: (project: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useDismissableLayer<HTMLDivElement>(true, onClose);
+  return (
+    <div ref={ref} className="quickStartProjectPrompt" role="dialog" aria-label={`为「${label}」选择项目`}>
+      <p><strong>「{label}」放在哪个项目里？</strong><span>任务会保留在所属项目中，过程与产物均可追溯。</span></p>
+      <div className="quickStartProjectList">
+        {options.map((option) => (
+          <button type="button" key={option} onClick={() => onPick(option)}>
+            <Folder size={14} aria-hidden="true" />{option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function ProjectSelector({ project, options, invalid, onChange }: { project: string | null; options: string[]; invalid: boolean; onChange: (project: string) => void }) {
