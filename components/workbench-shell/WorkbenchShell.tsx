@@ -662,9 +662,30 @@ export default function WorkbenchShell() {
     if (fallback) setAccountId(fallback);
   }, [lens, accountId, lensAccounts]);
 
+  /* 换镜头、换账号都先回首页。
+     ----------------------------------------------------------------------
+     换账号是换了一个人：停在上一个人的会话里，看的是他的对话、他的参数，
+     而侧栏和收件箱已经换成了你的——一屏之内两个人。
+     换镜头收敛的是「看哪条业务线」：留在原地的话，当前这条会话多半已经
+     不在侧栏的树里了，人会以为任务被删了。
+
+     顺手把站内信的层级位置也清掉：上一个账号打开着的那封信不该跟着过来。 */
+  const leaveToHome = () => {
+    setInboxTicketId(null);
+    setInboxNoticeTitle(null);
+    setInboxReviewing(false);
+    openNewTaskHome();
+  };
+
   const changeLens = (next: DemoLens) => {
     setLens(next);
     window.history.replaceState(null, "", demoLensSearch(next, window.location.href));
+    leaveToHome();
+  };
+
+  const changeAccount = (nextId: string) => {
+    setAccountId(nextId);
+    leaveToHome();
   };
   const inboxCount = tickets.filter((item) => item.assignee === account.name && item.status !== "done" && item.status !== "dropped").length;
   const activeLibraryFolder = libraryFolders.find((folder) => folder.id === libraryFolderId) ?? null;
@@ -679,7 +700,7 @@ export default function WorkbenchShell() {
           : null;
   if (quotationTarget) return <QuotationManagement onBack={() => setQuotationTarget(null)} initialBusiness={quotationTarget.business} initialTab={quotationTarget.tab} initialDraft={quotationTarget.draft} />;
   return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
-    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} unreadTaskIds={unreadTaskIds} attentionTaskIds={attentionTaskIds} deletedProjectIds={deletedProjectIds} deletedTaskIds={deletedTaskIds} renamedTaskTitles={renamedTaskTitles} libraryFolders={libraryFolders} activeLibraryFolderId={libraryFolderId} activeLibrarySpace={route === "library" ? libraryProject : null} highlightedProjectId={highlightedProjectId} account={account} inboxCount={inboxCount} lens={lens} onLensChange={changeLens} switchableAccounts={lensAccounts} onAccountChange={setAccountId} onOpenInbox={() => setRoute("inbox")} onOpenLibraryFolder={(projectName, folderId) => { setLibraryProject(projectName); setLibraryFolderId(folderId); setLibraryView(folderId ? "folder" : "overview"); setRoute("library"); }} onCreateProject={createProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onRenameTask={renameTask} onDeleteTask={deleteTask} onTogglePinnedItem={togglePin} onRouteChange={navigateShellRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationTarget({ business: "root" })} onToggleCollapsed={() => setCollapsed((value) => !value)} />
+    <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} unreadTaskIds={unreadTaskIds} attentionTaskIds={attentionTaskIds} deletedProjectIds={deletedProjectIds} deletedTaskIds={deletedTaskIds} renamedTaskTitles={renamedTaskTitles} libraryFolders={libraryFolders} activeLibraryFolderId={libraryFolderId} activeLibrarySpace={route === "library" ? libraryProject : null} highlightedProjectId={highlightedProjectId} account={account} inboxCount={inboxCount} lens={lens} onLensChange={changeLens} switchableAccounts={lensAccounts} onAccountChange={changeAccount} onOpenInbox={() => setRoute("inbox")} onOpenLibraryFolder={(projectName, folderId) => { setLibraryProject(projectName); setLibraryFolderId(folderId); setLibraryView(folderId ? "folder" : "overview"); setRoute("library"); }} onCreateProject={createProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onRenameTask={renameTask} onDeleteTask={deleteTask} onTogglePinnedItem={togglePin} onRouteChange={navigateShellRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationTarget({ business: "root" })} onToggleCollapsed={() => setCollapsed((value) => !value)} />
     {handoffOpen ? <TicketHandoffDialog currentUser={account.name} projects={visibleProjects.filter((item) => item.type === "client").map((item) => item.name)} defaultProject={project} onSubmit={submitHandoff} onClose={() => setHandoffOpen(false)} /> : null}
     <button className="mobileSidebarBackdrop" type="button" aria-label="关闭侧边栏" onClick={() => setCollapsed(true)} />
     {route === "module" ? <button className="mobileModuleSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button> : null}

@@ -43,13 +43,41 @@ export function QuotePreviewModal({ notes = [], initialForm = "sheet", title, de
   onClose: () => void;
 }) {
   const [form, setForm] = useState<"sheet" | "doc">(initialForm);
+  /* 右栏点哪一条,纸面上那一行就亮起来——反过来也一样。
+     两栏各说各的时候,人得自己在纸上找「TK blood sampling time points」那一行,
+     而那正是批注里最要紧的信息。 */
+  const [activeAnchor, setActiveAnchor] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dismiss = useModalDismiss(onClose);
 
   const byAnchor = new Map(notes.map((note) => [note.anchorId, note]));
+
+  /** 选中一条锚点：纸面上滚到它、亮起来。它在当前这一版纸上不存在就先切过去。 */
+  const focusAnchor = (anchorId: string) => {
+    setActiveAnchor(anchorId);
+    const targetForm = quoteAnchorInDoc(anchorId) ? form : "sheet";
+    if (targetForm !== form) setForm(targetForm);
+    /* 切了形态要等新的一版纸渲染出来才找得到那一行。 */
+    window.requestAnimationFrame(() => {
+      scrollRef.current
+        ?.querySelector(`[data-anchor="${anchorId}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
+
+  /* 纸面上点一行:整张纸交给一个事件,不必给 QuotePaper 再加一路回调——
+     每一行本来就带着 data-anchor。 */
+  const onPaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const row = (event.target as HTMLElement).closest<HTMLElement>("[data-anchor]");
+    const anchorId = row?.dataset.anchor;
+    if (!anchorId || !byAnchor.has(anchorId)) return;
+    setActiveAnchor(anchorId);
+  };
+
   const rowClass = (id: string) => {
     const note = byAnchor.get(id);
-    return note ? `hasNote is-${note.severity}` : "";
+    if (!note) return "";
+    return `hasNote is-${note.severity}${activeAnchor === id ? " isActive" : ""}`;
   };
   const bubble = (id: string) => {
     const note = byAnchor.get(id);
@@ -90,7 +118,7 @@ export function QuotePreviewModal({ notes = [], initialForm = "sheet", title, de
           {/* 回顶按钮挂在纸面这一栏上，不挂在整个 body 上：挂外面它会飘到
               右栏批注上方，挡住的正是要照着改的那几条。 */}
           <div className="quotePreviewPaperWrap">
-            <div className="quotePreviewPaper" ref={scrollRef}>
+            <div className="quotePreviewPaper" ref={scrollRef} onClick={onPaperClick}>
               {form === "sheet"
                 ? <QuoteSheetPaper rowClass={rowClass} bubble={bubble} />
                 : <QuoteDocPaper rowClass={rowClass} bubble={bubble} />}
@@ -108,28 +136,30 @@ export function QuotePreviewModal({ notes = [], initialForm = "sheet", title, de
               </header>
               <ul>
                 {notes.map((note) => (
-                  <li key={note.anchorId} className={`is-${note.severity}`}>
-                    <div className="quotePreviewNoteHead">
-                      <em className="quoteNoteCat">{quoteNoteLabel(note)}</em>
-                      <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
-                    </div>
-                    <strong>{quoteAnchorLabel(note.anchorId)}</strong>
-                    {/* 报价书上没有这一行时说清楚它在哪儿。不说的话，右栏三条、
-                        纸上只标了一条，看着就像记号丢了。 */}
-                    {form === "doc" && !quoteAnchorInDoc(note.anchorId) ? (
-                      <button className="quoteNoteOffForm" type="button" onClick={() => setForm("sheet")}>
-                        这一条批在计算表上 · 去看
-                      </button>
-                    ) : null}
-                    {note.suggested ? (
-                      <span className="quoteNoteDiff">
-                        <s>{quoteCurrentValue(note.anchorId) || "—"}</s>
-                        <ArrowRight size={11} aria-hidden="true" />
-                        <b>{note.suggested}</b>
+                  /* 外框长在 li 上、动作长在里面的 button 上——跟批注台那份清单
+                     同一个写法。整条可点：读到哪一条，就想看它批在纸的哪一行。 */
+                  <li key={note.anchorId} className={cn(`is-${note.severity}`, activeAnchor === note.anchorId && "isActive")}>
+                    <button className="quotePreviewNoteBody" type="button" onClick={() => focusAnchor(note.anchorId)}>
+                      <span className="quotePreviewNoteHead">
+                        <em className="quoteNoteCat">{quoteNoteLabel(note)}</em>
+                        <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
                       </span>
-                    ) : null}
-                    <p>{note.text}</p>
-                    <span className="quoteNoteBy">{note.author} · {note.authorRole} · {note.at}</span>
+                      <strong>{quoteAnchorLabel(note.anchorId)}</strong>
+                      {/* 报价书上没有这一行时说清楚它在哪儿。不说的话，右栏三条、
+                          纸上只标了一条，看着就像记号丢了。点它会连带切到计算表。 */}
+                      {form === "doc" && !quoteAnchorInDoc(note.anchorId) ? (
+                        <span className="quoteNoteOffForm">这一条批在计算表上 · 去看</span>
+                      ) : null}
+                      {note.suggested ? (
+                        <span className="quoteNoteDiff">
+                          <s>{quoteCurrentValue(note.anchorId) || "—"}</s>
+                          <ArrowRight size={11} aria-hidden="true" />
+                          <b>{note.suggested}</b>
+                        </span>
+                      ) : null}
+                      <span className="quotePreviewNoteText">{note.text}</span>
+                      <span className="quoteNoteBy">{note.author} · {note.authorRole} · {note.at}</span>
+                    </button>
                   </li>
                 ))}
               </ul>
