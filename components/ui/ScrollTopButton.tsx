@@ -9,7 +9,10 @@ import { useEffect, useState, type RefObject } from "react";
  * 只在真的滚下去之后才出现——常驻的按钮在还没滚动时是纯噪音，而且它会一直
  * 压在内容右下角，挡住的恰恰是表格最后一列。
  *
- * 阈值 320px 约等于半屏：滚得比这浅，手指往回一划比找按钮快，按钮出来反而多余。
+ * 阈值随容器走，不是写死的 320px。写死之后有个安静的坑：退回修订卡的滚动区
+ * 自己才 320px 高、内容 630px，最大能滚的距离是 310——永远到不了 320，
+ * 按钮在那张卡里等于不存在。所以改成「滚过自己半屏」，再用 320 封顶：
+ * 大容器维持原来的手感，小容器也能在真正滚起来之后给出这颗球。
  *
  * 挂在滚动容器的**外面**（容器的定位父级里），不是里面——放进去的话它会跟着
  * 内容一起滚走，正好在你最需要它的时候消失。
@@ -26,10 +29,17 @@ export function ScrollTopButton({
   useEffect(() => {
     const node = targetRef.current;
     if (!node) return;
-    const sync = () => setVisible(node.scrollTop > 320);
+    const threshold = () => Math.min(320, Math.max(120, node.clientHeight * 0.5));
+    const sync = () => setVisible(node.scrollTop > threshold());
     sync();
     node.addEventListener("scroll", sync, { passive: true });
-    return () => node.removeEventListener("scroll", sync);
+    /* 容器高度会变（弹窗切形态、窗口缩放），阈值跟着变，得重算一次。 */
+    const observer = new ResizeObserver(sync);
+    observer.observe(node);
+    return () => {
+      node.removeEventListener("scroll", sync);
+      observer.disconnect();
+    };
   }, [targetRef]);
 
   return (

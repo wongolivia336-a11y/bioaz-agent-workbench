@@ -22,8 +22,8 @@ import {
   type DmpkStage,
 } from "./fields";
 import { getDmpkInspectorPanels } from "./inspectorPanels";
+import { QuotePreviewModal } from "../../components/workbench-shell/QuotePreviewModal";
 import {
-  DmpkArtifactPreviewModal,
   DmpkComposer,
   DmpkConversation,
   DmpkEditProposalCard,
@@ -493,7 +493,20 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : null}
       </section>
       {previewOpen ? <DmpkQuotationPreviewModal fields={fields} onClose={() => setPreviewOpen(false)} /> : null}
-      {artifactPreview ? <DmpkArtifactPreviewModal kind={artifactPreview} onClose={() => setArtifactPreview(null)} /> : null}
+      {/* 会话里点开产物，看到的要跟站内信里、审批人那儿看到的是同一份纸。
+          原来这里渲染的是一张四行的摘要表——它既不是 Word 也不是 Excel，
+          撰写人对着它没法核对任何一行。 */}
+      {artifactPreview ? (
+        <QuotePreviewModal
+          title={artifactPreview === "word" ? `${taskTitle}_报价单.docx` : `${taskTitle}_报价明细.xlsx`}
+          description={artifactPreview === "word" ? "Word · 客户版报价书" : "Excel · 内部计算表"}
+          initialForm={artifactPreview === "word" ? "doc" : "sheet"}
+          /* 重出一版之后不再带旧批注：那些行已经改过了，还标着「必须修订」
+             等于让人对着自己刚改完的数再确认一遍。 */
+          notes={reworkSettled ? [] : reworkNotes}
+          onClose={() => setArtifactPreview(null)}
+        />
+      ) : null}
     </>
   );
 }
