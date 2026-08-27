@@ -3,8 +3,10 @@
 import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { PersonPicker } from "../../components/ui";
 import { ScrollTopButton } from "../../components/ui/ScrollTopButton";
 import { useModalDismiss } from "../../components/ui/useModalDismiss";
+import { directory } from "../../lib/workbench/mockInbox";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
@@ -151,7 +153,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ editProposal, onHandoff, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
+export function DmpkComposer({ editProposal, onHandoff, viewerName, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -169,7 +171,7 @@ export function DmpkComposer({ editProposal, onHandoff, onConfirmCurrentPrice, o
       {/* 报价出来了,下一步是把它交给谁。入口长在这儿而不是某个列表页顶栏:
           工单不是「新建」出来的,是干完活交出去那一下留下的凭据——所以它该
           出现在活刚干完的地方,而不是让人先想起去哪儿开一张单。 */}
-      {stage === "generated" && onHandoff ? <DmpkHandoffCard onHandoff={onHandoff} /> : null}
+      {stage === "generated" && onHandoff ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       {stage !== "collecting" && stage !== "ready" ? <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} locked={coworkerLocked} onChange={onCoworkerChange} /> : null}
       <WorkbenchComposer
@@ -472,7 +474,7 @@ function DmpkParameterFullscreenModal({ allFields, draftTabs, renderRow, onSelec
 }
 
 /** 报价生成之后的交接卡。审核这一棒是人做的,所以这里只问「交给谁」。 */
-function DmpkHandoffCard({ onHandoff }: { onHandoff: (to: string, note: string) => void }) {
+function DmpkHandoffCard({ onHandoff, viewerName }: { onHandoff: (to: string, note: string) => void; viewerName?: string }) {
   const [to, setTo] = useState("");
   const [note, setNote] = useState("");
   const ready = Boolean(to.trim());
@@ -482,13 +484,22 @@ function DmpkHandoffCard({ onHandoff }: { onHandoff: (to: string, note: string) 
         <div>
           <span>交接</span>
           <strong>报价单已生成，交给下一个人审核</strong>
-          <p>交接后这张工单会出现在对方的站内信里，随单带上本次的报价产物。</p>
+          <p>交接后这件事会出现在对方的站内信里，随行带上本次的报价产物。</p>
         </div>
       </header>
       <div className="dmpkHandoffFields">
-        <label>
+        <label htmlFor="dmpk-handoff-to">
           <span>交给</span>
-          <input value={to} onChange={(event) => setTo(event.target.value)} placeholder="姓名，例如 王林彬" aria-label="交给谁" />
+          {/* 从裸 input 换成选人控件:自由文本打错了没有任何反馈——
+              你把活交给了一个不存在的人,而系统看起来一切正常。 */}
+          <PersonPicker
+            id="dmpk-handoff-to"
+            people={directory}
+            value={to}
+            onChange={setTo}
+            excludeName={viewerName}
+            placeholder="选择接手的同事"
+          />
         </label>
         <label>
           <span>说明</span>

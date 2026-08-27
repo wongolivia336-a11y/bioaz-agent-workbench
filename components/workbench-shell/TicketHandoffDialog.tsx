@@ -2,8 +2,9 @@
 
 import { Paperclip, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { PersonPicker } from "../ui";
 import { useModalDismiss } from "../ui/useModalDismiss";
-import { inboxAccounts } from "../../lib/workbench/mockInbox";
+import { directory } from "../../lib/workbench/mockInbox";
 import type { MailResourceRef } from "../../lib/workbench/mailboxData";
 import type { TicketKind } from "../../lib/workbench/ticketData";
 import { ticketKindLabel } from "../../lib/workbench/ticketData";
@@ -52,9 +53,11 @@ export function TicketHandoffDialog({
   const [title, setTitle] = useState(defaultTitle ?? "");
   const [kind, setKind] = useState<TicketKind>(defaultKind ?? "qa-review");
   const [project, setProject] = useState(defaultProject || projects[0] || "");
-  /* 不能交给自己:交接的定义就是球换一只手。 */
-  const candidates = inboxAccounts.filter((account) => account.name !== currentUser);
-  const [assignee, setAssignee] = useState(candidates[0]?.name ?? "");
+  /* 不能交给自己:交接的定义就是球换一只手。范围是整本通讯录,不是那几个
+     可切换的演示账号——能交接的人远多于你能站过去看的人。 */
+  const candidates = directory.filter((account) => account.name !== currentUser);
+  /* 不预选。预选一个人等于替他做了决定,而这一格恰恰是最不该被默认的。 */
+  const [assignee, setAssignee] = useState("");
   const [note, setNote] = useState("");
   const [files, setFiles] = useState<MailResourceRef[]>(presetAttachments ?? []);
 
@@ -76,7 +79,7 @@ export function TicketHandoffDialog({
   /* 产物是必填。一张不带东西的工单等于一句「你去处理一下」,接手的人还得回来问
      处理什么——那正是这套东西要消灭的来回。 */
   const ready = Boolean(title.trim() && project && assignee && files.length);
-  const assigneeRole = inboxAccounts.find((account) => account.name === assignee)?.roleLabel ?? "";
+  const assigneeRole = directory.find((account) => account.name === assignee)?.roleLabel ?? "";
 
   return (
     <div className="modalBackdrop" role="presentation" {...dismiss}>
@@ -107,10 +110,13 @@ export function TicketHandoffDialog({
             </label>
             <label className="ticketHandoffField">
               <span>交给</span>
-              <CompactSelect
+              {/* 跟会话里那张交接卡用同一个控件。两处各写各的输入框,
+                  改一次交接行为就要同步两遍——而它们问的本来就是同一个问题。 */}
+              <PersonPicker
+                people={candidates}
                 value={assignee}
-                options={candidates.map((account) => account.name)}
                 onChange={setAssignee}
+                placeholder="选择接手的同事"
               />
             </label>
           </div>
@@ -140,7 +146,7 @@ export function TicketHandoffDialog({
         </div>
 
         <footer className="ticketHandoffFoot">
-          <p>交接后这张工单归 <strong>{assignee}</strong>{assigneeRole ? ` · ${assigneeRole}` : ""}，你在「全部状态」里还能查到它。</p>
+          <p>交接后这件事归 <strong>{assignee || "——"}</strong>{assigneeRole ? ` · ${assigneeRole}` : ""}，你在「全部状态」里还能查到它。</p>
           <div>
             <button className="secondaryButton compact" type="button" onClick={onClose}>取消</button>
             <button className="primaryButton compact" type="button" disabled={!ready} onClick={() => onSubmit({ title: title.trim(), kind, project, assignee, assigneeRole, note: note.trim(), attachments: files })}>确认交接</button>
