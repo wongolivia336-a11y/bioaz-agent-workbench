@@ -134,6 +134,9 @@ export type AgentModuleSessionProps = {
      只把人送回会话是不够的，**要改什么必须在眼前**，否则他还得切回站内信
      逐条读、记住哪几行、再切回来改，而那正是这套东西要消灭的来回。 */
   rework?: SessionRework;
+  /** 这一轮返工落笔了。壳层据此把它从「这条任务被退回着」里摘掉——
+   *  不摘的话切走再回来，卡又原样长回来，而事情早就做完了。 */
+  onReworkResolved?: () => void;
   /* 把这一版交给下一棒。QA 的驳回和通过都走这里：驳回交回撰写人、通过交给
      负责人做最终确认与归档。载荷落成一张工单，不再是一封等人点发送的草稿。 */
   onHandoff?: (handoff: SessionHandoff) => void;

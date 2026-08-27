@@ -8061,9 +8061,18 @@ button {
 /* ═══ 演示范围切换（脚手架，上线前连同 demoLens 一起删）═══════════════════
    做成一排分段按钮而不是三行带头像的行:它跟下面的账号切换是两条不同的轴,
    长得一样就会被读成同一组七选一。 */
-.accountLensRow {
-  display: flex;
-  align-items: center;
+/* 三档竖着排。
+   横着塞三个中文标签，在这个宽度里会折成「总览 / QA 审核」一行、
+   「DMPK 报价」自己一行——两行不等宽的方块，看着像坏了而不像一组三选一。
+   竖排之后三档一样宽、一样高，跟下面的账号行读起来也是同一种节奏。 */
+/* 选择器写成 `.accountMenu > .accountLensRow` (0,2,1) 不是啰嗦：菜单里有一条
+   `.accountMenu > div { grid-template-columns: 36px minmax(0,1fr) }`——那是给
+   账号行的头像 + 姓名两栏排的，(0,1,1) 压过单个 .accountLensRow (0,1,0)。
+   于是这三档被塞进了「头像列 + 姓名列」：总览挤进 36px、QA 审核占 1fr、
+   DMPK 报价折到第二行。图上那两行不等宽的方块就是这么来的。 */
+.accountMenu > .accountLensRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
   margin: 0 8px 6px;
   border: 1px solid var(--line);
@@ -8072,23 +8081,30 @@ button {
   padding: 2px;
 }
 
-.accountLensRow button {
-  flex: 1;
-  min-height: 26px;
+/* 同样要压过一条 `.account button { width: 32px }`——那是给头像那颗圆钮定的
+   尺寸，却把 .account 里所有按钮都罩住了，这三档一直被压成 32px 宽的小方块。
+   跟 .quoteNoteList button 把删除图标撑成一整条是同一个坑的两面：
+   拿祖先 + 标签选按钮，迟早会捞到后来加进去的那些。 */
+.accountMenu > .accountLensRow button {
+  display: flex;
+  width: auto;
+  min-height: 28px;
+  align-items: center;
   border: 0;
   border-radius: 7px;
   background: transparent;
-  padding: 0 6px;
+  padding: 0 10px;
   color: var(--body);
   font-size: 12px;
+  text-align: left;
   white-space: nowrap;
   cursor: pointer;
   transition: background 140ms ease, color 140ms ease;
 }
 
-.accountLensRow button:hover { color: var(--ink); }
+.accountMenu > .accountLensRow button:hover { color: var(--ink); }
 /* 选中那档抬成白底:分段控件里"当前在哪一档"必须比 hover 更明确。 */
-.accountLensRow button.isOn {
+.accountMenu > .accountLensRow button.isOn {
   background: #fff;
   box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
   color: var(--ink);
@@ -8127,17 +8143,22 @@ button {
    被驳回的报价点「进入会话处理」回到原会话时，落在对话末尾。
    「回到那个会话」只做到一半是没用的——回去了，但要改什么不在眼前，
    撰写人还得切回站内信逐条读再切回来。所以批注跟着人一起回来。 */
+/* 长得跟参数补全卡一样:同样的边框、圆角、内距。
+   ----------------------------------------------------------------------
+   输入框上方那个槽位里会先后出现参数补全卡、退回修订卡、变更确认卡——
+   它们是同一类东西:需要人当场定一件事。原来退回卡多一道 3px 的琥珀左沿、
+   圆角也小一号,同一个位置上先后出现两种盒子,人会以为它们是两类控件。
+   琥珀那个信号交给头部的徽标和「待处理 N 条」,不必再由边框说一遍。 */
 .reworkCard {
   /* 回顶按钮的定位父级。它要浮在卡上、而不是跟着内容滚走。 */
   position: relative;
   display: grid;
   gap: 12px;
-  margin: 16px 0 4px;
+  margin: 16px 0 10px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
-  border-radius: 12px;
+  border-radius: 18px;
   background: #fff;
-  padding: 16px 18px;
+  padding: 18px 20px;
 }
 
 /* 折叠态就是这张卡的常态:三条批注展开有半屏高,而它长在输入框上方——
@@ -8163,7 +8184,9 @@ button {
    真要摊开逐条看,走全屏。 */
 .reworkBody { display: grid; gap: 12px; }
 .reworkBody.isScrollable { max-height: 320px; overflow-y: auto; padding-right: 2px; }
-.reworkFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* 两颗都靠右。它们是同一组收尾动作——「先看看原件」和「就这样重出一版」，
+   分开钉在两端只会让人以为左边那颗是别的类别的东西。 */
+.reworkFoot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .reworkBadge {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
   border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
@@ -8234,12 +8257,16 @@ button {
 
 /* 全屏里内容自己滚，脚在下面钉住。 */
 .reworkModal { width: min(820px, calc(100vw - 48px)); max-height: min(760px, calc(100dvh - 48px)); }
-.reworkModalBody { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 12px; overflow: hidden; padding: 18px 20px 4px; }
+/* 底部留 18px,跟左右对齐。原来是 4px——页脚几乎贴着弹窗下边框,
+   两颗按钮看着像掉出去了。 */
+.reworkModalBody { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 14px; overflow: hidden; padding: 18px 20px; }
 .reworkModalBody .reworkBody { min-height: 0; overflow-y: auto; }
 
 /* 卡里的回顶按钮要小一号、要抬到页脚上方:卡总共才 320px 高，
    一颗 36px 的球压在右下角，挡的正好是「重新生成报价单」。 */
 .reworkCard .scrollTopButton { right: 14px; bottom: 58px; width: 30px; height: 30px; }
+/* 全屏里同理：页脚占掉底部约 48px，回顶球要落在它上面。 */
+.reworkModal .scrollTopButton { bottom: 62px; }
 
 /* ═══ 带批注的产物预览 ═══════════════════════════════════════════════════
    审批人在批注台上看到的是：被批的那几行有记号，右栏一列批注。撰写人拿回
@@ -8262,7 +8289,20 @@ button {
 .quotePreviewBody { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 14px; overflow: hidden; padding: 16px 20px; }
 .quotePreviewBody.hasNotes { grid-template-columns: minmax(0, 1fr) 320px; }
 .quotePreviewPaperWrap { position: relative; display: grid; min-height: 0; }
-.quotePreviewPaper { min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--soft, #f7f8fb); padding: 20px; }
+/* 计算表在这一栏里必须叠成一列。
+   ----------------------------------------------------------------------
+   两栏版原来只由 `@media (max-width: 1240px)` 收拢——媒体查询问的是**视口**
+   有多宽,而这里被卡住的是**这一栏**：视口 1512px，纸面这栏却只有 699px。
+   于是左边计价明细那张表(最小 354px)撑破自己 307px 的轨道，横着压到右边
+   可编辑参数上，两张表叠在一起。
+
+   容器查询问的才是对的那个问题。不支持容器查询的浏览器落到默认的单列——
+   窄容器里本来就该是单列，降级方向是安全的。 */
+.quotePreviewPaper { container-type: inline-size; min-height: 0; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--soft, #f7f8fb); padding: 20px; }
+.quotePreviewPaper .quoteSheetGrid { grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 880px) {
+  .quotePreviewPaper .quoteSheetGrid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+}
 .quotePreviewPaperWrap .scrollTopButton { right: 18px; bottom: 16px; }
 
 .quotePreviewNotes { display: grid; min-height: 0; align-content: start; gap: 10px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 14px 16px; }
@@ -8270,21 +8310,35 @@ button {
 .quotePreviewNotes > header strong { font-size: 13px; }
 .quotePreviewNotes > header small { color: var(--muted); font-size: 12px; }
 .quotePreviewNotes ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+/* 外框长在 li 上,不长在 button 上。卡里那颗按钮铺满整条,
+   把 width/padding 写到 button 上就会跟外框打架。 */
 .quotePreviewNotes > ul > li {
-  display: grid; gap: 5px;
   border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
-  border-radius: 8px; padding: 10px 11px;
+  border-radius: 8px; overflow: hidden;
+  transition: border-color 140ms ease, background 140ms ease;
 }
 .quotePreviewNotes > ul > li.is-advisory { border-left-color: var(--line); }
-.quotePreviewNotes > ul > li strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
-.quotePreviewNotes > ul > li p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.6; }
+/* 选中的那条:跟纸面上那一行同一套强调色,两边一眼能对上是同一件事。 */
+.quotePreviewNotes > ul > li.isActive {
+  border-color: var(--bioaz-agent-accent, #5c60b8);
+  background: var(--bioaz-agent-accent-soft, #f3f3fb);
+}
+.quotePreviewNoteBody {
+  display: grid; width: 100%; gap: 5px;
+  border: 0; background: transparent; padding: 10px 11px;
+  text-align: left; cursor: pointer;
+}
+.quotePreviewNotes > ul > li:hover { background: #fafbfc; }
+.quotePreviewNotes > ul > li.isActive:hover { background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.quotePreviewNoteBody strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.quotePreviewNoteText { color: var(--body); font-size: 12.5px; line-height: 1.6; }
 .quotePreviewNoteHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-/* 「这一条批在计算表上」既是解释也是入口：说完之后总得让人去得了。 */
+/* 「这一条批在计算表上」是一句解释,不是第二颗按钮——整条已经能点了,
+   里面再嵌一颗按钮只会多出一个不知道该点哪个的选择。 */
 .quoteNoteOffForm {
   justify-self: start; border: 1px dashed var(--line); border-radius: 999px;
-  background: transparent; padding: 3px 9px; color: var(--muted); font-size: 11.5px; cursor: pointer;
+  padding: 3px 9px; color: var(--muted); font-size: 11.5px;
 }
-.quoteNoteOffForm:hover { border-color: var(--line-strong, #cfd6e2); background: var(--soft, #f7f8fb); color: var(--ink); }
 
 .quotePreviewFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding: 12px 20px; }
 
@@ -8330,8 +8384,7 @@ button {
   display: grid; gap: 12px;
   margin: 0 0 10px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--bioaz-agent-accent, #5c60b8);
-  border-radius: 12px; background: #fff; padding: 16px 18px;
+  border-radius: 18px; background: #fff; padding: 18px 20px;
 }
 .changeConfirmCard > header { display: flex; align-items: center; gap: 10px; }
 .changeConfirmBadge {
