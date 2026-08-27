@@ -170,6 +170,32 @@ export const initialTickets: Ticket[] = [
       { id: "s3", at: "1 小时前", actor: "王林彬", actorRole: "审批人", action: "驳回", note: "第 8 页时间逻辑与原始记录对不上；终点日缺失值的补齐口径需要在方法学里注明出处。" },
     ],
   },
+  /* DMPK 这条线在演示里要能同时摆出「待审」「已驳回」「已通过」三种状态,
+     而且撰写人赵敏那一侧要有东西可看——否则她的收件箱是空的,
+     「球换手了它自己就到了」这句话就没有画面。所以这条线上刻意多备了几张。 */
+  {
+    id: "TK-2045",
+    title: "待确认：SD 大鼠 PK 预试报价",
+    kind: "dmpk-quotation",
+    status: "open",
+    project: "YY药业-Balb/c nude评价",
+    from: "赵敏",
+    fromRole: "DMPK 报价同事",
+    assignee: "王林彬",
+    assigneeRole: "审批人",
+    createdAt: "今天 10:20",
+    updatedAt: "40 分钟前",
+    attachments: [
+      file("tk-2045-a", "SD大鼠_PK预试_报价书.docx", "DOCX · 客户版 · 0.5 MB"),
+      file("tk-2045-b", "SD大鼠_PK预试_计算表.xlsx", "XLSX · 内部底稿 · 0.3 MB"),
+    ],
+    taskId: "task-balbc",
+    moduleId: "dmpk-quotation",
+    steps: [
+      { id: "s1", at: "今天 10:20", actor: "赵敏", actorRole: "DMPK 报价同事", action: "提交送审", note: "客户催得急，采血点按 8 个先报，后面可能加。" },
+      { id: "s2", at: "40 分钟前", actor: "系统", actorRole: "流转", action: "分派给王林彬" },
+    ],
+  },
   {
     id: "TK-2039",
     title: "待确认：Balb/c nude BA 报价单",
@@ -219,17 +245,23 @@ export const initialTickets: Ticket[] = [
     project: "ZZ药业-CT26模型评价",
     from: "赵敏",
     fromRole: "DMPK 报价同事",
-    assignee: "李林",
-    assigneeRole: "项目负责人",
+    /* 通过之后交回提交人。这条是给演示准备的「已通过」样本:
+       赵敏的收件箱里要能看到一件已经审完的事,附件可预览可下载,
+       随行的建议修订也还在——通过不等于批注消失。 */
+    assignee: "赵敏",
+    assigneeRole: "DMPK 报价同事",
     createdAt: "5 天前",
     updatedAt: "3 天前",
-    attachments: [file("tk-2033-a", "CT26_报价单.docx", "DOCX · 0.9 MB")],
+    attachments: [
+      file("tk-2033-a", "CT26_报价书.docx", "DOCX · 客户版 · 0.9 MB"),
+      file("tk-2033-b", "CT26_报价计算表.xlsx", "XLSX · 内部底稿 · 0.4 MB"),
+    ],
     taskId: "task-ct26-quote",
     moduleId: "dmpk-quotation",
     steps: [
       { id: "s1", at: "5 天前", actor: "赵敏", actorRole: "DMPK 报价同事", action: "提交送审" },
-      { id: "s2", at: "4 天前", actor: "王林彬", actorRole: "审批人", action: "审批通过" },
-      { id: "s3", at: "3 天前", actor: "王林彬", actorRole: "审批人", action: "流转给李林终审归档" },
+      { id: "s2", at: "4 天前", actor: "王林彬", actorRole: "审批人", action: "开始审核" },
+      { id: "s3", at: "3 天前", actor: "王林彬", actorRole: "审批人", action: "审批通过", note: "1 条建议修订随行留档，不影响通过。" },
     ],
   },
   {
