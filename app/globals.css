@@ -8150,7 +8150,30 @@ button {
   padding: 16px 18px;
 }
 
-.reworkCard > header { display: flex; align-items: center; gap: 10px; }
+/* 折叠态就是这张卡的常态:三条批注展开有半屏高,而它长在输入框上方——
+   越高,能看见的对话越少。头部先答「几条、还剩几条」,细节等要做决定时再展开。 */
+.reworkCard > header { display: flex; align-items: stretch; gap: 6px; }
+.reworkToggle {
+  display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px;
+  border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer;
+}
+.reworkTitle { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.reworkTitle strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
+.reworkTitle small { overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.reworkChevron { flex: none; color: var(--muted); transition: transform 160ms ease; }
+.reworkCard.isOpen .reworkChevron { transform: rotate(180deg); }
+.reworkFullscreen {
+  display: grid; width: 28px; height: 28px; flex: none; place-items: center;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  padding: 0; color: var(--muted); cursor: pointer;
+}
+.reworkFullscreen:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
+
+/* 展开之后给固定高度加内部滚动:卡片可以长,但不能长到把对话挤没。
+   真要摊开逐条看,走全屏。 */
+.reworkBody { display: grid; gap: 12px; }
+.reworkBody.isScrollable { max-height: 320px; overflow-y: auto; padding-right: 2px; }
+.reworkFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .reworkBadge {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
   border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
@@ -8180,10 +8203,14 @@ button {
    不说这一句，下面那组卡就是凭空冒出来的表单。 */
 .reworkLead { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
 
+/* 主体在左、动作在右:一行文字读到头,手就落在按钮上,
+   而不是读完再往回扫一行去找它。 */
 .reworkNote {
-  display: grid; gap: 6px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 12px;
   border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px;
 }
+.reworkNoteMain { display: grid; min-width: 0; gap: 6px; }
+.reworkNoteSide { display: grid; justify-items: stretch; gap: 6px; }
 /* 定了的那条淡下去但不消失——「处理了几条」跟「还剩几条」是同一件事的两面。 */
 .reworkNote.isSettled { opacity: .55; }
 
@@ -8200,11 +8227,14 @@ button {
 }
 .reworkNotePlan > span { color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; }
 
-.reworkNoteActions { display: flex; gap: 8px; }
+
 .reworkNoteState { display: flex; align-items: center; gap: 5px; margin: 0; color: var(--muted); font-size: 12px; }
 .reworkNoteState > svg { color: var(--bioaz-agent-accent, #5c60b8); }
 
-.reworkCard > footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* 全屏里内容自己滚，脚在下面钉住。 */
+.reworkModal { width: min(820px, calc(100vw - 48px)); max-height: min(760px, calc(100dvh - 48px)); }
+.reworkModalBody { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 12px; overflow: hidden; padding: 18px 20px 4px; }
+.reworkModalBody .reworkBody { min-height: 0; overflow-y: auto; }
 
 /* ═══ 卡片按钮 ═══════════════════════════════════════════════════════════
    .primaryButton / .secondaryButton 在这个仓库里高度对不齐是老问题
@@ -8230,7 +8260,7 @@ button {
 .reworkAction.isGhost:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
 
 /* 定了的那一行:状态在左，撤销在右。 */
-.reworkNoteActions.isSettledRow { align-items: center; justify-content: space-between; }
+
 
 /* ═══ 变更确认卡 ═════════════════════════════════════════════════════════
    跟参数收集卡、交接卡同一个槽位、同一种形态：都长在输入框上方，
