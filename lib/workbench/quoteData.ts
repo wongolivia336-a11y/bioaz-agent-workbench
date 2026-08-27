@@ -145,6 +145,23 @@ export const quoteNoteNeedsValue: Record<QuoteNoteCategory, boolean> = {
   param: true, price: true, basis: true, missing: false, notApplicable: false, custom: true,
 };
 
+/** 锚点当前的值。批注要显示「现值 → 建议值」的地方都用它,
+ *  不要各自再写一遍查找——两处查法分叉,显示的现值就会对不上。 */
+export function quoteCurrentValue(anchorId: string) {
+  const param = quoteParams.find((item) => item.id === anchorId);
+  if (param) return param.value;
+  const item = quoteItems.find((entry) => entry.id === anchorId);
+  return item?.unitPrice === undefined ? "" : item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/** 锚点的显示名。同上,统一一处。 */
+export function quoteAnchorLabel(anchorId: string) {
+  return quoteParams.find((param) => param.id === anchorId)?.label
+    ?? quoteItems.find((item) => item.id === anchorId)?.item
+    ?? quoteSubtotals.find((sub) => sub.id === anchorId)?.label
+    ?? anchorId;
+}
+
 /** 一条批注对外显示的分类名。自定义的显示它自己的标签,而不是「其他」——
  *  「其他」对读的人没有任何信息量,而这条批注的价值恰恰在那个名字里。 */
 export function quoteNoteLabel(note: Pick<QuoteNote, "category" | "customLabel">) {
@@ -179,3 +196,55 @@ export type QuoteNote = {
   /** 选中的那段原文。跟 QA 一样把它带上:清单给结论,引用给证据。 */
   quote?: string;
 };
+
+
+/* 种进去的批注。
+   -------------------------------------------------------------------
+   驳回和通过都会把这件事交回撰写人,而**批注要跟着一起回去**——
+   `suggested` 建议值的全部意义就是让下一版能被逐条核验,
+   要改的那个人看不见它,这个字段就白设计了。
+
+   演示需要现成的样本:被驳回那张要有「必须修订」,已通过那张要有「建议修订」,
+   好说明「通过不等于批注消失」。运行时新写的批注跟这些混在一起,共用一套渲染。 */
+export const seededQuoteNotes: Record<string, QuoteNote[]> = {
+  "TK-2039": [
+    {
+      anchorId: "p-discount",
+      category: "basis",
+      severity: "blocking",
+      text: "管理费口径与本单合同不一致。合同里写的是 15%，这一版按 30% 计的，整单金额差了一万多。",
+      suggested: "0.85",
+      quote: "Discount",
+      author: "王林彬", authorRole: "审批人", at: "2 天前",
+    },
+    {
+      anchorId: "i-method",
+      category: "custom",
+      customLabel: "表述有误",
+      severity: "advisory",
+      text: "「沿用已验证方法」这句客户看不懂，建议写清楚沿用的是哪一版方法学编号。",
+      quote: "Bioanalysis (Small Molecular)",
+      author: "王林彬", authorRole: "审批人", at: "2 天前",
+    },
+  ],
+  "TK-2033": [
+    {
+      anchorId: "p-samples",
+      category: "param",
+      severity: "advisory",
+      text: "样品数按 90 报没问题，但方案里写的是「不少于 90」，建议下一版把口径对齐，免得客户追加时又要改价。",
+      suggested: "90",
+      quote: "Samples analyzed",
+      author: "王林彬", authorRole: "审批人", at: "3 天前",
+    },
+  ],
+};
+
+/** 按工单取初始批注,转成组件用的 Record<anchorId, QuoteNote>。 */
+export function seededNotesByTicket(): Record<string, Record<string, QuoteNote>> {
+  const out: Record<string, Record<string, QuoteNote>> = {};
+  for (const [ticketId, notes] of Object.entries(seededQuoteNotes)) {
+    out[ticketId] = Object.fromEntries(notes.map((note) => [note.anchorId, note]));
+  }
+  return out;
+}

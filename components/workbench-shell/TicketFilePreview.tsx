@@ -1,9 +1,9 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, MessageSquare } from "lucide-react";
 import { Dialog } from "../ui";
 import { QuoteDocPaper, QuoteSheetPaper, money, quoteCategories } from "./QuotePaper";
-import { quoteItems, quoteMeta, quoteParams, quoteSubtotals } from "../../lib/workbench/quoteData";
+import { quoteItems, quoteMeta, quoteNoteSeverityLabel, quoteParams, quoteSubtotals, type QuoteNote } from "../../lib/workbench/quoteData";
 import type { MailResourceRef } from "../../lib/workbench/mailboxData";
 import type { Ticket } from "../../lib/workbench/ticketData";
 
@@ -68,11 +68,29 @@ export function downloadTicketFile(file: MailResourceRef, view: TicketFileView) 
   URL.revokeObjectURL(url);
 }
 
-export function TicketFilePreview({ file, view, onClose }: {
+export function TicketFilePreview({ file, view, notes = [], onClose }: {
   file: MailResourceRef;
   view: TicketFileView;
+  /* 这份产物上的批注。预览要在原文上标出被批的那几行——
+     只给一份干净的纸,提交人还得对着右边的清单在纸上找行,
+     而「哪一行」正是批注最要紧的信息。 */
+  notes?: QuoteNote[];
   onClose: () => void;
 }) {
+  const byAnchor = new Map(notes.map((note) => [note.anchorId, note]));
+  const rowClass = (id: string) => {
+    const note = byAnchor.get(id);
+    return note ? `hasNote is-${note.severity}` : "";
+  };
+  const bubble = (id: string) => {
+    const note = byAnchor.get(id);
+    if (!note) return null;
+    return (
+      <i className="quoteRowBubble" title={`${quoteNoteSeverityLabel[note.severity]}：${note.text}`} aria-label="已批注">
+        <MessageSquare size={10} />
+      </i>
+    );
+  };
   /* 用 components/ui 的 Dialog,不自己搭 backdrop——叉号、Esc、点遮罩、层栈
      都在那里做过一遍了。这里只给它一个皮肤类(宽度和正文底色)。 */
   return (
@@ -90,7 +108,9 @@ export function TicketFilePreview({ file, view, onClose }: {
         </>
       }
     >
-      {view === "quote-sheet" ? <QuoteSheetPaper /> : <QuoteDocPaper />}
+      {view === "quote-sheet"
+        ? <QuoteSheetPaper rowClass={rowClass} bubble={bubble} />
+        : <QuoteDocPaper rowClass={rowClass} bubble={bubble} />}
     </Dialog>
   );
 }

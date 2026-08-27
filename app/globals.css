@@ -8068,3 +8068,136 @@ button {
 .quoteDecisionNotes b { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
 .quoteDecisionNotes p { grid-column: 1 / -1; margin: 0; color: var(--body); font-size: 12px; line-height: 1.6; }
 .quoteDecisionNote { margin: 14px 0 0; color: var(--body); font-size: 12.5px; }
+
+
+/* ═══ 演示范围切换（脚手架，上线前连同 demoLens 一起删）═══════════════════
+   做成一排分段按钮而不是三行带头像的行:它跟下面的账号切换是两条不同的轴,
+   长得一样就会被读成同一组七选一。 */
+.accountLensRow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--soft, #f7f8fb);
+  padding: 2px;
+}
+
+.accountLensRow button {
+  flex: 1;
+  min-height: 26px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  padding: 0 6px;
+  color: var(--body);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.accountLensRow button:hover { color: var(--ink); }
+/* 选中那档抬成白底:分段控件里"当前在哪一档"必须比 hover 更明确。 */
+.accountLensRow button.isOn {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ═══ 复核批注（随这件事走，谁打开都看得见）═══════════════════════════════
+   之前批注只活在审批人的画布里,而要改的那个人走的是另一条路——
+   他拿到的只有一行「批注 N 条」。suggested 建议值的全部意义就是让下一版
+   能被逐条核验,看不见它,这个字段就白设计了。 */
+.ticketDetailNotes { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 16px 18px; }
+.ticketDetailNotes h2 {
+  display: flex; align-items: baseline; gap: 8px;
+  margin: 0 0 12px; font-size: 13px; font-weight: 700;
+}
+.ticketDetailNotes h2 small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.ticketDetailNotes ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ticketDetailNotes > ul > li {
+  display: grid; gap: 5px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+/* 建议修订收掉左侧那道琥珀:全都标成琥珀,「必须修订」就不再是个信号。 */
+.ticketDetailNotes > ul > li.is-advisory { border-left-color: var(--line); }
+.ticketDetailNoteHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ticketDetailNoteHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.ticketDetailNotes p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
+
+/* 预览里被批过的行。跟批注画布用同一套记号,免得同一件事在两处长得不一样。 */
+.ticketFilePreview tr.hasNote { background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.ticketFilePreview tr.hasNote.is-blocking { background: rgba(154, 122, 58, .1); }
+
+/* ═══ 退回修订卡 ═════════════════════════════════════════════════════════
+   被驳回的报价点「进入会话处理」回到原会话时，落在对话末尾。
+   「回到那个会话」只做到一半是没用的——回去了，但要改什么不在眼前，
+   撰写人还得切回站内信逐条读再切回来。所以批注跟着人一起回来。 */
+.reworkCard {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 4px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px 18px;
+}
+
+.reworkCard > header { display: flex; align-items: center; gap: 10px; }
+.reworkBadge {
+  display: grid; width: 28px; height: 28px; flex: none; place-items: center;
+  border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
+}
+.reworkCard > header > div { display: grid; flex: 1; gap: 2px; }
+.reworkCard > header strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
+.reworkCard > header small { color: var(--muted); font-size: 12px; }
+
+/* 「还剩几条必须改」是这张卡唯一需要读一眼就知道的数字。 */
+.reworkRemaining {
+  flex: none; border-radius: 999px; background: rgba(154, 122, 58, .16);
+  padding: 3px 9px; color: #7d6229; font-size: 11.5px; font-style: normal;
+}
+.reworkRemaining.isClear { background: var(--soft, #f7f8fb); color: var(--muted); }
+
+/* 驳回理由是总的判断，逐条批注是具体的账。两者分开排，不要混成一段。 */
+.reworkReason {
+  margin: 0; border-radius: 8px; background: var(--soft, #f7f8fb);
+  padding: 10px 12px; color: var(--body); font-size: 12.5px; line-height: 1.7;
+}
+
+.reworkGroup { display: grid; gap: 6px; }
+.reworkGroup > span { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.reworkGroup ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.reworkNote {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 9px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+}
+/* 勾掉的那条淡下去但不消失——「我改完了几条」跟「还剩几条」是同一件事的两面。 */
+.reworkNote.isDone { opacity: .5; }
+.reworkNote.isDone .reworkNoteHead strong { text-decoration: line-through; }
+
+.reworkCheck {
+  display: grid; width: 17px; height: 17px; margin-top: 1px; place-items: center;
+  border: 1px solid var(--line-strong, #cfd6e2); border-radius: 5px;
+  background: #fff; padding: 0; color: #fff; cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.reworkCheck[aria-checked="true"] {
+  border-color: var(--bioaz-agent-accent, #5c60b8);
+  background: var(--bioaz-agent-accent, #5c60b8);
+}
+
+.reworkNoteBody { display: grid; gap: 4px; }
+.reworkNoteHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.reworkNoteHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.reworkNote p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
+
+.reworkCard > footer { display: flex; justify-content: flex-start; }

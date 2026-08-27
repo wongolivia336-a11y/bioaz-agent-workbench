@@ -271,16 +271,26 @@ export function WorkspaceSidebar(props: Props) {
             {/* 演示镜头跟账号切换放在一起:两者都是演示装置,不是产品功能。
                 镜头决定「看哪条业务线」,账号决定「站在谁的位置上看」——
                 合起来才凑得出「同一件事在撰写人和审批人眼里各是什么样」。 */}
-            <p className="accountMenuLabel">演示视角</p>
-            {DEMO_LENSES.map((item) => (
-              <button className={`accountSwitchRow ${item.value === props.lens ? "isCurrent" : ""}`} type="button" key={item.value} onClick={() => { props.onLensChange(item.value); setAccountMenuOpen(false); }}>
-                <span className="avatar"><Eye size={13} /></span>
-                <span><strong>{item.label}</strong><small>{item.value === "all" ? "两条线都看" : `只看${item.label}这一条`}</small></span>
-                {item.value === props.lens ? <Check size={14} /> : null}
-              </button>
-            ))}
+            {/* 镜头做成一排分段按钮,不跟下面的账号行长一个样。
+                两者是不同的轴——镜头是「看哪条业务线」,账号是「站在谁的位置上」——
+                长得一样就会被读成同一组七选一。 */}
+            <p className="accountMenuLabel">演示范围</p>
+            <div className="accountLensRow" role="radiogroup" aria-label="演示范围">
+              {DEMO_LENSES.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={item.value === props.lens}
+                  className={item.value === props.lens ? "isOn" : ""}
+                  onClick={() => { props.onLensChange(item.value); setAccountMenuOpen(false); }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
             {/* 角色权限本应由登录账号决定，原型里给一个切换器把岗位的队列都演示出来 */}
-            <p className="accountMenuLabel">切换账号（演示）</p>
+            <p className="accountMenuLabel">切换账号</p>
             {props.switchableAccounts.map((item) => (
               <button className={`accountSwitchRow ${item.id === props.account.id ? "isCurrent" : ""}`} type="button" key={item.id} onClick={() => { props.onAccountChange(item.id); setAccountMenuOpen(false); }}>
                 <span className="avatar">{item.name.slice(0, 1)}</span>

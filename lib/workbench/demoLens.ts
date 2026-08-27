@@ -39,19 +39,38 @@ export const DEMO_LENSES: DemoLensDefinition[] = [
 export const getDemoLens = (value: DemoLens) =>
   DEMO_LENSES.find((lens) => lens.value === value) ?? DEMO_LENSES[0];
 
-/** 从地址栏读。`?view=dmpk` / `?view=qa`，认不出来就当总览。 */
+/* 不带参数时停在哪一档。近期要演示的就是 DMPK 报价这条线,所以直接打开
+   就是它——演示前少一次「记得先切镜头」。
+   要换成别的线,改这一个常量,读和写会跟着一起变(见下面两个函数)。 */
+export const DEFAULT_LENS: DemoLens = "dmpk-quotation";
+
+/* 参数名不能叫 view——那个名字早就被深链占用了(view=library / digital-team /
+   quotation-management),而且那段逻辑是「只要 view 有值就把 query 抹掉」,
+   所以 ?view=dmpk 每次加载都会被清干净。叫 line:这一维本来就是「业务线」。 */
+export const LENS_PARAM_NAME = "line";
+
+/** URL 里的短名。默认那一档不写进地址栏,所以它不在这张表的写入侧。 */
+const LENS_PARAM: Record<DemoLens, string> = {
+  "all": "all",
+  "qa-review": "qa",
+  "dmpk-quotation": "dmpk",
+};
+
+/** 从地址栏读。认不出来就用默认档。 */
 export function readDemoLens(search: string): DemoLens {
-  const value = new URLSearchParams(search).get("view");
+  const value = new URLSearchParams(search).get(LENS_PARAM_NAME);
   if (value === "dmpk" || value === "dmpk-quotation") return "dmpk-quotation";
   if (value === "qa" || value === "qa-review") return "qa-review";
-  return "all";
+  if (value === "all" || value === "overview") return "all";
+  return DEFAULT_LENS;
 }
 
-/** 写回地址栏。总览就把参数去掉——干净的 URL 本身就是「没有镜头」的意思。 */
-export function demoLensHref(lens: DemoLens) {
-  if (typeof window === "undefined") return "/";
-  const url = new URL(window.location.href);
-  if (lens === "all") url.searchParams.delete("view");
-  else url.searchParams.set("view", lens === "dmpk-quotation" ? "dmpk" : "qa");
+/* 写回地址栏。**默认那一档才把参数去掉**——「干净 URL = 默认值」这条规则
+   必须跟 readDemoLens 对称,否则切到非默认档、一刷新就被打回默认,
+   而用户以为自己切过了。 */
+export function demoLensSearch(lens: DemoLens, currentHref: string) {
+  const url = new URL(currentHref);
+  if (lens === DEFAULT_LENS) url.searchParams.delete(LENS_PARAM_NAME);
+  else url.searchParams.set(LENS_PARAM_NAME, LENS_PARAM[lens]);
   return url.pathname + url.search;
 }

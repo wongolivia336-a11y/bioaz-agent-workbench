@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowLeft, Bot, Check, ChevronLeft, ChevronRight, Highlighter, Paperclip, Search, Settings, Upload, User, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Check, ChevronLeft, ChevronRight, Highlighter, Paperclip, Search, Settings, Upload, User, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { StatusChip } from "../ui";
 import { QuoteReviewCanvas } from "./QuoteReviewCanvas";
 import { TicketFilePreview, downloadTicketFile, ticketFileView, type TicketFileView } from "./TicketFilePreview";
 import type { MailResourceRef } from "../../lib/workbench/mailboxData";
-import type { QuoteNote } from "../../lib/workbench/quoteData";
+import { quoteAnchorLabel, quoteCurrentValue, quoteNoteLabel, quoteNoteSeverityLabel, seededNotesByTicket, type QuoteNote } from "../../lib/workbench/quoteData";
 import {
   initialNotices,
   minutesFromLabel,
@@ -95,8 +95,9 @@ export function TicketsPage({
   /** 当前账号。侧栏那个切换器一换，「待我处理」跟着换——同一张单在不同角色眼里是不同的事。 */
   currentUser: string;
   projects: string[];
-  /** 带到会话里处理（QA 审核走这条:它要跟数字同事一起看） */
-  onHandle: (ticket: Ticket) => void;
+  /** 带到会话里处理。批注一起带过去——被退回的那一版回到原会话时，
+   *  「要改什么」必须在眼前，否则他还得切回站内信逐条读再切回来。 */
+  onHandle: (ticket: Ticket, notes: QuoteNote[]) => void;
   /** 只接手、不跳走（DMPK 报价复核走这条:全程人工，就在这一页做完） */
   onAccept: (ticket: Ticket) => void;
   /* 交接入口已经搬进会话（干完活那一下顺手交出去）。这里留成可选:工单不是
@@ -132,7 +133,7 @@ export function TicketsPage({
   const [readIds, setReadIds] = useState<string[]>([]);
   /* 批注按工单存。放在这一层而不是详情组件里,是因为详情会随返回列表卸载——
      写了一半的批注不该因为回去看一眼列表就没了。 */
-  const [notesByTicket, setNotesByTicket] = useState<Record<string, Record<string, QuoteNote>>>({});
+  const [notesByTicket, setNotesByTicket] = useState<Record<string, Record<string, QuoteNote>>>(seededNotesByTicket);
   /* 顶栏不再挂 tab——列表只有一个,没有视图可切。待我处理的数量在侧栏那颗徽标上。 */
   const [topbarPrimaryHost, setTopbarPrimaryHost] = useState<HTMLElement | null>(null);
   useEffect(() => {
@@ -191,7 +192,7 @@ export function TicketsPage({
         isMine={open.assignee === currentUser}
         notes={notesByTicket[open.id] ?? {}}
         onNotesChange={(next) => setNotesByTicket((current) => ({ ...current, [open.id]: next }))}
-        onHandle={() => onHandle(open)}
+        onHandle={() => onHandle(open, Object.values(notesByTicket[open.id] ?? {}))}
         onAccept={() => onAccept(open)}
         reviewing={reviewing}
         onReviewingChange={onReviewingChange}
@@ -421,6 +422,9 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
      审批人是 assignee 但不是 from。一个人在这件事里是什么身份,单子自己说得清,
      不用另造一个「角色」概念。 */
   const isSubmitter = currentUser === ticket.from;
+  /* 批注随这件事走,谁打开都看得见。 */
+  const noted = Object.values(notes);
+  const blockingCount = noted.filter((note) => note.severity === "blocking").length;
   const isQuotation = ticket.kind === "dmpk-quotation";
   const [preview, setPreview] = useState<{ file: MailResourceRef; view: TicketFileView } | null>(null);
 
@@ -476,7 +480,40 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
       ) : null}
 
       {preview ? (
-        <TicketFilePreview file={preview.file} view={preview.view} onClose={() => setPreview(null)} />
+        <TicketFilePreview file={preview.file} view={preview.view} notes={noted} onClose={() => setPreview(null)} />
+      ) : null}
+
+      {/* 批注随这件事一起走,不锁在批注画布里。
+          之前它只在审批人的画布上渲染,而提交人走的是另一条路——他拿到的只有
+          流转记录里一行「批注 N 条」。哪一条、现值多少、建议改成什么,全看不到。
+          可 suggested 这个字段的全部意义,就是让要改的那个人能逐条核验。
+
+          通过的那些也留着:「1 条建议修订随行留档,不影响通过」——
+          说了留档,就得真的看得见。 */}
+      {noted.length ? (
+        <section className="ticketDetailNotes">
+          <h2>复核批注<small>{noted.length} 条{blockingCount ? ` · 必须修订 ${blockingCount} 条` : ""}</small></h2>
+          <ul>
+            {noted.map((note) => (
+              <li key={note.anchorId} className={`is-${note.severity}`}>
+                <div className="ticketDetailNoteHead">
+                  <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
+                  <em className="quoteNoteCat">{quoteNoteLabel(note)}</em>
+                  <strong>{quoteAnchorLabel(note.anchorId)}</strong>
+                </div>
+                {note.suggested ? (
+                  <span className="quoteNoteDiff">
+                    <s>{quoteCurrentValue(note.anchorId) || "—"}</s>
+                    <ArrowRight size={11} aria-hidden="true" />
+                    <b>{note.suggested}</b>
+                  </span>
+                ) : null}
+                <p>{note.text}</p>
+                <span className="quoteNoteBy">{note.author} · {note.authorRole} · {note.at}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       {/* 这条链就是工单相对邮件多出来的那样东西。邮件里同一份报告来回三轮,

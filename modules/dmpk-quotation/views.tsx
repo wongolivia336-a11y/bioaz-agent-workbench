@@ -12,7 +12,9 @@ import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelec
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
-import type { CoworkerDefinition } from "../types";
+import type { CoworkerDefinition, SessionRework } from "../types";
+import { ReworkCard } from "../../components/workbench-shell/ReworkCard";
+import type { QuoteNote } from "../../lib/workbench/quoteData";
 import { priceCatalog, scenarioShortLabels } from "../quotation-management/dmpk/catalog";
 import {
   dmpkFieldOptions,
@@ -64,7 +66,7 @@ function RuleScopePreview() {
   );
 }
 
-export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
+export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, rework, onOpenInspector, onArtifactPreview, onOpenQuote }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; /** 这一版是被退回来的:批注跟着回到会话里 */ rework?: SessionRework; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void; onOpenQuote?: () => void }) {
   return (
     <div className="dmpkConversation">
       {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
@@ -78,6 +80,9 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
         />
       ) : null}
       {stage === "generated" ? <DmpkArtifactCards onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} /> : null}
+      {/* 退回修订卡落在对话末尾:它是「这一次为什么回到这儿」的答案,
+          该跟着最近发生的事排在一起,不该另开一个面板让人再找一次。 */}
+      {rework ? <ReworkCard notes={rework.notes as QuoteNote[]} reason={rework.reason} by={rework.by} at={rework.at} onOpenQuote={onOpenQuote} /> : null}
     </div>
   );
 }

@@ -10,16 +10,21 @@ import { TaskList } from "./TaskList";
 import { TicketsPage } from "./TicketsPage";
 import { TicketHandoffDialog, type HandoffPayload } from "./TicketHandoffDialog";
 import { initialTickets, type Ticket } from "../../lib/workbench/ticketData";
+import { seededSessionFields, seededSessionHistory } from "../../lib/workbench/seededSessions";
+import type { QuoteNote } from "../../lib/workbench/quoteData";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { DigitalTeamPage } from "./DigitalTeamPage";
 import { KnowledgeBasePage } from "../knowledge-base/KnowledgeBasePage";
 import { DEFAULT_ACCOUNT_ID, inboxAccounts } from "../../lib/workbench/mockInbox";
-import { getDemoLens, readDemoLens, type DemoLens } from "../../lib/workbench/demoLens";
+import { DEFAULT_LENS, demoLensSearch, getDemoLens, readDemoLens, type DemoLens } from "../../lib/workbench/demoLens";
 import { seededUnreadTaskIds, workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
-import type { ProjectType, QuotationManagementTarget, SessionHandoff, SessionOutcome, WorkbenchProject } from "../../modules/types";
+import type { ProjectType, QuotationManagementTarget, SessionHandoff, SessionOutcome, SessionRework, WorkbenchProject } from "../../modules/types";
 import { QuotationManagement } from "../../modules/quotation-management";
+
+/** 深链认识的 view 取值。不在这张表里的,说明是别人的参数,不该被顺手清掉。 */
+const KNOWN_DEEPLINK_VIEWS = ["library", "digital-team", "quotation-management"];
 
 export default function WorkbenchShell() {
   // Start closed so narrow viewports never paint the desktop sidebar before
@@ -68,14 +73,18 @@ export default function WorkbenchShell() {
   /* 按 id 取，不按下标。下标会随通讯录增删悄悄换人——加了赵敏之后
      inboxAccounts[1] 就从王林彬变成了林一一，而这种变化不报错。 */
   const [accountId, setAccountId] = useState(DEFAULT_ACCOUNT_ID);
-  /* 演示镜头。**脚手架,上线前删。** 由地址栏驱动:?view=dmpk / ?view=qa。
+  /* 演示镜头。**脚手架,上线前删。** 由地址栏驱动:不带参数 = DMPK 报价(近期
+     要演示的那条线),`?view=qa` 看 QA,`?view=all` 看总览。
      初值不在 useState 里直接读 window——服务端渲染不出同样的值,会 hydration 不匹配。
-     跟上面 collapsed 的处理方式一致:先给个安全值,挂载后再校正。 */
-  const [lens, setLens] = useState<DemoLens>("all");
+     跟上面 collapsed 的处理方式一致:先给默认值,挂载后再按地址栏校正。 */
+  const [lens, setLens] = useState<DemoLens>(DEFAULT_LENS);
   useEffect(() => { setLens(readDemoLens(window.location.search)); }, []);
   const [helperConversationStarted, setHelperConversationStarted] = useState(false);
   const [, setModuleRunStatus] = useState<ModuleRunStatus>("active");
   const [sessionSnapshots, setSessionSnapshots] = useState<Record<string, AgentSessionSnapshot[]>>({});
+  /* 这一版是被退回来的。跟着人一起进会话,进去之后清掉——它描述的是「这一次
+     怎么进来的」,不是会话本身的属性。 */
+  const [rework, setRework] = useState<SessionRework | undefined>();
   /* 会话结论按任务存。module 会随路由重挂载，结论放在它里面等于切走就没了。 */
   const [sessionOutcomes, setSessionOutcomes] = useState<Record<string, SessionOutcome>>({});
   /* null = 没开。开的时候带上落点，这样从报价会话过去能直接停在规则页并带着草稿，
@@ -241,9 +250,18 @@ export default function WorkbenchShell() {
     }
     /* 深链是一次性的：消费完就把 query 从地址栏抹掉。
        否则参数一直留着，之后每次刷新都会被重新读到，
-       从报价规则跳过一次之后，页面就永远停在后台了。 */
-    if (moduleId || view) {
-      window.history.replaceState(null, "", window.location.pathname);
+       从报价规则跳过一次之后，页面就永远停在后台了。
+
+       但只抹**自己认识**的那些。原来写的是「moduleId 或 view 有值就抹掉整个
+       pathname 之后的部分」——于是任何别人放在地址栏里的参数都被顺手清掉，
+       演示镜头的 ?line= 就是这么每次加载都消失的。
+       删只删自己消费掉的键，别人的留着。 */
+    const consumed = ["module", "task", "view", "business", "tab", "draft"];
+    if (moduleId || KNOWN_DEEPLINK_VIEWS.includes(view ?? "")) {
+      const next = new URLSearchParams(window.location.search);
+      consumed.forEach((key) => next.delete(key));
+      const query = next.toString();
+      window.history.replaceState(null, "", window.location.pathname + (query ? `?${query}` : ""));
     }
   }, []);
 
@@ -410,14 +428,29 @@ export default function WorkbenchShell() {
 
   /* QA 那一类要带到会话里处理：批注有 AI 提的也有人工补的，还要跨版本验证
      上一轮提的问题改没改——这些都得跟数字同事一起看。 */
-  const handleTicket = (ticket: Ticket) => {
+  const handleTicket = (ticket: Ticket, notes: QuoteNote[] = []) => {
     acceptTicket(ticket);
+    /* 被退回的那一版:把驳回理由和逐条批注一起带进会话。
+       只把人送回会话是不够的——要改什么必须在眼前,否则他还得切回站内信
+       逐条读、记住哪几行、再切回来改。 */
+    const rejectedStep = [...ticket.steps].reverse().find((step) => step.action.includes("退回") || step.action.includes("驳回"));
+    setRework(ticket.status === "rejected" ? {
+      reason: rejectedStep?.note,
+      by: `${rejectedStep?.actor ?? ticket.from} · ${rejectedStep?.actorRole ?? ""}`.trim().replace(/ · $/, ""),
+      at: rejectedStep?.at ?? ticket.updatedAt,
+      notes,
+      attachmentName: ticket.attachments[0]?.name,
+    } : undefined);
     /* 不管有没有关联会话，都走同一条路把工单的说明和产物带进去：
-       有关联的接着上次说，没有的（手动交接开的单）新开一条并带上同样的上下文。 */
+       有关联的接着上次说，没有的（手动交接开的单）新开一条并带上同样的上下文。
+
+       被退回的那一版例外:不把驳回理由塞成首轮请求。那句话是审批人说的,
+       塞进去会渲染成撰写人自己的一条消息——他打开会话看到自己"说"了一句
+       从没说过的话。理由归退回修订卡,那儿才写着是谁说的。 */
     startTaskFromTicket({
       subject: ticket.title,
       project: ticket.project,
-      context: ticket.steps[ticket.steps.length - 1]?.note ?? ticket.title,
+      context: ticket.status === "rejected" ? undefined : (ticket.steps[ticket.steps.length - 1]?.note ?? ticket.title),
       attachments: ticket.attachments.map((file) => ({ id: file.id, kind: "file" as const, label: file.name, meta: file.meta, origin: "library" as const })),
       moduleId: ticket.moduleId,
       taskId: ticket.taskId,
@@ -609,10 +642,7 @@ export default function WorkbenchShell() {
 
   const changeLens = (next: DemoLens) => {
     setLens(next);
-    const url = new URL(window.location.href);
-    if (next === "all") url.searchParams.delete("view");
-    else url.searchParams.set("view", next === "dmpk-quotation" ? "dmpk" : "qa");
-    window.history.replaceState(null, "", url.pathname + url.search);
+    window.history.replaceState(null, "", demoLensSearch(next, window.location.href));
   };
   const inboxCount = tickets.filter((item) => item.assignee === account.name && item.status !== "done" && item.status !== "dropped").length;
   const activeLibraryFolder = libraryFolders.find((folder) => folder.id === libraryFolderId) ?? null;
@@ -631,6 +661,6 @@ export default function WorkbenchShell() {
     {handoffOpen ? <TicketHandoffDialog currentUser={account.name} projects={visibleProjects.filter((item) => item.type === "client").map((item) => item.name)} defaultProject={project} onSubmit={submitHandoff} onClose={() => setHandoffOpen(false)} /> : null}
     <button className="mobileSidebarBackdrop" type="button" aria-label="关闭侧边栏" onClick={() => setCollapsed(true)} />
     {route === "module" ? <button className="mobileModuleSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button> : null}
-    {route === "module" && Session && activeModule ? <Session projectName={project ?? "未归属项目"} taskTitle={taskTitle} initialRequest={initialRequest} initialAttachments={initialAttachments} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} onOpenQuotationManagement={(options) => setQuotationTarget({ business: "dmpk", ...options })} viewerRole={account.role} viewerName={account.name} onHandoff={handoffFromSession} sessionOutcome={activeTaskId ? sessionOutcomes[activeTaskId] ?? null : null} onSessionOutcomeChange={(next) => { if (activeTaskId) setSessionOutcomes((current) => ({ ...current, [activeTaskId]: next })); }} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="topbarPathLayer"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={14} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "未归属项目"}</span><ChevronRight size={14} /><strong>{taskTitle}</strong></> : route === "inbox" && (inboxTicketId || inboxNoticeTitle) ? <><button type="button" onClick={() => { setInboxTicketId(null); setInboxNoticeTitle(null); setInboxReviewing(false); }}>站内信</button><ChevronRight size={14} />{inboxReviewing && inboxTicketId ? <><button type="button" onClick={() => setInboxReviewing(false)}>{inboxTicketLabel}</button><ChevronRight size={14} /><strong>报价复核</strong></> : <strong>{inboxTicketLabel ?? inboxNoticeTitle}</strong>}</> : route === "library" && libraryProject ? <><button type="button" onClick={() => { setLibraryProject(null); setLibraryFolderId(null); setLibraryView("overview"); }}>数据中枢</button><ChevronRight size={14} />{librarySectionLabel ? <><button type="button" onClick={() => { setLibraryFolderId(null); setLibraryView("overview"); }}>{libraryProject}</button><ChevronRight size={14} /><strong>{librarySectionLabel}</strong></> : <strong>{libraryProject}</strong>}</> : <strong>{route === "library" ? "数据中枢" : route === "inbox" ? "站内信" : route === "knowledgeBase" ? "知识库" : route === "digitalTeam" ? "数字团队" : "新建任务"}</strong>}</div><div className="topbarScopeSlot" id="workbench-topbar-scope" /><div className="topbarPrimarySlot" id="workbench-topbar-primary" /></div><div className="topbarSecondRow"><div id="workbench-topbar-tabs" className="topbarTabLayer" /><div id="workbench-topbar-actions" className="topbarToolLayer" /></div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "inbox" ? <TicketsPage tickets={tickets} currentUser={account.name} projects={visibleProjects.filter((item) => item.type === "client").map((item) => item.name)} onHandle={handleTicket} onAccept={acceptTicket} reviewerRole={account.roleLabel} onReject={rejectTicket} onArchive={approveTicket} lensKind={activeLens.kindLabel} openTicketId={inboxTicketId} onOpenTicketChange={setInboxTicketId} openNoticeTitle={inboxNoticeTitle} onOpenNoticeChange={setInboxNoticeTitle} reviewing={inboxReviewing} onReviewingChange={setInboxReviewing} /> : route === "library" ? <FileManager projects={visibleProjects} selectedProject={libraryProject} selectedFolderId={libraryFolderId} folders={libraryFolders} view={libraryView} onSelectedProjectChange={(nextProject) => { setLibraryProject(nextProject); if (!nextProject) { setLibraryFolderId(null); setLibraryView("overview"); } }} onSelectedFolderChange={setLibraryFolderId} onViewChange={setLibraryView} onCreateProject={createProject} /> : route === "digitalTeam" ? <DigitalTeamPage projects={visibleProjects} tasks={runtimeTasks.filter((task) => !deletedTaskIds.includes(task.id))} onStartModule={startModuleDirect} onOpenLibrary={() => navigateShellRoute("library")} /> : route === "knowledgeBase" ? <KnowledgeBasePage /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={quickStarts} projectOptions={visibleProjectOptions} projectNotice={projectNotice} onProjectChange={(nextProject) => { setProject(nextProject); setProjectNotice(null); }} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
+    {route === "module" && Session && activeModule ? <Session projectName={project ?? "未归属项目"} taskTitle={taskTitle} initialRequest={initialRequest} initialAttachments={initialAttachments} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} onOpenQuotationManagement={(options) => setQuotationTarget({ business: "dmpk", ...options })} viewerRole={account.role} viewerName={account.name} rework={rework} initialHistory={activeTaskId ? seededSessionHistory[activeTaskId] : undefined} initialFields={activeTaskId ? seededSessionFields[activeTaskId] : undefined} onHandoff={handoffFromSession} sessionOutcome={activeTaskId ? sessionOutcomes[activeTaskId] ?? null : null} onSessionOutcomeChange={(next) => { if (activeTaskId) setSessionOutcomes((current) => ({ ...current, [activeTaskId]: next })); }} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="topbarPathLayer"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={14} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "未归属项目"}</span><ChevronRight size={14} /><strong>{taskTitle}</strong></> : route === "inbox" && (inboxTicketId || inboxNoticeTitle) ? <><button type="button" onClick={() => { setInboxTicketId(null); setInboxNoticeTitle(null); setInboxReviewing(false); }}>站内信</button><ChevronRight size={14} />{inboxReviewing && inboxTicketId ? <><button type="button" onClick={() => setInboxReviewing(false)}>{inboxTicketLabel}</button><ChevronRight size={14} /><strong>报价复核</strong></> : <strong>{inboxTicketLabel ?? inboxNoticeTitle}</strong>}</> : route === "library" && libraryProject ? <><button type="button" onClick={() => { setLibraryProject(null); setLibraryFolderId(null); setLibraryView("overview"); }}>数据中枢</button><ChevronRight size={14} />{librarySectionLabel ? <><button type="button" onClick={() => { setLibraryFolderId(null); setLibraryView("overview"); }}>{libraryProject}</button><ChevronRight size={14} /><strong>{librarySectionLabel}</strong></> : <strong>{libraryProject}</strong>}</> : <strong>{route === "library" ? "数据中枢" : route === "inbox" ? "站内信" : route === "knowledgeBase" ? "知识库" : route === "digitalTeam" ? "数字团队" : "新建任务"}</strong>}</div><div className="topbarScopeSlot" id="workbench-topbar-scope" /><div className="topbarPrimarySlot" id="workbench-topbar-primary" /></div><div className="topbarSecondRow"><div id="workbench-topbar-tabs" className="topbarTabLayer" /><div id="workbench-topbar-actions" className="topbarToolLayer" /></div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "inbox" ? <TicketsPage tickets={tickets} currentUser={account.name} projects={visibleProjects.filter((item) => item.type === "client").map((item) => item.name)} onHandle={handleTicket} onAccept={acceptTicket} reviewerRole={account.roleLabel} onReject={rejectTicket} onArchive={approveTicket} lensKind={activeLens.kindLabel} openTicketId={inboxTicketId} onOpenTicketChange={setInboxTicketId} openNoticeTitle={inboxNoticeTitle} onOpenNoticeChange={setInboxNoticeTitle} reviewing={inboxReviewing} onReviewingChange={setInboxReviewing} /> : route === "library" ? <FileManager projects={visibleProjects} selectedProject={libraryProject} selectedFolderId={libraryFolderId} folders={libraryFolders} view={libraryView} onSelectedProjectChange={(nextProject) => { setLibraryProject(nextProject); if (!nextProject) { setLibraryFolderId(null); setLibraryView("overview"); } }} onSelectedFolderChange={setLibraryFolderId} onViewChange={setLibraryView} onCreateProject={createProject} /> : route === "digitalTeam" ? <DigitalTeamPage projects={visibleProjects} tasks={runtimeTasks.filter((task) => !deletedTaskIds.includes(task.id))} onStartModule={startModuleDirect} onOpenLibrary={() => navigateShellRoute("library")} /> : route === "knowledgeBase" ? <KnowledgeBasePage /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={quickStarts} projectOptions={visibleProjectOptions} projectNotice={projectNotice} onProjectChange={(nextProject) => { setProject(nextProject); setProjectNotice(null); }} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main>;
 }
