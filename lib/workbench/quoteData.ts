@@ -208,6 +208,18 @@ export type QuoteNote = {
    好说明「通过不等于批注消失」。运行时新写的批注跟这些混在一起,共用一套渲染。 */
 export const seededQuoteNotes: Record<string, QuoteNote[]> = {
   "TK-2039": [
+    /* 一条落在会话参数上（采血点数），一条落在报价单本身（管理费口径）。
+       两种都要有：采纳之后前者会让右侧参数面板跟着变，后者不会——
+       而这正是「批注锚在报价条目上、会话收的是模块字段」这件事在界面上的样子。 */
+    {
+      anchorId: "p-tk-points",
+      category: "param",
+      severity: "blocking",
+      text: "方案里写的是每只动物 10 个采血点，这一版按 8 个报的，分析工作量少算了。",
+      suggested: "10",
+      quote: "TK blood sampling time points/animal",
+      author: "王林彬", authorRole: "审批人", at: "2 天前",
+    },
     {
       anchorId: "p-discount",
       category: "basis",

@@ -13,7 +13,8 @@ import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-s
 import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition, SessionRework } from "../types";
-import { ReworkCard } from "../../components/workbench-shell/ReworkCard";
+import { ReworkCard, type ReworkNoteState } from "../../components/workbench-shell/ReworkCard";
+import { ChangeConfirmCard, type QuoteChange } from "../../components/workbench-shell/ChangeConfirmCard";
 import type { QuoteNote } from "../../lib/workbench/quoteData";
 import { priceCatalog, scenarioShortLabels } from "../quotation-management/dmpk/catalog";
 import {
@@ -66,7 +67,7 @@ function RuleScopePreview() {
   );
 }
 
-export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, rework, onOpenInspector, onArtifactPreview, onOpenQuote }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; /** 这一版是被退回来的:批注跟着回到会话里 */ rework?: SessionRework; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void; onOpenQuote?: () => void }) {
+export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
   return (
     <div className="dmpkConversation">
       {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
@@ -82,7 +83,7 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
       {stage === "generated" ? <DmpkArtifactCards onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} /> : null}
       {/* 退回修订卡落在对话末尾:它是「这一次为什么回到这儿」的答案,
           该跟着最近发生的事排在一起,不该另开一个面板让人再找一次。 */}
-      {rework ? <ReworkCard notes={rework.notes as QuoteNote[]} reason={rework.reason} by={rework.by} at={rework.at} onOpenQuote={onOpenQuote} /> : null}
+
     </div>
   );
 }
@@ -158,7 +159,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ editProposal, onHandoff, viewerName, handoffDone, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
+export function DmpkComposer({ editProposal, onHandoff, viewerName, handoffDone, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -176,6 +177,27 @@ export function DmpkComposer({ editProposal, onHandoff, viewerName, handoffDone,
       {/* 报价出来了,下一步是把它交给谁。入口长在这儿而不是某个列表页顶栏:
           工单不是「新建」出来的,是干完活交出去那一下留下的凭据——所以它该
           出现在活刚干完的地方,而不是让人先想起去哪儿开一张单。 */}
+      {/* 退回修订卡跟交接卡、参数卡同一个槽位:它们是同一类东西——
+          需要人当场做一个决定的卡片,而决定做完紧接着就是打字,
+          所以它该待在手指已经在的地方,并且与输入框同宽。 */}
+      {rework && onAcceptRework && onDeferRework && onResetRework && !changeConfirm ? (
+        <ReworkCard
+          notes={reworkNotes}
+          reason={rework.reason}
+          by={rework.by}
+          at={rework.at}
+          states={reworkStates}
+          currentValueOf={reworkCurrentValue}
+          onAccept={onAcceptRework}
+          onDefer={onDeferRework}
+          onReset={onResetRework}
+          onRegenerate={onRegenerateRework}
+          onOpenQuote={onOpenQuote}
+        />
+      ) : null}
+      {changeConfirm && onConfirmChanges && onCancelChanges ? (
+        <ChangeConfirmCard changes={changeConfirm} onConfirm={onConfirmChanges} onCancel={onCancelChanges} />
+      ) : null}
       {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       {stage !== "collecting" && stage !== "ready" ? <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} locked={coworkerLocked} onChange={onCoworkerChange} /> : null}
