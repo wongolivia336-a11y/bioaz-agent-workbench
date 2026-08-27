@@ -198,44 +198,86 @@
 
 /* ---------- 3.5 快捷入口的项目追问 ---------- */
 
-/* 长在卡片正下方：你刚点的那张卡在上面 8px 处，问题问的正是它。
-   弹到 123px 外那颗选择器上去，等于让人重新找一遍自己刚做的事。 */
+/* 卡片行和它的追问面板共用一个定位上下文：面板绝对定位挂在这里，
+   所以它出现时不占任何一行，下面的输入框一格都不会动。 */
+.quickStartZone {
+  position: relative;
+  display: grid;
+  width: 100%;
+  justify-items: center;
+}
+
+/* 面板从被点的那张卡「长出来」。
+   ----------------------------------------------------------------------
+   位移和缩放由 JS 用 FLIP 反算（见 NewTaskHome 里的 useLayoutEffect），
+   这里只负责定义它走回终点的方式。曲线用的是 Apple 那条 sheet 曲线：
+   起手快、收尾长，性格全在最后那 30% 上。
+
+   居中不用 transform——transform 整条留给 FLIP，
+   靠 left/right + margin-inline 对齐，两者才不会互相覆盖。 */
+/* 落点是卡片行本身，不是卡片行下方。
+   ----------------------------------------------------------------------
+   量过：卡片行底边到输入框顶边只有 96px，而这块面板 185px 高——挂在下方
+   必然压到输入框上。而且「就地长成」本来就该落在原地：iOS 长按菜单、
+   macOS Launchpad 的文件夹都是在原位展开、盖住周围，不是从底下顶出来。
+   -8px 让它略微探出行外，阴影才有浮起来的样子。 */
 .quickStartProjectPrompt {
+  position: absolute;
+  top: -8px;
+  right: 0;
+  left: 0;
+  z-index: 30;
   display: grid;
   width: min(560px, 100%);
-  justify-self: center;
-  gap: 10px;
-  margin-top: 4px;
+  margin-inline: auto;
   border: 1px solid var(--bioaz-agent-accent-border, #dcddf2);
   border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface, #fff);
-  padding: 14px 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-  animation: quickStartPromptIn 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  box-shadow: 0 14px 40px rgba(17, 19, 24, 0.12), 0 2px 6px rgba(17, 19, 24, 0.05);
+  transition:
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 150ms linear;
 }
 
-@keyframes quickStartPromptIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* 内容做等比反向缩放，否则文字会跟着面板一起被压扁。
+   它比外框晚一点点淡入：形先到位，字再落下来。 */
+.quickStartPromptInner {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  transition:
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 230ms ease-out 125ms;
+}
+
+/* 被点的那张卡淡下去——它正在「变成」这个面板。
+   因果关系写在动作里，就不用再补一句「需要先选择项目」。 */
+.taskExampleGrid button[data-dimmed="true"] {
+  opacity: 0.4;
+  transition: opacity 200ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quickStartProjectPrompt { animation: none; }
+  .quickStartProjectPrompt,
+  .quickStartPromptInner,
+  .taskExampleGrid button[data-dimmed="true"] {
+    transition: none;
+  }
 }
 
-.quickStartProjectPrompt > p {
+.quickStartPromptInner > p {
   display: grid;
   gap: 3px;
   margin: 0;
 }
 
-.quickStartProjectPrompt > p strong {
+.quickStartPromptInner > p strong {
   color: var(--bioaz-text-primary, #272b33);
   font-size: 13.5px;
   font-weight: 650;
 }
 
-.quickStartProjectPrompt > p span {
+.quickStartPromptInner > p span {
   color: var(--bioaz-text-tertiary, #7c8593);
   font-size: 12px;
 }
