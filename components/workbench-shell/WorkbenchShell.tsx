@@ -14,12 +14,15 @@ import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { DigitalTeamPage } from "./DigitalTeamPage";
 import { KnowledgeBasePage } from "../knowledge-base/KnowledgeBasePage";
 import { DEFAULT_ACCOUNT_ID, inboxAccounts } from "../../lib/workbench/mockInbox";
-import { getDemoLens, readDemoLens, type DemoLens } from "../../lib/workbench/demoLens";
+import { DEFAULT_LENS, demoLensSearch, getDemoLens, readDemoLens, type DemoLens } from "../../lib/workbench/demoLens";
 import { seededUnreadTaskIds, workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { ProjectType, QuotationManagementTarget, SessionHandoff, SessionOutcome, WorkbenchProject } from "../../modules/types";
 import { QuotationManagement } from "../../modules/quotation-management";
+
+/** 深链认识的 view 取值。不在这张表里的,说明是别人的参数,不该被顺手清掉。 */
+const KNOWN_DEEPLINK_VIEWS = ["library", "digital-team", "quotation-management"];
 
 export default function WorkbenchShell() {
   // Start closed so narrow viewports never paint the desktop sidebar before
@@ -68,10 +71,11 @@ export default function WorkbenchShell() {
   /* 按 id 取，不按下标。下标会随通讯录增删悄悄换人——加了赵敏之后
      inboxAccounts[1] 就从王林彬变成了林一一，而这种变化不报错。 */
   const [accountId, setAccountId] = useState(DEFAULT_ACCOUNT_ID);
-  /* 演示镜头。**脚手架,上线前删。** 由地址栏驱动:?view=dmpk / ?view=qa。
+  /* 演示镜头。**脚手架,上线前删。** 由地址栏驱动:不带参数 = DMPK 报价(近期
+     要演示的那条线),`?view=qa` 看 QA,`?view=all` 看总览。
      初值不在 useState 里直接读 window——服务端渲染不出同样的值,会 hydration 不匹配。
-     跟上面 collapsed 的处理方式一致:先给个安全值,挂载后再校正。 */
-  const [lens, setLens] = useState<DemoLens>("all");
+     跟上面 collapsed 的处理方式一致:先给默认值,挂载后再按地址栏校正。 */
+  const [lens, setLens] = useState<DemoLens>(DEFAULT_LENS);
   useEffect(() => { setLens(readDemoLens(window.location.search)); }, []);
   const [helperConversationStarted, setHelperConversationStarted] = useState(false);
   const [, setModuleRunStatus] = useState<ModuleRunStatus>("active");
@@ -241,9 +245,18 @@ export default function WorkbenchShell() {
     }
     /* 深链是一次性的：消费完就把 query 从地址栏抹掉。
        否则参数一直留着，之后每次刷新都会被重新读到，
-       从报价规则跳过一次之后，页面就永远停在后台了。 */
-    if (moduleId || view) {
-      window.history.replaceState(null, "", window.location.pathname);
+       从报价规则跳过一次之后，页面就永远停在后台了。
+
+       但只抹**自己认识**的那些。原来写的是「moduleId 或 view 有值就抹掉整个
+       pathname 之后的部分」——于是任何别人放在地址栏里的参数都被顺手清掉，
+       演示镜头的 ?line= 就是这么每次加载都消失的。
+       删只删自己消费掉的键，别人的留着。 */
+    const consumed = ["module", "task", "view", "business", "tab", "draft"];
+    if (moduleId || KNOWN_DEEPLINK_VIEWS.includes(view ?? "")) {
+      const next = new URLSearchParams(window.location.search);
+      consumed.forEach((key) => next.delete(key));
+      const query = next.toString();
+      window.history.replaceState(null, "", window.location.pathname + (query ? `?${query}` : ""));
     }
   }, []);
 
@@ -609,10 +622,7 @@ export default function WorkbenchShell() {
 
   const changeLens = (next: DemoLens) => {
     setLens(next);
-    const url = new URL(window.location.href);
-    if (next === "all") url.searchParams.delete("view");
-    else url.searchParams.set("view", next === "dmpk-quotation" ? "dmpk" : "qa");
-    window.history.replaceState(null, "", url.pathname + url.search);
+    window.history.replaceState(null, "", demoLensSearch(next, window.location.href));
   };
   const inboxCount = tickets.filter((item) => item.assignee === account.name && item.status !== "done" && item.status !== "dropped").length;
   const activeLibraryFolder = libraryFolders.find((folder) => folder.id === libraryFolderId) ?? null;
