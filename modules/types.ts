@@ -119,6 +119,9 @@ export type AgentModuleSessionProps = {
   /* 当前登录账号的岗位。QA 审核用它决定谁能落笔——撰写人端与审批人端是
      同一个 Session 的两种渲染，不是两个页面。其余 module 忽略即可。 */
   viewerRole?: "author" | "approver" | "owner";
+  /* 当前登录账号的姓名。交接选择器要用它把自己从候选里去掉——
+     交接的定义就是球换一只手，交给自己不是交接。 */
+  viewerName?: string;
   /* 把这一版交给下一棒。QA 的驳回和通过都走这里：驳回交回撰写人、通过交给
      负责人做最终确认与归档。载荷落成一张工单，不再是一封等人点发送的草稿。 */
   onHandoff?: (handoff: SessionHandoff) => void;

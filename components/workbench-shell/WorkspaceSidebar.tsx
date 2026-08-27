@@ -2,7 +2,8 @@
 
 import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { inboxAccounts, type InboxAccount } from "../../lib/workbench/mockInbox";
+import { type InboxAccount } from "../../lib/workbench/mockInbox";
+import { DEMO_LENSES, getDemoLens, type DemoLens } from "../../lib/workbench/demoLens";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, PinItem } from "../../lib/workbench/shellTypes";
 import type { ProjectType, WorkbenchProject, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
@@ -28,6 +29,10 @@ type Props = {
   highlightedProjectId: string | null;
   account: InboxAccount;
   inboxCount: number;
+  /** 演示脚手架:当前镜头与这条线上可切换的账号。上线前连同 demoLens 一起删。 */
+  lens: DemoLens;
+  onLensChange: (lens: DemoLens) => void;
+  switchableAccounts: InboxAccount[];
   onAccountChange: (accountId: string) => void;
   onOpenLibraryFolder: (project: string, folderId: string | null) => void;
   onCreateProject: (name: string, type: ProjectType) => WorkbenchProject | null;
@@ -68,9 +73,13 @@ export function WorkspaceSidebar(props: Props) {
     title: props.renamedTaskTitles[item.id] ?? item.title,
     project: currentProjectNameByOriginal.get(item.project ?? "") ?? item.project,
   }));
+  /* 演示镜头也收敛侧栏:只收敛收件箱是不够的,演示 DMPK 那条线时,
+     项目树里挂着的 QA 任务会一直在旁边晃。**脚手架,上线前删。** */
+  const lensModuleId = getDemoLens(props.lens).moduleId;
   const catalog: PinItem[] = [...runtimePinItems, ...staticTaskItems].filter((item) => (
     !props.deletedTaskIds.includes(item.id)
     && visibleProjects.some((project) => project.name === item.project)
+    && (!lensModuleId || item.moduleId === lensModuleId)
   ));
   const pinnedItems = props.pinnedItemIds.map((id) => catalog.find((item) => item.id === id)).filter((item): item is PinItem => Boolean(item));
 
@@ -259,9 +268,20 @@ export function WorkspaceSidebar(props: Props) {
         {accountMenuOpen ? (
           <div className="accountMenu">
             <div><span className="avatar">{props.account.name.slice(0, 1)}</span><span><strong>{props.account.name}</strong><small>{props.account.roleLabel} · {props.account.email}</small></span></div>
-            {/* 角色权限本应由登录账号决定，原型里给一个切换器把三个岗位的队列都演示出来 */}
+            {/* 演示镜头跟账号切换放在一起:两者都是演示装置,不是产品功能。
+                镜头决定「看哪条业务线」,账号决定「站在谁的位置上看」——
+                合起来才凑得出「同一件事在撰写人和审批人眼里各是什么样」。 */}
+            <p className="accountMenuLabel">演示视角</p>
+            {DEMO_LENSES.map((item) => (
+              <button className={`accountSwitchRow ${item.value === props.lens ? "isCurrent" : ""}`} type="button" key={item.value} onClick={() => { props.onLensChange(item.value); setAccountMenuOpen(false); }}>
+                <span className="avatar"><Eye size={13} /></span>
+                <span><strong>{item.label}</strong><small>{item.value === "all" ? "两条线都看" : `只看${item.label}这一条`}</small></span>
+                {item.value === props.lens ? <Check size={14} /> : null}
+              </button>
+            ))}
+            {/* 角色权限本应由登录账号决定，原型里给一个切换器把岗位的队列都演示出来 */}
             <p className="accountMenuLabel">切换账号（演示）</p>
-            {inboxAccounts.map((item) => (
+            {props.switchableAccounts.map((item) => (
               <button className={`accountSwitchRow ${item.id === props.account.id ? "isCurrent" : ""}`} type="button" key={item.id} onClick={() => { props.onAccountChange(item.id); setAccountMenuOpen(false); }}>
                 <span className="avatar">{item.name.slice(0, 1)}</span>
                 <span><strong>{item.name}</strong><small>{item.roleLabel}</small></span>

@@ -16,7 +16,12 @@ export type InboxAccount = {
   name: string;
   email: string;
   role: InboxRole;
+  /** 显示用，比 role 具体：同为 author，「一线实验员」和「DMPK 报价同事」不是一回事 */
   roleLabel: string;
+  /** 交接选择器里的分组：DMPK / QA / 药效 / 审批与管理 / 商务 */
+  team: string;
+  /** 侧栏账号切换器是否列出它。演示装置，不是权限。 */
+  switchable?: boolean;
 };
 
 /** todo 做完才消失，feed 看过即褪。两者生命周期不同，绝不能混进一个列表。 */
@@ -54,11 +59,39 @@ export type InboxItem = {
   actions: InboxAction[];
 };
 
-export const inboxAccounts: InboxAccount[] = [
-  { id: "acct-lin", name: "林一一", email: "lin@bioaz.com", role: "author", roleLabel: "撰写人" },
-  { id: "acct-wang", name: "王林彬", email: "wanglb@bioaz.com", role: "approver", roleLabel: "审批人" },
-  { id: "acct-li", name: "李林", email: "lil@bioaz.com", role: "owner", roleLabel: "负责人" },
+/* 通讯录。
+   -------------------------------------------------------------------
+   这里装两件不同的事,用一个 switchable 分开:
+
+   **通讯录**是交接的目标范围——把活交给谁,可选的是全公司。
+   **可切换账号**是演示装置,只有那么几个:要把「同一张单在两个人眼里长什么样」
+   演出来,至少得能站到对面去看一眼。
+
+   分成两个数组会立刻产生两处真相(同一个人在一处叫「撰写人」、另一处叫
+   「DMPK 报价同事」这类事),所以只留一份,用标志位切。
+
+   team 用于选择器里分组:一个你不熟的名字,光有姓名不够,得知道他是哪条线上的。 */
+export const directory: InboxAccount[] = [
+  { id: "acct-zhao", name: "赵敏", email: "zhaom@bioaz.com", role: "author", roleLabel: "DMPK 报价同事", team: "DMPK", switchable: true },
+  { id: "acct-sun", name: "孙桦", email: "sunh@bioaz.com", role: "author", roleLabel: "DMPK 实验负责人", team: "DMPK" },
+  { id: "acct-lin", name: "林一一", email: "lin@bioaz.com", role: "author", roleLabel: "一线实验员", team: "QA", switchable: true },
+  { id: "acct-zhou", name: "周颖", email: "zhouy@bioaz.com", role: "author", roleLabel: "QA 审核员", team: "QA" },
+  { id: "acct-chen", name: "陈默", email: "chenm@bioaz.com", role: "author", roleLabel: "药效实验员", team: "药效" },
+  { id: "acct-wang", name: "王林彬", email: "wanglb@bioaz.com", role: "approver", roleLabel: "审批人", team: "审批与管理", switchable: true },
+  { id: "acct-li", name: "李林", email: "lil@bioaz.com", role: "owner", roleLabel: "项目负责人", team: "审批与管理", switchable: true },
+  { id: "acct-he", name: "何雯", email: "hew@bioaz.com", role: "owner", roleLabel: "商务经理", team: "商务" },
 ];
+
+/** 侧栏那个账号切换器只列这些——演示要站到对面去看，不是要模拟全公司登录。 */
+export const inboxAccounts: InboxAccount[] = directory.filter((person) => person.switchable);
+
+/** 默认站在审批人视角。写成 id 而不是下标：下标会随通讯录增删悄悄换人。 */
+export const DEFAULT_ACCOUNT_ID = "acct-wang";
+
+/** 选择器里的分组顺序。跟 directory 的排列一致，改一处即可。 */
+export const directoryTeams = directory
+  .map((person) => person.team)
+  .filter((team, index, list) => list.indexOf(team) === index);
 
 export const inboxRoleLabel: Record<InboxRole, string> = {
   author: "撰写人",

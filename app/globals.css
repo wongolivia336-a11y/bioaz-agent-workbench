@@ -7564,9 +7564,11 @@ button {
   max-height: min(860px, calc(100dvh - 48px));
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
-.ticketFilePreviewBody { min-height: 0; overflow: auto; background: var(--soft, #f7f8fb); padding: 18px; }
-.ticketFilePreviewBody .quoteSheet,
-.ticketFilePreviewBody .quoteDoc { margin: 0 auto; }
+/* 正文那格由 Dialog 渲染成 .bioazUiDialogBody,皮肤挂在外层的实例类上。
+   两个类名连写(0,2,0)压得住通用的 .bioazUiDialogBody(0,1,0)。 */
+.ticketFilePreview .bioazUiDialogBody { min-height: 0; overflow: auto; background: var(--soft, #f7f8fb); padding: 18px; }
+.ticketFilePreview .quoteSheet,
+.ticketFilePreview .quoteDoc { margin: 0 auto; }
 
 
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { Download, X } from "lucide-react";
-import { useModalDismiss } from "../ui/useModalDismiss";
+import { Download } from "lucide-react";
+import { Dialog } from "../ui";
 import { QuoteDocPaper, QuoteSheetPaper, money, quoteCategories } from "./QuotePaper";
 import { quoteItems, quoteMeta, quoteParams, quoteSubtotals } from "../../lib/workbench/quoteData";
 import type { MailResourceRef } from "../../lib/workbench/mailboxData";
@@ -73,31 +73,24 @@ export function TicketFilePreview({ file, view, onClose }: {
   view: TicketFileView;
   onClose: () => void;
 }) {
-  /* 叉号、Esc、点遮罩三条路都能关,跟这套界面里其他弹窗一致。 */
-  const dismiss = useModalDismiss(onClose);
-
+  /* 用 components/ui 的 Dialog,不自己搭 backdrop——叉号、Esc、点遮罩、层栈
+     都在那里做过一遍了。这里只给它一个皮肤类(宽度和正文底色)。 */
   return (
-    <div className="modalBackdrop" role="presentation" {...dismiss}>
-      <section className="bioazUiDialog ticketFilePreview" role="dialog" aria-modal="true" aria-label={`预览 ${file.name}`}>
-        <header className="bioazUiDialogHeader">
-          <div>
-            <h2>{file.name}</h2>
-            <p>{file.meta}</p>
-          </div>
-          <button className="bioazUiDialogClose" type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button>
-        </header>
-
-        <div className="bioazUiDialogBody ticketFilePreviewBody">
-          {view === "quote-sheet" ? <QuoteSheetPaper /> : <QuoteDocPaper />}
-        </div>
-
-        <footer className="bioazUiDialogFooter">
+    <Dialog
+      title={file.name}
+      description={file.meta}
+      className="ticketFilePreview"
+      onClose={onClose}
+      footer={
+        <>
           <button className="secondaryButton compact" type="button" onClick={() => downloadTicketFile(file, view)}>
             <Download size={14} />下载
           </button>
           <button className="primaryButton compact" type="button" onClick={onClose}>关闭</button>
-        </footer>
-      </section>
-    </div>
+        </>
+      }
+    >
+      {view === "quote-sheet" ? <QuoteSheetPaper /> : <QuoteDocPaper />}
+    </Dialog>
   );
 }

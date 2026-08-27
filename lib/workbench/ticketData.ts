@@ -60,7 +60,7 @@ export type Ticket = {
 export const ticketStatusLabel: Record<TicketStatus, string> = {
   open: "待处理",
   rejected: "已驳回",
-  done: "已完成",
+  done: "已通过",
   dropped: "已废弃",
 };
 

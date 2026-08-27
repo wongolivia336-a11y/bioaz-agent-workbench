@@ -1596,3 +1596,104 @@ body:has(.bioazDesignSystemPage) {
 .dmpkDraftTab > button {
   --icon-stroke: 2.3;
 }
+
+
+/* ═══ PersonPicker ═══════════════════════════════════════════════════════
+   选人控件。收起态长得像一个字段(跟旁边的 input 同高同圆角),展开是一层浮层。
+   收件人是一个对象,所以选中之后显示成 chip——没人会想去手打一枚 chip。 */
+.personPicker { position: relative; display: grid; }
+
+.personPickerField {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: 0 10px;
+  color: var(--bioaz-text-primary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease;
+}
+
+.personPickerField:hover { border-color: var(--bioaz-border-strong, var(--bioaz-border)); }
+.personPickerField.isOpen { border-color: var(--bioaz-agent-accent); }
+.personPickerField > svg { flex: none; color: var(--bioaz-text-tertiary); }
+.personPickerPlaceholder { color: var(--bioaz-text-tertiary); }
+
+.personChip { display: inline-flex; min-width: 0; align-items: center; gap: 6px; }
+.personChip i {
+  display: grid; width: 20px; height: 20px; flex: none; place-items: center;
+  border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-secondary); font-size: 11px; font-style: normal;
+}
+.personChip strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 600; }
+.personChip em {
+  overflow: hidden; color: var(--bioaz-text-tertiary); font-size: 11.5px;
+  font-style: normal; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* 清除按钮压在字段右侧、箭头左边。绝对定位是为了不参与字段的 flex 排布——
+   它出现和消失时,里面那枚 chip 不该跟着动。 */
+.personPickerClear {
+  position: absolute; top: 50%; right: 30px;
+  display: grid; width: 20px; height: 20px; place-items: center;
+  transform: translateY(-50%);
+  border: 0; border-radius: var(--bioaz-radius-full); background: transparent;
+  padding: 0; color: var(--bioaz-text-tertiary); cursor: pointer;
+}
+.personPickerClear:hover { background: var(--bioaz-surface-active); color: var(--bioaz-text-primary); }
+
+.personPickerPanel {
+  position: absolute; z-index: 40; top: calc(100% + 5px); right: 0; left: 0;
+  display: grid; grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  box-shadow: 0 12px 32px rgba(16, 24, 40, .12);
+}
+
+.personPickerSearch {
+  display: flex; align-items: center; gap: 7px;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 9px 11px;
+  color: var(--bioaz-text-tertiary);
+}
+.personPickerSearch input {
+  min-width: 0; flex: 1; border: 0; outline: 0; background: transparent;
+  color: var(--bioaz-text-primary); font: inherit; font-size: 13px;
+}
+
+.personPickerList { max-height: 264px; overflow-y: auto; padding: 5px; }
+.personPickerGroup { display: grid; gap: 1px; }
+.personPickerGroup > span {
+  padding: 7px 8px 4px; color: var(--bioaz-text-tertiary);
+  font-size: 11px; font-weight: 600;
+}
+
+.personPickerOption {
+  display: flex; align-items: center; gap: 9px;
+  border: 0; border-radius: var(--bioaz-radius-control); background: transparent;
+  padding: 7px 8px; text-align: left; cursor: pointer;
+}
+/* 高亮跟着键盘游标走,不跟着 :hover——两套高亮同时亮会让人分不清
+   按 Enter 会选中哪一个。鼠标移入时直接把游标挪过去。 */
+.personPickerOption.isCursor { background: var(--bioaz-surface-hover); }
+.personPickerOption > i {
+  display: grid; width: 26px; height: 26px; flex: none; place-items: center;
+  border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-secondary); font-size: 12px; font-style: normal;
+}
+.personPickerOption > span { display: grid; min-width: 0; flex: 1; gap: 1px; }
+.personPickerOption strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 600; }
+.personPickerOption small {
+  overflow: hidden; color: var(--bioaz-text-tertiary); font-size: 11.5px;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.personPickerOption > svg { flex: none; color: var(--bioaz-agent-accent); }
+
