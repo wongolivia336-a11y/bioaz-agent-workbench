@@ -36,12 +36,14 @@ const PAGE_SIZE = 10;
    量的是类型、其余才是状态。两个都搬走了:类型归类型轴;而归属根本不需要一个
    筛子——收件箱本来就是你的,装的就是到你手上的东西(见 filtered)。
    未读与否由行首那颗点指示,也不必再多一个筛子。 */
-const STATUS_OPTIONS = ["全部状态", "待处理", "已驳回", "已完成", "已作废"] as const;
+const STATUS_OPTIONS = ["全部状态", "待处理", "已驳回", "已通过", "已作废"] as const;
 
+/* 这几个键必须跟 ticketStatusLabel 的取值一模一样,否则筛出来永远是空——
+   done 从「已完成」改名成「已通过」时,这里差点忘了跟着改。 */
 const STATUS_MATCH: Record<string, TicketStatus[]> = {
   "待处理": ["open"],
   "已驳回": ["rejected"],
-  "已完成": ["done"],
+  "已通过": ["done"],
   "已作废": ["dropped"],
 };
 
@@ -218,7 +220,7 @@ export function TicketsPage({
       <div className="ticketsFilters">
         <label className="ticketsSearch">
           <Search size={14} />
-          <input value={keyword} placeholder="搜索标题、发件人或工单号" onChange={(event) => { setKeyword(event.target.value); setPage(1); }} />
+          <input value={keyword} placeholder="搜索主题、发件人或项目" onChange={(event) => { setKeyword(event.target.value); setPage(1); }} />
           {keyword ? <button type="button" aria-label="清空搜索" onClick={() => { setKeyword(""); setPage(1); }}><X size={13} /></button> : null}
         </label>
         {/* 类型、状态、项目并排:它们是同一种东西,缩小这一屏的三把尺子。 */}
@@ -327,9 +329,13 @@ export function TicketsPage({
   );
 }
 
-/* 一张工单的生命周期就这四步,来回多少轮都还是这四步。
-   驳回不是第五步,是被打回到「审核」那一格——所以它不占位置,只把当前格子染红。 */
-const TICKET_STAGES = ["提交", "审核", "通过", "归档"] as const;
+/* 一件事的生命周期就这三步,来回多少轮都还是这三步。
+   驳回不是第四步,是被打回到「审核」那一格——所以它不占位置,只把当前格子染红。
+
+   原本还有第四格「归档」。删了:归档要落进数据中枢,而数据中枢还没建好——
+   画一格永远走不到的进度,比不画更误导。通过之后这件事回到撰写人手上,
+   后续动作发生在这个系统之外,所以「通过」就是这条链的终点。 */
+const TICKET_STAGES = ["提交", "审核", "通过"] as const;
 
 /**
  * 状态条:现在到哪一步。
@@ -339,10 +345,10 @@ const TICKET_STAGES = ["提交", "审核", "通过", "归档"] as const;
  * 一个是位置,一个是历史;前者只有四格且永远只有四格,后者随轮次增长。
  */
 function TicketStageBar({ status }: { status: Ticket["status"] }) {
-  const current = status === "done" ? 3 : status === "dropped" ? 1 : status === "open" ? 1 : 1;
+  const current = status === "done" ? 2 : 1;
   const rejected = status === "rejected";
   return (
-    <ol className="ticketStageBar" aria-label="工单进度">
+    <ol className="ticketStageBar" aria-label="处理进度">
       {TICKET_STAGES.map((stage, index) => {
         const state = index < current ? "done" : index === current ? (rejected ? "rejected" : "current") : "todo";
         return (
@@ -401,9 +407,16 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
   onReject: (summary: string) => void;
   onArchive: () => void;
 }) {
-  /* 只有球还在你手上时才谈处置。已驳回是球在上一棒那儿,已完成和已作废是终态——
-     给一个点不动的按钮,比不给更让人困惑。 */
-  const actionable = ticket.status === "open" && isMine;
+  /* 只有球还在你手上、且这件事还没了结时才谈处置。
+     判据必须是「归属 + 未到终态」,不能只看状态是不是 open——驳回之后
+     assignee 换回了撰写人,那张单对他就是头号待办,可它的状态是 rejected。
+     只认 open 会让他看到一句「球不在你这边,当前处理人是林一一」,而他就是林一一。 */
+  const isTerminal = ticket.status === "done" || ticket.status === "dropped";
+  const actionable = isMine && !isTerminal;
+  /* 他是不是这件事的提交人。驳回时 assignee 换回 from,所以撰写人同时是两者;
+     审批人是 assignee 但不是 from。一个人在这件事里是什么身份,单子自己说得清,
+     不用另造一个「角色」概念。 */
+  const isSubmitter = currentUser === ticket.from;
   const isQuotation = ticket.kind === "dmpk-quotation";
   const [preview, setPreview] = useState<{ file: MailResourceRef; view: TicketFileView } | null>(null);
 
@@ -437,7 +450,7 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
 
       {ticket.attachments.length ? (
         <section className="ticketDetailFiles">
-          <h2>随单产物</h2>
+          <h2>随行产物</h2>
           {ticket.attachments.map((file) => {
             const view = ticketFileView(ticket, file);
             return (
@@ -486,8 +499,15 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
       <footer className="ticketDetailActions">
         {!actionable ? (
           <p className="ticketDetailHint">
-            {ticket.status === "done" || ticket.status === "dropped" ? "这张工单已经结束，只能查看。" : `球不在你这边，当前处理人是 ${ticket.assignee}。`}
+            {isTerminal ? "这件事已经结束，只能查看。" : `球不在你这边，当前处理人是 ${ticket.assignee}。`}
           </p>
+        ) : isQuotation && isSubmitter ? (
+          /* 提交人拿回这一单(被驳回、或要改)时,该回到当初产出它的那个会话去改,
+             不是进批注台——他不是来批注的,他是来改的。 */
+          <>
+            <p className="ticketDetailHint">回到当初产出这份报价的会话，改完再交一次。</p>
+            <button className="primaryButton compact" type="button" onClick={onHandle}>进入会话处理</button>
+          </>
         ) : isQuotation ? (
           <>
             <p className="ticketDetailHint">这一单全程人工复核，不经过数字同事。</p>

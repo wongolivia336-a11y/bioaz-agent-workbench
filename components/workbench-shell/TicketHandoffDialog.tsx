@@ -122,7 +122,7 @@ export function TicketHandoffDialog({
           </div>
 
           <div className="ticketHandoffField">
-            <span>随单产物{files.length ? "" : " · 必填"}</span>
+            <span>随行产物{files.length ? "" : " · 必填"}</span>
             <div className="ticketHandoffFiles">
               {files.map((file) => (
                 <article key={file.id}>
