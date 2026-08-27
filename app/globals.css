@@ -8163,7 +8163,9 @@ button {
    真要摊开逐条看,走全屏。 */
 .reworkBody { display: grid; gap: 12px; }
 .reworkBody.isScrollable { max-height: 320px; overflow-y: auto; padding-right: 2px; }
-.reworkFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* 两颗都靠右。它们是同一组收尾动作——「先看看原件」和「就这样重出一版」，
+   分开钉在两端只会让人以为左边那颗是别的类别的东西。 */
+.reworkFoot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .reworkBadge {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
   border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
@@ -8234,12 +8236,16 @@ button {
 
 /* 全屏里内容自己滚，脚在下面钉住。 */
 .reworkModal { width: min(820px, calc(100vw - 48px)); max-height: min(760px, calc(100dvh - 48px)); }
-.reworkModalBody { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 12px; overflow: hidden; padding: 18px 20px 4px; }
+/* 底部留 18px,跟左右对齐。原来是 4px——页脚几乎贴着弹窗下边框,
+   两颗按钮看着像掉出去了。 */
+.reworkModalBody { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 14px; overflow: hidden; padding: 18px 20px; }
 .reworkModalBody .reworkBody { min-height: 0; overflow-y: auto; }
 
 /* 卡里的回顶按钮要小一号、要抬到页脚上方:卡总共才 320px 高，
    一颗 36px 的球压在右下角，挡的正好是「重新生成报价单」。 */
 .reworkCard .scrollTopButton { right: 14px; bottom: 58px; width: 30px; height: 30px; }
+/* 全屏里同理：页脚占掉底部约 48px，回顶球要落在它上面。 */
+.reworkModal .scrollTopButton { bottom: 62px; }
 
 /* ═══ 带批注的产物预览 ═══════════════════════════════════════════════════
    审批人在批注台上看到的是：被批的那几行有记号，右栏一列批注。撰写人拿回

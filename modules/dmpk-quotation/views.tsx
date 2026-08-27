@@ -29,7 +29,42 @@ import {
 } from "./fields";
 
 export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "review";
-export type DmpkChatMessage = { id: string; role: "user" | "agent"; text: string; attachments?: ComposerAttachment[] };
+/**
+ * 会话里的一条记录。
+ *
+ * `run` 是「数字同事跑了一次」的那条痕迹。
+ * ----------------------------------------------------------------------
+ * 它原来不在消息流里——是照着 stage 渲染在所有消息**后面**的一条固定尾巴。
+ * 于是一旦这一轮回完话，那条运行记录就留在了回复的下方：读下来是
+ * 「我还没识别到参数」→「已更新报价参数」，先说结论后说过程，顺序是反的。
+ * 再来一轮，它还会跳到更下面去——它根本不属于任何一轮。
+ *
+ * 运行发生在某个时刻，它就该钉在那个时刻。所以完成的运行进消息流；
+ * 只有**正在跑**的那一条才留在最下面，因为它确实是此刻正在发生的事。
+ */
+export type DmpkChatMessage = {
+  id: string;
+  role: "user" | "agent" | "run";
+  text: string;
+  attachments?: ComposerAttachment[];
+  /** role === "run" 时这一次跑了哪几步。 */
+  runSteps?: string[];
+};
+
+/** 一次运行的标题与步骤。两处（进行中的尾巴、留档的那条）取自同一处，免得分叉。 */
+export function dmpkRunRecord(kind: "params" | "quote", options: { running?: boolean; missingCount?: number } = {}) {
+  const { running = false, missingCount = 0 } = options;
+  if (kind === "quote") {
+    return {
+      text: running ? "正在生成报价单" : "已完成报价生成过程",
+      runSteps: ["检查计价关键字段", "匹配 PK 动物实验价格规则", "匹配生物分析价格规则", "生成 Word / Excel 报价单", "校验页面与文件金额一致"],
+    };
+  }
+  return {
+    text: running ? "正在处理报价参数" : "已更新报价参数",
+    runSteps: ["读取用户输入", "识别 DMPK / PK 业务线", missingCount ? `还缺 ${missingCount} 项报价参数` : "当前阶段参数已齐全"],
+  };
+}
 export type DmpkEditProposal =
   | { kind: "current-price"; request: string; previousPrice: number; nextPrice: number }
   | { kind: "global-rule"; request: string; minimumSamples: number };
@@ -68,18 +103,20 @@ function RuleScopePreview() {
 }
 
 export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
+  const liveRun = stage === "thinking" || stage === "generating"
+    ? dmpkRunRecord(stage === "generating" ? "quote" : "params", { running: true, missingCount: currentMissing.length })
+    : null;
   return (
     <div className="dmpkConversation">
       {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
-      {messages.map((message) => message.role === "agent" ? <AgentReply key={message.id}>{message.text}</AgentReply> : <UserBubble key={message.id} text={message.text} attachments={message.attachments} />)}
-      {stage !== "idle" ? (
-        <DmpkActivityChain
-          title={stage === "generated" ? "已完成报价生成过程" : stage === "thinking" ? "正在处理报价参数" : "已更新报价参数"}
-          steps={stage === "generating" || stage === "generated" ? ["检查计价关键字段", "匹配 PK 动物实验价格规则", "匹配生物分析价格规则", "生成 Word / Excel 报价单", "校验页面与文件金额一致"] : ["读取用户输入", "识别 DMPK / PK 业务线", currentMissing.length ? `还缺 ${currentMissing.length} 项报价参数` : "当前阶段参数已齐全"]}
-          running={stage === "thinking" || stage === "generating"}
-          onOpenInspector={onOpenInspector}
-        />
-      ) : null}
+      {messages.map((message) => {
+        if (message.role === "run") return <DmpkActivityChain key={message.id} title={message.text} steps={message.runSteps ?? []} running={false} onOpenInspector={onOpenInspector} />;
+        if (message.role === "agent") return <AgentReply key={message.id}>{message.text}</AgentReply>;
+        return <UserBubble key={message.id} text={message.text} attachments={message.attachments} />;
+      })}
+      {/* 只有正在跑的那一条留在最下面——它确实是此刻正在发生的事。
+          跑完就进消息流，钉在它发生的那个位置。 */}
+      {liveRun ? <DmpkActivityChain title={liveRun.text} steps={liveRun.runSteps} running onOpenInspector={onOpenInspector} /> : null}
       {stage === "generated" ? <DmpkArtifactCards onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} /> : null}
       {/* 退回修订卡落在对话末尾:它是「这一次为什么回到这儿」的答案,
           该跟着最近发生的事排在一起,不该另开一个面板让人再找一次。 */}
@@ -199,7 +236,10 @@ export function DmpkComposer({ editProposal, onHandoff, viewerName, handoffDone,
       ) : null}
       {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
-      {stage !== "collecting" && stage !== "ready" ? <CoworkerSelector coworkers={coworkers} activeCoworkerId={activeCoworkerId} locked={coworkerLocked} onChange={onCoworkerChange} /> : null}
+      {/* 「DMPK报价同事 ∨」那颗切换器撤掉。走到这个工作台的路只有一条——
+          从站内信进来，或者在项目里新建一个 DMPK 报价任务——两条路都已经
+          决定了对面是谁。留一个几乎不会被点、点了还会把当前这一单切走的
+          下拉框，只是在输入框上方多占一行。 */}
       <WorkbenchComposer
         className="dmpkComposer"
         attachments={attachments}

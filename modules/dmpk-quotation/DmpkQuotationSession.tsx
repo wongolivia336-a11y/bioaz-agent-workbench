@@ -26,6 +26,7 @@ import { QuotePreviewModal } from "../../components/workbench-shell/QuotePreview
 import {
   DmpkComposer,
   DmpkConversation,
+  dmpkRunRecord,
   DmpkEditProposalCard,
   DmpkQuotationPreviewModal,
   type DmpkChatMessage,
@@ -33,7 +34,7 @@ import {
   type DmpkInspectorPanelId,
 } from "./views";
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, rework, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, rework, onReworkResolved, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
   const openingMessage = "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。";
   /* 回到旧会话时把参数一起还原。不还原的话,右侧面板停在「未开始」,
      而对话里写着「参数已齐全、报价单已生成」——一屏之内自相矛盾。 */
@@ -66,8 +67,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         .filter((entry) => entry.role !== "process")
         .map((entry) => ({ id: entry.id, role: entry.role as DmpkChatMessage["role"], text: entry.text }));
     }
+    /* 开场白在前、被带进来的那句请求在后。反过来读是这样的：
+       用户先说了一整段需求，数字同事接着自我介绍并请他「描述检测类型、
+       分子类型……」——而那些他刚刚说完。 */
     return initialRequest
-      ? [{ id: "initial-request", role: "user", text: initialRequest, attachments: initialAttachments }, { id: "context", role: "agent", text: openingMessage }]
+      ? [{ id: "context", role: "agent", text: openingMessage }, { id: "initial-request", role: "user", text: initialRequest, attachments: initialAttachments }]
       : [{ id: "context", role: "agent", text: openingMessage }];
   });
   /* 这一单交出去了没有。交接是一次性动作,不该留一张还能再点一次的卡在那儿。 */
@@ -123,13 +127,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       moduleId: "dmpk-quotation",
       coworkerName: activeCoworker?.name ?? "DMPK报价同事",
       stageLabel: stage === "generated" ? "报价已生成" : stage === "ready" ? "参数已齐全" : stage === "collecting" ? "参数补全中" : "报价处理中",
-      entries: messages.map((message) => ({ id: message.id, role: message.role, text: message.text })),
+      /* 运行记录不进快照:上下文摘要要的是「说了什么」,不是「跑了几步」。 */
+      entries: messages.filter((message) => message.role !== "run").map((message) => ({ id: message.id, role: message.role as "user" | "agent", text: message.text })),
       facts: fields.filter((field) => field.value).map((field) => ({ label: field.label, value: field.value })),
     });
   }, [activeCoworker?.name, fields, messages, onSessionSnapshotChange, stage]);
 
   const appendMessage = (role: DmpkChatMessage["role"], text: string, attachments?: ComposerAttachment[]) => {
     setMessages((items) => [...items, { id: `${role}-${Date.now()}-${items.length}`, role, text, attachments }]);
+  };
+
+  /* 跑完一轮就把这条运行记录钉进消息流,紧挨着它自己那条回复的上方。
+     一定要在 appendMessage("agent", …) 之前调用——过程在前,结论在后。 */
+  const appendRun = (kind: "params" | "quote", missingCount = 0) => {
+    const record = dmpkRunRecord(kind, { missingCount });
+    setMessages((items) => [...items, { id: `run-${Date.now()}-${items.length}`, role: "run", ...record }]);
   };
 
   /* 交接完成之后卡片就收起,内容沉淀成会话里的一条记录。
@@ -200,11 +212,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       return change ? { ...field, value: change.to } : field;
     }));
     setReworkSettled(true);
+    /* 也告诉壳层这一单不再是「被退回着」的状态,否则切走再回来卡片又长回来。 */
+    onReworkResolved?.();
     appendMessage("user", `确认本轮改动，共 ${pendingChanges.length} 项，按新值重出一版。`);
     setStage("generating");
     suggestPanel("parameters");
     window.setTimeout(() => {
       setStage("generated");
+      appendRun("quote");
       appendMessage("agent", "已按确认的改动重新生成报价单，Word 与 Excel 金额校验一致，可再次送审。");
     }, 1200);
   };
@@ -233,6 +248,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       setActiveGroup(nextGroup);
       setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
       setStage("collecting");
+      appendRun("params", remaining.length);
       appendMessage("agent", recognized.length
         ? `已识别：${recognized.map((field) => `${field.label}：${field.value}`).join("、")}。还需要补充 ${remaining.length} 项报价参数，请从下方当前参数页继续填写。`
         : "我还没有识别到可用于报价的具体参数。请先描述检测类型、分子类型、动物种属与数量、试验周期和采血点，我会继续追问缺失项。");
@@ -308,9 +324,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         setActiveGroup(nextGroup);
         setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
         setStage("collecting");
+        appendRun("params", remaining.length);
         appendMessage("agent", `已更新报价参数。还需补充 ${remaining.length} 项参数，请继续在下方补全卡中选择。`);
       } else {
         setStage("ready");
+        appendRun("params");
         appendMessage("agent", "计价关键字段已齐全。请进行报价前确认，确认后生成 Word 报价单和 Excel 报价明细。");
       }
     }, 700);
@@ -357,6 +375,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     window.setTimeout(() => {
       setStage("generated");
       suggestPanel("artifacts");
+      appendRun("quote");
       appendMessage("agent", "报价单已生成。Word 与 Excel 金额校验一致。");
     }, 1800);
   };
@@ -484,7 +503,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         />
         {panelFocus ? (
           <FloatingChatDock
-            messages={messages}
+            /* 浮动对话只放人和数字同事说的话:那个小窗是用来接着聊的,
+               把运行记录也塞进去只会把仅有的几行挤掉。 */
+            messages={messages.filter((message) => message.role !== "run") as { id: string; role: "user" | "agent"; text: string }[]}
             text={composerText}
             onTextChange={setComposerText}
             onSend={submitComposer}
