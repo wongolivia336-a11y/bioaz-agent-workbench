@@ -1697,7 +1697,3 @@ body:has(.bioazDesignSystemPage) {
 }
 .personPickerOption > svg { flex: none; color: var(--bioaz-agent-accent); }
 
-.personPickerEmpty {
-  margin: 0; padding: 18px 10px; color: var(--bioaz-text-tertiary);
-  font-size: 12.5px; text-align: center;
-}

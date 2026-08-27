@@ -3,6 +3,7 @@
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
+import { EmptyState } from "./EmptyState";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 import type { InboxAccount } from "../../lib/workbench/mockInbox";
 
@@ -158,8 +159,10 @@ export function PersonPicker({
                 })}
               </div>
             ))}
-            {/* 空结果要说话。留一片空白会让人以为控件坏了，而不是没搜到。 */}
-            {!candidates.length ? <p className="personPickerEmpty">没有匹配的同事</p> : null}
+            {/* 空结果要说话。留一片空白会让人以为控件坏了，而不是没搜到。
+                用 EmptyState 的 inline 变体,不自己造第 14 种空态类名——
+                audit:ui 正是为了拦住这种事,而我第一版就手搓了一个。 */}
+            {!candidates.length ? <EmptyState variant="inline" title="没有匹配的同事" /> : null}
           </div>
         </div>
       ) : null}
