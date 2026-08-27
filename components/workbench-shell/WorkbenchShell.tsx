@@ -107,7 +107,7 @@ export default function WorkbenchShell() {
   const [projectNotice, setProjectNotice] = useState<string | null>(null);
   const [highlightedProjectId, setHighlightedProjectId] = useState<string | null>(null);
 
-  const quickStarts = useMemo(() => quickStartRegistry.map((item) => { const Icon = item.icon; return { id: item.id, label: item.label, prompt: item.prompt, availability: item.availability, icon: <Icon size={16} /> }; }), []);
+  const quickStarts = useMemo(() => quickStartRegistry.map((item) => { const Icon = item.icon; return { id: item.id, label: item.label, prompt: item.prompt, availability: item.availability, moduleId: item.moduleId, icon: <Icon size={16} /> }; }), []);
   const suggestedCoworker = pendingModule?.suggestedCoworker ?? null;
 
   const createRuntimeTask = (title: string, module: AgentModuleDefinition | null, projectOverride?: string | null) => {
@@ -227,11 +227,15 @@ export default function WorkbenchShell() {
   };
   const cancelDispatch = () => { setText(pendingRequest ?? ""); setPendingRequest(null); setPendingModule(null); };
 
-  const startModuleDirect = (moduleId: string) => {
+  /* projectOverride：首屏点快捷入口时项目是当场选的，而 setProject 要下一次
+     渲染才生效——同一个 tick 里读 state 拿到的还是 null，流程会被自己的前置
+     校验挡回去。把刚选的那个项目直接递进来。 */
+  const startModuleDirect = (moduleId: string, projectOverride?: string) => {
     const module = getAgentModule(moduleId);
     if (!module || module.availability !== "available") return;
-    if (!project) { setProjectNotice("请先选择任务所属项目，再启动流程。"); setRoute("newTask"); return; }
-    const taskId = createRuntimeTask(`${module.moduleName}任务`, module);
+    const targetProject = projectOverride ?? project;
+    if (!targetProject) { setProjectNotice("请先选择任务所属项目，再启动流程。"); setRoute("newTask"); return; }
+    const taskId = createRuntimeTask(`${module.moduleName}任务`, module, targetProject);
     if (!taskId) return;
     setActiveModule(module);
     setActiveCoworkerId(module.suggestedCoworker.id);
@@ -654,6 +658,10 @@ export default function WorkbenchShell() {
   const lensAccounts = activeLens.accountIds.length
     ? inboxAccounts.filter((item) => activeLens.accountIds.includes(item.id))
     : inboxAccounts;
+  /* 首屏的快捷入口**不跟镜头收敛**。镜头是演示脚手架，它收敛的是「你手上
+     有哪些活」（侧栏、收件箱）；而首屏这四张卡说的是「这个工作台能做什么」，
+     那是产品的能力清单，四条业务线一样重要，肿瘤报价接入后也在其中。
+     少列一张，读到的就不是「现在不看它」，而是「它不存在」。 */
   /* 切镜头时当前账号可能不在这条线上(比如站在林一一的位置切到 DMPK),
      那就落到这条线的第一个人身上,否则会停在一个看不到任何东西的账号里。 */
   useEffect(() => {

@@ -179,45 +179,141 @@
   line-height: 1.5;
 }
 
-/* 未选项目 —— 卡片降为未激活。用的是「安静」而不是「压暗」：
-   压暗读作坏了，安静读作还没轮到。跟禁用卡（虚线边）也要能区分开，
-   那是「永远不可用」，这是「现在不可用」。 */
-.taskExampleGrid button[data-gated="true"] {
-  border-color: var(--bioaz-border);
-  background: var(--bioaz-surface-subtle);
+/* 「未选项目 = 卡片变灰」那一套已经删掉。
+   ----------------------------------------------------------------------
+   它跟上面那条 :disabled 的样子几乎一样（同底色 var(--bioaz-surface-subtle)、
+   同标题色 var(--bioaz-text-tertiary)），差别只剩边框的实线/虚线；而解释那句
+   「需要先选择项目」当时是 hover 才显示的——后果常驻，原因藏着。
+   现在没选项目也照点，点了就地问项目（.quickStartProjectPrompt）。
+   这一屏上唯一淡下去的东西，只有「即将接入」。 */
+
+/* 卡片数量随演示镜头变：DMPK 镜头下只剩一张。列数和整栏宽度都跟着实际张数
+   走——固定四等分的话，一张卡会被拉成 860px 的横条；固定 860px 宽再居中，
+   一张卡又会缩成四分之一。215px 是一张卡该有的宽度，乘以张数就是这一栏。 */
+.newTaskIntro .taskExampleGrid {
+  width: min(calc(var(--quick-start-count, 4) * 215px), 100%);
+  grid-template-columns: repeat(var(--quick-start-count, 4), minmax(0, 1fr));
+  justify-self: center;
 }
 
-.taskExampleGrid button[data-gated="true"] .taskExampleIcon {
-  border-color: var(--bioaz-border);
-  background: var(--bioaz-surface-hover);
-  color: var(--bioaz-text-tertiary);
+/* ---------- 3.5 快捷入口的项目追问 ---------- */
+
+/* 卡片行和它的追问面板共用一个定位上下文：面板绝对定位挂在这里，
+   所以它出现时不占任何一行，下面的输入框一格都不会动。 */
+.quickStartZone {
+  position: relative;
+  display: grid;
+  width: 100%;
+  justify-items: center;
 }
 
-.taskExampleGrid button[data-gated="true"] strong {
-  color: var(--bioaz-text-tertiary);
+/* 面板从被点的那张卡「长出来」。
+   ----------------------------------------------------------------------
+   位移和缩放由 JS 用 FLIP 反算（见 NewTaskHome 里的 useLayoutEffect），
+   这里只负责定义它走回终点的方式。曲线用的是 Apple 那条 sheet 曲线：
+   起手快、收尾长，性格全在最后那 30% 上。
+
+   居中不用 transform——transform 整条留给 FLIP，
+   靠 left/right + margin-inline 对齐，两者才不会互相覆盖。 */
+/* 落点是卡片行本身，不是卡片行下方。
+   ----------------------------------------------------------------------
+   量过：卡片行底边到输入框顶边只有 96px，而这块面板 185px 高——挂在下方
+   必然压到输入框上。而且「就地长成」本来就该落在原地：iOS 长按菜单、
+   macOS Launchpad 的文件夹都是在原位展开、盖住周围，不是从底下顶出来。
+   -8px 让它略微探出行外，阴影才有浮起来的样子。 */
+.quickStartProjectPrompt {
+  position: absolute;
+  top: -8px;
+  right: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  width: min(560px, 100%);
+  margin-inline: auto;
+  border: 1px solid var(--bioaz-agent-accent-border, #dcddf2);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface, #fff);
+  box-shadow: 0 14px 40px rgba(17, 19, 24, 0.12), 0 2px 6px rgba(17, 19, 24, 0.05);
+  transition:
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 150ms linear;
 }
 
-.taskExampleGrid button[data-gated="true"] .taskExampleTop svg {
-  color: var(--bioaz-text-disabled);
+/* 内容做等比反向缩放，否则文字会跟着面板一起被压扁。
+   它比外框晚一点点淡入：形先到位，字再落下来。 */
+.quickStartPromptInner {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  transition:
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 230ms ease-out 125ms;
 }
 
-.taskExampleGate {
-  display: none;
-  color: var(--bioaz-brand-primary);
-  font-size: 11.5px;
-  font-style: normal;
+/* 被点的那张卡淡下去——它正在「变成」这个面板。
+   因果关系写在动作里，就不用再补一句「需要先选择项目」。 */
+.taskExampleGrid button[data-dimmed="true"] {
+  opacity: 0.4;
+  transition: opacity 200ms ease;
 }
 
-/* hover 才说明原因：四张卡同时挂一句一样的话是噪音，
-   但把手放上去的那一刻，人正需要这句话。 */
-.taskExampleGrid button[data-gated="true"]:hover .taskExampleGate,
-.taskExampleGrid button[data-gated="true"]:focus-visible .taskExampleGate {
-  display: block;
+@media (prefers-reduced-motion: reduce) {
+  .quickStartProjectPrompt,
+  .quickStartPromptInner,
+  .taskExampleGrid button[data-dimmed="true"] {
+    transition: none;
+  }
 }
 
-.taskExampleGrid button[data-gated="true"]:hover .taskExampleCopy small,
-.taskExampleGrid button[data-gated="true"]:focus-visible .taskExampleCopy small {
-  display: none;
+.quickStartPromptInner > p {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+}
+
+.quickStartPromptInner > p strong {
+  color: var(--bioaz-text-primary, #272b33);
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.quickStartPromptInner > p span {
+  color: var(--bioaz-text-tertiary, #7c8593);
+  font-size: 12px;
+}
+
+.quickStartProjectList {
+  display: grid;
+  gap: 4px;
+}
+
+.quickStartProjectList button {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-control);
+  background: transparent;
+  padding: 0 10px;
+  color: var(--bioaz-text-secondary, #4a5261);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.quickStartProjectList button > svg {
+  flex: none;
+  color: var(--bioaz-text-tertiary, #7c8593);
+}
+
+.quickStartProjectList button:hover,
+.quickStartProjectList button:focus-visible {
+  border-color: var(--bioaz-agent-accent-border, #dcddf2);
+  background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  color: var(--bioaz-text-primary, #272b33);
+  outline: 0;
 }
 
 /* ---------- 4. 项目选择器：留在输入框上方，宽度收成 pill ---------- */
