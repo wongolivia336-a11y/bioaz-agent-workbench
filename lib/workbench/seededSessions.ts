@@ -20,7 +20,7 @@ export const seededSessionHistory: Record<string, SessionHistoryEntry[]> = {
     { id: "h4", role: "agent", text: "参数已齐全。已匹配 BA 动物实验与生物分析价格规则，管理费按 30% 口径计取。" },
     { id: "h5", role: "agent", text: "报价单已生成，Word 与 Excel 金额校验一致。" },
     { id: "h6", role: "user", text: "交接给 王林彬：客户催得急，麻烦优先看一下。" },
-    { id: "h7", role: "agent", text: "已交接。这件事现在在 王林彬 那儿，本次的 Word 报价单与 Excel 报价明细已随行。" },
+    { id: "h7", role: "agent", text: "已交接给 王林彬，本次的 Word 报价单与 Excel 报价明细已随行。对方将在站内信中收到。" },
   ],
 };
 

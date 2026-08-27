@@ -19,6 +19,8 @@ type Props = {
   pinnedItemIds: string[];
   /** agent 在你离开之后才交付的任务。侧栏用一个蓝点提示，点开即清。 */
   unreadTaskIds: string[];
+  /** 被退回、球在你手上的任务。侧栏用「要你动手」那颗点提示。 */
+  attentionTaskIds: string[];
   deletedProjectIds: string[];
   deletedTaskIds: string[];
   renamedTaskTitles: Record<string, string>;
@@ -165,6 +167,7 @@ export function WorkspaceSidebar(props: Props) {
               active={props.activeTaskId === item.id}
               pinned
               unread={props.unreadTaskIds.includes(item.id)}
+              attention={props.attentionTaskIds.includes(item.id)}
               onClick={() => props.onOpenTask(toTask(item))}
               onRename={(title) => props.onRenameTask(item.id, title)}
               onDelete={() => props.onDeleteTask(item.id)}
@@ -207,6 +210,7 @@ export function WorkspaceSidebar(props: Props) {
                 active={props.activeTaskId === item.id}
                 pinned={props.pinnedItemIds.includes(item.id)}
                 unread={props.unreadTaskIds.includes(item.id)}
+              attention={props.attentionTaskIds.includes(item.id)}
                 onPinToggle={() => props.onTogglePinnedItem(item.id)}
                 onClick={() => props.onOpenTask(toTask(item))}
                 onRename={(title) => props.onRenameTask(item.id, title)}
@@ -432,14 +436,17 @@ function SidebarProject({ title, highlighted = false, open, onToggle, onRename, 
 
    两种点撞在一起时黄盖蓝，一行永远只显一个：「要你确认」已经隐含
    「有新内容」，蓝点在那时候不多说任何事。 */
-function taskDotTone(status: string | undefined, unread: boolean): "attention" | "unread" | null {
-  if (status === "pending" || status === "blocked") return "attention";
+function taskDotTone(status: string | undefined, unread: boolean, attention = false): "attention" | "unread" | null {
+  /* 被退回的那条也算「要你动手」——它跟 pending/blocked 是同一件事：
+     球在你这儿，你欠着一个动作。不另开一种颜色：这套点只有两种意思，
+     加第三种就得再定一次优先级，而「要你动手」本来就说得完这件事。 */
+  if (attention || status === "pending" || status === "blocked") return "attention";
   if (unread) return "unread";
   return null;
 }
 
-function SidebarTask({ item, active = false, pinned = false, unread = false, onClick, onPinToggle, onRename, onDelete }: { item: PinItem; active?: boolean; pinned?: boolean; unread?: boolean; onClick: () => void; onPinToggle: () => void; onRename: (title: string) => void; onDelete: () => void }) {
-  const tone = taskDotTone(item.status, unread);
+function SidebarTask({ item, active = false, pinned = false, unread = false, attention = false, onClick, onPinToggle, onRename, onDelete }: { item: PinItem; active?: boolean; pinned?: boolean; unread?: boolean; attention?: boolean; onClick: () => void; onPinToggle: () => void; onRename: (title: string) => void; onDelete: () => void }) {
+  const tone = taskDotTone(item.status, unread, attention);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.title);

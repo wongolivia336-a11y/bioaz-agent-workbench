@@ -7557,20 +7557,8 @@ button {
 }
 .ticketFileActions button:hover { border-color: var(--line); background: var(--soft, #f7f8fb); color: var(--ink); }
 
-/* 预览弹窗。纸面本身可能很长,所以给弹窗一个上限高度、让正文自己滚,
-   而不是把弹窗撑出屏幕。 */
-.bioazUiDialog.ticketFilePreview {
-  width: min(1040px, calc(100vw - 48px));
-  max-height: min(860px, calc(100dvh - 48px));
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
-/* 正文那格由 Dialog 渲染成 .bioazUiDialogBody,皮肤挂在外层的实例类上。
-   两个类名连写(0,2,0)压得住通用的 .bioazUiDialogBody(0,1,0)。 */
-.ticketFilePreview .bioazUiDialogBody { min-height: 0; overflow: auto; background: var(--soft, #f7f8fb); padding: 18px; }
-.ticketFilePreview .quoteSheet,
-.ticketFilePreview .quoteDoc { margin: 0 auto; }
-
-
+/* 附件预览的皮肤搬去了 .quotePreviewModal——预览要显示的不再是一份干净的纸,
+   而是审批人当时那一屏(行内记号 + 右栏批注),两处不该各留一套。 */
 
 .ticketDetailActions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .ticketDetailHint { margin: 0 auto 0 0; color: var(--muted); font-size: 12.5px; }
@@ -8132,14 +8120,16 @@ button {
 .ticketDetailNotes p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
 
 /* 预览里被批过的行。跟批注画布用同一套记号,免得同一件事在两处长得不一样。 */
-.ticketFilePreview tr.hasNote { background: var(--bioaz-agent-accent-soft, #f3f3fb); }
-.ticketFilePreview tr.hasNote.is-blocking { background: rgba(154, 122, 58, .1); }
+.quotePreviewPaper tr.hasNote { background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.quotePreviewPaper tr.hasNote.is-blocking { background: rgba(154, 122, 58, .1); }
 
 /* ═══ 退回修订卡 ═════════════════════════════════════════════════════════
    被驳回的报价点「进入会话处理」回到原会话时，落在对话末尾。
    「回到那个会话」只做到一半是没用的——回去了，但要改什么不在眼前，
    撰写人还得切回站内信逐条读再切回来。所以批注跟着人一起回来。 */
 .reworkCard {
+  /* 回顶按钮的定位父级。它要浮在卡上、而不是跟着内容滚走。 */
+  position: relative;
   display: grid;
   gap: 12px;
   margin: 16px 0 4px;
@@ -8150,7 +8140,30 @@ button {
   padding: 16px 18px;
 }
 
-.reworkCard > header { display: flex; align-items: center; gap: 10px; }
+/* 折叠态就是这张卡的常态:三条批注展开有半屏高,而它长在输入框上方——
+   越高,能看见的对话越少。头部先答「几条、还剩几条」,细节等要做决定时再展开。 */
+.reworkCard > header { display: flex; align-items: stretch; gap: 6px; }
+.reworkToggle {
+  display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px;
+  border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer;
+}
+.reworkTitle { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.reworkTitle strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
+.reworkTitle small { overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.reworkChevron { flex: none; color: var(--muted); transition: transform 160ms ease; }
+.reworkCard.isOpen .reworkChevron { transform: rotate(180deg); }
+.reworkFullscreen {
+  display: grid; width: 28px; height: 28px; flex: none; place-items: center;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  padding: 0; color: var(--muted); cursor: pointer;
+}
+.reworkFullscreen:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
+
+/* 展开之后给固定高度加内部滚动:卡片可以长,但不能长到把对话挤没。
+   真要摊开逐条看,走全屏。 */
+.reworkBody { display: grid; gap: 12px; }
+.reworkBody.isScrollable { max-height: 320px; overflow-y: auto; padding-right: 2px; }
+.reworkFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .reworkBadge {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
   border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
@@ -8176,28 +8189,172 @@ button {
 .reworkGroup > span { color: var(--muted); font-size: 11.5px; font-weight: 600; }
 .reworkGroup ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 
+/* 数字同事的开场白：说清楚看到了什么、打算怎么办。
+   不说这一句，下面那组卡就是凭空冒出来的表单。 */
+.reworkLead { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
+
+/* 动作横排在自己那一行、贴右边界。
+   ----------------------------------------------------------------------
+   上一版把它们竖着塞在右侧一条 auto 列里：那条列宽由「采纳方案」四个字定死,
+   两颗按钮就成了又窄又高的一竖条,而左边的方案文字被压到剩半幅。
+   卡本来就只有 composer 那么宽——横向的地方要留给读的东西,
+   按钮另起一行反而各自都松快。 */
 .reworkNote {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 9px;
-  border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+  display: grid; gap: 10px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px;
 }
-/* 勾掉的那条淡下去但不消失——「我改完了几条」跟「还剩几条」是同一件事的两面。 */
-.reworkNote.isDone { opacity: .5; }
-.reworkNote.isDone .reworkNoteHead strong { text-decoration: line-through; }
+.reworkNoteMain { display: grid; min-width: 0; gap: 6px; }
+.reworkNoteSide {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px;
+  border-top: 1px dashed var(--line); padding-top: 10px;
+}
+/* 两颗按钮同宽同高:它们是一组对等的选择,不是「主要动作 + 旁边那个」。 */
+.reworkNoteSide .reworkAction { min-width: 92px; justify-content: center; }
+.reworkNoteSide .reworkAction.isGhost { min-width: 0; }
+/* 定了的那条淡下去但不消失——「处理了几条」跟「还剩几条」是同一件事的两面。 */
+.reworkNote.isSettled { opacity: .55; }
 
-.reworkCheck {
-  display: grid; width: 17px; height: 17px; margin-top: 1px; place-items: center;
-  border: 1px solid var(--line-strong, #cfd6e2); border-radius: 5px;
-  background: #fff; padding: 0; color: #fff; cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease;
-}
-.reworkCheck[aria-checked="true"] {
-  border-color: var(--bioaz-agent-accent, #5c60b8);
-  background: var(--bioaz-agent-accent, #5c60b8);
-}
-
-.reworkNoteBody { display: grid; gap: 4px; }
 .reworkNoteHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .reworkNoteHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
-.reworkNote p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
 
-.reworkCard > footer { display: flex; justify-content: flex-start; }
+/* 批注原话跟数字同事的方案分开排：方案是对原话的解读，不是它的替代。
+   人要能看到原话再决定接不接受。 */
+.reworkNoteQuote { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
+.reworkNotePlan {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 8px;
+  margin: 0; border-radius: 7px; background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  padding: 8px 10px; color: var(--ink); font-size: 12.5px; line-height: 1.7;
+}
+.reworkNotePlan > span { color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; }
+
+
+/* 定了的那一行:状态推到左边，撤销留在右边——跟未定时按钮的落点一致。 */
+.reworkNoteState { display: flex; margin: 0 auto 0 0; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
+.reworkNoteState > svg { color: var(--bioaz-agent-accent, #5c60b8); }
+
+/* 全屏里内容自己滚，脚在下面钉住。 */
+.reworkModal { width: min(820px, calc(100vw - 48px)); max-height: min(760px, calc(100dvh - 48px)); }
+.reworkModalBody { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: 12px; overflow: hidden; padding: 18px 20px 4px; }
+.reworkModalBody .reworkBody { min-height: 0; overflow-y: auto; }
+
+/* 卡里的回顶按钮要小一号、要抬到页脚上方:卡总共才 320px 高，
+   一颗 36px 的球压在右下角，挡的正好是「重新生成报价单」。 */
+.reworkCard .scrollTopButton { right: 14px; bottom: 58px; width: 30px; height: 30px; }
+
+/* ═══ 带批注的产物预览 ═══════════════════════════════════════════════════
+   审批人在批注台上看到的是：被批的那几行有记号，右栏一列批注。撰写人拿回
+   这一版之后，如果只给他一份干净的纸，他就得对着别处的清单在纸上找行——
+   而「哪一行」正是批注里最要紧的那个信息。所以这里把那一屏原样给出来，
+   区别只有一个：他不能落笔，只能读。
+
+   计算表和报价书都要有：DMPK 的产物本来就是一 Excel 一 Word。 */
+.quotePreviewModal {
+  width: min(1120px, calc(100vw - 48px));
+  height: min(780px, calc(100dvh - 48px));
+  max-height: none;
+  /* 头、身体、脚。previewModal 原本只有两行——少一行的话脚会掉进隐式轨道。 */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.quotePreviewModal > header { gap: 16px; }
+.quotePreviewModal > header > div:first-child { min-width: 0; flex: 1; }
+.quotePreviewModal > header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+.quotePreviewBody { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 14px; overflow: hidden; padding: 16px 20px; }
+.quotePreviewBody.hasNotes { grid-template-columns: minmax(0, 1fr) 320px; }
+.quotePreviewPaperWrap { position: relative; display: grid; min-height: 0; }
+.quotePreviewPaper { min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--soft, #f7f8fb); padding: 20px; }
+.quotePreviewPaperWrap .scrollTopButton { right: 18px; bottom: 16px; }
+
+.quotePreviewNotes { display: grid; min-height: 0; align-content: start; gap: 10px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 14px 16px; }
+.quotePreviewNotes > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.quotePreviewNotes > header strong { font-size: 13px; }
+.quotePreviewNotes > header small { color: var(--muted); font-size: 12px; }
+.quotePreviewNotes ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.quotePreviewNotes > ul > li {
+  display: grid; gap: 5px;
+  border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 8px; padding: 10px 11px;
+}
+.quotePreviewNotes > ul > li.is-advisory { border-left-color: var(--line); }
+.quotePreviewNotes > ul > li strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.quotePreviewNotes > ul > li p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.6; }
+.quotePreviewNoteHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* 「这一条批在计算表上」既是解释也是入口：说完之后总得让人去得了。 */
+.quoteNoteOffForm {
+  justify-self: start; border: 1px dashed var(--line); border-radius: 999px;
+  background: transparent; padding: 3px 9px; color: var(--muted); font-size: 11.5px; cursor: pointer;
+}
+.quoteNoteOffForm:hover { border-color: var(--line-strong, #cfd6e2); background: var(--soft, #f7f8fb); color: var(--ink); }
+
+.quotePreviewFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding: 12px 20px; }
+
+/* 叠在另一个弹窗之上时要抬一层。原来两层同一个 z-index，后来的那层靠 DOM
+   插入顺序侥幸压住——而 portal 的插入顺序不该是「谁在上面」的依据。
+
+   140 不是随手写的：.modalBackdrop 在这个仓库里被定义了两次
+   （globals.css 写 80，review.css:3465 写 100），实际生效的是后加载的 100。
+   照 globals 里那条挑个 9x 的数会正好压在下面——审计报的 193 条跨文件重复，
+   踩起来就是这个样子。 */
+.modalBackdrop.isStacked { z-index: 140; background: rgba(17, 24, 39, 0.28); }
+
+/* ═══ 卡片按钮 ═══════════════════════════════════════════════════════════
+   .primaryButton / .secondaryButton 在这个仓库里高度对不齐是老问题
+   （design-system.md 记过：模块样式与通用样式特异性相同，靠文件顺序决胜负）。
+   卡片里的按钮不去参与那场竞争，自己定死一套：同高、同圆角、同内距。 */
+.reworkAction {
+  display: inline-flex; min-height: 30px; align-items: center; gap: 6px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; padding: 0 12px;
+  color: var(--body); font-size: 12.5px; font-weight: 500;
+  white-space: nowrap; cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.reworkAction:hover:not(:disabled) { border-color: var(--line-strong, #cfd6e2); background: #fafbfc; color: var(--ink); }
+.reworkAction.isPrimary {
+  border-color: transparent;
+  background: var(--bioaz-action-primary, #17191e);
+  color: #fff;
+}
+.reworkAction.isPrimary:hover:not(:disabled) { background: #2b2f37; color: #fff; }
+.reworkAction:disabled { border-color: var(--line); background: var(--soft, #f7f8fb); color: var(--muted); cursor: not-allowed; }
+.reworkAction.isGhost { min-height: 26px; border-color: transparent; background: transparent; color: var(--muted); padding: 0 8px; }
+.reworkAction.isGhost:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
+
+/* 定了的那一行:状态在左，撤销在右。 */
+
+
+/* ═══ 变更确认卡 ═════════════════════════════════════════════════════════
+   跟参数收集卡、交接卡同一个槽位、同一种形态：都长在输入框上方，
+   都是「需要你当场定一件事」的卡。 */
+.changeConfirmCard {
+  display: grid; gap: 12px;
+  margin: 0 0 10px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--bioaz-agent-accent, #5c60b8);
+  border-radius: 12px; background: #fff; padding: 16px 18px;
+}
+.changeConfirmCard > header { display: flex; align-items: center; gap: 10px; }
+.changeConfirmBadge {
+  display: grid; width: 28px; height: 28px; flex: none; place-items: center;
+  border-radius: 999px;
+  background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  color: var(--bioaz-agent-accent, #5c60b8);
+}
+.changeConfirmCard > header strong { display: block; color: var(--ink); font-size: 13.5px; font-weight: 650; }
+.changeConfirmCard > header small { color: var(--muted); font-size: 12px; }
+
+.changeConfirmGroup { display: grid; gap: 6px; }
+.changeConfirmGroup > span {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+  color: var(--muted); font-size: 11.5px; font-weight: 600;
+}
+/* 分两组的意义全在这行小字上：改参数的会同步到右侧，改报价单的不会。
+   不说清楚，人会以为每一条都能在右边找到对应的那一格。 */
+.changeConfirmGroup > span em { color: var(--muted); font-size: 11px; font-style: normal; font-weight: 400; }
+.changeConfirmGroup ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.changeConfirmGroup li {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  border-radius: 7px; background: var(--soft, #f7f8fb); padding: 8px 11px;
+}
+.changeConfirmGroup li strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.changeConfirmCard > footer { display: flex; justify-content: flex-end; gap: 8px; }

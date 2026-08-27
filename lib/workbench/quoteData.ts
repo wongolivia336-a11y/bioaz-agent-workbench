@@ -83,7 +83,10 @@ export const quoteParams: QuoteParam[] = [
   { id: "p-hema", label: "Hematology time points/animal", value: "1", feeds: "s-clinpath" },
   { id: "p-chem", label: "Serum biochemistry time points/animal", value: "1", feeds: "s-clinpath" },
   { id: "p-coag", label: "Coagulation/animal", value: "1", feeds: "s-clinpath" },
-  { id: "p-tk-points", label: "TK blood sampling time points/animal", value: "10", feeds: "s-tkanalysis" },
+  /* 8 而不是 10：这份报价就是被退回的那一版，批注说的正是「按 8 个报的」。
+     它也要跟 seededSessions 里 bloodPoints 的 "8" 对得上——纸面、批注、
+     会话参数三处说的必须是同一件事，否则「现值 10 → 建议 10」会当场穿帮。 */
+  { id: "p-tk-points", label: "TK blood sampling time points/animal", value: "8", feeds: "s-tkanalysis" },
   { id: "p-compounds", label: "Number of compounds", value: "1", feeds: "s-tkanalysis" },
   { id: "p-samples", label: "Samples analyzed", value: "90", feeds: "s-tkanalysis" },
   { id: "p-tissues", label: "Number of TOX tissue samples/animal", value: "6", feeds: "s-tissuefix" },
@@ -162,6 +165,14 @@ export function quoteAnchorLabel(anchorId: string) {
     ?? anchorId;
 }
 
+/** 这条锚点在客户版报价书上有没有对应的行。
+ *  报价书只出计价条目；可编辑参数和小计只存在于内部计算表。所以同一批批注,
+ *  切到报价书之后有一部分在纸上找不到落点——那不是坏了,是这两份文件本来就不一样。
+ *  界面要把这件事说出来,否则「右栏 3 条、纸上只标了 1 条」看着就是个 bug。 */
+export function quoteAnchorInDoc(anchorId: string) {
+  return quoteItems.some((item) => item.id === anchorId);
+}
+
 /** 一条批注对外显示的分类名。自定义的显示它自己的标签,而不是「其他」——
  *  「其他」对读的人没有任何信息量,而这条批注的价值恰恰在那个名字里。 */
 export function quoteNoteLabel(note: Pick<QuoteNote, "category" | "customLabel">) {
@@ -208,6 +219,18 @@ export type QuoteNote = {
    好说明「通过不等于批注消失」。运行时新写的批注跟这些混在一起,共用一套渲染。 */
 export const seededQuoteNotes: Record<string, QuoteNote[]> = {
   "TK-2039": [
+    /* 一条落在会话参数上（采血点数），一条落在报价单本身（管理费口径）。
+       两种都要有：采纳之后前者会让右侧参数面板跟着变，后者不会——
+       而这正是「批注锚在报价条目上、会话收的是模块字段」这件事在界面上的样子。 */
+    {
+      anchorId: "p-tk-points",
+      category: "param",
+      severity: "blocking",
+      text: "方案里写的是每只动物 10 个采血点，这一版按 8 个报的，分析工作量少算了。",
+      suggested: "10",
+      quote: "TK blood sampling time points/animal",
+      author: "王林彬", authorRole: "审批人", at: "2 天前",
+    },
     {
       anchorId: "p-discount",
       category: "basis",
