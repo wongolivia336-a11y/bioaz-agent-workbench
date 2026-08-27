@@ -89,6 +89,7 @@ export function TicketsPage({
   reviewerRole,
   onReject,
   onArchive,
+  lensKind,
 }: {
   tickets: Ticket[];
   /** 当前账号。侧栏那个切换器一换，「待我处理」跟着换——同一张单在不同角色眼里是不同的事。 */
@@ -116,6 +117,8 @@ export function TicketsPage({
   /** 驳回 = 打回上一棒（工单里不用猜,提交人就写在单子上）;归档 = 落进数据中枢并收到终态。 */
   onReject: (ticket: Ticket, summary: string) => void;
   onArchive: (ticket: Ticket) => void;
+  /** 演示镜头:只看这一类工单。null = 两条线都看。**脚手架,上线前删。** */
+  lensKind?: string | null;
 }) {
   const [status, setStatus] = useState<string>("全部状态");
   const [keyword, setKeyword] = useState("");
@@ -146,6 +149,7 @@ export function TicketsPage({
            球一换手,那张单就出现在对方的收件箱里、从你这儿消失(驳回把 assignee
            设回提交人,归档则留在你名下收终态)。判据跟侧栏那颗徽标一致。 */
         if (ticket.assignee !== currentUser) return false;
+        if (lensKind && ticketKindLabel[ticket.kind] !== lensKind) return false;
         if (status !== "全部状态" && !(STATUS_MATCH[status] ?? []).includes(ticket.status)) return false;
         if (kind !== "全部类型" && ticketKindLabel[ticket.kind] !== kind) return false;
         if (project !== "全部项目" && ticket.project !== project) return false;
@@ -170,7 +174,7 @@ export function TicketsPage({
       .map((notice) => ({ kind: "notice" as const, at: minutesFromLabel(notice.at), notice }));
 
     return [...ticketRows, ...noticeRows].sort((a, b) => a.at - b.at);
-  }, [tickets, status, kind, project, keyword, currentUser]);
+  }, [tickets, status, kind, project, keyword, currentUser, lensKind]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
@@ -224,7 +228,7 @@ export function TicketsPage({
           {keyword ? <button type="button" aria-label="清空搜索" onClick={() => { setKeyword(""); setPage(1); }}><X size={13} /></button> : null}
         </label>
         {/* 类型、状态、项目并排:它们是同一种东西,缩小这一屏的三把尺子。 */}
-        <CompactSelect value={kind} options={[...KIND_OPTIONS]} onChange={reset(setKind)} />
+        <CompactSelect value={kind} options={lensKind ? KIND_OPTIONS.filter((item) => item === "全部类型" || item === lensKind || NOTICE_KIND[item]) : [...KIND_OPTIONS]} onChange={reset(setKind)} />
         <CompactSelect value={status} options={[...STATUS_OPTIONS]} onChange={reset(setStatus)} />
         <CompactSelect value={project} options={["全部项目", ...projects]} onChange={reset(setProject)} />
       </div>

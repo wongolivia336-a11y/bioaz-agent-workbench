@@ -54,6 +54,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [messages, setMessages] = useState<DmpkChatMessage[]>(() => initialRequest
     ? [{ id: "initial-request", role: "user", text: initialRequest, attachments: initialAttachments }, { id: "context", role: "agent", text: openingMessage }]
     : [{ id: "context", role: "agent", text: openingMessage }]);
+  /* 这一单交出去了没有。交接是一次性动作,不该留一张还能再点一次的卡在那儿。 */
+  const [handedOff, setHandedOff] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [stage, setStage] = useState<DmpkStage>("idle");
@@ -103,6 +105,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   const appendMessage = (role: DmpkChatMessage["role"], text: string, attachments?: ComposerAttachment[]) => {
     setMessages((items) => [...items, { id: `${role}-${Date.now()}-${items.length}`, role, text, attachments }]);
+  };
+
+  /* 交接完成之后卡片就收起,内容沉淀成会话里的一条记录。
+     交接卡是一个**临时的录入界面**,它的产物属于对话——把一张已提交、
+     再也点不动的表单留在原地,等于让人反复看见一个不能操作的控件,
+     而会话的价值恰恰是「从上往下读就知道发生过什么」。 */
+  const handOff = (to: string, note: string) => {
+    setHandedOff(true);
+    appendMessage("user", note ? `交接给 ${to}：${note}` : `交接给 ${to}`);
+    appendMessage("agent", `已交接。这件事现在在 ${to} 那儿，本次的 Word 报价单与 Excel 报价明细已随行。对方在站内信里会看到它。`);
   };
 
   /** 发送时把 chip 里的内容固化到这条用户消息上，composer 随即清空 */
@@ -359,10 +371,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         </header>
         <SessionMinimap scrollerRef={chatScrollerRef} />
         <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer editProposal={editProposal} viewerName={viewerName} onHandoff={(to, note) => onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
+        <DmpkComposer editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
-        ] })} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())} />
+        ] }); }} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())} />
         <WorkbenchPanelBody
           panels={railPanels}
           visibleIds={visiblePanelIds}
