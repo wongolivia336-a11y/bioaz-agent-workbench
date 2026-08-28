@@ -44,12 +44,15 @@ export const dmpkFieldOptions: Record<string, string[]> = {
   molecule: ["小分子", "多肽", "抗体", "寡核苷酸"],
   species: ["SD 大鼠", "小鼠", "Beagle 犬", "食蟹猴"],
   animalsPerGroup: ["3", "6", "10", "自定义"],
-  groupCount: ["3", "4", "6", "自定义"],
+  // 2 是当前值、3 是批注建议值，两个都要能点到
+  groupCount: ["2", "3", "4", "6", "自定义"],
   cycle: ["1 周", "2 周", "4 周", "自定义"],
   compoundType: ["普通小分子", "寡核苷酸", "多肽", "抗体"],
   method: ["LC-MS/MS", "ELISA", "qPCR", "LBA"],
   sampleType: ["血浆", "血清", "组织匀浆", "尿液"],
-  bloodPoints: ["3", "6", "9", "自定义"],
+  /* 10 是审批人批注里给的建议值。选项表里没有它的话，照着批注改这条路
+     只能走「自定义」——演示时那一下会很别扭，而且它本来就是个常见取值。 */
+  bloodPoints: ["3", "6", "8", "10", "自定义"],
   analyteCount: ["1", "2", "3", "自定义"],
   format: ["Word + Excel", "Word", "Excel"],
   language: ["中文", "英文", "中英双语"],

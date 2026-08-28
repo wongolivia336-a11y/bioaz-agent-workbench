@@ -41,10 +41,15 @@ export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gap
  *
  * 运行发生在某个时刻，它就该钉在那个时刻。所以完成的运行进消息流；
  * 只有**正在跑**的那一条才留在最下面，因为它确实是此刻正在发生的事。
+ *
+ * `artifacts`（产物卡）栽在同一个坑里，晚了一轮才发现：它原本也是照着
+ * `stage === "generated"` 渲染在所有消息**后面**的。于是生成完先交接、再回头看，
+ * 产物卡跑到了「已交接给林一一」的下面——读起来像是交接完才生成的报价单。
+ * 现在它也进消息流，钉在生成那一刻。
  */
 export type DmpkChatMessage = {
   id: string;
-  role: "user" | "agent" | "run" | "inbound";
+  role: "user" | "agent" | "run" | "inbound" | "artifacts";
   text: string;
   attachments?: ComposerAttachment[];
   /** role === "run" 时这一次跑了哪几步。 */
@@ -121,15 +126,13 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
       {messages.map((message) => {
         if (message.role === "run") return <DmpkActivityChain key={message.id} title={message.text} steps={message.runSteps ?? []} running={false} onOpenInspector={onOpenInspector} />;
         if (message.role === "inbound") return <DmpkInboundEvent key={message.id} text={message.text} attachments={message.attachments} />;
+        if (message.role === "artifacts") return <DmpkArtifactCards key={message.id} onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} />;
         if (message.role === "agent") return <AgentReply key={message.id}>{message.text}</AgentReply>;
         return <UserBubble key={message.id} text={message.text} attachments={message.attachments} />;
       })}
       {/* 只有正在跑的那一条留在最下面——它确实是此刻正在发生的事。
           跑完就进消息流，钉在它发生的那个位置。 */}
       {liveRun ? <DmpkActivityChain title={liveRun.text} steps={liveRun.runSteps} running onOpenInspector={onOpenInspector} /> : null}
-      {stage === "generated" ? <DmpkArtifactCards onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} /> : null}
-      {/* 退回修订卡落在对话末尾:它是「这一次为什么回到这儿」的答案,
-          该跟着最近发生的事排在一起,不该另开一个面板让人再找一次。 */}
 
     </div>
   );
