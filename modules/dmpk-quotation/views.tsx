@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, CircleDollarSign, CornerDownLeft, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { PersonPicker } from "../../components/ui";
@@ -10,7 +10,7 @@ import { directory } from "../../lib/workbench/mockInbox";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
-import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
+import { MessageAttachments, WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition, SessionRework } from "../types";
 import { ReworkCard, type ReworkNoteState } from "../../components/workbench-shell/ReworkCard";
@@ -44,7 +44,7 @@ export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gap
  */
 export type DmpkChatMessage = {
   id: string;
-  role: "user" | "agent" | "run";
+  role: "user" | "agent" | "run" | "inbound";
   text: string;
   attachments?: ComposerAttachment[];
   /** role === "run" 时这一次跑了哪几步。 */
@@ -120,6 +120,7 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
       {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
       {messages.map((message) => {
         if (message.role === "run") return <DmpkActivityChain key={message.id} title={message.text} steps={message.runSteps ?? []} running={false} onOpenInspector={onOpenInspector} />;
+        if (message.role === "inbound") return <DmpkInboundEvent key={message.id} text={message.text} attachments={message.attachments} />;
         if (message.role === "agent") return <AgentReply key={message.id}>{message.text}</AgentReply>;
         return <UserBubble key={message.id} text={message.text} attachments={message.attachments} />;
       })}
@@ -130,6 +131,31 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
       {/* 退回修订卡落在对话末尾:它是「这一次为什么回到这儿」的答案,
           该跟着最近发生的事排在一起,不该另开一个面板让人再找一次。 */}
 
+    </div>
+  );
+}
+
+/**
+ * 从会话外面进来的一件事：产物被退回、被通过、被转交。
+ *
+ * 为什么它既不是 user 气泡也不是 agent 回复
+ * ----------------------------------------------------------------------
+ * 之前这条根本不存在：对话里是「已交接给王林彬」紧接着「已读取退回批注」，
+ * 中间那件真正发生的事——**东西被退回来了，附件也跟着回来了**——一点痕迹都没有。
+ * 读下来像是数字同事凭空开始读一份不知从哪冒出来的批注。
+ *
+ * 做成 user 气泡是错的：那句话不是赵敏说的，把它画成她的气泡等于替她说话。
+ * 做成 agent 回复也是错的：数字同事不是这件事的发起人，它只是随后读了一遍。
+ * 所以给它自己的形态——一条带署名和附件的到达记录，靠左但不属于任何一方。
+ */
+function DmpkInboundEvent({ text, attachments }: { text: string; attachments?: ComposerAttachment[] }) {
+  return (
+    <div className="dmpkInboundEvent">
+      <span className="dmpkInboundMark"><CornerDownLeft size={13} aria-hidden="true" /></span>
+      <div>
+        <strong>{text}</strong>
+        {attachments?.length ? <MessageAttachments items={attachments} /> : null}
+      </div>
     </div>
   );
 }

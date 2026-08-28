@@ -137,7 +137,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       coworkerName: activeCoworker?.name ?? "DMPK报价同事",
       stageLabel: stage === "generated" ? "报价已生成" : stage === "ready" ? "参数已齐全" : stage === "collecting" ? "参数补全中" : "报价处理中",
       /* 运行记录不进快照:上下文摘要要的是「说了什么」,不是「跑了几步」。 */
-      entries: messages.filter((message) => message.role !== "run").map((message) => ({ id: message.id, role: message.role as "user" | "agent", text: message.text })),
+      entries: messages.filter((message) => message.role === "user" || message.role === "agent").map((message) => ({ id: message.id, role: message.role as "user" | "agent", text: message.text })),
       facts: fields.filter((field) => field.value).map((field) => ({ label: field.label, value: field.value })),
     });
   }, [activeCoworker?.name, fields, messages, onSessionSnapshotChange, stage]);
@@ -180,6 +180,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     if (!rework || reworkGreetedRef.current) return;
     reworkGreetedRef.current = true;
     const blocking = reworkNotes.filter((note) => note.severity === "blocking").length;
+    /* 先记下「东西回来了」这件事本身，再让数字同事去读它。
+       附件挂在这一条上——被退回的是一份产物，不是一句话。 */
+    setMessages((items) => [...items, {
+      id: `inbound-${Date.now()}`,
+      role: "inbound",
+      text: `${rework.by} 退回了这一版`,
+      attachments: rework.attachmentName
+        ? [{ id: "rework-file", kind: "file" as const, label: rework.attachmentName, meta: "随退回一起返还", origin: "library" as const }]
+        : undefined,
+    }]);
     setStage("thinking");
     /* 不给这个 effect 写 cleanup 去 clearTimeout。
        严格模式下 effect 会跑两遍(挂载 → 清理 → 再挂载)：第一遍把 ref 置真并
@@ -567,7 +577,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             ) : null}
             /* 浮动对话只放人和数字同事说的话:那个小窗是用来接着聊的,
                把运行记录也塞进去只会把仅有的几行挤掉。 */
-            messages={messages.filter((message) => message.role !== "run") as { id: string; role: "user" | "agent"; text: string }[]}
+            messages={messages.filter((message) => message.role === "user" || message.role === "agent") as { id: string; role: "user" | "agent"; text: string }[]}
             text={composerText}
             onTextChange={setComposerText}
             onSend={submitComposer}

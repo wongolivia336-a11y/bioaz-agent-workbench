@@ -8385,6 +8385,23 @@ button {
    要看原件就把它铺到中间去——那颗全屏按钮本来就在 tab 栏右端。 */
 .dmpkReworkPanel:not(.isExpanded) .annotatedQuote { display: none; }
 
+/* 从会话外面进来的一件事：产物被退回、被通过、被转交。
+   它靠左但不是气泡——那句话不是当前这个人说的，也不是数字同事说的，
+   是发生在他俩之外的一件事。所以既不给气泡底色，也不给头像，
+   只给一条竖线和一枚方向图标。 */
+.dmpkInboundEvent {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 10px;
+  margin: 14px 0 4px;
+  border-left: 2px solid var(--sidebar-dot-attention, #9a7a3a);
+  padding: 8px 0 8px 12px;
+}
+.dmpkInboundMark {
+  display: grid; width: 26px; height: 26px; place-items: center;
+  border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
+}
+.dmpkInboundEvent > div { display: grid; gap: 6px; min-width: 0; }
+.dmpkInboundEvent strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+
 /* 收起态的批注清单。侧栏放不下报价单，但放得下批注本身。 */
 .dmpkReworkList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .dmpkReworkList > li {
