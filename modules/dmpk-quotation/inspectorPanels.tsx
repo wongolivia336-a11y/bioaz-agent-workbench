@@ -227,34 +227,14 @@ function ReworkPanel({ context }: { context: DmpkInspectorContext }) {
       {context.reworkReason ? <p className="dmpkReworkReason">{context.reworkReason}</p> : null}
 
       {/* 一个平面：左边报价单，右边批注栏。跟 QA 审核台同一个形状。
-          动作长在每张批注卡下面——原来另起了一份「待改清单」，那是把同一份
-          东西列了两遍，中间还套了三层框。 */}
-      <AnnotatedQuote
-        notes={context.reworkNotes}
-        className="isPanel"
-        noteAction={(note) => <ReworkNoteAction note={note} context={context} />}
-      />
-    </div>
-  );
-}
 
-/** 一条批注的出口：能落到参数上就去改那一格，落不到就把话筒递回对话。 */
-function ReworkNoteAction({ note, context }: { note: QuoteNote; context: DmpkInspectorContext }) {
-  const fieldId = noteAnchorToField[note.anchorId];
-  const field = fieldId ? context.fields.find((item) => item.id === fieldId) : undefined;
-  if (field) {
-    return (
-      <button type="button" onClick={() => context.onEditField(field.id)}>
-        去改「{field.label}」
-      </button>
-    );
-  }
-  /* 这一条落不到任何一格参数上——报价单的条目和会话收的字段本来就不是
-     一一对应。与其给个点了没反应的按钮，不如把话筒递回去。 */
-  return (
-    <button type="button" onClick={() => context.onDraftMessage(`关于「${quoteAnchorLabel(note.anchorId)}」：`)}>
-      在对话里说明
-    </button>
+          **这一栏是说明书，不是操作台。** 批注上没有任何动作按钮——
+          它的全部职责是让人看清「哪一行、错在哪、该是多少」，
+          改这件事发生在右侧参数收集里，由人自己点。
+          在这儿再放一颗「去改」，等于给了第二条改的路径，
+          而两条路径迟早会对不上。 */}
+      <AnnotatedQuote notes={context.reworkNotes} className="isPanel" />
+    </div>
   );
 }
 

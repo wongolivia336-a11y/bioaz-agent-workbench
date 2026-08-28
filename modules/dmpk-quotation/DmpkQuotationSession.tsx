@@ -26,6 +26,7 @@ import {
   DmpkConversation,
   dmpkRunRecord,
   DmpkEditProposalCard,
+  DmpkParameterTaskCard,
   DmpkQuotationPreviewModal,
   type DmpkChatMessage,
   type DmpkEditProposal,
@@ -492,6 +493,20 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         />
         {panelFocus ? (
           <FloatingChatDock
+            /* 画布铺满时，要当场做的那个决定跟着输入框走。
+               用户在右侧参数收集里点了「改这一项」，卡片本来长在 composer 上，
+               而 composer 此刻被画布盖住——点了等于没反应。
+               画布一收起，同一张卡自然回到 composer 上方。 */
+            card={composerFields.length ? (
+              <DmpkParameterTaskCard
+                activeGroup={activeGroup}
+                fields={composerFields}
+                allFields={fields}
+                draftTabs={draftTabs}
+                mode={editingField ? "edit" : "collect"}
+                onSelect={addDraft}
+              />
+            ) : null}
             /* 浮动对话只放人和数字同事说的话:那个小窗是用来接着聊的,
                把运行记录也塞进去只会把仅有的几行挤掉。 */
             messages={messages.filter((message) => message.role !== "run") as { id: string; role: "user" | "agent"; text: string }[]}

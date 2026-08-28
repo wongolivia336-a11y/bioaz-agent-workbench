@@ -8375,24 +8375,9 @@ button {
   padding: 10px 12px; color: var(--body); font-size: 12.5px; line-height: 1.7;
 }
 
-/* 动作长在批注卡下面，跟 QA 那边每张审核卡自带「采纳 / 忽略」一个道理。
-   之前是在别处又列了一份一模一样的清单——同一件事说两遍，读的人得先弄清
-   这两份是不是同一份。 */
-.quotePreviewNoteAction {
-  display: flex; justify-content: flex-end;
-  border-top: 1px solid var(--line); padding: 8px 11px;
-}
-.quotePreviewNoteAction button {
-  display: inline-flex; min-height: 28px; align-items: center;
-  border: 1px solid var(--line); border-radius: 8px; background: #fff;
-  padding: 0 10px; color: var(--body); font-size: 12px; white-space: nowrap; cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
-}
-.quotePreviewNoteAction button:hover {
-  border-color: var(--bioaz-agent-accent-border, #dcddf2);
-  background: var(--bioaz-agent-accent-soft, #f3f3fb);
-  color: var(--ink);
-}
+/* 批注栏上没有动作按钮：它是说明书，不是操作台。
+   改这件事只有一条路——右侧参数收集里人自己点。在批注上再放一颗「去改」，
+   等于给了第二条路径，而两条路径迟早会对不上。 */
 
 /* 铺开时左参照、右动手。参数那一栏定宽 300px：它是表单，宽了不会更好读，
    而原件那边多一寸就多一行看得见的条目。 */

@@ -7299,6 +7299,19 @@ button { -webkit-tap-highlight-color: transparent; }
   transform: translateX(-50%);
 }
 
+/* 药丸上方那张要当场做决定的卡。跟药丸同宽——它是 composer 被画布挤走之后
+   的落点，宽度不一致会读成两个不相干的控件。给自己的高度上限和滚动：
+   参数一多，它会长到把画布顶掉，而画布正是此刻要照着看的东西。 */
+.floatingChatCard {
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+  border-radius: var(--bioaz-radius-container, 16px);
+  background: var(--bioaz-surface, #fff);
+  box-shadow: var(--bioaz-shadow-floating, 0 12px 32px rgba(17, 19, 24, .08));
+}
+/* 卡自己那圈圆角和内距由 .parameterTaskCard 给，这儿不要再叠一层。 */
+.floatingChatCard > .parameterTaskCard { margin: 0; box-shadow: none; }
+
 .floatingChatPill {
   display: grid;
   align-items: end;
