@@ -9,7 +9,7 @@ import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelpe
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
-import { quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
+import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
 import { noteAnchorToField } from "./noteFieldMap";
 import {
   dmpkGroups,
@@ -531,7 +531,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : (
           <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         )}
-        <DmpkComposer reworkNotice={rework && !reworkSettled && !reworkCanvas ? (
+        <DmpkComposer unresolvedNotes={reworkNotes
+          .filter((note) => !noteAnchorToField[note.anchorId])
+          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} reworkNotice={rework && !reworkSettled && !reworkCanvas ? (
           <DmpkReworkNoticeCard
             by={rework.by}
             at={rework.at}

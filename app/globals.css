@@ -8385,6 +8385,23 @@ button {
    要看原件就把它铺到中间去——那颗全屏按钮本来就在 tab 栏右端。 */
 .dmpkReworkPanel:not(.isExpanded) .annotatedQuote { display: none; }
 
+/* 送审前的最后一道关口：落不到参数格上的那几条批注。
+   它是这一轮唯一一个「不说清楚就出不去」的地方——说明栏因此从选填变必填。 */
+.dmpkHandoffUnresolved {
+  display: grid; gap: 6px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 10px; background: var(--soft, #f7f8fb); padding: 11px 13px;
+}
+.dmpkHandoffUnresolved > strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
+.dmpkHandoffUnresolved ul { display: grid; gap: 3px; margin: 0; padding-left: 18px; }
+.dmpkHandoffUnresolved li { color: var(--body); font-size: 12.5px; }
+.dmpkHandoffUnresolved > span { color: var(--muted); font-size: 11.5px; line-height: 1.6; }
+.dmpkHandoffRequired {
+  margin-left: 6px; border-radius: 999px; background: rgba(154, 122, 58, .16);
+  padding: 1px 7px; color: #7d6229; font-size: 10.5px; font-style: normal;
+}
+
 /* 从会话外面进来的一件事：产物被退回、被通过、被转交。
    它靠左但不是气泡——那句话不是当前这个人说的，也不是数字同事说的，
    是发生在他俩之外的一件事。所以既不给气泡底色，也不给头像，
@@ -8458,6 +8475,30 @@ button {
   gap: 10px;
   overflow: hidden;
   padding: 16px 20px 96px;
+  /* 从下方长出来——入口卡就在那个位置，画布是它展开的结果。
+     只动 transform 和 opacity：这两样合成器能直接接手，不触发重排。 */
+  animation: dmpkReworkCanvasIn 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes dmpkReworkCanvasIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 收起时对话回来。它不是「另一个页面」，是刚才被盖住的那一个，
+   所以用同一条曲线、更短的时长——回来的东西不该比出去的还隆重。 */
+.dmpkWorkspace:not(.isReworkCanvas) > .dmpkChatScroller {
+  animation: dmpkChatReturn 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes dmpkChatReturn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dmpkReworkCanvas,
+  .dmpkWorkspace:not(.isReworkCanvas) > .dmpkChatScroller { animation: none; }
 }
 .dmpkReworkCanvas:not(:has(.dmpkReworkReason)) { grid-template-rows: auto minmax(0, 1fr); }
 
