@@ -10,5 +10,7 @@
   "radiusValues": 56,
   "fontSizeValues": 36,
   "durationValues": 11,
-  "hexColors": 219
+  "hexColors": 219,
+  "keyframeNames": 45,
+  "enterDistances": 11
 }

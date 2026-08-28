@@ -177,6 +177,26 @@ const scales = [
     legal: 40,
     note: "令牌里的颜色约 40 个，多出来的都是当场拍的",
   },
+  /* 关键帧比上面几项更容易失控，因为**没有令牌能约束它**：
+     圆角至少还有 --bioaz-radius-* 摆在那里提醒你，动画只要写个新名字就成立了。
+     结果是 45 个名字里三十多个都在做「东西出现了」：
+     nodeIn 升 4px、userSend 升 6px、messageSendIn 升 8px、artifactIn 升 10px，
+     而 messageSendIn 和 workspaceAssistantIn 逐字节相同。
+     设计系统里只留三条：出现、转圈、呼吸。 */
+  {
+    key: "keyframeNames",
+    name: "关键帧名字",
+    have: distinct(/@keyframes\s+([A-Za-z0-9_-]+)/g).size,
+    legal: 3,
+    note: "出现 bioazUiEnter / 转圈 bioazUiSpin / 呼吸 bioazUiThinkingPulse",
+  },
+  {
+    key: "enterDistances",
+    name: "「出现」的位移距离",
+    have: distinct(/@keyframes[^{]*\{[^@]*?translateY\((-?[\d.]+px)\)/g).size,
+    legal: 1,
+    note: "只该有一个默认值，其余靠 --bioaz-enter-rise 调",
+  },
 ];
 
 // ── 报告 ─────────────────────────────────────────────────────────────────

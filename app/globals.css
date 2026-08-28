@@ -1569,16 +1569,10 @@ button {
   }
 }
 
-@keyframes artifactIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* artifactIn 曾经在这里定义过一份 translateY(10px) 的，同名的另一份在本文件
+   4600 行附近写着 7px。同名关键帧后定义的整个覆盖前一个——也就是说这一份
+   从来没生效过，而 1863 行那条按 10px 写的规则实际一直在跑 7px。
+   删掉死的那份，保留正在生效的 7px：视觉零变化，文件不再自相矛盾。 */
 
 @keyframes backdropIn {
   from {
