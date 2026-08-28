@@ -8385,6 +8385,50 @@ button {
    要看原件就把它铺到中间去——那颗全屏按钮本来就在 tab 栏右端。 */
 .dmpkReworkPanel:not(.isExpanded) .annotatedQuote { display: none; }
 
+/* 收起态的批注清单。侧栏放不下报价单，但放得下批注本身。 */
+.dmpkReworkList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dmpkReworkList > li {
+  display: grid; gap: 4px;
+  border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 8px; padding: 10px 11px;
+}
+.dmpkReworkList > li.is-advisory { border-left-color: var(--line); }
+.dmpkReworkListHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.dmpkReworkListHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.dmpkReworkList p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.6; }
+/* 铺成画布之后清单让位给原件——那时两栏并排，右栏本来就是这份清单。 */
+.dmpkReworkPanel.isExpanded .dmpkReworkList { display: none; }
+
+/* ═══ 退回批注入口卡（composer 上方）═══════════════════════════════════
+   批注收进右侧一个 tab 之后就太安静了：这是当下最要紧的一件事，
+   却跟「报价规则」并排躺着。跟 QA 那张「审批决策」卡同一个位置、
+   同一个职责——把当前这件事和它的出口摆在手边。 */
+.dmpkReworkNotice {
+  display: grid; gap: 10px;
+  margin: 0 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px; background: #fff; padding: 16px 18px;
+}
+.dmpkReworkNotice > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dmpkReworkNotice > header > div { display: grid; gap: 2px; }
+.dmpkReworkNotice > header span { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.dmpkReworkNotice > header strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
+.dmpkReworkNotice > header i {
+  flex: none; border-radius: 999px; background: var(--soft, #f7f8fb);
+  padding: 3px 9px; color: var(--muted); font-size: 11.5px; font-style: normal;
+}
+.dmpkReworkNotice > header i.isBlocking { background: rgba(154, 122, 58, .16); color: #7d6229; }
+.dmpkReworkNotice > p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
+.dmpkReworkNotice > footer { display: flex; justify-content: flex-end; }
+.dmpkReworkNotice > footer button {
+  display: inline-flex; min-height: 30px; align-items: center; gap: 6px;
+  border: 1px solid transparent; border-radius: 8px;
+  background: var(--bioaz-action-primary, #17191e); padding: 0 12px;
+  color: #fff; font-size: 12.5px; cursor: pointer;
+  transition: background 140ms ease;
+}
+.dmpkReworkNotice > footer button:hover { background: #2b2f37; }
+
 /* ═══ 退回批注画布 ═══════════════════════════════════════════════════════
    它占的是**对话那一列**，不是整个工作区。右边那 320px 面板照旧在，
    底部一颗药丸——这就是 QA 审核台的形状：中间是要看的，右边是要动手的，

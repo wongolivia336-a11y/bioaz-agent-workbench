@@ -7312,6 +7312,17 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 卡自己那圈圆角和内距由 .parameterTaskCard 给，这儿不要再叠一层。 */
 .floatingChatCard > .parameterTaskCard { margin: 0; box-shadow: none; }
 
+/* 已选参数的 chips，摆在药丸正上方——跟它在 composer 里的位置一致。
+   没有这一格的话，画布态下选完一个值屏幕上什么都不留，
+   用户既不知道生效没有，也没法反悔。 */
+.floatingChatChips {
+  border-radius: var(--bioaz-radius-container, 16px);
+  background: var(--bioaz-surface, #fff);
+  padding: 8px 10px;
+  box-shadow: var(--bioaz-shadow-floating, 0 12px 32px rgba(17, 19, 24, .08));
+}
+.floatingChatChips > .composerChipTray { margin: 0; }
+
 .floatingChatPill {
   display: grid;
   align-items: end;

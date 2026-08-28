@@ -27,8 +27,10 @@ import {
   DmpkConversation,
   dmpkRunRecord,
   DmpkEditProposalCard,
+  ComposerChipTray,
   DmpkParameterTaskCard,
   DmpkQuotationPreviewModal,
+  DmpkReworkNoticeCard,
   type DmpkChatMessage,
   type DmpkEditProposal,
   type DmpkInspectorPanelId,
@@ -146,7 +148,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   /* 跑完一轮就把这条运行记录钉进消息流,紧挨着它自己那条回复的上方。
      一定要在 appendMessage("agent", …) 之前调用——过程在前,结论在后。 */
-  const appendRun = (kind: "params" | "quote", missingCount = 0) => {
+  const appendRun = (kind: "params" | "quote" | "rework", missingCount = 0) => {
     const record = dmpkRunRecord(kind, { missingCount });
     setMessages((items) => [...items, { id: `run-${Date.now()}-${items.length}`, role: "run", ...record }]);
   };
@@ -168,8 +170,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
      等于让它替人做主，改动也就绕过了参数收集。现在改回来：
      它把批注和原件摊开在右侧画布里，改由人在参数卡上动手。
 
-     顺序是有意的：先 run（对话里看得见它在读），再开面板。
-     直接弹出一屏东西，人不知道那是哪来的。 */
+     顺序是有意的，而且这三步都在对话里留了痕：
+       1. 跑一次「读取退回批注」——run 记录，能展开看它读了什么
+       2. 说一句话，讲清楚有几条、去哪儿看、在哪儿改
+       3. 把「退回批注」这个 tab 打开
+     画布**不自动铺开**：那是一屏很重的东西，凭空盖住对话会让人不知道
+     它是哪来的。由 composer 上那张入口卡领进去，人点了才铺。 */
   useEffect(() => {
     if (!rework || reworkGreetedRef.current) return;
     reworkGreetedRef.current = true;
@@ -181,10 +187,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
        ref 已经保证了只排一次，一次性的定时器不需要再被撤销。 */
     window.setTimeout(() => {
       setStage("collecting");
-      appendRun("params", missingFields.length);
-      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。原件和批注已摊在中间，对照着在右侧参数收集里改，改完在下方确认发送。`);
-      setReworkCanvas(true);
-      openInspector("parameters");
+      appendRun("rework");
+      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。批注已收在右侧「退回批注」，要对照原件看就摊开成画布；改在参数收集里改，改完在下方确认发送。`);
+      openInspector("rework");
     }, 900);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rework]);
@@ -516,7 +521,15 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : (
           <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         )}
-        <DmpkComposer editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
+        <DmpkComposer reworkNotice={rework && !reworkSettled && !reworkCanvas ? (
+          <DmpkReworkNoticeCard
+            by={rework.by}
+            at={rework.at}
+            total={reworkNotes.length}
+            blocking={reworkNotes.filter((note) => note.severity === "blocking").length}
+            onOpenCanvas={() => setReworkCanvas(true)}
+          />
+        ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
         ] }); }} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())} />
@@ -541,6 +554,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
                用户在右侧参数收集里点了「改这一项」，卡片本来长在 composer 上，
                而 composer 此刻被画布盖住——点了等于没反应。
                画布一收起，同一张卡自然回到 composer 上方。 */
+            chips={draftTabs.length ? <ComposerChipTray tabs={draftTabs} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} /> : null}
             card={composerFields.length ? (
               <DmpkParameterTaskCard
                 activeGroup={activeGroup}

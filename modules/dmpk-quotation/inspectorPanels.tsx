@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   ArrowUpRight,
   Calculator,
   ChevronDown,
@@ -31,7 +32,7 @@ import {
 } from "../../components/workbench-inspector/WorkbenchInspector";
 import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote";
 import { noteAnchorToField } from "./noteFieldMap";
-import { quoteAnchorLabel, type QuoteNote } from "../../lib/workbench/quoteData";
+import { quoteAnchorLabel, quoteCurrentValue, quoteNoteSeverityLabel, type QuoteNote } from "../../lib/workbench/quoteData";
 
 export type DmpkInspectorStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
 export type DmpkInspectorGroup = "assay" | "animal" | "analysis" | "delivery";
@@ -234,6 +235,29 @@ function ReworkPanel({ context }: { context: DmpkInspectorContext }) {
           在这儿再放一颗「去改」，等于给了第二条改的路径，
           而两条路径迟早会对不上。 */}
       <AnnotatedQuote notes={context.reworkNotes} className="isPanel" />
+
+      {/* 收在 320px 侧栏里时，报价单那一面放不下，但**批注本身放得下**。
+          原来这儿只剩标题和驳回理由，等于告诉人「有 3 条批注」却不给看，
+          还得先摊开画布才知道是哪 3 条。 */}
+      <ul className="dmpkReworkList">
+        {context.reworkNotes.map((note) => (
+          <li key={note.anchorId} className={`is-${note.severity}`}>
+            <span className="dmpkReworkListHead">
+              <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
+              <strong>{quoteAnchorLabel(note.anchorId)}</strong>
+            </span>
+            {note.suggested ? (
+              <span className="quoteNoteDiff">
+                <s>{quoteCurrentValue(note.anchorId) || "—"}</s>
+                <ArrowRight size={11} aria-hidden="true" />
+                <b>{note.suggested}</b>
+              </span>
+            ) : null}
+            <p>{note.text}</p>
+            <span className="quoteNoteBy">{note.author} · {note.authorRole} · {note.at}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

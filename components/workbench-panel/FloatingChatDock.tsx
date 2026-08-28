@@ -26,6 +26,11 @@ type FloatingChatDockProps = {
      画布收起来、对话露出来，它自然回到 composer 上方。同一张卡，两个位置，
      取决于此刻输入框在哪儿。 */
   card?: React.ReactNode;
+  /* 已经选进来、等着一起发出去的参数 chips。
+     药丸原本没有这一格，于是画布态下选完一个值屏幕上什么都不留——
+     用户不知道刚才那一下有没有生效，也没法反悔。
+     chips 跟 composer 里是同一个组件，删除方式也一样。 */
+  chips?: React.ReactNode;
 };
 
 /** 播报浮层的停留时长；到点淡出，只在药丸上留一颗未读点 */
@@ -39,7 +44,7 @@ const BROADCAST_MS = 3500;
  * 收进来只会把药丸撑成第二个 composer。
  * 例外是 `card`——要当场做的决定必须跟着输入框走，见那个属性上的说明。
  */
-export function FloatingChatDock({ messages, text, onTextChange, onSend, disabled = false, placeholder = "问一句，或补充说明…", autoFocus = true, card }: FloatingChatDockProps) {
+export function FloatingChatDock({ messages, text, onTextChange, onSend, disabled = false, placeholder = "问一句，或补充说明…", autoFocus = true, card, chips }: FloatingChatDockProps) {
   const [expanded, setExpanded] = useState(false);
   const [broadcastIds, setBroadcastIds] = useState<string[]>([]);
   const [unread, setUnread] = useState(false);
@@ -138,6 +143,8 @@ export function FloatingChatDock({ messages, text, onTextChange, onSend, disable
       ) : null}
 
       {card ? <div className="floatingChatCard">{card}</div> : null}
+
+      {chips ? <div className="floatingChatChips">{chips}</div> : null}
 
       <div className="floatingChatPill">
         <button
