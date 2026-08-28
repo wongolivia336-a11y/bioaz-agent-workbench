@@ -31,7 +31,7 @@ import {
 } from "../../components/workbench-inspector/WorkbenchInspector";
 import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote";
 import { noteAnchorToField } from "./noteFieldMap";
-import { quoteAnchorLabel, quoteNoteSeverityLabel, type QuoteNote } from "../../lib/workbench/quoteData";
+import { quoteAnchorLabel, type QuoteNote } from "../../lib/workbench/quoteData";
 
 export type DmpkInspectorStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
 export type DmpkInspectorGroup = "assay" | "animal" | "analysis" | "delivery";
@@ -226,55 +226,35 @@ function ReworkPanel({ context }: { context: DmpkInspectorContext }) {
       />
       {context.reworkReason ? <p className="dmpkReworkReason">{context.reworkReason}</p> : null}
 
-      {/* 待改清单。它是批注和参数之间那条线的可见形态——
-          读到一条，直接从这里跳到要改的那一格。 */}
-      <ul className="dmpkReworkTodo">
-        {context.reworkNotes.map((note) => (
-          <ReworkTodoRow key={note.anchorId} note={note} context={context} />
-        ))}
-      </ul>
-
-      {/* 铺开之后左参照、右动手：原件和批注在左，参数收集**原样搬到右边**。
-          它们必须同屏——否则每改一项都要切一次 tab，而「刚才那条批注说的是
-          哪一格」正是切走之后最先忘掉的东西。 */}
-      <div className="dmpkReworkWork">
-        <AnnotatedQuote notes={context.reworkNotes} className="isPanel" />
-        {context.expanded ? (
-          <section className="dmpkReworkFields">
-            <header><strong>参数收集</strong><small>在这里改，改完到对话里确认</small></header>
-            <ParametersPanel context={context} />
-          </section>
-        ) : null}
-      </div>
+      {/* 一个平面：左边报价单，右边批注栏。跟 QA 审核台同一个形状。
+          动作长在每张批注卡下面——原来另起了一份「待改清单」，那是把同一份
+          东西列了两遍，中间还套了三层框。 */}
+      <AnnotatedQuote
+        notes={context.reworkNotes}
+        className="isPanel"
+        noteAction={(note) => <ReworkNoteAction note={note} context={context} />}
+      />
     </div>
   );
 }
 
-function ReworkTodoRow({ note, context }: { note: QuoteNote; context: DmpkInspectorContext }) {
+/** 一条批注的出口：能落到参数上就去改那一格，落不到就把话筒递回对话。 */
+function ReworkNoteAction({ note, context }: { note: QuoteNote; context: DmpkInspectorContext }) {
   const fieldId = noteAnchorToField[note.anchorId];
   const field = fieldId ? context.fields.find((item) => item.id === fieldId) : undefined;
+  if (field) {
+    return (
+      <button type="button" onClick={() => context.onEditField(field.id)}>
+        去改「{field.label}」
+      </button>
+    );
+  }
+  /* 这一条落不到任何一格参数上——报价单的条目和会话收的字段本来就不是
+     一一对应。与其给个点了没反应的按钮，不如把话筒递回去。 */
   return (
-    <li className={`is-${note.severity}`}>
-      <div className="dmpkReworkTodoMain">
-        <span className="dmpkReworkTodoHead">
-          <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
-          <strong>{quoteAnchorLabel(note.anchorId)}</strong>
-          {note.suggested ? <em>建议改为 {note.suggested}</em> : null}
-        </span>
-        <p>{note.text}</p>
-      </div>
-      {field ? (
-        <button type="button" onClick={() => context.onEditField(field.id)}>
-          去改「{field.label}」
-        </button>
-      ) : (
-        /* 这一条落不到任何一格参数上——报价单的条目和会话收的字段本来就
-           不是一一对应。与其给个点了没反应的按钮，不如把话筒递回去。 */
-        <button type="button" onClick={() => context.onDraftMessage(`关于「${quoteAnchorLabel(note.anchorId)}」：`)}>
-          在对话里说明
-        </button>
-      )}
-    </li>
+    <button type="button" onClick={() => context.onDraftMessage(`关于「${quoteAnchorLabel(note.anchorId)}」：`)}>
+      在对话里说明
+    </button>
   );
 }
 

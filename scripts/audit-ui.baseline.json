@@ -1,7 +1,7 @@
 {
   "stylesheets": 23,
-  "selectors": 3983,
-  "duplicateSelectors": 598,
+  "selectors": 3970,
+  "duplicateSelectors": 597,
   "crossFileDuplicates": 193,
   "suspectDeadClasses": 382,
   "handRolledModals": 6,

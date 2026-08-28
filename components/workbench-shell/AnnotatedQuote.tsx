@@ -32,12 +32,16 @@ import {
  * 两种形态都要有：DMPK 的产物本来就是一 Word 一 Excel，报价书给客户看，
  * 计算表推导单价。复核和返工都要在两者之间来回。
  */
-export function AnnotatedQuote({ notes = [], initialForm = "sheet", className, toolbarExtra }: {
+export function AnnotatedQuote({ notes = [], initialForm = "sheet", className, toolbarExtra, noteAction }: {
   notes?: QuoteNote[];
   initialForm?: "sheet" | "doc";
   className?: string;
   /** 工具条右端的附加内容，比如下载按钮。 */
   toolbarExtra?: React.ReactNode;
+  /* 每条批注下面挂的动作。QA 那边每张审核卡自带「采纳 / 忽略」，
+     是同一个道理：**要做的事就长在说明它的那段话下面**，
+     不要在别处再列一份一模一样的清单。 */
+  noteAction?: (note: QuoteNote) => React.ReactNode;
 }) {
   const [form, setForm] = useState<"sheet" | "doc">(initialForm);
   const [activeAnchor, setActiveAnchor] = useState<string | null>(null);
@@ -142,6 +146,7 @@ export function AnnotatedQuote({ notes = [], initialForm = "sheet", className, t
                     <span className="quotePreviewNoteText">{note.text}</span>
                     <span className="quoteNoteBy">{note.author} · {note.authorRole} · {note.at}</span>
                   </button>
+                  {noteAction ? <div className="quotePreviewNoteAction">{noteAction(note)}</div> : null}
                 </li>
               ))}
             </ul>
