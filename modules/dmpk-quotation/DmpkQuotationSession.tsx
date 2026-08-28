@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronRight, WandSparkles } from "lucide-react";
+import { ChevronRight, Minimize2, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
+import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
@@ -77,6 +78,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [handedOff, setHandedOff] = useState(false);
   const reworkNotes = (rework?.notes ?? []) as QuoteNote[];
   const reworkGreetedRef = useRef(false);
+  /* 退回批注铺成中间那块画布了没有。
+     ----------------------------------------------------------------------
+     它跟 panelFocus 不是一回事。panelFocus 是「面板铺满整个工作区」，
+     对话和右侧栏一起消失；而这里要的是 QA 审核台那个形状——
+     **中间是要看的东西，右边仍然是那 320px 的面板，底部一颗药丸**。
+     读在中间，改在右边，确认在药丸，三样同屏。
+
+     所以展开退回批注不是 setPanelFocus(true)，是把它搬到中间去当画布，
+     面板顺势切回参数收集。收起来的时候，对话回到中间，
+     退回批注变回面板里的一个 tab。 */
+  const [reworkCanvas, setReworkCanvas] = useState(false);
   /* 这一轮返工做完了没有。做完就把「退回批注」那个 tab 收掉——
      一份已经照着改完的原件留在 tab 栏里,只会让人反复确认自己是不是漏了什么。 */
   const [reworkSettled, setReworkSettled] = useState(false);
@@ -170,12 +182,24 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     window.setTimeout(() => {
       setStage("collecting");
       appendRun("params", missingFields.length);
-      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。原件和批注已摊在右侧「退回批注」里，对照着在参数收集里改，改完在这里确认发送。`);
-      openInspector("rework");
-      setPanelFocus(true);
+      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。原件和批注已摊在中间，对照着在右侧参数收集里改，改完在下方确认发送。`);
+      setReworkCanvas(true);
+      openInspector("parameters");
     }, 900);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rework]);
+
+  /* 展开「退回批注」＝ 把它搬到中间当画布，而不是让面板铺满整屏。
+     铺满会把「改」（右侧参数收集）和「确认」（底部输入）一起赶走，
+     而这一屏的活恰恰要三样同时在。所以这里把 panelFocus 接管掉：
+     一旦是退回批注要全屏，就转成画布模式，面板顺势切回参数收集。 */
+  useEffect(() => {
+    if (!panelFocus || inspectorPanelId !== "rework") return;
+    setPanelFocus(false);
+    setReworkCanvas(true);
+    openInspector("parameters");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panelFocus, inspectorPanelId]);
 
   /* 现值：能映射到会话参数的走会话字段，其余走报价单。
      两套词表不一一对应，取错一边，显示的现值就跟人眼前的面板对不上。 */
@@ -415,8 +439,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       window.requestAnimationFrame(() => setComposerAttention(true));
       window.setTimeout(() => setComposerAttention(false), 720);
     },
-    /* 退回批注。settled 之后清空——那个 tab 也就自动没了。 */
-    reworkNotes: reworkSettled ? [] : reworkNotes,
+    /* 退回批注。铺成中间画布的时候，面板里那个 tab 就该消失——
+       同一份东西不该同时占着中间和右边。settled 之后同理。 */
+    reworkNotes: reworkSettled || reworkCanvas ? [] : reworkNotes,
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
@@ -465,13 +490,32 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   return (
     <>
-      <section className={`dmpkWorkspace ${panelFocus ? "isPanelFocus" : ""}`}>
+      <section className={`dmpkWorkspace ${panelFocus ? "isPanelFocus" : ""} ${reworkCanvas ? "isReworkCanvas" : ""}`}>
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
           <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </header>
-        <SessionMinimap scrollerRef={chatScrollerRef} />
-        <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
+        {!reworkCanvas ? <SessionMinimap scrollerRef={chatScrollerRef} /> : null}
+        {reworkCanvas && rework ? (
+          /* 中间这块画布 = 要照着改的原件。右侧那 320px 面板照旧在，
+             底部是药丸——读、改、确认三样同屏，谁也不用切走。 */
+          <section className="dmpkReworkCanvas" aria-label="退回批注">
+            <header>
+              <div>
+                <strong>{rework.by} 退回了这一版</strong>
+                <small>{rework.at} · 共 {reworkNotes.length} 条批注{reworkNotes.filter((note) => note.severity === "blocking").length ? `，其中 ${reworkNotes.filter((note) => note.severity === "blocking").length} 条必须修订` : ""}</small>
+              </div>
+              {/* 收起来：对话回到中间，退回批注变回面板里的一个 tab。 */}
+              <button type="button" onClick={() => { setReworkCanvas(false); openInspector("rework"); }} aria-label="收起画布，回到对话" title="收起画布，回到对话">
+                <Minimize2 size={15} />
+              </button>
+            </header>
+            {rework.reason ? <p className="dmpkReworkReason">{rework.reason}</p> : null}
+            <AnnotatedQuote notes={reworkNotes} className="isPanel" />
+          </section>
+        ) : (
+          <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
+        )}
         <DmpkComposer editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
@@ -491,7 +535,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             setInspectorPanelId(panelId as DmpkInspectorPanelId);
           }}
         />
-        {panelFocus ? (
+        {panelFocus || reworkCanvas ? (
           <FloatingChatDock
             /* 画布铺满时，要当场做的那个决定跟着输入框走。
                用户在右侧参数收集里点了「改这一项」，卡片本来长在 composer 上，

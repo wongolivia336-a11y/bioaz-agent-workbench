@@ -8382,8 +8382,39 @@ button {
 /* 铺开时左参照、右动手。参数那一栏定宽 300px：它是表单，宽了不会更好读，
    而原件那边多一寸就多一行看得见的条目。 */
 /* 侧栏那 320px 里读不了两栏并排的报价单。收起时只给标题和驳回理由，
-   要看原件就把面板铺开——那颗全屏按钮本来就在 tab 栏右端。 */
+   要看原件就把它铺到中间去——那颗全屏按钮本来就在 tab 栏右端。 */
 .dmpkReworkPanel:not(.isExpanded) .annotatedQuote { display: none; }
+
+/* ═══ 退回批注画布 ═══════════════════════════════════════════════════════
+   它占的是**对话那一列**，不是整个工作区。右边那 320px 面板照旧在，
+   底部一颗药丸——这就是 QA 审核台的形状：中间是要看的，右边是要动手的，
+   底下是要确认的。铺满整屏（panelFocus）会把「改」和「确认」一起赶走，
+   而这一屏的活恰恰要三样同时在。 */
+.dmpkReworkCanvas {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 10px;
+  overflow: hidden;
+  padding: 16px 20px 96px;
+}
+.dmpkReworkCanvas:not(:has(.dmpkReworkReason)) { grid-template-rows: auto minmax(0, 1fr); }
+
+.dmpkReworkCanvas > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dmpkReworkCanvas > header > div { display: grid; gap: 2px; }
+.dmpkReworkCanvas > header strong { color: var(--ink); font-size: 14px; font-weight: 650; }
+.dmpkReworkCanvas > header small { color: var(--muted); font-size: 12px; }
+.dmpkReworkCanvas > header > button {
+  display: grid; width: 28px; height: 28px; flex: none; place-items: center;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  color: var(--muted); cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.dmpkReworkCanvas > header > button:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
+
+/* 画布态下 composer 换成了药丸，底部那 96px 内距是给它的落脚点；
+   不留的话滚到底时最后一行会被药丸压住。 */
+.dmpkWorkspace.isReworkCanvas > .dmpkComposerWrap { display: none; }
 
 /* 叠在另一个弹窗之上时要抬一层。原来两层同一个 z-index，后来的那层靠 DOM
    插入顺序侥幸压住——而 portal 的插入顺序不该是「谁在上面」的依据。
