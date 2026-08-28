@@ -8299,7 +8299,7 @@ button {
    纸面自己一层。QA 审核台是对的参照：文档就是一块平面，批注栏就是一块平面，
    两块之间只有间距，没有第三个盒子。 */
 .annotatedQuote.isPanel { min-height: 0; height: 100%; }
-.annotatedQuote.isPanel .annotatedQuoteBar { border-bottom: 0; padding: 0 0 10px; }
+.annotatedQuote.isPanel .annotatedQuoteBar { border-bottom: 0; padding: 0 0 8px; }
 .annotatedQuote.isPanel .quotePreviewBody { padding: 0; }
 
 .quotePreviewBody { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 14px; overflow: hidden; padding: 16px 20px; }
@@ -8370,9 +8370,15 @@ button {
 .dmpkReworkPanel.isExpanded { grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
 .dmpkReworkPanel.isExpanded:not(:has(.dmpkReworkReason)) { grid-template-rows: auto minmax(0, 1fr); }
 
+/* 驳回理由跟在标题块里，不再单开一条通栏——纸面才是这一屏要看的东西，
+   顶上每多一段，它就晚一寸开始。 */
 .dmpkReworkReason {
+  margin: 4px 0 0; color: var(--body); font-size: 12.5px; line-height: 1.6;
+}
+/* 收在右侧面板里时它是独立一段，那儿地方够，给底色好读 */
+.dmpkReworkPanel .dmpkReworkReason {
   margin: 0; border-radius: 8px; background: var(--soft, #f7f8fb);
-  padding: 10px 12px; color: var(--body); font-size: 12.5px; line-height: 1.7;
+  padding: 10px 12px; line-height: 1.7;
 }
 
 /* 批注栏上没有动作按钮：它是说明书，不是操作台。
@@ -8418,6 +8424,39 @@ button {
 }
 .dmpkInboundEvent > div { display: grid; gap: 6px; min-width: 0; }
 .dmpkInboundEvent strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+
+/* ═══ 报价版本 ═══════════════════════════════════════════════════════════
+   摊成一列历史，不做成版本下拉。下拉的默认状态只显示一个值，于是
+   「这一单出过几版」被藏在了点开之后——而返工场景里，出过第二版
+   这件事本身就是要给人看的信息。最新那版展开，旧版收成一行留在原地。 */
+.dmpkQuoteVersions { display: grid; gap: 8px; }
+.dmpkQuoteVersion { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.dmpkQuoteVersion.isCurrent { border-color: var(--bioaz-agent-accent-border, #dcddf2); }
+.dmpkQuoteVersion > button {
+  display: grid; width: 100%; grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center; gap: 10px;
+  border: 0; background: transparent; padding: 11px 12px; text-align: left; cursor: pointer;
+}
+.dmpkQuoteVersion > button:hover { background: var(--soft, #f7f8fb); }
+.dmpkQuoteVersionTag {
+  border-radius: 6px; background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  padding: 2px 8px; color: var(--bioaz-agent-accent, #5c60b8);
+  font-size: 11.5px; font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.dmpkQuoteVersionMeta { display: grid; min-width: 0; gap: 1px; }
+.dmpkQuoteVersionMeta strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.dmpkQuoteVersionMeta small { color: var(--muted); font-size: 11.5px; }
+.dmpkQuoteVersionNow {
+  border-radius: 999px; background: var(--bioaz-status-success-soft, #d1fae5);
+  padding: 2px 8px; color: var(--bioaz-status-success, #065f46); font-size: 10.5px; font-style: normal;
+}
+.dmpkQuoteVersionChevron { color: var(--muted); transition: transform 160ms ease; }
+.dmpkQuoteVersion > button[aria-expanded="true"] .dmpkQuoteVersionChevron { transform: rotate(180deg); }
+.dmpkQuoteVersionFiles { display: grid; gap: 6px; border-top: 1px solid var(--line); padding: 10px 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dmpkQuoteVersionChevron { transition: none; }
+}
 
 /* 收起态的批注清单。侧栏放不下报价单，但放得下批注本身。 */
 .dmpkReworkList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -8471,10 +8510,11 @@ button {
 .dmpkReworkCanvas {
   display: grid;
   min-height: 0;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 10px;
+  /* 两轨：标题块 + 纸面。理由已经收进标题块，不再单占一行。 */
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
   overflow: hidden;
-  padding: 16px 20px 96px;
+  padding: 12px 20px 96px;
   /* 从下方长出来——入口卡就在那个位置，画布是它展开的结果。
      只动 transform 和 opacity：这两样合成器能直接接手，不触发重排。 */
   animation: dmpkReworkCanvasIn 260ms cubic-bezier(0.32, 0.72, 0, 1) both;

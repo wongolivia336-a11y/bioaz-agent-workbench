@@ -91,6 +91,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
      面板顺势切回参数收集。收起来的时候，对话回到中间，
      退回批注变回面板里的一个 tab。 */
   const [reworkCanvas, setReworkCanvas] = useState(false);
+  /* 画布开过一次没有。入口卡是**领路的**，路认得了就该让开——
+     它跟参数补全卡抢的是同一个槽位，两张一起堆着，人不知道先做哪个。 */
+  const [reworkCanvasSeen, setReworkCanvasSeen] = useState(false);
+  /* 这一单出过几版报价。每生成一次追加一条，旧版不删——
+     报价被退过一次这件事，一个月后回来看还得能查到。 */
+  const [quoteVersions, setQuoteVersions] = useState<{ id: string; label: string; at: string; origin: string }[]>([]);
+  const pushQuoteVersion = (origin: string) => setQuoteVersions((items) => [
+    ...items,
+    { id: `v${items.length + 1}`, label: `v${items.length + 1}`, at: "刚刚生成 · 金额校验一致", origin },
+  ]);
   /* 这一轮返工做完了没有。做完就把「退回批注」那个 tab 收掉——
      一份已经照着改完的原件留在 tab 栏里,只会让人反复确认自己是不是漏了什么。 */
   const [reworkSettled, setReworkSettled] = useState(false);
@@ -461,6 +471,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
     expanded: panelFocus,
+    quoteVersions,
   });
   /* 参数面板只负责改「参数的值」——逐项点编辑图标即可。
      改规则不属于这里，「对话编辑」已经移到报价规则面板。 */
@@ -515,17 +526,20 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           /* 中间这块画布 = 要照着改的原件。右侧那 320px 面板照旧在，
              底部是药丸——读、改、确认三样同屏，谁也不用切走。 */
           <section className="dmpkReworkCanvas" aria-label="退回批注">
+            {/* 驳回理由收进标题块里，不再单开一条通栏。
+                原来是「标题 / 理由条 / 形态切换」三段各占一行，纸面被压到 225px
+                才开始——而纸面才是这一屏要看的东西。 */}
             <header>
               <div>
                 <strong>{rework.by} 退回了这一版</strong>
                 <small>{rework.at} · 共 {reworkNotes.length} 条批注{reworkNotes.filter((note) => note.severity === "blocking").length ? `，其中 ${reworkNotes.filter((note) => note.severity === "blocking").length} 条必须修订` : ""}</small>
+                {rework.reason ? <p className="dmpkReworkReason">{rework.reason}</p> : null}
               </div>
               {/* 收起来：对话回到中间，退回批注变回面板里的一个 tab。 */}
               <button type="button" onClick={() => { setReworkCanvas(false); openInspector("rework"); }} aria-label="收起画布，回到对话" title="收起画布，回到对话">
                 <Minimize2 size={15} />
               </button>
             </header>
-            {rework.reason ? <p className="dmpkReworkReason">{rework.reason}</p> : null}
             <AnnotatedQuote notes={reworkNotes} className="isPanel" />
           </section>
         ) : (
@@ -533,13 +547,13 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         )}
         <DmpkComposer unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
-          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} reworkNotice={rework && !reworkSettled && !reworkCanvas ? (
+          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} reworkNotice={rework && !reworkSettled && !reworkCanvas && !reworkCanvasSeen && !composerFields.length ? (
           <DmpkReworkNoticeCard
             by={rework.by}
             at={rework.at}
             total={reworkNotes.length}
             blocking={reworkNotes.filter((note) => note.severity === "blocking").length}
-            onOpenCanvas={() => setReworkCanvas(true)}
+            onOpenCanvas={() => { setReworkCanvas(true); setReworkCanvasSeen(true); }}
           />
         ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },

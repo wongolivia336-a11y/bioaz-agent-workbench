@@ -69,6 +69,8 @@ export type DmpkInspectorContext = {
   reworkReason?: string;
   /** 画布铺开了没有。铺开才排三列，320px 的侧栏里排不下。 */
   expanded?: boolean;
+  /* 这一单出过几版报价。返工场景里「出过第二版」本身就是要给人看的信息。 */
+  quoteVersions: { id: string; label: string; at: string; origin: string }[];
 };
 
 const groupLabels: Record<DmpkInspectorGroup, string> = {
@@ -151,7 +153,7 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
     defaultWhen: (context) => context.stage === "generated",
     state: (context) => withError(context),
     errorMessage: "报价结果暂时不可用",
-    render: (context) => <ArtifactsPanel onPreview={context.onPreviewArtifact} />,
+    render: (context) => <ArtifactsPanel context={context} onPreview={context.onPreviewArtifact} />,
   },
   {
     id: "rules",
@@ -446,13 +448,64 @@ function EvidencePanel({ onPreview }: { onPreview: () => void }) {
   );
 }
 
-function ArtifactsPanel({ onPreview }: { onPreview: (kind: "word" | "excel") => void }) {
+/**
+ * 报价产物，按版本列。
+ *
+ * 为什么是一列历史，不是一个版本下拉
+ * ----------------------------------------------------------------------
+ * 下拉的默认状态只显示一个值，于是「这一单出过几版」这件事被藏在了点开之后。
+ * 而返工场景里，「出过第二版」本身就是要给人看的信息——审批人退了，你改了，
+ * 又出了一版，这条线索比任何一份文件都重要。
+ *
+ * 所以摊成一列，最新那版展开（多数时候要拿的就是它），旧版收成一行，
+ * 点开才露出文件。旧版不删也不藏：报价被退过一次这件事，
+ * 一个月后回来看还得能查到。
+ */
+function ArtifactsPanel({ context, onPreview }: { context: DmpkInspectorContext; onPreview: (kind: "word" | "excel") => void }) {
+  const versions = context.quoteVersions.length
+    ? context.quoteVersions
+    : [{ id: "v1", label: "v1", at: "刚刚生成", origin: "首次生成" }];
   return (
-    <div className="dmpkInspectorList">
-      <PanelIntro title="报价版本 v1" meta="刚刚生成 · 金额校验一致" />
-      <ArtifactRow icon={FileText} title="中文 Word 报价单" meta="30% 管理费" onPreview={() => onPreview("word")} />
-      <ArtifactRow icon={FileSpreadsheet} title="Excel 报价明细" meta="15% 管理费" onPreview={() => onPreview("excel")} />
+    <div className="dmpkQuoteVersions">
+      {[...versions].reverse().map((version, index) => (
+        <QuoteVersionCard
+          key={version.id}
+          version={version}
+          current={index === 0}
+          total={versions.length}
+          onPreview={onPreview}
+        />
+      ))}
     </div>
+  );
+}
+
+function QuoteVersionCard({ version, current, total, onPreview }: {
+  version: { id: string; label: string; at: string; origin: string };
+  current: boolean;
+  total: number;
+  onPreview: (kind: "word" | "excel") => void;
+}) {
+  /* 最新那版默认展开——多数时候要拿的就是它。旧版收起来但留在原地。 */
+  const [open, setOpen] = useState(current);
+  return (
+    <section className={`dmpkQuoteVersion${current ? " isCurrent" : ""}`}>
+      <button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        <span className="dmpkQuoteVersionTag">{version.label}</span>
+        <span className="dmpkQuoteVersionMeta">
+          <strong>{version.origin}</strong>
+          <small>{version.at}</small>
+        </span>
+        {current && total > 1 ? <i className="dmpkQuoteVersionNow">当前</i> : null}
+        <ChevronDown size={14} className="dmpkQuoteVersionChevron" aria-hidden="true" />
+      </button>
+      {open ? (
+        <div className="dmpkQuoteVersionFiles">
+          <ArtifactRow icon={FileText} title="中文 Word 报价单" meta="30% 管理费" onPreview={() => onPreview("word")} />
+          <ArtifactRow icon={FileSpreadsheet} title="Excel 报价明细" meta="15% 管理费" onPreview={() => onPreview("excel")} />
+        </div>
+      ) : null}
+    </section>
   );
 }
 
