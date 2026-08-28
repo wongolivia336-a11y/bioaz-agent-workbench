@@ -96,7 +96,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [reworkCanvasSeen, setReworkCanvasSeen] = useState(false);
   /* 这一单出过几版报价。每生成一次追加一条，旧版不删——
      报价被退过一次这件事，一个月后回来看还得能查到。 */
-  const [quoteVersions, setQuoteVersions] = useState<{ id: string; label: string; at: string; origin: string }[]>([]);
+  const [quoteVersions, setQuoteVersions] = useState<{ id: string; label: string; at: string; origin: string }[]>(() =>
+    /* 带着退回进来时，被退回的那一版**已经存在**——它就是 v1。
+       不种这一条的话，改完重出会标成「v1 首次生成」，而屏幕上明明写着
+       这是第二次：审批人退过一次，你才在这儿。 */
+    rework ? [{ id: "v1", label: "v1", at: rework.at, origin: "送审后被退回" }] : []);
   const pushQuoteVersion = (origin: string) => setQuoteVersions((items) => [
     ...items,
     { id: `v${items.length + 1}`, label: `v${items.length + 1}`, at: "刚刚生成 · 金额校验一致", origin },
@@ -252,8 +256,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     suggestPanel("parameters");
     window.setTimeout(() => {
       setStage("generated");
+      pushQuoteVersion(`按 ${reworkNotes.length} 条批注重出`);
       appendRun("quote");
       appendMessage("agent", "已按修改后的参数重新生成报价单，Word 与 Excel 金额校验一致，可再次送审。");
+      /* 产物卡钉在生成这一刻，不再挂在对话末尾——挂末尾的话，
+         生成完先交接、产物卡就跑到「已交接给某某」下面去了。 */
+      appendMessage("artifacts", "");
     }, 1200);
   };
 
@@ -408,8 +416,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     window.setTimeout(() => {
       setStage("generated");
       suggestPanel("artifacts");
+      /* 带着退回进来时 v1 已经种下（就是被退回的那一版），
+         所以这里追加的自然是 v2；从零开始的会话则是 v1。 */
+      pushQuoteVersion(rework ? `按 ${reworkNotes.length} 条批注重出` : "首次生成");
       appendRun("quote");
       appendMessage("agent", "报价单已生成。Word 与 Excel 金额校验一致。");
+      appendMessage("artifacts", "");
     }, 1800);
   };
 

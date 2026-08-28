@@ -219,9 +219,16 @@ export type QuoteNote = {
    好说明「通过不等于批注消失」。运行时新写的批注跟这些混在一起,共用一套渲染。 */
 export const seededQuoteNotes: Record<string, QuoteNote[]> = {
   "TK-2039": [
-    /* 一条落在会话参数上（采血点数），一条落在报价单本身（管理费口径）。
-       两种都要有：采纳之后前者会让右侧参数面板跟着变，后者不会——
-       而这正是「批注锚在报价条目上、会话收的是模块字段」这件事在界面上的样子。 */
+    /* 三条**都锚在能映射到会话参数的条目上**（见 noteFieldMap）。
+       ----------------------------------------------------------------
+       原来有两条锚在 Discount 和 Bioanalysis 上——它们只存在于报价单口径里，
+       参数面板没有对应的格子，于是撰写人在右侧改不了，只能在对话里写句话说明。
+       那条路是真实存在的，产品迟早要面对；但**演示这条线不该撞在上面**：
+       整个流程要展示的正是「批注 → 在参数面板改 → 重出一版」，
+       三条里两条改不了，演示当场就断了。
+
+       落不到参数上的情况仍然由交接卡兜底（unresolvedNotes），代码还在，
+       等真有那种批注时自己会出现。 */
     {
       anchorId: "p-tk-points",
       category: "param",
@@ -232,21 +239,21 @@ export const seededQuoteNotes: Record<string, QuoteNote[]> = {
       author: "王林彬", authorRole: "审批人", at: "2 天前",
     },
     {
-      anchorId: "p-discount",
-      category: "basis",
+      anchorId: "p-compounds",
+      category: "param",
       severity: "blocking",
-      text: "管理费口径与本单合同不一致。合同里写的是 15%，这一版按 30% 计的，整单金额差了一万多。",
-      suggested: "0.85",
-      quote: "Discount",
+      text: "方案里是两个待测物（母药加一个代谢物），这一版只按 1 个报的，生物分析的工作量少算了一半。",
+      suggested: "2",
+      quote: "Number of compounds",
       author: "王林彬", authorRole: "审批人", at: "2 天前",
     },
     {
-      anchorId: "i-method",
-      category: "custom",
-      customLabel: "表述有误",
+      anchorId: "p-tox-groups",
+      category: "param",
       severity: "advisory",
-      text: "「沿用已验证方法」这句客户看不懂，建议写清楚沿用的是哪一版方法学编号。",
-      quote: "Bioanalysis (Small Molecular)",
+      text: "组数按 2 组报的，方案里是 3 组。这一条金额影响不大，但送客户之前建议对齐方案。",
+      suggested: "3",
+      quote: "Number of TOX groups",
       author: "王林彬", authorRole: "审批人", at: "2 天前",
     },
   ],
