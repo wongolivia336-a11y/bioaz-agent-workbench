@@ -139,6 +139,46 @@ const drift = [
   },
 ];
 
+// ── 4. 刻度漂移 ──────────────────────────────────────────────────────────
+/* 「用了多少次」说明不了问题，「用了多少**种**」才说明。
+   令牌定了 4 档圆角、6 级字号、4 档时长；代码里实际跑出多少种，差额就是漂移。
+
+   这一节比上面那些计数更值钱：选择器多不一定是坏事（界面确实复杂），
+   但同一个视觉维度上出现 58 种取值，只可能是每处各自拍的。 */
+const allCss = loaded.map(({ abs }) => fs.readFileSync(abs, "utf8")).join("\n");
+const distinct = (re, pick = (m) => m[1]) => new Set(Array.from(allCss.matchAll(re), pick).map((v) => v.trim().toLowerCase()));
+
+const scales = [
+  {
+    key: "radiusValues",
+    name: "圆角取值",
+    have: distinct(/border-radius:\s*([^;}]+)[;}]/g).size,
+    legal: 4,
+    note: "令牌 tool 8 / control 12 / container 16 / full",
+  },
+  {
+    key: "fontSizeValues",
+    name: "字号取值",
+    have: distinct(/font-size:\s*([^;}]+)[;}]/g).size,
+    legal: 6,
+    note: "排版刻度 32 / 24 / 18 / 14 / 13 / 12",
+  },
+  {
+    key: "durationValues",
+    name: "过渡时长取值",
+    have: distinct(/transition[^;}]*?(\d+ms)/g).size,
+    legal: 4,
+    note: "令牌 fast 120 / standard 160 / spatial 220 / entrance 360",
+  },
+  {
+    key: "hexColors",
+    name: "写死的十六进制色",
+    have: distinct(/(#[0-9a-fA-F]{3,8})\b/g).size,
+    legal: 40,
+    note: "令牌里的颜色约 40 个，多出来的都是当场拍的",
+  },
+];
+
 // ── 报告 ─────────────────────────────────────────────────────────────────
 const now = {
   stylesheets: loaded.length,
@@ -149,6 +189,7 @@ const now = {
   handRolledModals: drift[0].bad,
   rawButtonClasses: drift[1].bad,
   adHocEmptyStates: drift[2].bad,
+  ...Object.fromEntries(scales.map((s) => [s.key, s.have])),
 };
 
 const base = fs.existsSync(BASELINE) ? JSON.parse(fs.readFileSync(BASELINE, "utf8")) : null;
@@ -171,6 +212,13 @@ for (const d of drift) {
   const k = { modal: "handRolledModals", button: "rawButtonClasses", empty: "adHocEmptyStates" }[d.key];
   console.log(`${d.name.padEnd(6)} 用组件 ${String(d.good).padStart(3)} · 手写 ${String(d.bad).padStart(3)}${delta(k)}`);
   console.log(`       ${d.goodLabel}  vs  ${d.badLabel}`);
+}
+console.log("-".repeat(64));
+console.log("刻度：同一个视觉维度上跑出了多少种取值");
+for (const scale of scales) {
+  const over = scale.have > scale.legal ? `  超出 ${scale.have - scale.legal}` : "";
+  console.log(`${scale.name.padEnd(16)} ${String(scale.have).padStart(4)} 种 / 应有 ${String(scale.legal).padStart(2)}${delta(scale.key)}${over}`);
+  console.log(`       ${scale.note}`);
 }
 console.log("=".repeat(64));
 

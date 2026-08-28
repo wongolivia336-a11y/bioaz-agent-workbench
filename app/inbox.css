@@ -53,10 +53,10 @@
 /* 邮件行永远占最后一条轨道：筛选行在已发送/草稿/搜索时不渲染，
    靠 grid-row: -2 / -1 定位比数子元素个数稳。 */
 .mailboxRows { grid-row: -2 / -1; min-height: 0; overflow: auto; border-top: 1px solid var(--bioaz-border); padding: 6px 8px 12px; }
-.mailboxRow { position:relative; border-radius:var(--bioaz-radius-control); transition:background-color 140ms ease; }
+.mailboxRow { position:relative; border-radius:var(--bioaz-radius-control); transition:background-color var(--bioaz-motion-standard) ease; }
 .mailboxRow:hover { background:var(--bioaz-surface-hover); }.mailboxRow.active { background:var(--bioaz-agent-accent-soft); }
 .mailboxRow.active::before { position:absolute; top:12px; bottom:12px; left:3px; width:2px; border-radius:var(--bioaz-radius-full); background:var(--bioaz-agent-accent); content:""; }
-.mailboxRowMain { display:grid; width:100%; gap:5px; border:0; border-radius:inherit; background:transparent; padding:13px 12px 13px 14px; text-align:left; cursor:pointer; transition:transform 140ms cubic-bezier(.23,1,.32,1); }
+.mailboxRowMain { display:grid; width:100%; gap:5px; border:0; border-radius:inherit; background:transparent; padding:13px 12px 13px 14px; text-align:left; cursor:pointer; transition:transform var(--bioaz-motion-standard) cubic-bezier(.23,1,.32,1); }
 .mailboxRowMain:active { transform:scale(.99); }
 .mailboxRowMain>div { display:flex; align-items:center; justify-content:space-between; gap:8px; }.mailboxRowMain>div strong { overflow:hidden; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }.mailboxRowMain time { flex:none; color:var(--bioaz-text-tertiary); font-size:11px; }
 .mailboxRowMain>b { overflow:hidden; color:var(--bioaz-text-primary); font-size:13px; text-overflow:ellipsis; white-space:nowrap; }.mailboxRowMain>p { overflow:hidden; margin:0; color:var(--bioaz-text-tertiary); font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
@@ -86,7 +86,7 @@
    但也不能等 hover 才占位——那样每行都会在鼠标经过时抖一下。 */
 /* 落右下角而不是右上角：右上角已经站了时间戳和未读圆点两个东西，
    第三个挤进去必然压字。右下角那一行只有左侧的状态 chip，右半边是空的。 */
-.mailboxRowActions { position:absolute; right:8px; bottom:9px; opacity:0; transition:opacity 140ms ease; }
+.mailboxRowActions { position:absolute; right:8px; bottom:9px; opacity:0; transition:opacity var(--bioaz-motion-standard) ease; }
 .mailboxRow:hover .mailboxRowActions, .mailboxRow:focus-within .mailboxRowActions, .mailboxRow.active .mailboxRowActions { opacity:1; }
 .mailboxDetailPane { min-width:0; min-height:0; overflow:auto; background:var(--bioaz-surface); }
 .mailReader,.mailComposer { display:grid; max-width:900px; min-height:100%; align-content:start; gap:22px; margin:0 auto; padding:30px 40px; }
@@ -365,7 +365,7 @@
 
 .sidebarInboxButton svg polyline,
 .sidebarInboxButton svg path {
-  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--bioaz-motion-spatial) cubic-bezier(0.2, 0.8, 0.2, 1);
   transform-origin: center;
 }
 

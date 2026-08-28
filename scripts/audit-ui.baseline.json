@@ -6,5 +6,9 @@
   "suspectDeadClasses": 382,
   "handRolledModals": 6,
   "rawButtonClasses": 53,
-  "adHocEmptyStates": 13
+  "adHocEmptyStates": 13,
+  "radiusValues": 56,
+  "fontSizeValues": 36,
+  "durationValues": 11,
+  "hexColors": 219
 }

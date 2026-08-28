@@ -819,7 +819,7 @@
   color: color-mix(in srgb, var(--bioaz-agent-accent) 78%, var(--bioaz-text-primary));
   font: inherit;
   cursor: pointer;
-  transition: border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: border-color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .qaApprovalJump > svg { flex: none; opacity: 0.75; }
@@ -852,9 +852,9 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
-    background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
-    color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+    border-color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease),
+    background var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease),
+    color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .qaAnnotateToggle:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
@@ -929,7 +929,7 @@
   background: var(--bioaz-agent-accent);
   color: #fff;
   cursor: pointer;
-  transition: opacity var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: opacity var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .qaAnnotationSend:disabled { background: var(--bioaz-border-strong); cursor: default; }
@@ -1035,9 +1035,9 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
-    background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
-    color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+    border-color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease),
+    background var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease),
+    color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .qaCompareToggle:hover { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
@@ -1215,7 +1215,7 @@
   color: inherit;
   font: inherit;
   cursor: pointer;
-  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: background var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .qaDocMark > em {
@@ -1272,7 +1272,7 @@
   height: 100%;
   border-radius: inherit;
   background: var(--bioaz-agent-accent);
-  transition: width var(--bioaz-motion-standard, 220ms) var(--bioaz-ease-standard, ease);
+  transition: width var(--bioaz-motion-standard, var(--bioaz-motion-spatial)) var(--bioaz-ease-standard, ease);
 }
 
 .qaReviewProgress > small { color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); }
@@ -1295,7 +1295,7 @@
   border-radius: var(--bioaz-radius-tool);
   padding: 3px 6px;
   margin: 0 -6px;
-  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: background var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 /* ② 增删改沿用旧系统的配色：修改=橙、新增=蓝、删除=红且划掉。

@@ -274,7 +274,7 @@ button { -webkit-tap-highlight-color: transparent; }
   text-align: left;
   opacity: 0;
   box-shadow: var(--review-shadow-float);
-  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms;
+  transition: opacity var(--bioaz-motion-standard) ease, transform var(--bioaz-motion-standard) ease, visibility var(--bioaz-motion-standard);
 }
 .contextSummaryCard p { margin: 0; color: var(--review-muted); font-size: 12px; line-height: 1.6; }
 .contextSummaryCard small { color: #8b94a2; font-size: 11px; }
@@ -356,7 +356,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .assistantContextBar .compactSelect > button:hover,
 .assistantContextBar .compactSelect.isOpen > button { border-color: var(--review-line); background: #fff; color: var(--review-ink); }
-.assistantContextBar .compactSelect > button svg { margin-left: 3px; color: #8a93a1; transition: transform 140ms ease; }
+.assistantContextBar .compactSelect > button svg { margin-left: 3px; color: #8a93a1; transition: transform var(--bioaz-motion-standard) ease; }
 .assistantContextBar .compactSelect.isOpen > button svg { transform: rotate(180deg); }
 .assistantContextBar .compactSelectMenu {
   width: max(220px, 100%);
@@ -1024,7 +1024,7 @@ button { -webkit-tap-highlight-color: transparent; }
   :is(.warningDecisionList, .warningActions, .responsibilityNote) {
   visibility: visible;
   opacity: 1;
-  transition: opacity 160ms var(--bioaz-ease-standard) 70ms;
+  transition: opacity var(--bioaz-motion-standard) var(--bioaz-ease-standard) 70ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2217,8 +2217,8 @@ button { -webkit-tap-highlight-color: transparent; }
   clip-path: inset(24px calc((100% - 260px) / 2) 24px round 999px);
   transition:
     clip-path 260ms var(--ambient-ease),
-    background-color 220ms var(--ambient-ease),
-    box-shadow 220ms var(--ambient-ease);
+    background-color var(--bioaz-motion-spatial) var(--ambient-ease),
+    box-shadow var(--bioaz-motion-spatial) var(--ambient-ease);
 }
 .knowledgeBaseView .ambientAssistantEntry {
   inset: 24px calc((100% - 260px) / 2);
@@ -2231,10 +2231,10 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 6px 18px rgba(18, 24, 38, 0.05);
   overflow: hidden;
   transition:
-    opacity 120ms ease,
-    transform 220ms var(--ambient-ease),
-    border-color 140ms ease,
-    background-color 140ms ease;
+    opacity var(--bioaz-motion-fast) ease,
+    transform var(--bioaz-motion-spatial) var(--ambient-ease),
+    border-color var(--bioaz-motion-standard) ease,
+    background-color var(--bioaz-motion-standard) ease;
 }
 .knowledgeBaseView .ambientAssistantEntry > * {
   position: relative;
@@ -2275,7 +2275,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .knowledgeBaseView .ambientAssistantComposer {
   padding: 36px 12px 10px;
-  transition: opacity 160ms ease 30ms, transform 240ms var(--ambient-ease);
+  transition: opacity var(--bioaz-motion-standard) ease 30ms, transform 240ms var(--ambient-ease);
 }
 .knowledgePreviewDialog .primaryButton,
 .knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
@@ -3198,7 +3198,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #475467;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
+  transition: background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), color var(--bioaz-motion-fast) var(--bioaz-ease-out-3);
 }
 
 .kbFolderStrip button:hover {
@@ -3265,7 +3265,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #475467;
   font-size: 12px;
   cursor: pointer;
-  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
+  transition: background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), color var(--bioaz-motion-fast) var(--bioaz-ease-out-3);
 }
 
 .kbPagination button:hover:not(:disabled) {
@@ -3535,7 +3535,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fff;
   padding: 10px 12px;
   cursor: pointer;
-  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
+  transition: background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), color var(--bioaz-motion-fast) var(--bioaz-ease-out-3);
 }
 
 .kbAssignOptions button:hover {
@@ -4448,7 +4448,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-color: var(--bioaz-border);
   box-shadow: none;
   transform: none;
-  transition: border-color 150ms ease;
+  transition: border-color var(--bioaz-motion-standard) ease;
 }
 .tumor-reportModuleShell .gateDecision,
 .tumor-reportModuleShell .gateDecision:hover,
@@ -5490,7 +5490,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 /* 交互反馈保留在按钮上即可 */
 .dmpkComposerWrap :is(button, label, input) {
-  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+  transition: background-color var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 /* ===== 参数收集面板：撑满可用高度，内容自然排布不再挤出滚动条 ===== */
@@ -5901,7 +5901,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font: inherit;
   font-size: 12px;
   font-weight: 600;
-  transition: background-color 140ms ease, color 140ms ease;
+  transition: background-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .projectOverviewLanes .overviewViewAll:hover {
@@ -6073,7 +6073,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* 唯一的指针反馈留给可点的选项，且只改颜色 */
 :is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button {
-  transition: background-color 120ms ease, border-color 120ms ease;
+  transition: background-color var(--bioaz-motion-fast) ease, border-color var(--bioaz-motion-fast) ease;
 }
 :is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button:hover {
   border-color: var(--bioaz-border-strong);
@@ -6122,7 +6122,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   border-radius: 8px 8px 0 0;
   color: var(--bioaz-text-secondary);
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 /* 选中态用底部一条灰条，不用整块底色，读起来更像标签页 */
@@ -6179,7 +6179,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-tertiary);
   visibility: hidden;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .workbenchPanelTab:hover .workbenchPanelTabClose,
@@ -6406,7 +6406,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--bioaz-agent-accent);
   content: "";
   opacity: 0;
-  transition: opacity var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: opacity var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .workbenchPanelResizer:hover::after,
@@ -6778,7 +6778,7 @@ button { -webkit-tap-highlight-color: transparent; }
    是必要的可点性提示，所以在禁令之后重新声明回来。 */
 :is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button,
 :is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button {
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  transition: background-color var(--bioaz-motion-fast) ease, border-color var(--bioaz-motion-fast) ease, color var(--bioaz-motion-fast) ease;
 }
 
 /* 分页 tab 与选项芯片：连颜色过渡也一并去掉，hover 只做瞬时换色，
@@ -7237,7 +7237,7 @@ button { -webkit-tap-highlight-color: transparent; }
   opacity: 0;
   transform: translateX(-12px);
   pointer-events: none;
-  transition: opacity 140ms ease-out, transform 140ms ease-out;
+  transition: opacity var(--bioaz-motion-standard) ease-out, transform var(--bioaz-motion-standard) ease-out;
 }
 
 /* ---- tab 栏右端的视图操作组：[ + ] │ [ ⤢ ] ---- */
@@ -7266,7 +7266,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .workbenchPanelFocus:hover:not(:disabled) {
@@ -7370,7 +7370,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .floatingChatPillToggle {

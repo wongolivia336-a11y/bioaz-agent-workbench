@@ -10,7 +10,7 @@
 .quotationAdmin>button:hover{background:var(--soft)}
 .quotationAdmin>button>span:nth-child(2){display:grid;min-width:0}
 .quotationAdmin>button strong{font-size:13.5px}.quotationAdmin>button small{overflow:hidden;color:var(--body);font-size:12px;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
-.quotationAdmin>button>svg{color:var(--muted);transition:transform 160ms ease}.quotationAdmin.menuOpen>button>svg{transform:rotate(180deg)}
+.quotationAdmin>button>svg{color:var(--muted);transition:transform var(--bioaz-motion-standard) ease}.quotationAdmin.menuOpen>button>svg{transform:rotate(180deg)}
 .quotationAdmin .avatar{width:34px;height:34px;border-radius:12px;background:var(--soft-strong);color:var(--ink);font-size:13px;font-weight:750}
 .quotationAdminMenu{position:absolute;right:-2px;bottom:62px;z-index:20;width:244px;overflow:hidden;border:1px solid var(--line-strong);border-radius:14px;background:#fff;padding:7px;box-shadow:var(--shadow)}
 .quotationAdminMenu>div{display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:8px 8px 12px;margin-bottom:5px}.quotationAdminMenu>div>span:nth-child(2){display:grid}.quotationAdminMenu>div small{color:var(--body);font-size:12px;font-weight:400}
