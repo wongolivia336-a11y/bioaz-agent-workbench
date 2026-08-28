@@ -12,6 +12,7 @@ import {
   FileInput,
   FileSpreadsheet,
   FileText,
+  CornerDownLeft,
   History,
   ListChecks,
   SlidersHorizontal,
@@ -28,6 +29,9 @@ import {
   type InspectorPanelRegistry,
   type ResolvedInspectorPanel,
 } from "../../components/workbench-inspector/WorkbenchInspector";
+import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote";
+import { noteAnchorToField } from "./noteFieldMap";
+import { quoteAnchorLabel, quoteNoteSeverityLabel, type QuoteNote } from "../../lib/workbench/quoteData";
 
 export type DmpkInspectorStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
 export type DmpkInspectorGroup = "assay" | "animal" | "analysis" | "delivery";
@@ -56,6 +60,14 @@ export type DmpkInspectorContext = {
   onPreviewQuotation: () => void;
   /** 面板只负责说清楚：要改什么就把现成的话填进 composer，由对话完成修改 */
   onDraftMessage: (text: string) => void;
+  /* 被退回的那一版带回来的批注。空数组＝这一单没被退回过，
+     「退回批注」那个 tab 也就不存在。 */
+  reworkNotes: QuoteNote[];
+  reworkBy?: string;
+  reworkAt?: string;
+  reworkReason?: string;
+  /** 画布铺开了没有。铺开才排三列，320px 的侧栏里排不下。 */
+  expanded?: boolean;
 };
 
 const groupLabels: Record<DmpkInspectorGroup, string> = {
@@ -152,6 +164,21 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
     render: (context) => <RulesPanel context={context} />,
   },
   {
+    /* 退回批注。它不是「过程」也不是「结果」，是一份**要照着改的原件**。
+       给它自己的 tab，并且默认铺开成画布——报价单、批注、参数三样并排，
+       在 320px 的侧栏里读不了。 */
+    id: "rework",
+    label: "退回批注",
+    icon: CornerDownLeft,
+    primary: true,
+    expandable: true,
+    available: (context) => context.reworkNotes.length > 0,
+    state: (context) => (context.reworkNotes.length ? withError(context) : "empty"),
+    emptyMessage: "本版没有退回批注",
+    errorMessage: "退回批注暂时不可用",
+    render: (context) => <ReworkPanel context={context} />,
+  },
+  {
     id: "review",
     label: "审核记录",
     icon: History,
@@ -166,6 +193,89 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
 
 export function getDmpkInspectorPanels(context: DmpkInspectorContext): ResolvedInspectorPanel[] {
   return resolveInspectorPanels(dmpkInspectorPanelRegistry, context);
+}
+
+/**
+ * 退回批注面板。
+ *
+ * 三样东西怎么摆
+ * ----------------------------------------------------------------------
+ * 赵敏要跑的这一圈是：**读批注 → 找到那一格 → 改 → 确认**。
+ * 涉及三个面：批注与原文、参数收集、对话。它们不是三个平级的栏——
+ *
+ *   批注 + 原文   是**参照**，从头到尾都得看着
+ *   参数收集       是**动手的地方**
+ *   对话           是**落笔的地方**（确认发生在这里）
+ *
+ * 所以画布里排两栏：左边参照（原件 + 批注），右边动手（参数收集）；
+ * 对话在画布模式下自动收成底部那颗浮动 dock，一直在，但不占列宽。
+ * 三样同屏，谁也不用切走。
+ *
+ * 最要紧的一条：**批注和参数之间的对应关系要画出来，不能靠人记。**
+ * 能映射到参数的批注，卡上直接给「去改这一项」；映射不到的（比如表述类），
+ * 给「在对话里说明」，把话填进输入框。两套词表本来就不一一对应，
+ * 与其假装对得上，不如把对不上的那几条明说。
+ */
+function ReworkPanel({ context }: { context: DmpkInspectorContext }) {
+  const blocking = context.reworkNotes.filter((note) => note.severity === "blocking").length;
+  return (
+    <div className={`dmpkReworkPanel${context.expanded ? " isExpanded" : ""}`}>
+      <PanelIntro
+        title={`${context.reworkBy ?? "审批人"} 退回了这一版`}
+        meta={`${context.reworkAt ?? ""} · 共 ${context.reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}`}
+      />
+      {context.reworkReason ? <p className="dmpkReworkReason">{context.reworkReason}</p> : null}
+
+      {/* 待改清单。它是批注和参数之间那条线的可见形态——
+          读到一条，直接从这里跳到要改的那一格。 */}
+      <ul className="dmpkReworkTodo">
+        {context.reworkNotes.map((note) => (
+          <ReworkTodoRow key={note.anchorId} note={note} context={context} />
+        ))}
+      </ul>
+
+      {/* 铺开之后左参照、右动手：原件和批注在左，参数收集**原样搬到右边**。
+          它们必须同屏——否则每改一项都要切一次 tab，而「刚才那条批注说的是
+          哪一格」正是切走之后最先忘掉的东西。 */}
+      <div className="dmpkReworkWork">
+        <AnnotatedQuote notes={context.reworkNotes} className="isPanel" />
+        {context.expanded ? (
+          <section className="dmpkReworkFields">
+            <header><strong>参数收集</strong><small>在这里改，改完到对话里确认</small></header>
+            <ParametersPanel context={context} />
+          </section>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ReworkTodoRow({ note, context }: { note: QuoteNote; context: DmpkInspectorContext }) {
+  const fieldId = noteAnchorToField[note.anchorId];
+  const field = fieldId ? context.fields.find((item) => item.id === fieldId) : undefined;
+  return (
+    <li className={`is-${note.severity}`}>
+      <div className="dmpkReworkTodoMain">
+        <span className="dmpkReworkTodoHead">
+          <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
+          <strong>{quoteAnchorLabel(note.anchorId)}</strong>
+          {note.suggested ? <em>建议改为 {note.suggested}</em> : null}
+        </span>
+        <p>{note.text}</p>
+      </div>
+      {field ? (
+        <button type="button" onClick={() => context.onEditField(field.id)}>
+          去改「{field.label}」
+        </button>
+      ) : (
+        /* 这一条落不到任何一格参数上——报价单的条目和会话收的字段本来就
+           不是一一对应。与其给个点了没反应的按钮，不如把话筒递回去。 */
+        <button type="button" onClick={() => context.onDraftMessage(`关于「${quoteAnchorLabel(note.anchorId)}」：`)}>
+          在对话里说明
+        </button>
+      )}
+    </li>
+  );
 }
 
 function ProcessPanel({ context }: { context: DmpkInspectorContext }) {

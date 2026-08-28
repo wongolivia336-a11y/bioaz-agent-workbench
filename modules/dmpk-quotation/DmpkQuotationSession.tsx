@@ -8,9 +8,7 @@ import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelpe
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
-import { type ReworkNoteState } from "../../components/workbench-shell/ReworkCard";
-import type { QuoteChange } from "../../components/workbench-shell/ChangeConfirmCard";
-import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
+import { quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
 import { noteAnchorToField } from "./noteFieldMap";
 import {
   dmpkGroups,
@@ -76,14 +74,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   });
   /* 这一单交出去了没有。交接是一次性动作,不该留一张还能再点一次的卡在那儿。 */
   const [handedOff, setHandedOff] = useState(false);
-  /* 每条批注处理到哪一步。退回给撰写人同时也是交接给他的数字同事——
-     数字同事读完批注给出方案，人只做确认，而不是自己照着清单改。 */
-  const [reworkStates, setReworkStates] = useState<Record<string, ReworkNoteState>>({});
   const reworkNotes = (rework?.notes ?? []) as QuoteNote[];
   const reworkGreetedRef = useRef(false);
-  const [changeConfirmOpen, setChangeConfirmOpen] = useState(false);
-  /* 这一轮返工做完了没有。做完卡片就收起——跟交接卡同一个道理:
-     一张已经落笔、再也点不动的卡留在原地,只会让人反复确认自己是不是漏了什么。 */
+  /* 这一轮返工做完了没有。做完就把「退回批注」那个 tab 收掉——
+     一份已经照着改完的原件留在 tab 栏里,只会让人反复确认自己是不是漏了什么。 */
   const [reworkSettled, setReworkSettled] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
@@ -154,13 +148,31 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     appendMessage("agent", `已交接给 ${to}，本次的 Word 报价单与 Excel 报价明细已随行。对方将在站内信中收到。`);
   };
 
-  /* 进会话先打个招呼：说清楚我看到了什么、打算怎么办。
-     不说这一句，那张卡就是凭空冒出来的一张表单。 */
+  /* 从站内信进来时：先跑一次，再把原件摊开。
+     ----------------------------------------------------------------------
+     数字同事在这一步只做三件事——读、说清楚、把东西摊到你面前。
+     **它不替你决定要改成什么**：上一版给的是一张「逐条采纳」的方案卡，
+     等于让它替人做主，改动也就绕过了参数收集。现在改回来：
+     它把批注和原件摊开在右侧画布里，改由人在参数卡上动手。
+
+     顺序是有意的：先 run（对话里看得见它在读），再开面板。
+     直接弹出一屏东西，人不知道那是哪来的。 */
   useEffect(() => {
     if (!rework || reworkGreetedRef.current) return;
     reworkGreetedRef.current = true;
     const blocking = reworkNotes.filter((note) => note.severity === "blocking").length;
-    appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。已逐条给出处理方案，请核对后采纳。`);
+    setStage("thinking");
+    /* 不给这个 effect 写 cleanup 去 clearTimeout。
+       严格模式下 effect 会跑两遍(挂载 → 清理 → 再挂载)：第一遍把 ref 置真并
+       排上定时器，清理把它取消，第二遍又被 ref 挡回去——于是这一段永远不发生。
+       ref 已经保证了只排一次，一次性的定时器不需要再被撤销。 */
+    window.setTimeout(() => {
+      setStage("collecting");
+      appendRun("params", missingFields.length);
+      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。原件和批注已摊在右侧「退回批注」里，对照着在参数收集里改，改完在这里确认发送。`);
+      openInspector("rework");
+      setPanelFocus(true);
+    }, 900);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rework]);
 
@@ -172,55 +184,26 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     return fields.find((field) => field.id === fieldId)?.value ?? quoteCurrentValue(anchorId);
   };
 
-  /* 采纳只改这一条的状态，不立刻写回参数——真正落笔在「确认本轮改动」那一步。
-     逐条采纳时看的是「这一条该不该改」，落笔前还要看一次「这一轮总共改了什么」。 */
-  const acceptRework = (note: QuoteNote) => setReworkStates((current) => ({ ...current, [note.anchorId]: "accepted" }));
-  /* 「另行说明」不是拒绝，是把话筒交回去。方案不一定对，
-     不接受它的人应该能直接说自己的想法，而不是被迫先采纳再改回来。 */
-  const deferRework = (note: QuoteNote) => {
-    setReworkStates((current) => ({ ...current, [note.anchorId]: "deferred" }));
-    setComposerAttention(true);
-  };
-  /* 决定要能反悔。改的是报价，点错一下代价不小，而「已经定了就不给改」
-     只会让人不敢点。 */
-  const resetRework = (note: QuoteNote) => setReworkStates((current) => {
-    const next = { ...current };
-    delete next[note.anchorId];
-    return next;
-  });
+  /* 「逐条采纳 / 另行说明 / 撤销 / 确认本轮改动」这一整套已经删掉。
+     ----------------------------------------------------------------------
+     那是让数字同事替人做决定：它读完批注给出方案，人只是点头。代价有两个——
+     改动绕过了参数收集（右侧面板成了旁观者），而且人对着的是它的转述，
+     不是审批人的原话。
 
-  const pendingChanges: QuoteChange[] = reworkNotes
-    .filter((note) => reworkStates[note.anchorId] === "accepted" && note.suggested)
-    .map((note) => {
-      const fieldId = noteAnchorToField[note.anchorId];
-      return {
-        fieldId,
-        label: fieldId ? (fields.find((field) => field.id === fieldId)?.label ?? quoteAnchorLabel(note.anchorId)) : quoteAnchorLabel(note.anchorId),
-        from: reworkCurrentValue(note.anchorId),
-        to: note.suggested!,
-        scope: (fieldId ? "field" : "quote") as QuoteChange["scope"],
-      };
-    });
-
-  const regenerateFromRework = () => setChangeConfirmOpen(true);
+     现在的分工：它只负责把原件和批注摊开；改由人在参数收集里动手，
+     经 composer 发送确认。所以这里不需要任何中间状态。 */
 
   const confirmChanges = () => {
-    setChangeConfirmOpen(false);
-    /* 参数真的改掉——右侧参数收集跟着变。这一步是「同步更新」四个字的实处。 */
-    setFields((items) => items.map((field) => {
-      const change = pendingChanges.find((item) => item.fieldId === field.id);
-      return change ? { ...field, value: change.to } : field;
-    }));
+    /* 参数已经由人在参数收集里改过了，这一步只是重出一版。 */
     setReworkSettled(true);
-    /* 也告诉壳层这一单不再是「被退回着」的状态,否则切走再回来卡片又长回来。 */
+    /* 也告诉壳层这一单不再是「被退回着」的状态,否则切走再回来面板又长回来。 */
     onReworkResolved?.();
-    appendMessage("user", `确认本轮改动，共 ${pendingChanges.length} 项，按新值重出一版。`);
     setStage("generating");
     suggestPanel("parameters");
     window.setTimeout(() => {
       setStage("generated");
       appendRun("quote");
-      appendMessage("agent", "已按确认的改动重新生成报价单，Word 与 Excel 金额校验一致，可再次送审。");
+      appendMessage("agent", "已按修改后的参数重新生成报价单，Word 与 Excel 金额校验一致，可再次送审。");
     }, 1200);
   };
 
@@ -431,6 +414,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       window.requestAnimationFrame(() => setComposerAttention(true));
       window.setTimeout(() => setComposerAttention(false), 720);
     },
+    /* 退回批注。settled 之后清空——那个 tab 也就自动没了。 */
+    reworkNotes: reworkSettled ? [] : reworkNotes,
+    reworkBy: rework?.by,
+    reworkAt: rework?.at,
+    reworkReason: rework?.reason,
+    expanded: panelFocus,
   });
   /* 参数面板只负责改「参数的值」——逐项点编辑图标即可。
      改规则不属于这里，「对话编辑」已经移到报价规则面板。 */
@@ -482,7 +471,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         </header>
         <SessionMinimap scrollerRef={chatScrollerRef} />
         <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} rework={reworkSettled ? undefined : rework} reworkNotes={reworkNotes} reworkStates={reworkStates} reworkCurrentValue={reworkCurrentValue} onAcceptRework={acceptRework} onDeferRework={deferRework} onResetRework={resetRework} onRegenerateRework={regenerateFromRework} changeConfirm={changeConfirmOpen ? pendingChanges : null} onConfirmChanges={confirmChanges} onCancelChanges={() => setChangeConfirmOpen(false)} onOpenQuote={() => setArtifactPreview("excel")} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
+        <DmpkComposer editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
         ] }); }} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())} />

@@ -8286,6 +8286,18 @@ button {
 .quotePreviewModal > header > div:first-child { min-width: 0; flex: 1; }
 .quotePreviewModal > header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 
+/* 带批注的报价：弹窗里和右侧画布里是同一个组件，容器不同而已。
+   工具条一行 + 主体一行；主体自己再分纸面与批注两栏。 */
+.annotatedQuote { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.annotatedQuoteBar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-bottom: 1px solid var(--line); padding: 12px 20px;
+}
+/* 长在面板里时不要再自带边框和内距——外面那层面板已经给了。 */
+.annotatedQuote.isPanel { min-height: 380px; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.annotatedQuote.isPanel .annotatedQuoteBar { padding: 10px 12px; }
+.annotatedQuote.isPanel .quotePreviewBody { padding: 12px; }
+
 .quotePreviewBody { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 14px; overflow: hidden; padding: 16px 20px; }
 .quotePreviewBody.hasNotes { grid-template-columns: minmax(0, 1fr) 320px; }
 .quotePreviewPaperWrap { position: relative; display: grid; min-height: 0; }
@@ -8341,6 +8353,78 @@ button {
 }
 
 .quotePreviewFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding: 12px 20px; }
+
+/* ═══ 退回批注面板 ═══════════════════════════════════════════════════════
+   赵敏这一圈要跑的是：读批注 → 找到那一格 → 改 → 确认。三个面各有分工——
+   批注与原件是**参照**，参数收集是**动手的地方**，对话是**落笔的地方**。
+   所以画布里不是三根平级的柱子：左边参照、右边参数收集，对话在画布模式下
+   自动收成底部那颗浮动 dock，一直在但不占列宽。 */
+.dmpkReworkPanel { display: grid; gap: 12px; align-content: start; min-height: 0; }
+.dmpkReworkPanel.isExpanded { grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
+
+.dmpkReworkReason {
+  margin: 0; border-radius: 8px; background: var(--soft, #f7f8fb);
+  padding: 10px 12px; color: var(--body); font-size: 12.5px; line-height: 1.7;
+}
+
+/* 待改清单：批注和参数之间那条线的可见形态。不画出来，人就得自己记
+   「第 2 条批注对应右边哪一格」——而那正是最容易漏的一步。 */
+.dmpkReworkTodo { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dmpkReworkTodo > li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 8px; padding: 9px 11px;
+}
+.dmpkReworkTodo > li.is-advisory { border-left-color: var(--line); }
+.dmpkReworkTodoMain { display: grid; min-width: 0; gap: 3px; }
+.dmpkReworkTodoHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.dmpkReworkTodoHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.dmpkReworkTodoHead em {
+  border-radius: 999px; background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  padding: 1px 7px; color: var(--bioaz-agent-accent, #5c60b8);
+  font-size: 11px; font-style: normal;
+}
+.dmpkReworkTodo p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.dmpkReworkTodo > li > button {
+  display: inline-flex; min-height: 28px; flex: none; align-items: center;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  padding: 0 10px; color: var(--body); font-size: 12px; white-space: nowrap; cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+.dmpkReworkTodo > li > button:hover {
+  border-color: var(--bioaz-agent-accent-border, #dcddf2);
+  background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  color: var(--ink);
+}
+
+/* 铺开时左参照、右动手。参数那一栏定宽 300px：它是表单，宽了不会更好读，
+   而原件那边多一寸就多一行看得见的条目。 */
+/* container-type 挂在**父级**上，不是挂在要被查询的那个网格上——
+   容器查询只能给容器的后代定样式，管不了容器自己。 */
+.dmpkReworkPanel { container-type: inline-size; }
+.dmpkReworkWork { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+
+.dmpkReworkFields {
+  display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); gap: 10px;
+  overflow: hidden; border: 1px solid var(--line); border-radius: 12px;
+  background: #fff; padding: 12px;
+}
+.dmpkReworkFields > header { display: grid; gap: 2px; }
+.dmpkReworkFields > header strong { color: var(--ink); font-size: 13px; font-weight: 650; }
+.dmpkReworkFields > header small { color: var(--muted); font-size: 11.5px; }
+.dmpkReworkFields > :last-child { min-height: 0; overflow-y: auto; }
+
+/* 排不排得下两栏，取决于**画布**有多宽，不是视口有多宽——视口 1512 的时候
+   这块画布可能只有 1092，而侧栏收起与否还会再改一次。这个坑在计算表那边
+   已经踩过一次：媒体查询问的从来不是被卡住的那个盒子。
+   容器查询不被支持时落到单列，降级方向是安全的。 */
+@container (min-width: 860px) {
+  .dmpkReworkPanel.isExpanded .dmpkReworkWork { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+
+/* 侧栏那 320px 里读不了两栏并排的报价单。收起时只给清单，
+   要看原件就把面板铺开——那颗全屏按钮本来就在 tab 栏右端。 */
+.dmpkReworkPanel:not(.isExpanded) .annotatedQuote { display: none; }
 
 /* 叠在另一个弹窗之上时要抬一层。原来两层同一个 z-index，后来的那层靠 DOM
    插入顺序侥幸压住——而 portal 的插入顺序不该是「谁在上面」的依据。

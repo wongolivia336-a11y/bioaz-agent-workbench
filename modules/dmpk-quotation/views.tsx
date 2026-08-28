@@ -28,7 +28,7 @@ import {
   type DmpkStage,
 } from "./fields";
 
-export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "review";
+export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "rules" | "rework" | "review";
 /**
  * 会话里的一条记录。
  *
