@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   ArrowUpRight,
   Calculator,
   ChevronDown,
@@ -12,6 +13,7 @@ import {
   FileInput,
   FileSpreadsheet,
   FileText,
+  CornerDownLeft,
   History,
   ListChecks,
   SlidersHorizontal,
@@ -28,6 +30,9 @@ import {
   type InspectorPanelRegistry,
   type ResolvedInspectorPanel,
 } from "../../components/workbench-inspector/WorkbenchInspector";
+import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote";
+import { noteAnchorToField } from "./noteFieldMap";
+import { quoteAnchorLabel, quoteCurrentValue, quoteNoteSeverityLabel, type QuoteNote } from "../../lib/workbench/quoteData";
 
 export type DmpkInspectorStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
 export type DmpkInspectorGroup = "assay" | "animal" | "analysis" | "delivery";
@@ -56,6 +61,16 @@ export type DmpkInspectorContext = {
   onPreviewQuotation: () => void;
   /** 面板只负责说清楚：要改什么就把现成的话填进 composer，由对话完成修改 */
   onDraftMessage: (text: string) => void;
+  /* 被退回的那一版带回来的批注。空数组＝这一单没被退回过，
+     「退回批注」那个 tab 也就不存在。 */
+  reworkNotes: QuoteNote[];
+  reworkBy?: string;
+  reworkAt?: string;
+  reworkReason?: string;
+  /** 画布铺开了没有。铺开才排三列，320px 的侧栏里排不下。 */
+  expanded?: boolean;
+  /* 这一单出过几版报价。返工场景里「出过第二版」本身就是要给人看的信息。 */
+  quoteVersions: { id: string; label: string; at: string; origin: string }[];
 };
 
 const groupLabels: Record<DmpkInspectorGroup, string> = {
@@ -138,7 +153,7 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
     defaultWhen: (context) => context.stage === "generated",
     state: (context) => withError(context),
     errorMessage: "报价结果暂时不可用",
-    render: (context) => <ArtifactsPanel onPreview={context.onPreviewArtifact} />,
+    render: (context) => <ArtifactsPanel context={context} onPreview={context.onPreviewArtifact} />,
   },
   {
     id: "rules",
@@ -150,6 +165,21 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
     state: (context) => withError(context),
     errorMessage: "报价规则暂时不可用",
     render: (context) => <RulesPanel context={context} />,
+  },
+  {
+    /* 退回批注。它不是「过程」也不是「结果」，是一份**要照着改的原件**。
+       给它自己的 tab，并且默认铺开成画布——报价单、批注、参数三样并排，
+       在 320px 的侧栏里读不了。 */
+    id: "rework",
+    label: "退回批注",
+    icon: CornerDownLeft,
+    primary: true,
+    expandable: true,
+    available: (context) => context.reworkNotes.length > 0,
+    state: (context) => (context.reworkNotes.length ? withError(context) : "empty"),
+    emptyMessage: "本版没有退回批注",
+    errorMessage: "退回批注暂时不可用",
+    render: (context) => <ReworkPanel context={context} />,
   },
   {
     id: "review",
@@ -166,6 +196,72 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
 
 export function getDmpkInspectorPanels(context: DmpkInspectorContext): ResolvedInspectorPanel[] {
   return resolveInspectorPanels(dmpkInspectorPanelRegistry, context);
+}
+
+/**
+ * 退回批注面板。
+ *
+ * 三样东西怎么摆
+ * ----------------------------------------------------------------------
+ * 赵敏要跑的这一圈是：**读批注 → 找到那一格 → 改 → 确认**。
+ * 涉及三个面：批注与原文、参数收集、对话。它们不是三个平级的栏——
+ *
+ *   批注 + 原文   是**参照**，从头到尾都得看着
+ *   参数收集       是**动手的地方**
+ *   对话           是**落笔的地方**（确认发生在这里）
+ *
+ * 所以画布里排两栏：左边参照（原件 + 批注），右边动手（参数收集）；
+ * 对话在画布模式下自动收成底部那颗浮动 dock，一直在，但不占列宽。
+ * 三样同屏，谁也不用切走。
+ *
+ * 最要紧的一条：**批注和参数之间的对应关系要画出来，不能靠人记。**
+ * 能映射到参数的批注，卡上直接给「去改这一项」；映射不到的（比如表述类），
+ * 给「在对话里说明」，把话填进输入框。两套词表本来就不一一对应，
+ * 与其假装对得上，不如把对不上的那几条明说。
+ */
+function ReworkPanel({ context }: { context: DmpkInspectorContext }) {
+  const blocking = context.reworkNotes.filter((note) => note.severity === "blocking").length;
+  return (
+    <div className={`dmpkReworkPanel${context.expanded ? " isExpanded" : ""}`}>
+      <PanelIntro
+        title={`${context.reworkBy ?? "审批人"} 退回了这一版`}
+        meta={`${context.reworkAt ?? ""} · 共 ${context.reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}`}
+      />
+      {context.reworkReason ? <p className="dmpkReworkReason">{context.reworkReason}</p> : null}
+
+      {/* 一个平面：左边报价单，右边批注栏。跟 QA 审核台同一个形状。
+
+          **这一栏是说明书，不是操作台。** 批注上没有任何动作按钮——
+          它的全部职责是让人看清「哪一行、错在哪、该是多少」，
+          改这件事发生在右侧参数收集里，由人自己点。
+          在这儿再放一颗「去改」，等于给了第二条改的路径，
+          而两条路径迟早会对不上。 */}
+      <AnnotatedQuote notes={context.reworkNotes} className="isPanel" />
+
+      {/* 收在 320px 侧栏里时，报价单那一面放不下，但**批注本身放得下**。
+          原来这儿只剩标题和驳回理由，等于告诉人「有 3 条批注」却不给看，
+          还得先摊开画布才知道是哪 3 条。 */}
+      <ul className="dmpkReworkList">
+        {context.reworkNotes.map((note) => (
+          <li key={note.anchorId} className={`is-${note.severity}`}>
+            <span className="dmpkReworkListHead">
+              <i className={`quoteNoteSev is-${note.severity}`}>{quoteNoteSeverityLabel[note.severity]}</i>
+              <strong>{quoteAnchorLabel(note.anchorId)}</strong>
+            </span>
+            {note.suggested ? (
+              <span className="quoteNoteDiff">
+                <s>{quoteCurrentValue(note.anchorId) || "—"}</s>
+                <ArrowRight size={11} aria-hidden="true" />
+                <b>{note.suggested}</b>
+              </span>
+            ) : null}
+            <p>{note.text}</p>
+            <span className="quoteNoteBy">{note.author} · {note.authorRole} · {note.at}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function ProcessPanel({ context }: { context: DmpkInspectorContext }) {
@@ -352,13 +448,64 @@ function EvidencePanel({ onPreview }: { onPreview: () => void }) {
   );
 }
 
-function ArtifactsPanel({ onPreview }: { onPreview: (kind: "word" | "excel") => void }) {
+/**
+ * 报价产物，按版本列。
+ *
+ * 为什么是一列历史，不是一个版本下拉
+ * ----------------------------------------------------------------------
+ * 下拉的默认状态只显示一个值，于是「这一单出过几版」这件事被藏在了点开之后。
+ * 而返工场景里，「出过第二版」本身就是要给人看的信息——审批人退了，你改了，
+ * 又出了一版，这条线索比任何一份文件都重要。
+ *
+ * 所以摊成一列，最新那版展开（多数时候要拿的就是它），旧版收成一行，
+ * 点开才露出文件。旧版不删也不藏：报价被退过一次这件事，
+ * 一个月后回来看还得能查到。
+ */
+function ArtifactsPanel({ context, onPreview }: { context: DmpkInspectorContext; onPreview: (kind: "word" | "excel") => void }) {
+  const versions = context.quoteVersions.length
+    ? context.quoteVersions
+    : [{ id: "v1", label: "v1", at: "刚刚生成", origin: "首次生成" }];
   return (
-    <div className="dmpkInspectorList">
-      <PanelIntro title="报价版本 v1" meta="刚刚生成 · 金额校验一致" />
-      <ArtifactRow icon={FileText} title="中文 Word 报价单" meta="30% 管理费" onPreview={() => onPreview("word")} />
-      <ArtifactRow icon={FileSpreadsheet} title="Excel 报价明细" meta="15% 管理费" onPreview={() => onPreview("excel")} />
+    <div className="dmpkQuoteVersions">
+      {[...versions].reverse().map((version, index) => (
+        <QuoteVersionCard
+          key={version.id}
+          version={version}
+          current={index === 0}
+          total={versions.length}
+          onPreview={onPreview}
+        />
+      ))}
     </div>
+  );
+}
+
+function QuoteVersionCard({ version, current, total, onPreview }: {
+  version: { id: string; label: string; at: string; origin: string };
+  current: boolean;
+  total: number;
+  onPreview: (kind: "word" | "excel") => void;
+}) {
+  /* 最新那版默认展开——多数时候要拿的就是它。旧版收起来但留在原地。 */
+  const [open, setOpen] = useState(current);
+  return (
+    <section className={`dmpkQuoteVersion${current ? " isCurrent" : ""}`}>
+      <button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        <span className="dmpkQuoteVersionTag">{version.label}</span>
+        <span className="dmpkQuoteVersionMeta">
+          <strong>{version.origin}</strong>
+          <small>{version.at}</small>
+        </span>
+        {current && total > 1 ? <i className="dmpkQuoteVersionNow">当前</i> : null}
+        <ChevronDown size={14} className="dmpkQuoteVersionChevron" aria-hidden="true" />
+      </button>
+      {open ? (
+        <div className="dmpkQuoteVersionFiles">
+          <ArtifactRow icon={FileText} title="中文 Word 报价单" meta="30% 管理费" onPreview={() => onPreview("word")} />
+          <ArtifactRow icon={FileSpreadsheet} title="Excel 报价明细" meta="15% 管理费" onPreview={() => onPreview("excel")} />
+        </div>
+      ) : null}
+    </section>
   );
 }
 

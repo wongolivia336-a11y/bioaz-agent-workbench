@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ChevronDown, CircleDollarSign, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, CircleDollarSign, CornerDownLeft, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { PersonPicker } from "../../components/ui";
@@ -10,7 +10,7 @@ import { directory } from "../../lib/workbench/mockInbox";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
-import { WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
+import { MessageAttachments, WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition, SessionRework } from "../types";
 import { ReworkCard, type ReworkNoteState } from "../../components/workbench-shell/ReworkCard";
@@ -28,7 +28,7 @@ import {
   type DmpkStage,
 } from "./fields";
 
-export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "review";
+export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "rules" | "rework" | "review";
 /**
  * 会话里的一条记录。
  *
@@ -44,7 +44,7 @@ export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gap
  */
 export type DmpkChatMessage = {
   id: string;
-  role: "user" | "agent" | "run";
+  role: "user" | "agent" | "run" | "inbound";
   text: string;
   attachments?: ComposerAttachment[];
   /** role === "run" 时这一次跑了哪几步。 */
@@ -52,8 +52,17 @@ export type DmpkChatMessage = {
 };
 
 /** 一次运行的标题与步骤。两处（进行中的尾巴、留档的那条）取自同一处，免得分叉。 */
-export function dmpkRunRecord(kind: "params" | "quote", options: { running?: boolean; missingCount?: number } = {}) {
+export function dmpkRunRecord(kind: "params" | "quote" | "rework", options: { running?: boolean; missingCount?: number } = {}) {
   const { running = false, missingCount = 0 } = options;
+  if (kind === "rework") {
+    /* 退回刚进来那一次跑的不是「更新参数」——那时什么都还没改。
+       它读的是退回工单，所以标题和步骤都得说这件事，否则这条记录
+       在时间线上会撒一个小谎。 */
+    return {
+      text: running ? "正在读取退回批注" : "已读取退回批注",
+      runSteps: ["读取退回工单", "定位批注锚点到报价条目", "比对当前参数取值"],
+    };
+  }
   if (kind === "quote") {
     return {
       text: running ? "正在生成报价单" : "已完成报价生成过程",
@@ -111,6 +120,7 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
       {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
       {messages.map((message) => {
         if (message.role === "run") return <DmpkActivityChain key={message.id} title={message.text} steps={message.runSteps ?? []} running={false} onOpenInspector={onOpenInspector} />;
+        if (message.role === "inbound") return <DmpkInboundEvent key={message.id} text={message.text} attachments={message.attachments} />;
         if (message.role === "agent") return <AgentReply key={message.id}>{message.text}</AgentReply>;
         return <UserBubble key={message.id} text={message.text} attachments={message.attachments} />;
       })}
@@ -121,6 +131,31 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
       {/* 退回修订卡落在对话末尾:它是「这一次为什么回到这儿」的答案,
           该跟着最近发生的事排在一起,不该另开一个面板让人再找一次。 */}
 
+    </div>
+  );
+}
+
+/**
+ * 从会话外面进来的一件事：产物被退回、被通过、被转交。
+ *
+ * 为什么它既不是 user 气泡也不是 agent 回复
+ * ----------------------------------------------------------------------
+ * 之前这条根本不存在：对话里是「已交接给王林彬」紧接着「已读取退回批注」，
+ * 中间那件真正发生的事——**东西被退回来了，附件也跟着回来了**——一点痕迹都没有。
+ * 读下来像是数字同事凭空开始读一份不知从哪冒出来的批注。
+ *
+ * 做成 user 气泡是错的：那句话不是赵敏说的，把它画成她的气泡等于替她说话。
+ * 做成 agent 回复也是错的：数字同事不是这件事的发起人，它只是随后读了一遍。
+ * 所以给它自己的形态——一条带署名和附件的到达记录，靠左但不属于任何一方。
+ */
+function DmpkInboundEvent({ text, attachments }: { text: string; attachments?: ComposerAttachment[] }) {
+  return (
+    <div className="dmpkInboundEvent">
+      <span className="dmpkInboundMark"><CornerDownLeft size={13} aria-hidden="true" /></span>
+      <div>
+        <strong>{text}</strong>
+        {attachments?.length ? <MessageAttachments items={attachments} /> : null}
+      </div>
     </div>
   );
 }
@@ -196,7 +231,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ editProposal, onHandoff, viewerName, handoffDone, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
+export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHandoff, viewerName, handoffDone, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { /** 落不到参数格上的批注，交接卡在送审时问一次 */ unresolvedNotes?: { anchorId: string; label: string }[]; /** 退回批注入口卡。它跟参数卡、交接卡同一个槽位：需要人当场做的事都在这儿 */ reworkNotice?: ReactNode; editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -208,6 +243,7 @@ export function DmpkComposer({ editProposal, onHandoff, viewerName, handoffDone,
   const pendingCoworker = coworkers.find((item) => item.id === pendingCoworkerId);
   return (
     <footer ref={wrapRef} className={`dmpkComposerWrap ${attention ? "needsAttention" : ""}`}>
+      {reworkNotice}
       {editProposal ? <DmpkEditProposalCard proposal={editProposal} onConfirmCurrentPrice={onConfirmCurrentPrice} onOpenRuleManagement={onOpenRuleManagement} /> : null}
       {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} allFields={allFields} draftTabs={draftTabs} mode={mode} onSelect={onSelect} /> : null}
       {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} /> : null}
@@ -234,7 +270,7 @@ export function DmpkComposer({ editProposal, onHandoff, viewerName, handoffDone,
       {changeConfirm && onConfirmChanges && onCancelChanges ? (
         <ChangeConfirmCard changes={changeConfirm} onConfirm={onConfirmChanges} onCancel={onCancelChanges} />
       ) : null}
-      {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} /> : null}
+      {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} unresolvedNotes={unresolvedNotes} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       {/* 「DMPK报价同事 ∨」那颗切换器撤掉。走到这个工作台的路只有一条——
           从站内信进来，或者在项目里新建一个 DMPK 报价任务——两条路都已经
@@ -289,7 +325,40 @@ const draftGroupById = new Map(initialDmpkFields.map((field) => [field.id, field
  * 二十几个 chip 平铺就是一堵墙，按组分开才扫得动。高度封顶后内部滚动，
  * 保证输入框任何时候都还在屏幕上。
  */
-function ComposerChipTray({ tabs, onRemove }: { tabs: DmpkDraftTab[]; onRemove: (fieldId: string) => void }) {
+/**
+ * 退回批注的入口卡，长在 composer 上方。
+ *
+ * 为什么要有它：批注收进右侧一个 tab 之后就太安静了——那是这一屏最要紧的
+ * 一件事，却跟「报价规则」并排躺着，谁也不会主动去点。跟 QA 那张「审批决策」
+ * 卡同一个位置、同一个职责：**把当前这件事和它的出口摆在手边**。
+ */
+export function DmpkReworkNoticeCard({ by, at, total, blocking, onOpenCanvas }: {
+  by: string;
+  at: string;
+  total: number;
+  blocking: number;
+  onOpenCanvas: () => void;
+}) {
+  return (
+    <section className="dmpkReworkNotice" aria-label="退回批注">
+      <header>
+        <div>
+          <span>退回批注</span>
+          <strong>{by} 退回了这一版</strong>
+        </div>
+        <i className={blocking ? "isBlocking" : ""}>{blocking ? `必须修订 ${blocking} 条` : "均为建议"}</i>
+      </header>
+      <p>{at} · 共 {total} 条批注。摊开成画布对照原件看，改在右侧参数收集里。</p>
+      <footer>
+        <button type="button" onClick={onOpenCanvas}>
+          <Maximize2 size={14} aria-hidden="true" />摊开批注画布
+        </button>
+      </footer>
+    </section>
+  );
+}
+
+export function ComposerChipTray({ tabs, onRemove }: { tabs: DmpkDraftTab[]; onRemove: (fieldId: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   // chips 被清空后（发送完一轮）自动回到收起态，否则下次进来是个空的大盒子
   useEffect(() => { if (!tabs.length) setExpanded(false); }, [tabs.length]);
@@ -400,7 +469,7 @@ function ParameterOptionRow({ field, index, selectedValue, editingCustom, custom
   );
 }
 
-function DmpkParameterTaskCard({ activeGroup, fields, allFields, draftTabs, mode, onSelect }: { activeGroup: DmpkGroupId; fields: DmpkField[]; allFields: DmpkField[]; draftTabs: DmpkDraftTab[]; mode: "collect" | "edit"; onSelect: (field: DmpkField, value: string) => void }) {
+export function DmpkParameterTaskCard({ activeGroup, fields, allFields, draftTabs, mode, onSelect }: { activeGroup: DmpkGroupId; fields: DmpkField[]; allFields: DmpkField[]; draftTabs: DmpkDraftTab[]; mode: "collect" | "edit"; onSelect: (field: DmpkField, value: string) => void }) {
   const [editingCustom, setEditingCustom] = useState<string | null>(null);
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [fullscreen, setFullscreen] = useState(false);
@@ -540,10 +609,19 @@ function DmpkParameterFullscreenModal({ allFields, draftTabs, renderRow, onSelec
 }
 
 /** 报价生成之后的交接卡。审核这一棒是人做的,所以这里只问「交给谁」。 */
-function DmpkHandoffCard({ onHandoff, viewerName }: { onHandoff: (to: string, note: string) => void; viewerName?: string }) {
+function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [] }: {
+  onHandoff: (to: string, note: string) => void;
+  viewerName?: string;
+  /* 落不到任何一格参数上的批注。报价单的条目和会话收的字段本来就不是
+     一一对应——Discount 这类只存在于报价单口径里，参数面板里没有它的格子，
+     所以它永远不会显示成「已处理」。 */
+  unresolvedNotes?: { anchorId: string; label: string }[];
+}) {
   const [to, setTo] = useState("");
   const [note, setNote] = useState("");
-  const ready = Boolean(to.trim());
+  /* 有落不到参数上的批注时，说明栏从选填变必填——否则那几条就这么静悄悄地
+     跟着报价单又送回审批人手里，而他上一轮正是为它们退的。 */
+  const ready = Boolean(to.trim()) && (!unresolvedNotes.length || Boolean(note.trim()));
   return (
     <section className="warningDecision dmpkHandoffCard">
       <header className="warningDecisionHeader">
@@ -553,6 +631,22 @@ function DmpkHandoffCard({ onHandoff, viewerName }: { onHandoff: (to: string, no
           <p>交接后这件事会出现在对方的站内信里，随行带上本次的报价产物。</p>
         </div>
       </header>
+
+      {/* 未落到参数上的那几条，在**送审这一刻**问一次。
+          ----------------------------------------------------------------
+          替代方案是给每条批注挂一个勾选框。那样做有两个问题：批注是审批人的
+          原话，撰写人在上面留标记读起来像改了他的记录；而且「改到哪儿了」
+          参数面板已经在说了，再加一套就有两个真相来源。
+          所以只在这里问一次——它是这一轮唯一一个「不说清楚就出不去」的关口。 */}
+      {unresolvedNotes.length ? (
+        <div className="dmpkHandoffUnresolved">
+          <strong>以下 {unresolvedNotes.length} 条批注没有对应的参数格</strong>
+          <ul>
+            {unresolvedNotes.map((item) => <li key={item.anchorId}>{item.label}</li>)}
+          </ul>
+          <span>它们只作用于报价单口径。请在下面的说明里写清楚怎么处理的，审批人才看得到。</span>
+        </div>
+      ) : null}
       <div className="dmpkHandoffFields">
         <label htmlFor="dmpk-handoff-to">
           <span>交给</span>
@@ -568,8 +662,13 @@ function DmpkHandoffCard({ onHandoff, viewerName }: { onHandoff: (to: string, no
           />
         </label>
         <label>
-          <span>说明</span>
-          <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="选填，例如：管理费按 30% 口径，请复核" aria-label="交接说明" />
+          <span>说明{unresolvedNotes.length ? <em className="dmpkHandoffRequired">必填</em> : null}</span>
+          <input
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder={unresolvedNotes.length ? `例如：${unresolvedNotes[0].label} 已按 15% 口径重算` : "选填，例如：管理费按 30% 口径，请复核"}
+            aria-label="交接说明"
+          />
         </label>
       </div>
       <div className="warningActions">

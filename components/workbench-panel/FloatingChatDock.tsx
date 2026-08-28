@@ -16,6 +16,21 @@ type FloatingChatDockProps = {
      QA 里它是常驻的，会话一打开就在——那时用户要读的是原件，
      抢走光标会让翻页键、退格全落进输入框。所以默认聚焦可关。 */
   autoFocus?: boolean;
+  /* 药丸上方那张要当场做决定的卡（参数补全、变更确认之类）。
+     ------------------------------------------------------------------
+     这里原本刻意不收任何卡片，理由是「全屏是审核视角」。那条理由只对了一半：
+     全屏之后**动手的地方也在全屏里**——用户在右侧面板点了「改这一项」，
+     卡片却长在被画布盖住的 composer 上，等于点了没反应。
+
+     所以卡片跟着 composer 走：composer 缩成药丸，它就落到药丸上方；
+     画布收起来、对话露出来，它自然回到 composer 上方。同一张卡，两个位置，
+     取决于此刻输入框在哪儿。 */
+  card?: React.ReactNode;
+  /* 已经选进来、等着一起发出去的参数 chips。
+     药丸原本没有这一格，于是画布态下选完一个值屏幕上什么都不留——
+     用户不知道刚才那一下有没有生效，也没法反悔。
+     chips 跟 composer 里是同一个组件，删除方式也一样。 */
+  chips?: React.ReactNode;
 };
 
 /** 播报浮层的停留时长；到点淡出，只在药丸上留一颗未读点 */
@@ -25,10 +40,11 @@ const BROADCAST_MS = 3500;
  * 面板全屏时对话收成的悬浮药丸。三态：
  * 静默（只有输入框）→ 播报（agent 新消息浮在药丸上方，3.5s 后淡出留点）→ 展开（浮层对话）。
  *
- * 它刻意只带「输入 + 发送」这一条最小路径：全屏是审核视角，
- * 参数补全卡、附件、同事切换那些都属于 dock 态的 composer，收进来只会把药丸撑成第二个 composer。
+ * 输入这一路仍然只有「打字 + 发送」：附件、同事切换那些属于 dock 态的 composer，
+ * 收进来只会把药丸撑成第二个 composer。
+ * 例外是 `card`——要当场做的决定必须跟着输入框走，见那个属性上的说明。
  */
-export function FloatingChatDock({ messages, text, onTextChange, onSend, disabled = false, placeholder = "问一句，或补充说明…", autoFocus = true }: FloatingChatDockProps) {
+export function FloatingChatDock({ messages, text, onTextChange, onSend, disabled = false, placeholder = "问一句，或补充说明…", autoFocus = true, card, chips }: FloatingChatDockProps) {
   const [expanded, setExpanded] = useState(false);
   const [broadcastIds, setBroadcastIds] = useState<string[]>([]);
   const [unread, setUnread] = useState(false);
@@ -97,8 +113,14 @@ export function FloatingChatDock({ messages, text, onTextChange, onSend, disable
     .map((id) => messages.find((message) => message.id === id))
     .filter((message): message is FloatingChatMessage => Boolean(message));
 
+  /* 有 chips 就等于有东西可发，不必再打一行字。
+     原来这里死守 `!text.trim()`，于是画布态下选完三项参数、发送键还是灰的——
+     用户已经把要说的都选完了，系统却还在等他打字。
+     composer 那边一直是这个规则（draftTabs 有值就能发），两处得一致。 */
+  const canSubmit = !disabled && (text.trim().length > 0 || Boolean(chips));
+
   const submit = () => {
-    if (disabled || !text.trim()) return;
+    if (!canSubmit) return;
     onSend();
   };
 
@@ -126,6 +148,10 @@ export function FloatingChatDock({ messages, text, onTextChange, onSend, disable
         </div>
       ) : null}
 
+      {card ? <div className="floatingChatCard">{card}</div> : null}
+
+      {chips ? <div className="floatingChatChips">{chips}</div> : null}
+
       <div className="floatingChatPill">
         <button
           type="button"
@@ -148,7 +174,7 @@ export function FloatingChatDock({ messages, text, onTextChange, onSend, disable
             submit();
           }}
         />
-        <button type="button" className="floatingChatSend" aria-label="发送" disabled={disabled || !text.trim()} onClick={submit}>
+        <button type="button" className="floatingChatSend" aria-label="发送" disabled={!canSubmit} onClick={submit}>
           <ArrowUp size={14} />
         </button>
       </div>

@@ -8286,6 +8286,22 @@ button {
 .quotePreviewModal > header > div:first-child { min-width: 0; flex: 1; }
 .quotePreviewModal > header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 
+/* 带批注的报价：弹窗里和右侧画布里是同一个组件，容器不同而已。
+   工具条一行 + 主体一行；主体自己再分纸面与批注两栏。 */
+.annotatedQuote { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.annotatedQuoteBar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-bottom: 1px solid var(--line); padding: 12px 20px;
+}
+/* 长在面板里：不再自带边框和底色。
+   ----------------------------------------------------------------------
+   上一版这里给了一圈框，于是画布上出现了框套框套框——面板一层、这张卡一层、
+   纸面自己一层。QA 审核台是对的参照：文档就是一块平面，批注栏就是一块平面，
+   两块之间只有间距，没有第三个盒子。 */
+.annotatedQuote.isPanel { min-height: 0; height: 100%; }
+.annotatedQuote.isPanel .annotatedQuoteBar { border-bottom: 0; padding: 0 0 8px; }
+.annotatedQuote.isPanel .quotePreviewBody { padding: 0; }
+
 .quotePreviewBody { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 14px; overflow: hidden; padding: 16px 20px; }
 .quotePreviewBody.hasNotes { grid-template-columns: minmax(0, 1fr) 320px; }
 .quotePreviewPaperWrap { position: relative; display: grid; min-height: 0; }
@@ -8341,6 +8357,206 @@ button {
 }
 
 .quotePreviewFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding: 12px 20px; }
+
+/* ═══ 退回批注面板 ═══════════════════════════════════════════════════════
+   赵敏这一圈要跑的是：读批注 → 找到那一格 → 改 → 确认。三个面各有分工——
+   批注与原件是**参照**，参数收集是**动手的地方**，对话是**落笔的地方**。
+   所以画布里不是三根平级的柱子：左边参照、右边参数收集，对话在画布模式下
+   自动收成底部那颗浮动 dock，一直在但不占列宽。 */
+.dmpkReworkPanel { display: grid; gap: 12px; align-content: start; min-height: 0; }
+/* 铺开时：头部与驳回理由各占一行，剩下的全给那块平面。
+   auto auto 1fr 三轨对三个孩子——数错一个，多出来的那个会掉进隐式轨道，
+   而隐式轨道是 auto，于是内容再多也不滚，直接把面板撑破。 */
+.dmpkReworkPanel.isExpanded { grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
+.dmpkReworkPanel.isExpanded:not(:has(.dmpkReworkReason)) { grid-template-rows: auto minmax(0, 1fr); }
+
+/* 驳回理由跟在标题块里，不再单开一条通栏——纸面才是这一屏要看的东西，
+   顶上每多一段，它就晚一寸开始。 */
+.dmpkReworkReason {
+  margin: 4px 0 0; color: var(--body); font-size: 12.5px; line-height: 1.6;
+}
+/* 收在右侧面板里时它是独立一段，那儿地方够，给底色好读 */
+.dmpkReworkPanel .dmpkReworkReason {
+  margin: 0; border-radius: 8px; background: var(--soft, #f7f8fb);
+  padding: 10px 12px; line-height: 1.7;
+}
+
+/* 批注栏上没有动作按钮：它是说明书，不是操作台。
+   改这件事只有一条路——右侧参数收集里人自己点。在批注上再放一颗「去改」，
+   等于给了第二条路径，而两条路径迟早会对不上。 */
+
+/* 铺开时左参照、右动手。参数那一栏定宽 300px：它是表单，宽了不会更好读，
+   而原件那边多一寸就多一行看得见的条目。 */
+/* 侧栏那 320px 里读不了两栏并排的报价单。收起时只给标题和驳回理由，
+   要看原件就把它铺到中间去——那颗全屏按钮本来就在 tab 栏右端。 */
+.dmpkReworkPanel:not(.isExpanded) .annotatedQuote { display: none; }
+
+/* 送审前的最后一道关口：落不到参数格上的那几条批注。
+   它是这一轮唯一一个「不说清楚就出不去」的地方——说明栏因此从选填变必填。 */
+.dmpkHandoffUnresolved {
+  display: grid; gap: 6px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 10px; background: var(--soft, #f7f8fb); padding: 11px 13px;
+}
+.dmpkHandoffUnresolved > strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
+.dmpkHandoffUnresolved ul { display: grid; gap: 3px; margin: 0; padding-left: 18px; }
+.dmpkHandoffUnresolved li { color: var(--body); font-size: 12.5px; }
+.dmpkHandoffUnresolved > span { color: var(--muted); font-size: 11.5px; line-height: 1.6; }
+.dmpkHandoffRequired {
+  margin-left: 6px; border-radius: 999px; background: rgba(154, 122, 58, .16);
+  padding: 1px 7px; color: #7d6229; font-size: 10.5px; font-style: normal;
+}
+
+/* 从会话外面进来的一件事：产物被退回、被通过、被转交。
+   它靠左但不是气泡——那句话不是当前这个人说的，也不是数字同事说的，
+   是发生在他俩之外的一件事。所以既不给气泡底色，也不给头像，
+   只给一条竖线和一枚方向图标。 */
+.dmpkInboundEvent {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 10px;
+  margin: 14px 0 4px;
+  border-left: 2px solid var(--sidebar-dot-attention, #9a7a3a);
+  padding: 8px 0 8px 12px;
+}
+.dmpkInboundMark {
+  display: grid; width: 26px; height: 26px; place-items: center;
+  border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
+}
+.dmpkInboundEvent > div { display: grid; gap: 6px; min-width: 0; }
+.dmpkInboundEvent strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+
+/* ═══ 报价版本 ═══════════════════════════════════════════════════════════
+   摊成一列历史，不做成版本下拉。下拉的默认状态只显示一个值，于是
+   「这一单出过几版」被藏在了点开之后——而返工场景里，出过第二版
+   这件事本身就是要给人看的信息。最新那版展开，旧版收成一行留在原地。 */
+.dmpkQuoteVersions { display: grid; gap: 8px; }
+.dmpkQuoteVersion { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.dmpkQuoteVersion.isCurrent { border-color: var(--bioaz-agent-accent-border, #dcddf2); }
+.dmpkQuoteVersion > button {
+  display: grid; width: 100%; grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center; gap: 10px;
+  border: 0; background: transparent; padding: 11px 12px; text-align: left; cursor: pointer;
+}
+.dmpkQuoteVersion > button:hover { background: var(--soft, #f7f8fb); }
+.dmpkQuoteVersionTag {
+  border-radius: 6px; background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  padding: 2px 8px; color: var(--bioaz-agent-accent, #5c60b8);
+  font-size: 11.5px; font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.dmpkQuoteVersionMeta { display: grid; min-width: 0; gap: 1px; }
+.dmpkQuoteVersionMeta strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.dmpkQuoteVersionMeta small { color: var(--muted); font-size: 11.5px; }
+.dmpkQuoteVersionNow {
+  border-radius: 999px; background: var(--bioaz-status-success-soft, #d1fae5);
+  padding: 2px 8px; color: var(--bioaz-status-success, #065f46); font-size: 10.5px; font-style: normal;
+}
+.dmpkQuoteVersionChevron { color: var(--muted); transition: transform 160ms ease; }
+.dmpkQuoteVersion > button[aria-expanded="true"] .dmpkQuoteVersionChevron { transform: rotate(180deg); }
+.dmpkQuoteVersionFiles { display: grid; gap: 6px; border-top: 1px solid var(--line); padding: 10px 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dmpkQuoteVersionChevron { transition: none; }
+}
+
+/* 收起态的批注清单。侧栏放不下报价单，但放得下批注本身。 */
+.dmpkReworkList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dmpkReworkList > li {
+  display: grid; gap: 4px;
+  border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border-radius: 8px; padding: 10px 11px;
+}
+.dmpkReworkList > li.is-advisory { border-left-color: var(--line); }
+.dmpkReworkListHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.dmpkReworkListHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.dmpkReworkList p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.6; }
+/* 铺成画布之后清单让位给原件——那时两栏并排，右栏本来就是这份清单。 */
+.dmpkReworkPanel.isExpanded .dmpkReworkList { display: none; }
+
+/* ═══ 退回批注入口卡（composer 上方）═══════════════════════════════════
+   批注收进右侧一个 tab 之后就太安静了：这是当下最要紧的一件事，
+   却跟「报价规则」并排躺着。跟 QA 那张「审批决策」卡同一个位置、
+   同一个职责——把当前这件事和它的出口摆在手边。 */
+.dmpkReworkNotice {
+  display: grid; gap: 10px;
+  margin: 0 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px; background: #fff; padding: 16px 18px;
+}
+.dmpkReworkNotice > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dmpkReworkNotice > header > div { display: grid; gap: 2px; }
+.dmpkReworkNotice > header span { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.dmpkReworkNotice > header strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
+.dmpkReworkNotice > header i {
+  flex: none; border-radius: 999px; background: var(--soft, #f7f8fb);
+  padding: 3px 9px; color: var(--muted); font-size: 11.5px; font-style: normal;
+}
+.dmpkReworkNotice > header i.isBlocking { background: rgba(154, 122, 58, .16); color: #7d6229; }
+.dmpkReworkNotice > p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
+.dmpkReworkNotice > footer { display: flex; justify-content: flex-end; }
+.dmpkReworkNotice > footer button {
+  display: inline-flex; min-height: 30px; align-items: center; gap: 6px;
+  border: 1px solid transparent; border-radius: 8px;
+  background: var(--bioaz-action-primary, #17191e); padding: 0 12px;
+  color: #fff; font-size: 12.5px; cursor: pointer;
+  transition: background 140ms ease;
+}
+.dmpkReworkNotice > footer button:hover { background: #2b2f37; }
+
+/* ═══ 退回批注画布 ═══════════════════════════════════════════════════════
+   它占的是**对话那一列**，不是整个工作区。右边那 320px 面板照旧在，
+   底部一颗药丸——这就是 QA 审核台的形状：中间是要看的，右边是要动手的，
+   底下是要确认的。铺满整屏（panelFocus）会把「改」和「确认」一起赶走，
+   而这一屏的活恰恰要三样同时在。 */
+.dmpkReworkCanvas {
+  display: grid;
+  min-height: 0;
+  /* 两轨：标题块 + 纸面。理由已经收进标题块，不再单占一行。 */
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  overflow: hidden;
+  padding: 12px 20px 96px;
+  /* 从下方长出来——入口卡就在那个位置，画布是它展开的结果。
+     只动 transform 和 opacity：这两样合成器能直接接手，不触发重排。 */
+  animation: dmpkReworkCanvasIn 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes dmpkReworkCanvasIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 收起时对话回来。它不是「另一个页面」，是刚才被盖住的那一个，
+   所以用同一条曲线、更短的时长——回来的东西不该比出去的还隆重。 */
+.dmpkWorkspace:not(.isReworkCanvas) > .dmpkChatScroller {
+  animation: dmpkChatReturn 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes dmpkChatReturn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dmpkReworkCanvas,
+  .dmpkWorkspace:not(.isReworkCanvas) > .dmpkChatScroller { animation: none; }
+}
+.dmpkReworkCanvas:not(:has(.dmpkReworkReason)) { grid-template-rows: auto minmax(0, 1fr); }
+
+.dmpkReworkCanvas > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dmpkReworkCanvas > header > div { display: grid; gap: 2px; }
+.dmpkReworkCanvas > header strong { color: var(--ink); font-size: 14px; font-weight: 650; }
+.dmpkReworkCanvas > header small { color: var(--muted); font-size: 12px; }
+.dmpkReworkCanvas > header > button {
+  display: grid; width: 28px; height: 28px; flex: none; place-items: center;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  color: var(--muted); cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.dmpkReworkCanvas > header > button:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
+
+/* 画布态下 composer 换成了药丸，底部那 96px 内距是给它的落脚点；
+   不留的话滚到底时最后一行会被药丸压住。 */
+.dmpkWorkspace.isReworkCanvas > .dmpkComposerWrap { display: none; }
 
 /* 叠在另一个弹窗之上时要抬一层。原来两层同一个 z-index，后来的那层靠 DOM
    插入顺序侥幸压住——而 portal 的插入顺序不该是「谁在上面」的依据。

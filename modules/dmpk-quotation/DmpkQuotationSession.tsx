@@ -1,15 +1,14 @@
 "use client";
 
-import { ChevronRight, WandSparkles } from "lucide-react";
+import { ChevronRight, Minimize2, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
+import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
-import { type ReworkNoteState } from "../../components/workbench-shell/ReworkCard";
-import type { QuoteChange } from "../../components/workbench-shell/ChangeConfirmCard";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
 import { noteAnchorToField } from "./noteFieldMap";
 import {
@@ -28,7 +27,10 @@ import {
   DmpkConversation,
   dmpkRunRecord,
   DmpkEditProposalCard,
+  ComposerChipTray,
+  DmpkParameterTaskCard,
   DmpkQuotationPreviewModal,
+  DmpkReworkNoticeCard,
   type DmpkChatMessage,
   type DmpkEditProposal,
   type DmpkInspectorPanelId,
@@ -76,14 +78,31 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   });
   /* 这一单交出去了没有。交接是一次性动作,不该留一张还能再点一次的卡在那儿。 */
   const [handedOff, setHandedOff] = useState(false);
-  /* 每条批注处理到哪一步。退回给撰写人同时也是交接给他的数字同事——
-     数字同事读完批注给出方案，人只做确认，而不是自己照着清单改。 */
-  const [reworkStates, setReworkStates] = useState<Record<string, ReworkNoteState>>({});
   const reworkNotes = (rework?.notes ?? []) as QuoteNote[];
   const reworkGreetedRef = useRef(false);
-  const [changeConfirmOpen, setChangeConfirmOpen] = useState(false);
-  /* 这一轮返工做完了没有。做完卡片就收起——跟交接卡同一个道理:
-     一张已经落笔、再也点不动的卡留在原地,只会让人反复确认自己是不是漏了什么。 */
+  /* 退回批注铺成中间那块画布了没有。
+     ----------------------------------------------------------------------
+     它跟 panelFocus 不是一回事。panelFocus 是「面板铺满整个工作区」，
+     对话和右侧栏一起消失；而这里要的是 QA 审核台那个形状——
+     **中间是要看的东西，右边仍然是那 320px 的面板，底部一颗药丸**。
+     读在中间，改在右边，确认在药丸，三样同屏。
+
+     所以展开退回批注不是 setPanelFocus(true)，是把它搬到中间去当画布，
+     面板顺势切回参数收集。收起来的时候，对话回到中间，
+     退回批注变回面板里的一个 tab。 */
+  const [reworkCanvas, setReworkCanvas] = useState(false);
+  /* 画布开过一次没有。入口卡是**领路的**，路认得了就该让开——
+     它跟参数补全卡抢的是同一个槽位，两张一起堆着，人不知道先做哪个。 */
+  const [reworkCanvasSeen, setReworkCanvasSeen] = useState(false);
+  /* 这一单出过几版报价。每生成一次追加一条，旧版不删——
+     报价被退过一次这件事，一个月后回来看还得能查到。 */
+  const [quoteVersions, setQuoteVersions] = useState<{ id: string; label: string; at: string; origin: string }[]>([]);
+  const pushQuoteVersion = (origin: string) => setQuoteVersions((items) => [
+    ...items,
+    { id: `v${items.length + 1}`, label: `v${items.length + 1}`, at: "刚刚生成 · 金额校验一致", origin },
+  ]);
+  /* 这一轮返工做完了没有。做完就把「退回批注」那个 tab 收掉——
+     一份已经照着改完的原件留在 tab 栏里,只会让人反复确认自己是不是漏了什么。 */
   const [reworkSettled, setReworkSettled] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
@@ -128,7 +147,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       coworkerName: activeCoworker?.name ?? "DMPK报价同事",
       stageLabel: stage === "generated" ? "报价已生成" : stage === "ready" ? "参数已齐全" : stage === "collecting" ? "参数补全中" : "报价处理中",
       /* 运行记录不进快照:上下文摘要要的是「说了什么」,不是「跑了几步」。 */
-      entries: messages.filter((message) => message.role !== "run").map((message) => ({ id: message.id, role: message.role as "user" | "agent", text: message.text })),
+      entries: messages.filter((message) => message.role === "user" || message.role === "agent").map((message) => ({ id: message.id, role: message.role as "user" | "agent", text: message.text })),
       facts: fields.filter((field) => field.value).map((field) => ({ label: field.label, value: field.value })),
     });
   }, [activeCoworker?.name, fields, messages, onSessionSnapshotChange, stage]);
@@ -139,7 +158,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   /* 跑完一轮就把这条运行记录钉进消息流,紧挨着它自己那条回复的上方。
      一定要在 appendMessage("agent", …) 之前调用——过程在前,结论在后。 */
-  const appendRun = (kind: "params" | "quote", missingCount = 0) => {
+  const appendRun = (kind: "params" | "quote" | "rework", missingCount = 0) => {
     const record = dmpkRunRecord(kind, { missingCount });
     setMessages((items) => [...items, { id: `run-${Date.now()}-${items.length}`, role: "run", ...record }]);
   };
@@ -154,15 +173,58 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     appendMessage("agent", `已交接给 ${to}，本次的 Word 报价单与 Excel 报价明细已随行。对方将在站内信中收到。`);
   };
 
-  /* 进会话先打个招呼：说清楚我看到了什么、打算怎么办。
-     不说这一句，那张卡就是凭空冒出来的一张表单。 */
+  /* 从站内信进来时：先跑一次，再把原件摊开。
+     ----------------------------------------------------------------------
+     数字同事在这一步只做三件事——读、说清楚、把东西摊到你面前。
+     **它不替你决定要改成什么**：上一版给的是一张「逐条采纳」的方案卡，
+     等于让它替人做主，改动也就绕过了参数收集。现在改回来：
+     它把批注和原件摊开在右侧画布里，改由人在参数卡上动手。
+
+     顺序是有意的，而且这三步都在对话里留了痕：
+       1. 跑一次「读取退回批注」——run 记录，能展开看它读了什么
+       2. 说一句话，讲清楚有几条、去哪儿看、在哪儿改
+       3. 把「退回批注」这个 tab 打开
+     画布**不自动铺开**：那是一屏很重的东西，凭空盖住对话会让人不知道
+     它是哪来的。由 composer 上那张入口卡领进去，人点了才铺。 */
   useEffect(() => {
     if (!rework || reworkGreetedRef.current) return;
     reworkGreetedRef.current = true;
     const blocking = reworkNotes.filter((note) => note.severity === "blocking").length;
-    appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。已逐条给出处理方案，请核对后采纳。`);
+    /* 先记下「东西回来了」这件事本身，再让数字同事去读它。
+       附件挂在这一条上——被退回的是一份产物，不是一句话。 */
+    setMessages((items) => [...items, {
+      id: `inbound-${Date.now()}`,
+      role: "inbound",
+      text: `${rework.by} 退回了这一版`,
+      attachments: rework.attachmentName
+        ? [{ id: "rework-file", kind: "file" as const, label: rework.attachmentName, meta: "随退回一起返还", origin: "library" as const }]
+        : undefined,
+    }]);
+    setStage("thinking");
+    /* 不给这个 effect 写 cleanup 去 clearTimeout。
+       严格模式下 effect 会跑两遍(挂载 → 清理 → 再挂载)：第一遍把 ref 置真并
+       排上定时器，清理把它取消，第二遍又被 ref 挡回去——于是这一段永远不发生。
+       ref 已经保证了只排一次，一次性的定时器不需要再被撤销。 */
+    window.setTimeout(() => {
+      setStage("collecting");
+      appendRun("rework");
+      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。批注已收在右侧「退回批注」，要对照原件看就摊开成画布；改在参数收集里改，改完在下方确认发送。`);
+      openInspector("rework");
+    }, 900);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rework]);
+
+  /* 展开「退回批注」＝ 把它搬到中间当画布，而不是让面板铺满整屏。
+     铺满会把「改」（右侧参数收集）和「确认」（底部输入）一起赶走，
+     而这一屏的活恰恰要三样同时在。所以这里把 panelFocus 接管掉：
+     一旦是退回批注要全屏，就转成画布模式，面板顺势切回参数收集。 */
+  useEffect(() => {
+    if (!panelFocus || inspectorPanelId !== "rework") return;
+    setPanelFocus(false);
+    setReworkCanvas(true);
+    openInspector("parameters");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panelFocus, inspectorPanelId]);
 
   /* 现值：能映射到会话参数的走会话字段，其余走报价单。
      两套词表不一一对应，取错一边，显示的现值就跟人眼前的面板对不上。 */
@@ -172,55 +234,26 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     return fields.find((field) => field.id === fieldId)?.value ?? quoteCurrentValue(anchorId);
   };
 
-  /* 采纳只改这一条的状态，不立刻写回参数——真正落笔在「确认本轮改动」那一步。
-     逐条采纳时看的是「这一条该不该改」，落笔前还要看一次「这一轮总共改了什么」。 */
-  const acceptRework = (note: QuoteNote) => setReworkStates((current) => ({ ...current, [note.anchorId]: "accepted" }));
-  /* 「另行说明」不是拒绝，是把话筒交回去。方案不一定对，
-     不接受它的人应该能直接说自己的想法，而不是被迫先采纳再改回来。 */
-  const deferRework = (note: QuoteNote) => {
-    setReworkStates((current) => ({ ...current, [note.anchorId]: "deferred" }));
-    setComposerAttention(true);
-  };
-  /* 决定要能反悔。改的是报价，点错一下代价不小，而「已经定了就不给改」
-     只会让人不敢点。 */
-  const resetRework = (note: QuoteNote) => setReworkStates((current) => {
-    const next = { ...current };
-    delete next[note.anchorId];
-    return next;
-  });
+  /* 「逐条采纳 / 另行说明 / 撤销 / 确认本轮改动」这一整套已经删掉。
+     ----------------------------------------------------------------------
+     那是让数字同事替人做决定：它读完批注给出方案，人只是点头。代价有两个——
+     改动绕过了参数收集（右侧面板成了旁观者），而且人对着的是它的转述，
+     不是审批人的原话。
 
-  const pendingChanges: QuoteChange[] = reworkNotes
-    .filter((note) => reworkStates[note.anchorId] === "accepted" && note.suggested)
-    .map((note) => {
-      const fieldId = noteAnchorToField[note.anchorId];
-      return {
-        fieldId,
-        label: fieldId ? (fields.find((field) => field.id === fieldId)?.label ?? quoteAnchorLabel(note.anchorId)) : quoteAnchorLabel(note.anchorId),
-        from: reworkCurrentValue(note.anchorId),
-        to: note.suggested!,
-        scope: (fieldId ? "field" : "quote") as QuoteChange["scope"],
-      };
-    });
-
-  const regenerateFromRework = () => setChangeConfirmOpen(true);
+     现在的分工：它只负责把原件和批注摊开；改由人在参数收集里动手，
+     经 composer 发送确认。所以这里不需要任何中间状态。 */
 
   const confirmChanges = () => {
-    setChangeConfirmOpen(false);
-    /* 参数真的改掉——右侧参数收集跟着变。这一步是「同步更新」四个字的实处。 */
-    setFields((items) => items.map((field) => {
-      const change = pendingChanges.find((item) => item.fieldId === field.id);
-      return change ? { ...field, value: change.to } : field;
-    }));
+    /* 参数已经由人在参数收集里改过了，这一步只是重出一版。 */
     setReworkSettled(true);
-    /* 也告诉壳层这一单不再是「被退回着」的状态,否则切走再回来卡片又长回来。 */
+    /* 也告诉壳层这一单不再是「被退回着」的状态,否则切走再回来面板又长回来。 */
     onReworkResolved?.();
-    appendMessage("user", `确认本轮改动，共 ${pendingChanges.length} 项，按新值重出一版。`);
     setStage("generating");
     suggestPanel("parameters");
     window.setTimeout(() => {
       setStage("generated");
       appendRun("quote");
-      appendMessage("agent", "已按确认的改动重新生成报价单，Word 与 Excel 金额校验一致，可再次送审。");
+      appendMessage("agent", "已按修改后的参数重新生成报价单，Word 与 Excel 金额校验一致，可再次送审。");
     }, 1200);
   };
 
@@ -431,6 +464,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       window.requestAnimationFrame(() => setComposerAttention(true));
       window.setTimeout(() => setComposerAttention(false), 720);
     },
+    /* 退回批注。铺成中间画布的时候，面板里那个 tab 就该消失——
+       同一份东西不该同时占着中间和右边。settled 之后同理。 */
+    reworkNotes: reworkSettled || reworkCanvas ? [] : reworkNotes,
+    reworkBy: rework?.by,
+    reworkAt: rework?.at,
+    reworkReason: rework?.reason,
+    expanded: panelFocus,
+    quoteVersions,
   });
   /* 参数面板只负责改「参数的值」——逐项点编辑图标即可。
      改规则不属于这里，「对话编辑」已经移到报价规则面板。 */
@@ -475,14 +516,46 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
 
   return (
     <>
-      <section className={`dmpkWorkspace ${panelFocus ? "isPanelFocus" : ""}`}>
+      <section className={`dmpkWorkspace ${panelFocus ? "isPanelFocus" : ""} ${reworkCanvas ? "isReworkCanvas" : ""}`}>
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
           <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </header>
-        <SessionMinimap scrollerRef={chatScrollerRef} />
-        <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
-        <DmpkComposer editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} rework={reworkSettled ? undefined : rework} reworkNotes={reworkNotes} reworkStates={reworkStates} reworkCurrentValue={reworkCurrentValue} onAcceptRework={acceptRework} onDeferRework={deferRework} onResetRework={resetRework} onRegenerateRework={regenerateFromRework} changeConfirm={changeConfirmOpen ? pendingChanges : null} onConfirmChanges={confirmChanges} onCancelChanges={() => setChangeConfirmOpen(false)} onOpenQuote={() => setArtifactPreview("excel")} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
+        {!reworkCanvas ? <SessionMinimap scrollerRef={chatScrollerRef} /> : null}
+        {reworkCanvas && rework ? (
+          /* 中间这块画布 = 要照着改的原件。右侧那 320px 面板照旧在，
+             底部是药丸——读、改、确认三样同屏，谁也不用切走。 */
+          <section className="dmpkReworkCanvas" aria-label="退回批注">
+            {/* 驳回理由收进标题块里，不再单开一条通栏。
+                原来是「标题 / 理由条 / 形态切换」三段各占一行，纸面被压到 225px
+                才开始——而纸面才是这一屏要看的东西。 */}
+            <header>
+              <div>
+                <strong>{rework.by} 退回了这一版</strong>
+                <small>{rework.at} · 共 {reworkNotes.length} 条批注{reworkNotes.filter((note) => note.severity === "blocking").length ? `，其中 ${reworkNotes.filter((note) => note.severity === "blocking").length} 条必须修订` : ""}</small>
+                {rework.reason ? <p className="dmpkReworkReason">{rework.reason}</p> : null}
+              </div>
+              {/* 收起来：对话回到中间，退回批注变回面板里的一个 tab。 */}
+              <button type="button" onClick={() => { setReworkCanvas(false); openInspector("rework"); }} aria-label="收起画布，回到对话" title="收起画布，回到对话">
+                <Minimize2 size={15} />
+              </button>
+            </header>
+            <AnnotatedQuote notes={reworkNotes} className="isPanel" />
+          </section>
+        ) : (
+          <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
+        )}
+        <DmpkComposer unresolvedNotes={reworkNotes
+          .filter((note) => !noteAnchorToField[note.anchorId])
+          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} reworkNotice={rework && !reworkSettled && !reworkCanvas && !reworkCanvasSeen && !composerFields.length ? (
+          <DmpkReworkNoticeCard
+            by={rework.by}
+            at={rework.at}
+            total={reworkNotes.length}
+            blocking={reworkNotes.filter((note) => note.severity === "blocking").length}
+            onOpenCanvas={() => { setReworkCanvas(true); setReworkCanvasSeen(true); }}
+          />
+        ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
         ] }); }} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())} />
@@ -501,14 +574,34 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             setInspectorPanelId(panelId as DmpkInspectorPanelId);
           }}
         />
-        {panelFocus ? (
+        {panelFocus || reworkCanvas ? (
           <FloatingChatDock
+            /* 画布铺满时，要当场做的那个决定跟着输入框走。
+               用户在右侧参数收集里点了「改这一项」，卡片本来长在 composer 上，
+               而 composer 此刻被画布盖住——点了等于没反应。
+               画布一收起，同一张卡自然回到 composer 上方。 */
+            chips={draftTabs.length ? <ComposerChipTray tabs={draftTabs} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} /> : null}
+            card={composerFields.length ? (
+              <DmpkParameterTaskCard
+                activeGroup={activeGroup}
+                fields={composerFields}
+                allFields={fields}
+                draftTabs={draftTabs}
+                mode={editingField ? "edit" : "collect"}
+                onSelect={addDraft}
+              />
+            ) : null}
             /* 浮动对话只放人和数字同事说的话:那个小窗是用来接着聊的,
                把运行记录也塞进去只会把仅有的几行挤掉。 */
-            messages={messages.filter((message) => message.role !== "run") as { id: string; role: "user" | "agent"; text: string }[]}
+            messages={messages.filter((message) => message.role === "user" || message.role === "agent") as { id: string; role: "user" | "agent"; text: string }[]}
             text={composerText}
             onTextChange={setComposerText}
-            onSend={submitComposer}
+            /* 发送那一下把画布收起来。
+               这是这一轮读与改的分界：在此之前要看的是原件，在此之后要看的是
+               「我改了什么、系统怎么答的」——那些都在对话里。
+               不做成「改一下就自动收」，那是抢控制权；由用户自己的发送动作触发，
+               时机是他给的。 */
+            onSend={() => { submitComposer(); if (reworkCanvas) setReworkCanvas(false); }}
             disabled={stage === "thinking" || stage === "generating"}
           />
         ) : null}
