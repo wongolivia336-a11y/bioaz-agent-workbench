@@ -580,7 +580,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             messages={messages.filter((message) => message.role === "user" || message.role === "agent") as { id: string; role: "user" | "agent"; text: string }[]}
             text={composerText}
             onTextChange={setComposerText}
-            onSend={submitComposer}
+            /* 发送那一下把画布收起来。
+               这是这一轮读与改的分界：在此之前要看的是原件，在此之后要看的是
+               「我改了什么、系统怎么答的」——那些都在对话里。
+               不做成「改一下就自动收」，那是抢控制权；由用户自己的发送动作触发，
+               时机是他给的。 */
+            onSend={() => { submitComposer(); if (reworkCanvas) setReworkCanvas(false); }}
             disabled={stage === "thinking" || stage === "generating"}
           />
         ) : null}

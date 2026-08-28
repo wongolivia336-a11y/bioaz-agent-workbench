@@ -113,8 +113,14 @@ export function FloatingChatDock({ messages, text, onTextChange, onSend, disable
     .map((id) => messages.find((message) => message.id === id))
     .filter((message): message is FloatingChatMessage => Boolean(message));
 
+  /* 有 chips 就等于有东西可发，不必再打一行字。
+     原来这里死守 `!text.trim()`，于是画布态下选完三项参数、发送键还是灰的——
+     用户已经把要说的都选完了，系统却还在等他打字。
+     composer 那边一直是这个规则（draftTabs 有值就能发），两处得一致。 */
+  const canSubmit = !disabled && (text.trim().length > 0 || Boolean(chips));
+
   const submit = () => {
-    if (disabled || !text.trim()) return;
+    if (!canSubmit) return;
     onSend();
   };
 
@@ -168,7 +174,7 @@ export function FloatingChatDock({ messages, text, onTextChange, onSend, disable
             submit();
           }}
         />
-        <button type="button" className="floatingChatSend" aria-label="发送" disabled={disabled || !text.trim()} onClick={submit}>
+        <button type="button" className="floatingChatSend" aria-label="发送" disabled={!canSubmit} onClick={submit}>
           <ArrowUp size={14} />
         </button>
       </div>
