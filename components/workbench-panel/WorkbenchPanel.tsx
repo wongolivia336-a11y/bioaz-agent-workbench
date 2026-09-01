@@ -289,10 +289,79 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
     onPanelChange(panelId);
   };
 
+  /* ── 拖着长出一列 ───────────────────────────────────────────────────
+     按钮那条明路已经有了，这一层是叠上去的第二条路：顺手一拖就成，
+     发现了就不会忘。它属于外壳而不是某个业务，所以 QA、肿瘤报告
+     以及以后的新业务只要传了 columnIds 就一起有。
+
+     只有一条规则，两个方向共用：**最后一列的左边界就是分界线。**
+     把一个面板从右边拖到左边 → 摊成一列；从左边拖回右边 → 收回标签栏。
+     两个方向不写成两套判断，否则它们迟早会长出各自的边界情况。
+
+     用指针事件而不是 HTML5 拖放：这个仓库的抓手（面板改宽）已经是这么写的，
+     而且原生拖放在触屏上根本不触发，拖影也没法跟着做「拎起来」那一下。 */
+  const [drag, setDrag] = useState<{ id: string; label: string; x: number; y: number; toColumn: boolean } | null>(null);
+  const dragRef = useRef<{ id: string; label: string; startX: number; startY: number; moved: boolean } | null>(null);
+
+  /* 分界线：左边＝摊成一列，右边＝收回标签栏。
+
+     已经有列的时候，它就是标签那一列的左边界——那条线是看得见的。
+
+     一列都没有的时候不能照搬：标签栏此时占满整个面板，它的左边界
+     就是面板的左边界，于是「左边」是一片不存在的区域，怎么拖都判成收回。
+     所以这种情况下取面板左侧 40% 作为落区——人要把标签拖出去成一列，
+     手自然是往左边甩的，40% 足够接得住，又不会近到贴着标签栏误触发。 */
+  const splitBoundary = () => {
+    const panel = panelRef.current;
+    if (!panel) return Number.NEGATIVE_INFINITY;
+    if (leadingPanels.length) {
+      const tabs = panel.querySelector(".workbenchPanelTabs");
+      if (tabs) return tabs.getBoundingClientRect().left;
+    }
+    const rect = panel.getBoundingClientRect();
+    return rect.left + rect.width * 0.4;
+  };
+
+  const beginDrag = (panelId: string, label: string) => (event: React.PointerEvent) => {
+    if (!columns || event.button !== 0) return;
+    dragRef.current = { id: panelId, label, startX: event.clientX, startY: event.clientY, moved: false };
+  };
+
+  const moveDrag = (event: React.PointerEvent) => {
+    const state = dragRef.current;
+    if (!state) return;
+    /* 4px 阈值：不设的话，点一下标签切换会被当成一次零距离的拖拽，
+       松手时按落点判定，于是「点一下」变成了随机地摊开或收回。 */
+    if (!state.moved) {
+      if (Math.hypot(event.clientX - state.startX, event.clientY - state.startY) < 4) return;
+      state.moved = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    setDrag({ id: state.id, label: state.label, x: event.clientX, y: event.clientY, toColumn: event.clientX < splitBoundary() });
+  };
+
+  const endDrag = (event: React.PointerEvent) => {
+    const state = dragRef.current;
+    dragRef.current = null;
+    setDrag(null);
+    if (!state?.moved) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    const isColumn = (columnIds ?? []).includes(state.id);
+    const wantsColumn = event.clientX < splitBoundary();
+    // 拖回原来那一侧＝反悔，什么都不做
+    if (wantsColumn === isColumn) return;
+    if (wantsColumn) splitOut(state.id); else mergeBack(state.id);
+  };
+
+  /* 拖过一次之后紧跟着的那下 click 要吃掉，否则松手会顺带切换标签。 */
+  const swallowClickAfterDrag = (event: React.MouseEvent) => {
+    if (drag || dragRef.current?.moved) { event.preventDefault(); event.stopPropagation(); }
+  };
+
   return (
     <aside
       ref={panelRef}
-      className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""} ${leadingPanels.length ? "isColumns" : ""}`}
+      className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""} ${leadingPanels.length ? "isColumns" : ""} ${drag ? (drag.toColumn ? "isDropToColumn" : "isDropToTabs") : ""}`}
       style={leadingPanels.length ? ({ "--panel-columns": leadingPanels.length + 1 } as React.CSSProperties) : undefined}
       aria-hidden={!open}
     >
@@ -305,7 +374,13 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
         const Icon = panel.icon;
         return (
           <section className="workbenchPanelColumn" key={panel.id} aria-label={panel.label}>
-            <header className="workbenchPanelColumnHead">
+            <header
+              className={`workbenchPanelColumnHead ${columns ? "isDraggable" : ""} ${drag?.id === panel.id ? "isDragging" : ""}`}
+              onPointerDown={beginDrag(panel.id, panel.label)}
+              onPointerMove={moveDrag}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+            >
               <Icon size={14} />
               <strong>{panel.label}</strong>
               {/* 收回标签栏，不是关掉。以前这里是叉号调 hide()，
@@ -327,8 +402,17 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
             const Icon = panel.icon;
             const selected = panel.id === trailingActive?.id;
             return (
-              <span className={`workbenchPanelTab ${selected ? "isActive" : ""}`} key={panel.id}>
-                <button type="button" role="tab" aria-selected={selected} onClick={() => onPanelChange(panel.id)}>
+              <span className={`workbenchPanelTab ${selected ? "isActive" : ""} ${drag?.id === panel.id ? "isDragging" : ""}`} key={panel.id}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={(event) => { swallowClickAfterDrag(event); if (!event.defaultPrevented) onPanelChange(panel.id); }}
+                  onPointerDown={beginDrag(panel.id, panel.label)}
+                  onPointerMove={moveDrag}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                >
                   <Icon size={14} />
                   <span>{panel.label}</span>
                   {!selected && hintIds.includes(panel.id) ? <i className="workbenchPanelTabDot" aria-label="有更新" /> : null}
@@ -439,6 +523,20 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
         ) : null}
         {trailingActive ? <PanelContent panel={trailingActive} /> : null}
       </div>
+
+      {/* 跟着指针走的那一片。fixed 定位、不吃指针事件——
+          它只是告诉人「手上拿着的是这个」，判定落点的始终是真实指针坐标。
+          写成 transform 而不是 left/top：那两个每帧都要重排。 */}
+      {drag ? (
+        <span
+          className="workbenchPanelDragGhost"
+          style={{ transform: `translate3d(${drag.x}px, ${drag.y}px, 0)` }}
+          aria-hidden="true"
+        >
+          {drag.label}
+          <em>{drag.toColumn ? "松手并列显示" : "松手收回标签栏"}</em>
+        </span>
+      ) : null}
     </aside>
   );
 }

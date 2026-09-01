@@ -6308,6 +6308,64 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-agent-accent);
 }
 
+/* ── 拖着长出一列 ─────────────────────────────────────────────────────
+   分界线只有一条：标签那一列的左边界。往左拖＝摊成一列，往右拖＝收回标签。 */
+
+/* 标签本身不给 grab 光标：它首先是个可点的标签，拖是附带的。
+   给了 grab，人会以为它只能拖。列头反过来——那一整条除了收回键没有别的
+   可点的东西，明说它能拖是划算的。 */
+.workbenchPanelColumnHead.isDraggable { cursor: grab; touch-action: none; }
+.workbenchPanelColumnHead.isDraggable:active { cursor: grabbing; }
+.workbenchPanelTab button[role="tab"] { touch-action: none; }
+
+/* 被拎起来的那个留个淡影，说明它还在原位、只是暂时离手 */
+.workbenchPanelTab.isDragging,
+.workbenchPanelColumnHead.isDragging { opacity: 0.4; }
+
+/* 落点提示：整块目标区域泛一层色，比画一条插入线更好懂——
+   这里要回答的是「松手会去哪一侧」，不是「插到第几个」。 */
+.workbenchPanel.isDropToColumn .workbenchPanelColumn,
+.workbenchPanel.isDropToTabs .workbenchPanelTabs {
+  background: var(--bioaz-agent-accent-soft);
+}
+.workbenchPanel.isDropToColumn:not(.isColumns) .workbenchPanelBody {
+  /* 一列都还没摊开时，左边没有可染的列，就染内容区并画出未来那条边界 */
+  box-shadow: inset 3px 0 0 var(--bioaz-agent-accent);
+}
+
+.workbenchPanelDragGhost {
+  position: fixed;
+  z-index: 200;
+  top: 0;
+  left: 0;
+  display: grid;
+  gap: 1px;
+  /* 偏开指针一点，别让指尖压住自己要看的字 */
+  margin: 12px 0 0 14px;
+  border: 1px solid var(--bioaz-agent-accent-border);
+  border-radius: 10px;
+  background: var(--bioaz-surface);
+  padding: 7px 11px;
+  color: var(--bioaz-text-primary);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: var(--bioaz-shadow-floating);
+  pointer-events: none;
+}
+.workbenchPanelDragGhost > em {
+  color: var(--bioaz-agent-accent);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workbenchPanelTab.isDragging,
+  .workbenchPanelColumnHead.isDragging { opacity: 1; }
+}
+
 .workbenchPanelCollapse {
   display: grid;
   width: 28px;
