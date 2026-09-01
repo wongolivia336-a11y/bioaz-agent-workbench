@@ -79,9 +79,13 @@
   color: var(--bioaz-danger);
 }
 
+/* 按下去要有反应：底色变一下不够，还要缩一点。
+   0.97 很轻，轻到没人会专门注意；但少了它，按钮摸起来像贴纸——
+   点了之后要等界面回应才知道系统收到没有，中间那一段是空的。 */
 .bioazUiButton:active:not(:disabled),
 .bioazUiIconButton:active:not(:disabled) {
   background: var(--bioaz-surface-active);
+  transform: scale(0.97);
 }
 
 .bioazUiButton:disabled {
