@@ -320,6 +320,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const field = fields.find((item) => item.id === fieldId);
     if (!field) return;
     const invalidatesQuotation = stage === "generated";
+    /* 画布开着就先收起来。
+       画布是纯阅读态，没有输入框；这张参数卡本该落在 composer 上方，
+       画布不收，卡片就没有落点——点了等于没反应。
+
+       这一下不算抢控制权：点「编辑」是毫不含糊的意图声明，他要改这一项。
+       收起画布、把输入框交还给他，是顺着他的意思做。
+       （区别于「改一下就自动收」——那种才是替用户决定他看够了没有。） */
+    setReworkCanvas(false);
     openInspector("parameters");
     setParametersExpanded(true);
     setConversationEditing(false);
@@ -580,18 +588,29 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           open={panelOpen}
           focus={panelFocus}
           onFocusChange={setPanelFocus}
+          /* 退回处理这一屏要「边看批注边改参数」，所以允许并列。
+             排不排得下由量出来的宽度说了算，不是这里说了算。 */
+          columns
           onPanelChange={(panelId) => {
             setTabPinnedByUser(true);
             setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
             setInspectorPanelId(panelId as DmpkInspectorPanelId);
           }}
         />
-        {panelFocus || reworkCanvas ? (
+        {/* 画布态**不再有输入框**。
+            原来这里是 `panelFocus || reworkCanvas`：画布铺满时把对话收成药丸，
+            再把参数卡和 chips 塞进药丸，好让「读原件 / 改参数 / 确认」三样同屏。
+            那一套联动做得起来但很脆，而且它把三件性质不同的活压在了一屏里。
+
+            现在改成读改分离：画布只负责读，要改就先收起画布——
+            点参数的「编辑」会自动收起（见 startEditingField）。
+            面板全屏那条路仍然需要药丸：那时中间列整个让给了面板，
+            对话没有别的落脚点。 */}
+        {panelFocus ? (
           <FloatingChatDock
-            /* 画布铺满时，要当场做的那个决定跟着输入框走。
+            /* 面板全屏时，要当场做的那个决定跟着输入框走：
                用户在右侧参数收集里点了「改这一项」，卡片本来长在 composer 上，
-               而 composer 此刻被画布盖住——点了等于没反应。
-               画布一收起，同一张卡自然回到 composer 上方。 */
+               而 composer 此刻被面板盖住——点了等于没反应。 */
             chips={draftTabs.length ? <ComposerChipTray tabs={draftTabs} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} /> : null}
             card={composerFields.length ? (
               <DmpkParameterTaskCard
@@ -608,12 +627,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             messages={messages.filter((message) => message.role === "user" || message.role === "agent") as { id: string; role: "user" | "agent"; text: string }[]}
             text={composerText}
             onTextChange={setComposerText}
-            /* 发送那一下把画布收起来。
-               这是这一轮读与改的分界：在此之前要看的是原件，在此之后要看的是
-               「我改了什么、系统怎么答的」——那些都在对话里。
-               不做成「改一下就自动收」，那是抢控制权；由用户自己的发送动作触发，
-               时机是他给的。 */
-            onSend={() => { submitComposer(); if (reworkCanvas) setReworkCanvas(false); }}
+            onSend={submitComposer}
             disabled={stage === "thinking" || stage === "generating"}
           />
         ) : null}

@@ -1,6 +1,6 @@
 {
   "stylesheets": 23,
-  "selectors": 4023,
+  "selectors": 4033,
   "duplicateSelectors": 599,
   "crossFileDuplicates": 193,
   "suspectDeadClasses": 382,

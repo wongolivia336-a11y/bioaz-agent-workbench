@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, CircleAlert, Maximize2, Minimize2, PanelRightClose, PanelRightOpen, Plus, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ResolvedInspectorPanel } from "../workbench-inspector/WorkbenchInspector";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 
@@ -11,6 +11,31 @@ const PANEL_WIDTH_MIN = 320;
 const PANEL_WIDTH_MAX = 760;
 /** 对话列的下限。面板再宽也不能把中间那一列压到读不了。 */
 const CONVERSATION_MIN_WIDTH = 420;
+
+/* 并列
+   ----------------------------------------------------------------------
+   一列就是一个面板，所以列宽下限沿用面板下限。列数**不由用户直接选**，
+   由量出来的宽度决定——勾了两个但屏幕放不下，硬排出来两列各 200px，
+   两边都读不了。
+
+   规则只有一条：前 cap-1 个各占一列，剩下的全挤进最后一列用 tab 切。
+   cap = 1 时它退化成「所有面板都在最后一列」——也就是现在的样子，
+   一个字节都没变。QA 与肿瘤报告不传 columns，走的正是这条。 */
+const COLUMN_MIN_WIDTH = 320;
+const COLUMN_GAP = 16;
+const COLUMN_MAX = 3;
+
+/** 这个宽度能排下几列 */
+function columnCapacity(width: number) {
+  if (!width) return 1;
+  const fit = Math.floor((width + COLUMN_GAP) / (COLUMN_MIN_WIDTH + COLUMN_GAP));
+  return Math.min(COLUMN_MAX, Math.max(1, fit));
+}
+
+/** 排 n 列需要多宽 */
+function widthForColumns(n: number) {
+  return n * COLUMN_MIN_WIDTH + (n - 1) * COLUMN_GAP;
+}
 
 type PanelState = {
   panels: ResolvedInspectorPanel[];
@@ -24,6 +49,9 @@ type PanelState = {
   /** 面板铺满工作区（只吃对话列，topbar 与左侧任务栏保留）。不传 onFocusChange 就没有这颗按钮 */
   focus?: boolean;
   onFocusChange?: (focus: boolean) => void;
+  /* 允许并列。不传就是一列——QA 与肿瘤报告走这条，行为和以前完全一致。
+     开了也不保证真能并列：排不排得下由量出来的宽度说了算。 */
+  columns?: boolean;
 };
 
 /**
@@ -136,13 +164,76 @@ function PanelResizer({ panelRef }: { panelRef: React.RefObject<HTMLElement> }) 
  * 面板本体，占满白卡右侧一整列（含顶栏那一行），左侧一条顶天立地的分界线。
  * tab 栏是它自己的头部，所以分界线两侧一眼能分出「对话」与「面板」。
  */
-export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds = [], open = true, focus = false, onFocusChange }: PanelState & { open?: boolean }) {
+export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds = [], open = true, focus = false, onFocusChange, columns = false }: PanelState & { open?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useDismissableLayer<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
   const panelRef = useRef<HTMLElement>(null);
 
   const visiblePanels = panels.filter((panel) => visibleIds.includes(panel.id));
-  const active = visiblePanels.find((panel) => panel.id === activePanelId) ?? visiblePanels[0];
+
+  /* 量的是**面板自己**，不是视口。
+     受约束的是这一块的宽度：面板可拖、任务栏可收、全屏会把整条工作区让出来，
+     这三件事都不改变视口。这个仓库里已经栽过两次同样的跟头
+     （计算表、退回画布），所以这里一开始就用 ResizeObserver。 */
+  const [panelWidth, setPanelWidth] = useState(0);
+
+  /* 每次渲染都同步量一次。
+     只挂 ResizeObserver 是不够的：它的回调要等到下一次渲染周期才送达，
+     于是首帧永远按「一列」排，下一帧才翻成两列——勾选之后会看到明显的跳。
+     useLayoutEffect 在提交后、绘制前跑，量到的就是本次的真实宽度。 */
+  useLayoutEffect(() => {
+    const node = panelRef.current;
+    if (!node || !columns) return;
+    const next = node.getBoundingClientRect().width;
+    setPanelWidth((current) => (Math.abs(current - next) < 1 ? current : next));
+  });
+
+  /* 拖拽和收任务栏不引起本组件重渲，所以还要一个观察者兜住那些变化。 */
+  useEffect(() => {
+    const node = panelRef.current;
+    if (!node || !columns) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const next = entry.contentRect.width;
+      setPanelWidth((current) => (Math.abs(current - next) < 1 ? current : next));
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [columns]);
+
+  const capacity = columns ? columnCapacity(panelWidth) : 1;
+  /* 前 cap-1 个各占一列，剩下的挤进最后一列用 tab 切。
+     cap=1 时 leading 为空、trailing 是全部——即现状。 */
+  const leadingPanels = visiblePanels.slice(0, Math.max(0, capacity - 1));
+  const trailingPanels = visiblePanels.slice(Math.max(0, capacity - 1));
+  const trailingActive = trailingPanels.find((panel) => panel.id === activePanelId) ?? trailingPanels[0];
+  /* 勾了但排不下的：既不独占一列，也不是最后一列当前那个 tab。
+     要说明白为什么，静默失败会被当成功能坏了。 */
+  const crowded = columns && visiblePanels.length > capacity;
+
+  /* 勾第二个的时候，如果面板还有加宽的余地就自动加宽——
+     DMPK 默认 320，不加宽的话勾了也永远排不出第二列，
+     用户看到的是「点了没反应」。 */
+  const widenFor = (count: number) => {
+    const workspace = panelRef.current?.parentElement;
+    if (!workspace || !columns || focus) return;
+    const current = panelRef.current?.getBoundingClientRect().width ?? 0;
+    const room = workspace.getBoundingClientRect().width;
+    /* 加宽的上限仍然是「不把对话列压穿」——面板可以变宽，
+       但不能宽到让中间那一列读不了。 */
+    const ceiling = Math.max(PANEL_WIDTH_MIN, Math.min(PANEL_WIDTH_MAX, room - CONVERSATION_MIN_WIDTH));
+    /* 排得下几列就加宽到几列，**不是装不下三列就干脆不加宽**。
+       之前那版直接按目标列数算一个宽度，超了上限就整个放弃：
+       勾第四个面板时它想要三列的 992，够不着 760，于是连能排的两列
+       也一起没了——用户看到的还是「点了没反应」。 */
+    let fits = 1;
+    for (let n = Math.min(count, COLUMN_MAX); n > fits; n -= 1) {
+      if (widthForColumns(n) <= ceiling) { fits = n; break; }
+    }
+    if (fits < 2) return;
+    const need = widthForColumns(fits);
+    if (current >= need) return;
+    workspace.style.setProperty("--panel-width", `${Math.round(need)}px`);
+  };
 
   const hide = (panelId: string) => {
     // 至少留一个 tab，否则面板会变成一块没有出口的空白
@@ -159,17 +250,48 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
     if (visibleIds.includes(panelId)) { hide(panelId); return; }
     onVisibleIdsChange([...visibleIds, panelId]);
     onPanelChange(panelId);
+    /* 按**真正会渲染出来**的面板数算，不是 visibleIds 的长度。
+       两者会差很多：visibleIds 记着用户勾过的全部，而 panels 里
+       有一部分当前阶段还不可用（available 为假），根本不渲染。
+       拿原始长度去算，会为了一个看不见的面板去要第三列的宽度。 */
+    widenFor(visiblePanels.length + 1);
   };
 
   return (
-    <aside ref={panelRef} className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""}`} aria-hidden={!open}>
+    <aside
+      ref={panelRef}
+      className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""} ${leadingPanels.length ? "isColumns" : ""}`}
+      style={leadingPanels.length ? ({ "--panel-columns": leadingPanels.length + 1 } as React.CSSProperties) : undefined}
+      aria-hidden={!open}
+    >
       {/* 全屏态没有中间那一列可分，抓手就没有意义 */}
       {open && !focus ? <PanelResizer panelRef={panelRef} /> : null}
+
+      {/* 各自独占一列的那几个。它们自带标题，不进 tab 栏——
+          一条共享 tab 栏配几列内容，人分不清哪个 tab 对应哪一列。 */}
+      {leadingPanels.map((panel) => {
+        const Icon = panel.icon;
+        return (
+          <section className="workbenchPanelColumn" key={panel.id} aria-label={panel.label}>
+            <header className="workbenchPanelColumnHead">
+              <Icon size={14} />
+              <strong>{panel.label}</strong>
+              <button type="button" aria-label={`取消并列${panel.label}`} title="取消并列" onClick={() => hide(panel.id)}>
+                <X size={12} />
+              </button>
+            </header>
+            <div className="workbenchPanelColumnBody">
+              <PanelContent panel={panel} />
+            </div>
+          </section>
+        );
+      })}
+
       <div className="workbenchPanelTabs">
         <div className="workbenchPanelTabScroll" role="tablist" aria-label="工作面板">
-          {visiblePanels.map((panel) => {
+          {trailingPanels.map((panel) => {
             const Icon = panel.icon;
-            const selected = panel.id === active?.id;
+            const selected = panel.id === trailingActive?.id;
             return (
               <span className={`workbenchPanelTab ${selected ? "isActive" : ""}`} key={panel.id}>
                 <button type="button" role="tab" aria-selected={selected} onClick={() => onPanelChange(panel.id)}>
@@ -240,12 +362,12 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
                 提示挂在按钮自己身上就永远弹不出来，用户只看到一个没反应的灰按钮。 */}
             <span
               className="workbenchPanelFocusWrap"
-              title={focus ? "退出全屏（Esc）" : active?.expandable ? "面板全屏" : "该面板放宽后没有更多内容"}
+              title={focus ? "退出全屏（Esc）" : trailingActive?.expandable ? "面板全屏" : "该面板放宽后没有更多内容"}
             >
               <button
                 type="button"
                 className={`workbenchPanelFocus ${focus ? "isActive" : ""}`}
-                disabled={!focus && !active?.expandable}
+                disabled={!focus && !trailingActive?.expandable}
                 aria-pressed={focus}
                 aria-label={focus ? "退出全屏" : "面板全屏"}
                 onClick={() => onFocusChange(!focus)}
@@ -257,7 +379,15 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
         ) : null}
       </div>
       <div className="workbenchPanelBody" role="tabpanel">
-        {active ? <PanelContent panel={active} /> : null}
+        {/* 勾了但排不下：说清楚为什么，以及怎么才排得下。
+            只说「放不下」而不给出路，用户只会以为坏了。 */}
+        {crowded ? (
+          <p className="workbenchPanelCrowded">
+            还有 {visiblePanels.length - capacity} 个面板没能并列显示，先用上面的标签切换。
+            {focus ? "全屏下最多并列三个。" : "把面板往左拖宽，或收起左侧任务栏，就能多并一列。"}
+          </p>
+        ) : null}
+        {trailingActive ? <PanelContent panel={trailingActive} /> : null}
       </div>
     </aside>
   );
