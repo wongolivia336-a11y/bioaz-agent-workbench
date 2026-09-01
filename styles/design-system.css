@@ -1247,7 +1247,7 @@ body:has(.bioazDesignSystemPage) {
   .segmentedControl button
 ):not(:disabled):active {
   transform: scale(0.97);
-  transition: transform 160ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
+  transition: transform var(--bioaz-motion-standard) var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 /* 松手回弹稍快，形成「按得动、弹得快」的非对称手感 */
@@ -1261,7 +1261,7 @@ body:has(.bioazDesignSystemPage) {
   .iconButton,
   .toolIconButton
 ):not(:disabled) {
-  transition: transform 120ms var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
+  transition: transform var(--bioaz-motion-fast) var(--bioaz-ease-out-3, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 /* 大面积卡片按下时幅度更小，否则整块塌陷会显得笨重 */
@@ -1617,7 +1617,7 @@ body:has(.bioazDesignSystemPage) {
   font-size: 13px;
   text-align: left;
   cursor: pointer;
-  transition: border-color 140ms ease;
+  transition: border-color var(--bioaz-motion-standard) ease;
 }
 
 .personPickerField:hover { border-color: var(--bioaz-border-strong, var(--bioaz-border)); }

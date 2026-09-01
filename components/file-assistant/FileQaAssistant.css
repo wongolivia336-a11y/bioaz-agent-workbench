@@ -76,10 +76,10 @@
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease,
-    background-color 160ms ease;
+    border-color var(--bioaz-motion-standard) ease,
+    box-shadow var(--bioaz-motion-standard) ease,
+    transform var(--bioaz-motion-standard) ease,
+    background-color var(--bioaz-motion-standard) ease;
 }
 
 .fileQaHomeCard:hover,
@@ -127,7 +127,7 @@
   align-items: center;
   justify-content: flex-end;
   color: var(--muted, #9aa3af);
-  transition: color 160ms ease, transform 160ms ease;
+  transition: color var(--bioaz-motion-standard) ease, transform var(--bioaz-motion-standard) ease;
 }
 
 .fileQaHomeCard:hover .fileQaHomeCardArrow,
@@ -150,8 +150,8 @@
   box-shadow: 0 16px 42px rgba(17, 19, 24, 0.08);
   padding: 10px 12px;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
+    border-color var(--bioaz-motion-standard) ease,
+    box-shadow var(--bioaz-motion-standard) ease;
 }
 
 .fileQaHomeComposer:focus-within {
@@ -188,7 +188,7 @@
   background: transparent;
   color: var(--body, #5f6875);
   cursor: pointer;
-  transition: background-color 140ms ease;
+  transition: background-color var(--bioaz-motion-standard) ease;
 }
 
 .fileQaHomeAddBtn:hover,
@@ -214,8 +214,8 @@
   color: #ffffff;
   cursor: pointer;
   transition:
-    background-color 140ms ease,
-    opacity 140ms ease;
+    background-color var(--bioaz-motion-standard) ease,
+    opacity var(--bioaz-motion-standard) ease;
 }
 
 .fileQaHomeSendBtn:disabled,
@@ -285,8 +285,8 @@
   color: var(--body, #5f6875);
   cursor: pointer;
   transition:
-    border-color 140ms ease,
-    color 140ms ease;
+    border-color var(--bioaz-motion-standard) ease,
+    color var(--bioaz-motion-standard) ease;
 }
 
 .fileQaBackButton:hover {
@@ -305,8 +305,8 @@
   color: var(--body, #5f6875);
   cursor: pointer;
   transition:
-    background-color 140ms ease,
-    color 140ms ease;
+    background-color var(--bioaz-motion-standard) ease,
+    color var(--bioaz-motion-standard) ease;
 }
 
 .fileQaChatClose:hover {
@@ -466,8 +466,8 @@
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 140ms ease,
-    background-color 140ms ease;
+    border-color var(--bioaz-motion-standard) ease,
+    background-color var(--bioaz-motion-standard) ease;
 }
 
 .fileQaChatRefItem:hover {
@@ -608,9 +608,9 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
+    border-color var(--bioaz-motion-standard) ease,
+    box-shadow var(--bioaz-motion-standard) ease,
+    background-color var(--bioaz-motion-standard) ease;
 }
 
 .fileAssistantToggle:hover,

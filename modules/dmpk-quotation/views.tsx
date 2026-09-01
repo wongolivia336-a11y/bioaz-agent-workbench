@@ -335,26 +335,42 @@ const draftGroupById = new Map(initialDmpkFields.map((field) => [field.id, field
  * 一件事，却跟「报价规则」并排躺着，谁也不会主动去点。跟 QA 那张「审批决策」
  * 卡同一个位置、同一个职责：**把当前这件事和它的出口摆在手边**。
  */
-export function DmpkReworkNoticeCard({ by, at, total, blocking, onOpenCanvas }: {
-  by: string;
-  at: string;
+/**
+ * 退回之后停在输入框上方的那张卡。
+ *
+ * 它不再是「画布的入口」。
+ * ----------------------------------------------------------------------
+ * 以前第一步是「摊开批注画布」，因为读批注和改参数分别在两个地方，
+ * 得先把原件铺开才对得上。现在进会话时批注和参数已经并排在右侧，
+ * 第一步直接就是改——**画布降级成「原文我要再核一眼」时才用的东西**。
+ *
+ * 也不再重复一遍「谁退回了这一版」。
+ * ----------------------------------------------------------------------
+ * 那句话上面已经说过两遍：站内信事件一条、agent 回复一条。
+ * 卡片再说第三遍，占的是输入框正上方最贵的那块地方。
+ * 所以这里只留它独有的那件事——**接下来要做什么**。
+ * agent 那条负责报告发生了什么，这张卡负责待办，两者不重合。
+ */
+export function DmpkReworkNoticeCard({ total, blocking, onOpenCanvas }: {
   total: number;
   blocking: number;
   onOpenCanvas: () => void;
 }) {
   return (
-    <section className="dmpkReworkNotice" aria-label="退回批注">
+    <section className="dmpkReworkNotice" aria-label="退回处理">
       <header>
         <div>
-          <span>退回批注</span>
-          <strong>{by} 退回了这一版</strong>
+          <span>退回处理</span>
+          <strong>按 {total} 条批注修订</strong>
         </div>
         <i className={blocking ? "isBlocking" : ""}>{blocking ? `必须修订 ${blocking} 条` : "均为建议"}</i>
       </header>
-      <p>{at} · 共 {total} 条批注。摊开成画布对照原件看，改在右侧参数收集里。</p>
+      <p>批注和参数收集已并排在右侧，对照着改。改完在下方确认发送。</p>
       <footer>
-        <button type="button" onClick={onOpenCanvas}>
-          <Maximize2 size={14} aria-hidden="true" />摊开批注画布
+        {/* 次要动作，不是主路。要核对原件的人自己会来找它；
+            把它做成主按钮，等于每次都先让人绕一趟画布。 */}
+        <button type="button" className="isGhost" onClick={onOpenCanvas}>
+          <Maximize2 size={14} aria-hidden="true" />看原件
         </button>
       </footer>
     </section>

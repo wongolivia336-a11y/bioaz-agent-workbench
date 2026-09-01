@@ -1,10 +1,16 @@
 {
   "stylesheets": 23,
-  "selectors": 4023,
-  "duplicateSelectors": 599,
+  "selectors": 4042,
+  "duplicateSelectors": 600,
   "crossFileDuplicates": 193,
   "suspectDeadClasses": 382,
   "handRolledModals": 6,
   "rawButtonClasses": 53,
-  "adHocEmptyStates": 13
+  "adHocEmptyStates": 13,
+  "radiusValues": 56,
+  "fontSizeValues": 36,
+  "durationValues": 11,
+  "hexColors": 219,
+  "keyframeNames": 45,
+  "enterDistances": 11
 }

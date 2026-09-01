@@ -274,7 +274,7 @@ button { -webkit-tap-highlight-color: transparent; }
   text-align: left;
   opacity: 0;
   box-shadow: var(--review-shadow-float);
-  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms;
+  transition: opacity var(--bioaz-motion-standard) ease, transform var(--bioaz-motion-standard) ease, visibility var(--bioaz-motion-standard);
 }
 .contextSummaryCard p { margin: 0; color: var(--review-muted); font-size: 12px; line-height: 1.6; }
 .contextSummaryCard small { color: #8b94a2; font-size: 11px; }
@@ -356,7 +356,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .assistantContextBar .compactSelect > button:hover,
 .assistantContextBar .compactSelect.isOpen > button { border-color: var(--review-line); background: #fff; color: var(--review-ink); }
-.assistantContextBar .compactSelect > button svg { margin-left: 3px; color: #8a93a1; transition: transform 140ms ease; }
+.assistantContextBar .compactSelect > button svg { margin-left: 3px; color: #8a93a1; transition: transform var(--bioaz-motion-standard) ease; }
 .assistantContextBar .compactSelect.isOpen > button svg { transform: rotate(180deg); }
 .assistantContextBar .compactSelectMenu {
   width: max(220px, 100%);
@@ -1024,7 +1024,7 @@ button { -webkit-tap-highlight-color: transparent; }
   :is(.warningDecisionList, .warningActions, .responsibilityNote) {
   visibility: visible;
   opacity: 1;
-  transition: opacity 160ms var(--bioaz-ease-standard) 70ms;
+  transition: opacity var(--bioaz-motion-standard) var(--bioaz-ease-standard) 70ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2217,8 +2217,8 @@ button { -webkit-tap-highlight-color: transparent; }
   clip-path: inset(24px calc((100% - 260px) / 2) 24px round 999px);
   transition:
     clip-path 260ms var(--ambient-ease),
-    background-color 220ms var(--ambient-ease),
-    box-shadow 220ms var(--ambient-ease);
+    background-color var(--bioaz-motion-spatial) var(--ambient-ease),
+    box-shadow var(--bioaz-motion-spatial) var(--ambient-ease);
 }
 .knowledgeBaseView .ambientAssistantEntry {
   inset: 24px calc((100% - 260px) / 2);
@@ -2231,10 +2231,10 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 6px 18px rgba(18, 24, 38, 0.05);
   overflow: hidden;
   transition:
-    opacity 120ms ease,
-    transform 220ms var(--ambient-ease),
-    border-color 140ms ease,
-    background-color 140ms ease;
+    opacity var(--bioaz-motion-fast) ease,
+    transform var(--bioaz-motion-spatial) var(--ambient-ease),
+    border-color var(--bioaz-motion-standard) ease,
+    background-color var(--bioaz-motion-standard) ease;
 }
 .knowledgeBaseView .ambientAssistantEntry > * {
   position: relative;
@@ -2275,7 +2275,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .knowledgeBaseView .ambientAssistantComposer {
   padding: 36px 12px 10px;
-  transition: opacity 160ms ease 30ms, transform 240ms var(--ambient-ease);
+  transition: opacity var(--bioaz-motion-standard) ease 30ms, transform 240ms var(--ambient-ease);
 }
 .knowledgePreviewDialog .primaryButton,
 .knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
@@ -3198,7 +3198,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #475467;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
+  transition: background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), color var(--bioaz-motion-fast) var(--bioaz-ease-out-3);
 }
 
 .kbFolderStrip button:hover {
@@ -3265,7 +3265,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #475467;
   font-size: 12px;
   cursor: pointer;
-  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
+  transition: background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), color var(--bioaz-motion-fast) var(--bioaz-ease-out-3);
 }
 
 .kbPagination button:hover:not(:disabled) {
@@ -3535,7 +3535,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fff;
   padding: 10px 12px;
   cursor: pointer;
-  transition: background-color 120ms var(--bioaz-ease-out-3), border-color 120ms var(--bioaz-ease-out-3), color 120ms var(--bioaz-ease-out-3);
+  transition: background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), color var(--bioaz-motion-fast) var(--bioaz-ease-out-3);
 }
 
 .kbAssignOptions button:hover {
@@ -4448,7 +4448,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-color: var(--bioaz-border);
   box-shadow: none;
   transform: none;
-  transition: border-color 150ms ease;
+  transition: border-color var(--bioaz-motion-standard) ease;
 }
 .tumor-reportModuleShell .gateDecision,
 .tumor-reportModuleShell .gateDecision:hover,
@@ -5490,7 +5490,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 /* 交互反馈保留在按钮上即可 */
 .dmpkComposerWrap :is(button, label, input) {
-  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+  transition: background-color var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 /* ===== 参数收集面板：撑满可用高度，内容自然排布不再挤出滚动条 ===== */
@@ -5901,7 +5901,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font: inherit;
   font-size: 12px;
   font-weight: 600;
-  transition: background-color 140ms ease, color 140ms ease;
+  transition: background-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .projectOverviewLanes .overviewViewAll:hover {
@@ -6073,7 +6073,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* 唯一的指针反馈留给可点的选项，且只改颜色 */
 :is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button {
-  transition: background-color 120ms ease, border-color 120ms ease;
+  transition: background-color var(--bioaz-motion-fast) ease, border-color var(--bioaz-motion-fast) ease;
 }
 :is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button:hover {
   border-color: var(--bioaz-border-strong);
@@ -6094,6 +6094,64 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanel.isOpen {
   display: grid;
   grid-template-rows: 58px minmax(0, 1fr);
+}
+
+/* ── 并列 ─────────────────────────────────────────────────────────────
+   前几个面板各占一列并跨满两行（自带标题），最后一列保留 tab 栏 + 内容区。
+   列数由 JS 量出来后写进 --panel-columns——它是「排得下几列」的结果，
+   不是用户直接选的档位。
+
+   tab 栏和内容区显式落在最后一列，不靠自动排布：靠自动排布的话，
+   将来在面板里多加一个子元素，整个网格就会错位一格，而且极难看出原因。 */
+.workbenchPanel.isOpen.isColumns {
+  grid-template-columns: repeat(var(--panel-columns, 1), minmax(0, 1fr));
+}
+.workbenchPanel.isOpen.isColumns > .workbenchPanelTabs { grid-column: var(--panel-columns); grid-row: 1; }
+.workbenchPanel.isOpen.isColumns > .workbenchPanelBody { grid-column: var(--panel-columns); grid-row: 2; }
+
+/* 每一列内部就是一个完整的面板：一条标签栏 + 一块内容区，
+   行高和右边那一列逐像素一致。两者长得一样，人才看得出它们是同一种东西
+   ——一条被拆开的标签栏，而不是右侧塞了两个模块。 */
+.workbenchPanelColumn {
+  display: grid;
+  min-width: 0;
+  grid-row: 1 / -1;
+  grid-template-rows: 58px minmax(0, 1fr);
+  /* 列与列之间一条实线。用边框不用 gap：gap 会在两侧留出等距空白，
+     而这里要的是「这是两块内容」，一条线比一段空白说得更清楚。 */
+  border-right: 1px solid var(--line);
+}
+
+/* 「收回标签栏」。和关闭键同尺寸同显隐规则——它俩并排站在同一枚标签上，
+   长得不一样会让人以为是两类动作。 */
+.workbenchPanelTabMerge {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  margin: 0 6px 0 0;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  cursor: pointer;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
+}
+.workbenchPanelTabMerge:hover { background: rgba(17, 19, 24, 0.08); color: var(--bioaz-text-primary); }
+
+/* 勾了但排不下时的说明。放在内容区顶部而不是弹提示：
+   它描述的是这一块此刻的状态，不是一次性事件。 */
+.workbenchPanelCrowded {
+  margin: 0 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 8px 11px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .workbenchPanelTabs {
@@ -6122,7 +6180,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   border-radius: 8px 8px 0 0;
   color: var(--bioaz-text-secondary);
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 /* 选中态用底部一条灰条，不用整块底色，读起来更像标签页 */
@@ -6179,7 +6237,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-tertiary);
   visibility: hidden;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .workbenchPanelTab:hover .workbenchPanelTabClose,
@@ -6195,6 +6253,96 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanelTabClose:hover {
   background: rgba(17, 19, 24, 0.08);
   color: var(--bioaz-text-primary);
+}
+
+/* 「并列」：把这个标签摊成自己的一列。
+   和叉号同一套尺寸与显隐规则——它俩是一对，一个把面板摊开、一个把面板关掉，
+   长得不一样反而要人重新认一遍。 */
+.workbenchPanelTabSplit {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  margin: 0 2px 0 0;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  visibility: hidden;
+  cursor: pointer;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
+}
+
+.workbenchPanelTab:hover .workbenchPanelTabSplit,
+.workbenchPanelTabSplit:focus-visible {
+  visibility: visible;
+}
+
+/* 排不下时置灰但**留着**：这颗按钮消失会让整条标签栏的宽度跟着变，
+   一排标签在你眼前横跳，比一颗灰按钮更难受。 */
+.workbenchPanelTabSplit:disabled {
+  visibility: hidden;
+  cursor: default;
+}
+
+.workbenchPanelTabSplit:hover:not(:disabled) {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+/* ── 拖着长出一列 ─────────────────────────────────────────────────────
+   分界线只有一条：标签那一列的左边界。往左拖＝摊成一列，往右拖＝收回标签。 */
+
+/* 标签不给 grab 光标：它首先是个可点的标签，拖是附带的。
+   给了 grab，人反而会以为它只能拖。 */
+.workbenchPanelTab button[role="tab"] { touch-action: none; }
+
+/* 被拎起来的那个留个淡影，说明它还在原位、只是暂时离手 */
+.workbenchPanelTab.isDragging { opacity: 0.4; }
+
+/* 落点提示：整块目标区域泛一层色，比画一条插入线更好懂——
+   这里要回答的是「松手会去哪一侧」，不是「插到第几个」。 */
+.workbenchPanel.isDropToColumn .workbenchPanelColumn,
+.workbenchPanel.isDropToTabs .workbenchPanelTabs {
+  background: var(--bioaz-agent-accent-soft);
+}
+.workbenchPanel.isDropToColumn:not(.isColumns) .workbenchPanelBody {
+  /* 一列都还没摊开时，左边没有可染的列，就染内容区并画出未来那条边界 */
+  box-shadow: inset 3px 0 0 var(--bioaz-agent-accent);
+}
+
+.workbenchPanelDragGhost {
+  position: fixed;
+  z-index: 200;
+  top: 0;
+  left: 0;
+  display: grid;
+  gap: 1px;
+  /* 偏开指针一点，别让指尖压住自己要看的字 */
+  margin: 12px 0 0 14px;
+  border: 1px solid var(--bioaz-agent-accent-border);
+  border-radius: 10px;
+  background: var(--bioaz-surface);
+  padding: 7px 11px;
+  color: var(--bioaz-text-primary);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: var(--bioaz-shadow-floating);
+  pointer-events: none;
+}
+.workbenchPanelDragGhost > em {
+  color: var(--bioaz-agent-accent);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workbenchPanelTab.isDragging { opacity: 1; }
 }
 
 .workbenchPanelCollapse {
@@ -6406,7 +6554,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--bioaz-agent-accent);
   content: "";
   opacity: 0;
-  transition: opacity var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: opacity var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .workbenchPanelResizer:hover::after,
@@ -6778,7 +6926,7 @@ button { -webkit-tap-highlight-color: transparent; }
    是必要的可点性提示，所以在禁令之后重新声明回来。 */
 :is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button,
 :is(.parameterTaskCard, .dmpkParamModalBody) .parameterPages button {
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  transition: background-color var(--bioaz-motion-fast) ease, border-color var(--bioaz-motion-fast) ease, color var(--bioaz-motion-fast) ease;
 }
 
 /* 分页 tab 与选项芯片：连颜色过渡也一并去掉，hover 只做瞬时换色，
@@ -7237,7 +7385,7 @@ button { -webkit-tap-highlight-color: transparent; }
   opacity: 0;
   transform: translateX(-12px);
   pointer-events: none;
-  transition: opacity 140ms ease-out, transform 140ms ease-out;
+  transition: opacity var(--bioaz-motion-standard) ease-out, transform var(--bioaz-motion-standard) ease-out;
 }
 
 /* ---- tab 栏右端的视图操作组：[ + ] │ [ ⤢ ] ---- */
@@ -7266,7 +7414,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .workbenchPanelFocus:hover:not(:disabled) {
@@ -7370,7 +7518,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 
 .floatingChatPillToggle {

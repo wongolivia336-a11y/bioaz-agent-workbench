@@ -207,7 +207,7 @@
 
 .librarySpaceDisclosure > svg {
   flex: none;
-  transition: transform var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: transform var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .librarySpaceDisclosure > span { flex: none; }
@@ -480,7 +480,7 @@
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
-  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: background var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .knowledgeAskWindowBack:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
@@ -515,7 +515,7 @@
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
-  transition: background var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+  transition: background var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .knowledgeAskWindowClose:hover { background: var(--bioaz-surface-subtle); color: var(--bioaz-text-primary); }
@@ -587,8 +587,8 @@
   font-size: var(--bioaz-type-label-size);
   cursor: pointer;
   transition:
-    border-color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease),
-    color var(--bioaz-motion-fast, 140ms) var(--bioaz-ease-standard, ease);
+    border-color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease),
+    color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
 }
 
 .knowledgeAnswerSave:hover:not(:disabled) {

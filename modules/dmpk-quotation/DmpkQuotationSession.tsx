@@ -80,20 +80,18 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [handedOff, setHandedOff] = useState(false);
   const reworkNotes = (rework?.notes ?? []) as QuoteNote[];
   const reworkGreetedRef = useRef(false);
-  /* 退回批注铺成中间那块画布了没有。
+  /* 原件画布铺开了没有。
      ----------------------------------------------------------------------
-     它跟 panelFocus 不是一回事。panelFocus 是「面板铺满整个工作区」，
-     对话和右侧栏一起消失；而这里要的是 QA 审核台那个形状——
-     **中间是要看的东西，右边仍然是那 320px 的面板，底部一颗药丸**。
-     读在中间，改在右边，确认在药丸，三样同屏。
+     它跟 panelFocus 不是一回事：panelFocus 是面板铺满整个工作区，
+     这里是把原件搬到**中间那一列**去看，右侧面板照旧在。
 
-     所以展开退回批注不是 setPanelFocus(true)，是把它搬到中间去当画布，
-     面板顺势切回参数收集。收起来的时候，对话回到中间，
-     退回批注变回面板里的一个 tab。 */
+     它现在是**纯阅读态，没有任何输入控件**——要改就先收起来
+     （点参数的「编辑」会自动收）。读和改分开之后，
+     原来那套「画布里放胶囊输入框、参数卡跟着走」的联动整个不需要了。
+
+     它也不再是这一屏的第一步：进会话时批注和参数已经并排在右侧，
+     第一步直接是改，画布只在「原文我要再核一眼」时才用。 */
   const [reworkCanvas, setReworkCanvas] = useState(false);
-  /* 画布开过一次没有。入口卡是**领路的**，路认得了就该让开——
-     它跟参数补全卡抢的是同一个槽位，两张一起堆着，人不知道先做哪个。 */
-  const [reworkCanvasSeen, setReworkCanvasSeen] = useState(false);
   /* 这一单出过几版报价。每生成一次追加一条，旧版不删——
      报价被退过一次这件事，一个月后回来看还得能查到。 */
   const [quoteVersions, setQuoteVersions] = useState<{ id: string; label: string; at: string; origin: string }[]>(() =>
@@ -124,6 +122,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
   const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
   const [panelHintIds, setPanelHintIds] = useState<string[]>([]);
+  /* 哪几个面板摊成自己的一列。退回到达时自动填上，用户也能自己并/收。 */
+  const [columnPanelIds, setColumnPanelIds] = useState<string[]>([]);
   const visiblePanelIdsRef = useRef(visiblePanelIds);
   visiblePanelIdsRef.current = visiblePanelIds;
   const [parametersExpanded, setParametersExpanded] = useState(false);
@@ -177,19 +177,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     appendMessage("agent", `已交接给 ${to}，本次的 Word 报价单与 Excel 报价明细已随行。对方将在站内信中收到。`);
   };
 
-  /* 从站内信进来时：先跑一次，再把原件摊开。
+  /* 从站内信进来时：先跑一次，再把要用的两块并排铺好。
      ----------------------------------------------------------------------
-     数字同事在这一步只做三件事——读、说清楚、把东西摊到你面前。
+     数字同事在这一步只做三件事——读、说清楚、把东西摆到你面前。
      **它不替你决定要改成什么**：上一版给的是一张「逐条采纳」的方案卡，
      等于让它替人做主，改动也就绕过了参数收集。现在改回来：
-     它把批注和原件摊开在右侧画布里，改由人在参数卡上动手。
+     它只负责把批注和参数摆好，改由人在参数卡上动手。
 
-     顺序是有意的，而且这三步都在对话里留了痕：
+     顺序是有意的，而且都在对话里留了痕：
        1. 跑一次「读取退回批注」——run 记录，能展开看它读了什么
-       2. 说一句话，讲清楚有几条、去哪儿看、在哪儿改
-       3. 把「退回批注」这个 tab 打开
-     画布**不自动铺开**：那是一屏很重的东西，凭空盖住对话会让人不知道
-     它是哪来的。由 composer 上那张入口卡领进去，人点了才铺。 */
+       2. 说一句话，只报告有几条、几条必须改（该做什么交给输入框上那张卡）
+       3. 把「退回批注」和「参数收集」并排铺开
+
+     并排是自动的，**画布仍然不自动铺开**：这一单是被退回的、有批注要读、
+     有参数要改，这件事系统已经知道，再让人去菜单里勾一遍是明知故问；
+     而画布是一屏很重的东西，凭空盖住对话会让人不知道它是哪来的。 */
   useEffect(() => {
     if (!rework || reworkGreetedRef.current) return;
     reworkGreetedRef.current = true;
@@ -212,8 +214,24 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     window.setTimeout(() => {
       setStage("collecting");
       appendRun("rework");
-      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。批注已收在右侧「退回批注」，要对照原件看就摊开成画布；改在参数收集里改，改完在下方确认发送。`);
+      /* 这条只报告发生了什么。「接下来做什么」交给输入框上方那张卡——
+         同一句话说三遍（站内信事件、这条、卡片）是之前那版的毛病。 */
+      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。`);
+      /* 从站内信进来处理退回，要干的事是确定的：读批注、改参数。
+         那就直接把这两块并排铺好，而不是让人先去菜单里勾一遍——
+         系统已经知道这一单是被退回的，还要用户再说一次，是在明知故问。
+
+         顺序是「批注在左、参数在右」：从左到右正好是这件事的次序，
+         对话说发生了什么、批注说哪里不对、参数是动手的地方。
+
+         排不排得下仍由宽度说了算，窄屏上它会自动退回标签，不会硬挤。
+
+         两句都要：openInspector 负责把「退回批注」加进可见标签集，
+         columnIds 只是从**已经可见**的那些里挑谁摊开——
+         少了前一句，后一句挑不到任何东西。 */
       openInspector("rework");
+      setColumnPanelIds(["rework"]);
+      openInspector("parameters");
     }, 900);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rework]);
@@ -320,6 +338,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const field = fields.find((item) => item.id === fieldId);
     if (!field) return;
     const invalidatesQuotation = stage === "generated";
+    /* 画布开着就先收起来。
+       画布是纯阅读态，没有输入框；这张参数卡本该落在 composer 上方，
+       画布不收，卡片就没有落点——点了等于没反应。
+
+       这一下不算抢控制权：点「编辑」是毫不含糊的意图声明，他要改这一项。
+       收起画布、把输入框交还给他，是顺着他的意思做。
+       （区别于「改一下就自动收」——那种才是替用户决定他看够了没有。） */
+    setReworkCanvas(false);
     openInspector("parameters");
     setParametersExpanded(true);
     setConversationEditing(false);
@@ -482,7 +508,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
-    expanded: panelFocus,
+    /* expanded 的意思是「这一栏放得下报价单那张纸」，不是「面板全屏了」。
+       并列之前两者等价，现在不了：全屏 + 并列时每一列还是三五百像素，
+       纸摆进去照样读不了。
+
+       实测过的后果是**反的**：批注列在全屏并列时会去显示那张读不了的纸，
+       同时把真正读得了的批注列表藏起来。
+
+       所以只要摊了列就一律按窄的算——列宽由外壳按可用宽度分配，
+       这里拿不到也不该拿具体像素，「有没有并列」是够用的判据。 */
+    expanded: panelFocus && columnPanelIds.length === 0,
     quoteVersions,
   });
   /* 参数面板只负责改「参数的值」——逐项点编辑图标即可。
@@ -535,8 +570,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         </header>
         {!reworkCanvas ? <SessionMinimap scrollerRef={chatScrollerRef} /> : null}
         {reworkCanvas && rework ? (
-          /* 中间这块画布 = 要照着改的原件。右侧那 320px 面板照旧在，
-             底部是药丸——读、改、确认三样同屏，谁也不用切走。 */
+          /* 中间这块画布 = 要核对的原件，**只读**。
+             右侧面板照旧在，但底部没有输入框——要改就收起画布，
+             改和确认都回到主对话那一路。 */
           <section className="dmpkReworkCanvas" aria-label="退回批注">
             {/* 驳回理由收进标题块里，不再单开一条通栏。
                 原来是「标题 / 理由条 / 形态切换」三段各占一行，纸面被压到 225px
@@ -559,13 +595,22 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         )}
         <DmpkComposer unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
-          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} reworkNotice={rework && !reworkSettled && !reworkCanvas && !reworkCanvasSeen && !composerFields.length ? (
+          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} /* 这张卡在「这一轮改完」之前一直在。
+             以前条件里还有 !reworkCanvasSeen：画布看过一次它就永久退场，
+             因为那时它只是画布的入口，领完路就该让开。
+             现在它承载的是「按 N 条批注修订」这件待办——
+             人瞄了一眼原件，待办并没有完成，不该跟着消失。
+
+             但**动手的时候它得让开**：输入框上方只有一个槽位，
+             两件事叠在那儿，人不知道先做哪个。两种「正在动手」都要挡——
+               composerFields.length  参数卡正开着，在选值
+               draftTabs.length       值已经选进 chips，等着一起发
+             漏掉后一条的后果是：选完一个值，这张卡又压回 chips 上面。 */
+        reworkNotice={rework && !reworkSettled && !reworkCanvas && !composerFields.length && !draftTabs.length ? (
           <DmpkReworkNoticeCard
-            by={rework.by}
-            at={rework.at}
             total={reworkNotes.length}
             blocking={reworkNotes.filter((note) => note.severity === "blocking").length}
-            onOpenCanvas={() => { setReworkCanvas(true); setReworkCanvasSeen(true); }}
+            onOpenCanvas={() => setReworkCanvas(true)}
           />
         ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
@@ -580,18 +625,30 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           open={panelOpen}
           focus={panelFocus}
           onFocusChange={setPanelFocus}
+          /* 退回处理这一屏要「边看批注边改参数」，所以允许并列。
+             排不排得下由量出来的宽度说了算，不是这里说了算。 */
+          columnIds={columnPanelIds}
+          onColumnIdsChange={setColumnPanelIds}
           onPanelChange={(panelId) => {
             setTabPinnedByUser(true);
             setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
             setInspectorPanelId(panelId as DmpkInspectorPanelId);
           }}
         />
-        {panelFocus || reworkCanvas ? (
+        {/* 画布态**不再有输入框**。
+            原来这里是 `panelFocus || reworkCanvas`：画布铺满时把对话收成药丸，
+            再把参数卡和 chips 塞进药丸，好让「读原件 / 改参数 / 确认」三样同屏。
+            那一套联动做得起来但很脆，而且它把三件性质不同的活压在了一屏里。
+
+            现在改成读改分离：画布只负责读，要改就先收起画布——
+            点参数的「编辑」会自动收起（见 startEditingField）。
+            面板全屏那条路仍然需要药丸：那时中间列整个让给了面板，
+            对话没有别的落脚点。 */}
+        {panelFocus ? (
           <FloatingChatDock
-            /* 画布铺满时，要当场做的那个决定跟着输入框走。
+            /* 面板全屏时，要当场做的那个决定跟着输入框走：
                用户在右侧参数收集里点了「改这一项」，卡片本来长在 composer 上，
-               而 composer 此刻被画布盖住——点了等于没反应。
-               画布一收起，同一张卡自然回到 composer 上方。 */
+               而 composer 此刻被面板盖住——点了等于没反应。 */
             chips={draftTabs.length ? <ComposerChipTray tabs={draftTabs} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} /> : null}
             card={composerFields.length ? (
               <DmpkParameterTaskCard
@@ -608,12 +665,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             messages={messages.filter((message) => message.role === "user" || message.role === "agent") as { id: string; role: "user" | "agent"; text: string }[]}
             text={composerText}
             onTextChange={setComposerText}
-            /* 发送那一下把画布收起来。
-               这是这一轮读与改的分界：在此之前要看的是原件，在此之后要看的是
-               「我改了什么、系统怎么答的」——那些都在对话里。
-               不做成「改一下就自动收」，那是抢控制权；由用户自己的发送动作触发，
-               时机是他给的。 */
-            onSend={() => { submitComposer(); if (reworkCanvas) setReworkCanvas(false); }}
+            onSend={submitComposer}
             disabled={stage === "thinking" || stage === "generating"}
           />
         ) : null}
