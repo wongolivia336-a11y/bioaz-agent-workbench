@@ -8496,6 +8496,15 @@ button {
 }
 .dmpkReworkNotice > footer button:hover { background: #2b2f37; }
 
+/* 「看原件」是次要动作：现在第一步是直接改，画布只在要核对原文时才去。
+   做成描边而不是实心——实心按钮会把人往那儿引，而那不是主路。 */
+.dmpkReworkNotice > footer button.isGhost {
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--body);
+}
+.dmpkReworkNotice > footer button.isGhost:hover { background: var(--surface); color: var(--ink); }
+
 /* ═══ 退回批注画布 ═══════════════════════════════════════════════════════
    它占的是**对话那一列**，不是整个工作区。右边那 320px 面板照旧在，
    底部一颗药丸——这就是 QA 审核台的形状：中间是要看的，右边是要动手的，

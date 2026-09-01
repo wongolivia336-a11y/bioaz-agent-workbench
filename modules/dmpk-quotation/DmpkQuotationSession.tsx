@@ -91,9 +91,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
      面板顺势切回参数收集。收起来的时候，对话回到中间，
      退回批注变回面板里的一个 tab。 */
   const [reworkCanvas, setReworkCanvas] = useState(false);
-  /* 画布开过一次没有。入口卡是**领路的**，路认得了就该让开——
-     它跟参数补全卡抢的是同一个槽位，两张一起堆着，人不知道先做哪个。 */
-  const [reworkCanvasSeen, setReworkCanvasSeen] = useState(false);
   /* 这一单出过几版报价。每生成一次追加一条，旧版不删——
      报价被退过一次这件事，一个月后回来看还得能查到。 */
   const [quoteVersions, setQuoteVersions] = useState<{ id: string; label: string; at: string; origin: string }[]>(() =>
@@ -214,7 +211,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     window.setTimeout(() => {
       setStage("collecting");
       appendRun("rework");
-      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。批注和参数收集已并排放在右侧，对照着改就行；要核对原件再摊开成画布。改完在下方确认发送。`);
+      /* 这条只报告发生了什么。「接下来做什么」交给输入框上方那张卡——
+         同一句话说三遍（站内信事件、这条、卡片）是之前那版的毛病。 */
+      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。`);
       /* 从站内信进来处理退回，要干的事是确定的：读批注、改参数。
          那就直接把这两块并排铺好，而不是让人先去菜单里勾一遍——
          系统已经知道这一单是被退回的，还要用户再说一次，是在明知故问。
@@ -583,13 +582,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         )}
         <DmpkComposer unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
-          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} reworkNotice={rework && !reworkSettled && !reworkCanvas && !reworkCanvasSeen && !composerFields.length ? (
+          .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} /* 这张卡在「这一轮改完」之前一直在。
+             以前条件里还有 !reworkCanvasSeen：画布看过一次它就永久退场，
+             因为那时它只是画布的入口，领完路就该让开。
+             现在它承载的是「按 N 条批注修订」这件待办——
+             人瞄了一眼原件，待办并没有完成，不该跟着消失。
+             跟参数补全卡抢同一个槽位的问题，由 !composerFields.length 单独挡着。 */
+        reworkNotice={rework && !reworkSettled && !reworkCanvas && !composerFields.length ? (
           <DmpkReworkNoticeCard
-            by={rework.by}
-            at={rework.at}
             total={reworkNotes.length}
             blocking={reworkNotes.filter((note) => note.severity === "blocking").length}
-            onOpenCanvas={() => { setReworkCanvas(true); setReworkCanvasSeen(true); }}
+            onOpenCanvas={() => setReworkCanvas(true)}
           />
         ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
