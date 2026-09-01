@@ -368,28 +368,67 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
       {/* 全屏态没有中间那一列可分，抓手就没有意义 */}
       {open && !focus ? <PanelResizer panelRef={panelRef} /> : null}
 
-      {/* 各自独占一列的那几个。它们自带标题，不进 tab 栏——
-          一条共享 tab 栏配几列内容，人分不清哪个 tab 对应哪一列。 */}
+      {/* 摊出来的每一列，头部用的是**和标签栏同一套结构**：一条标签栏，
+          里面只站着一个标签。
+
+          上一版给它做了个纯标题的 header，结果两种列长得不是一个物种——
+          一边是标题、一边是标签条，看上去像右侧塞了两个不同的模块。
+          可它们本来就是同一件东西：一条标签栏被拆到了几列里。
+          长相一致，层级才读得出来。
+
+          「加面板」那颗加号只留在最后一列：它是整个面板的动作，
+          不是某一列的，每列都放一个反而让人以为是往这一列里加。 */}
       {leadingPanels.map((panel) => {
         const Icon = panel.icon;
         return (
           <section className="workbenchPanelColumn" key={panel.id} aria-label={panel.label}>
-            <header
-              className={`workbenchPanelColumnHead ${columns ? "isDraggable" : ""} ${drag?.id === panel.id ? "isDragging" : ""}`}
-              onPointerDown={beginDrag(panel.id, panel.label)}
-              onPointerMove={moveDrag}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
-            >
-              <Icon size={14} />
-              <strong>{panel.label}</strong>
-              {/* 收回标签栏，不是关掉。以前这里是叉号调 hide()，
-                  于是「不用并排了」被执行成了「把这个面板关了」。 */}
-              <button type="button" aria-label={`把${panel.label}收回标签栏`} title="收回标签栏" onClick={() => mergeBack(panel.id)}>
-                <PanelRightClose size={13} />
-              </button>
-            </header>
-            <div className="workbenchPanelColumnBody">
+            <div className="workbenchPanelTabs">
+              <div className="workbenchPanelTabScroll" role="tablist" aria-label={panel.label}>
+                <span className={`workbenchPanelTab isActive ${drag?.id === panel.id ? "isDragging" : ""}`}>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected
+                    onPointerDown={beginDrag(panel.id, panel.label)}
+                    onPointerMove={moveDrag}
+                    onPointerUp={endDrag}
+                    onPointerCancel={endDrag}
+                  >
+                    <Icon size={14} />
+                    <span>{panel.label}</span>
+                  </button>
+                  {/* 收回标签栏，不是关掉。这里曾经是叉号调 hide()，
+                      于是「不用并排了」被执行成了「把这个面板关了」。 */}
+                  <button
+                    type="button"
+                    className="workbenchPanelTabMerge"
+                    aria-label={`把${panel.label}收回标签栏`}
+                    title="收回标签栏"
+                    onClick={() => mergeBack(panel.id)}
+                  >
+                    <PanelRightClose size={12} />
+                  </button>
+                </span>
+              </div>
+              {/* 全屏按钮每一列都有，管的是这一列自己那个面板。
+                  少了它，摊出来的列反而比留在标签栏里少一个能力——
+                  「退回批注」摊成列之后就没法铺成画布看原件了。 */}
+              {onFocusChange && panel.expandable ? (
+                <div className="workbenchPanelViewActions">
+                  <span className="workbenchPanelActionDivider" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="workbenchPanelFocus"
+                    aria-label={`${panel.label}全屏`}
+                    title="全屏"
+                    onClick={() => { onPanelChange(panel.id); onFocusChange(true); }}
+                  >
+                    <Maximize2 size={14} />
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <div className="workbenchPanelBody" role="tabpanel">
               <PanelContent panel={panel} />
             </div>
           </section>

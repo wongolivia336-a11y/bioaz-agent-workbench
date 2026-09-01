@@ -600,8 +600,13 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
              因为那时它只是画布的入口，领完路就该让开。
              现在它承载的是「按 N 条批注修订」这件待办——
              人瞄了一眼原件，待办并没有完成，不该跟着消失。
-             跟参数补全卡抢同一个槽位的问题，由 !composerFields.length 单独挡着。 */
-        reworkNotice={rework && !reworkSettled && !reworkCanvas && !composerFields.length ? (
+
+             但**动手的时候它得让开**：输入框上方只有一个槽位，
+             两件事叠在那儿，人不知道先做哪个。两种「正在动手」都要挡——
+               composerFields.length  参数卡正开着，在选值
+               draftTabs.length       值已经选进 chips，等着一起发
+             漏掉后一条的后果是：选完一个值，这张卡又压回 chips 上面。 */
+        reworkNotice={rework && !reworkSettled && !reworkCanvas && !composerFields.length && !draftTabs.length ? (
           <DmpkReworkNoticeCard
             total={reworkNotes.length}
             blocking={reworkNotes.filter((note) => note.severity === "blocking").length}
