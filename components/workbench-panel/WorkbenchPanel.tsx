@@ -25,10 +25,16 @@ const COLUMN_MIN_WIDTH = 320;
 const COLUMN_GAP = 16;
 const COLUMN_MAX = 3;
 
+/* 布局回来的宽度是小数（网格分配余数），而 widenFor 恰好按下限设宽——
+   于是设了 656、量回来 655.1875，差 0.8px 就掉一档，两列永远排不出来。
+   留 1px 容差，正好覆盖这种「按下限设、按小数量」的情况。
+   （这条是在设计系统那边复现出来的：那边的外壳恰好分到了小数余量。） */
+const COLUMN_EPSILON = 1;
+
 /** 这个宽度能排下几列 */
 function columnCapacity(width: number) {
   if (!width) return 1;
-  const fit = Math.floor((width + COLUMN_GAP) / (COLUMN_MIN_WIDTH + COLUMN_GAP));
+  const fit = Math.floor((width + COLUMN_GAP + COLUMN_EPSILON) / (COLUMN_MIN_WIDTH + COLUMN_GAP));
   return Math.min(COLUMN_MAX, Math.max(1, fit));
 }
 
@@ -303,12 +309,6 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
   const [drag, setDrag] = useState<{ id: string; label: string; x: number; y: number; toColumn: boolean } | null>(null);
   const dragRef = useRef<{ id: string; label: string; startX: number; startY: number; moved: boolean } | null>(null);
 
-  /* 松手到底会发生什么——**只在这里算一次**。
-     提示文案、落区高亮、占位列全都读它。
-
-     以前提示和落区各自判断，于是出现过「拖的是标签、指针还在标签侧，
-     提示却写着松手收回标签栏」——它其实什么都不会做。
-     一个不会发生的动作被写成了承诺，比没有提示更糟。 */
   /* 再摊一列，宽度够不够？
      算的是「加宽到头之后」能排几列，不是此刻能排几列——落地时 widenFor
      会去争取那点宽度，判据得和它对齐，否则会把明明能成的拒掉。 */
