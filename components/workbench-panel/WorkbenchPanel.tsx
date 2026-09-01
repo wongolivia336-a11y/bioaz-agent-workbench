@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, Maximize2, Minimize2, PanelRightClose, PanelRightOpen, Plus, X } from "lucide-react";
+import { Check, CircleAlert, Columns2, Maximize2, Minimize2, PanelRightClose, PanelRightOpen, Plus, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ResolvedInspectorPanel } from "../workbench-inspector/WorkbenchInspector";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
@@ -49,9 +49,14 @@ type PanelState = {
   /** 面板铺满工作区（只吃对话列，topbar 与左侧任务栏保留）。不传 onFocusChange 就没有这颗按钮 */
   focus?: boolean;
   onFocusChange?: (focus: boolean) => void;
-  /* 允许并列。不传就是一列——QA 与肿瘤报告走这条，行为和以前完全一致。
-     开了也不保证真能并列：排不排得下由量出来的宽度说了算。 */
-  columns?: boolean;
+  /* 哪几个面板要各自独占一列。不传就是一列——QA 与肿瘤报告走这条，
+     行为和以前完全一致。传了也不保证真能并列：排不排得下由量出来的宽度说了算。
+
+     它和 visibleIds 是两件事：visibleIds 说「有哪些标签」，
+     columnIds 说「其中哪几个摊出来并排看」。少了这一层，
+     列头上那个「合并」就只能实现成「关掉」——保留但不并列这个状态无处安放。 */
+  columnIds?: string[];
+  onColumnIdsChange?: (ids: string[]) => void;
 };
 
 /**
@@ -164,7 +169,8 @@ function PanelResizer({ panelRef }: { panelRef: React.RefObject<HTMLElement> }) 
  * 面板本体，占满白卡右侧一整列（含顶栏那一行），左侧一条顶天立地的分界线。
  * tab 栏是它自己的头部，所以分界线两侧一眼能分出「对话」与「面板」。
  */
-export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds = [], open = true, focus = false, onFocusChange, columns = false }: PanelState & { open?: boolean }) {
+export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, activePanelId, onPanelChange, hintIds = [], open = true, focus = false, onFocusChange, columnIds, onColumnIdsChange }: PanelState & { open?: boolean }) {
+  const columns = Boolean(onColumnIdsChange);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useDismissableLayer<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
   const panelRef = useRef<HTMLElement>(null);
@@ -201,14 +207,20 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
   }, [columns]);
 
   const capacity = columns ? columnCapacity(panelWidth) : 1;
-  /* 前 cap-1 个各占一列，剩下的挤进最后一列用 tab 切。
-     cap=1 时 leading 为空、trailing 是全部——即现状。 */
-  const leadingPanels = visiblePanels.slice(0, Math.max(0, capacity - 1));
-  const trailingPanels = visiblePanels.slice(Math.max(0, capacity - 1));
+  /* 摊出来的按 columnIds 的顺序排，不按注册顺序——顺序在这里是有意义的：
+     退回处理这一屏是「先读批注、再改参数」，那就该从左往右这么摆。
+     （标签栏仍按注册顺序，那边要的是位置稳定，不能跟着勾选跳。） */
+  const requestedColumns = (columnIds ?? [])
+    .map((id) => visiblePanels.find((panel) => panel.id === id))
+    .filter((panel): panel is ResolvedInspectorPanel => Boolean(panel));
+  // 最后一列留给标签，所以最多摊 cap-1 个
+  const leadingPanels = requestedColumns.slice(0, Math.max(0, capacity - 1));
+  const trailingPanels = visiblePanels.filter((panel) => !leadingPanels.includes(panel));
   const trailingActive = trailingPanels.find((panel) => panel.id === activePanelId) ?? trailingPanels[0];
-  /* 勾了但排不下的：既不独占一列，也不是最后一列当前那个 tab。
-     要说明白为什么，静默失败会被当成功能坏了。 */
-  const crowded = columns && visiblePanels.length > capacity;
+  /* 只在**用户刚要求的并列没排下**时才说话。
+     以前是「可见面板数 > 列数」就一直挂着——可标签比列多本来就是常态，
+     那条提示于是长期占着批注列顶上那块地方，像在报错。 */
+  const deniedColumns = requestedColumns.length - leadingPanels.length;
 
   /* 勾第二个的时候，如果面板还有加宽的余地就自动加宽——
      DMPK 默认 320，不加宽的话勾了也永远排不出第二列，
@@ -250,11 +262,31 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
     if (visibleIds.includes(panelId)) { hide(panelId); return; }
     onVisibleIdsChange([...visibleIds, panelId]);
     onPanelChange(panelId);
-    /* 按**真正会渲染出来**的面板数算，不是 visibleIds 的长度。
-       两者会差很多：visibleIds 记着用户勾过的全部，而 panels 里
-       有一部分当前阶段还不可用（available 为假），根本不渲染。
-       拿原始长度去算，会为了一个看不见的面板去要第三列的宽度。 */
-    widenFor(visiblePanels.length + 1);
+  };
+
+  /* 摊成一列 / 收回标签栏。
+     这一对取代了原来列头上那个叉——那个叉调的是 hide()，
+     也就是把面板整个关掉，而用户想说的只是「不用并排了」。 */
+  /* 加宽是对「要摊几列」的响应，不挂在某一次点击上——
+     退回到达时是代码直接把 columnIds 填好的，没有点击可挂。
+
+     算的是 requestedColumns（真正会渲染的），不是 columnIds 的长度：
+     后者可能含当前阶段不可用、根本不渲染的面板，照它去要宽度，
+     会为一个看不见的东西多要一列。 */
+  useEffect(() => {
+    if (requestedColumns.length) widenFor(requestedColumns.length + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedColumns.length]);
+
+  const splitOut = (panelId: string) => {
+    if (!onColumnIdsChange) return;
+    onColumnIdsChange([...(columnIds ?? []).filter((id) => id !== panelId), panelId]);
+  };
+
+  const mergeBack = (panelId: string) => {
+    onColumnIdsChange?.((columnIds ?? []).filter((id) => id !== panelId));
+    // 收回来的那个直接成为当前标签，否则它会不声不响地藏进标签栏
+    onPanelChange(panelId);
   };
 
   return (
@@ -276,8 +308,10 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
             <header className="workbenchPanelColumnHead">
               <Icon size={14} />
               <strong>{panel.label}</strong>
-              <button type="button" aria-label={`取消并列${panel.label}`} title="取消并列" onClick={() => hide(panel.id)}>
-                <X size={12} />
+              {/* 收回标签栏，不是关掉。以前这里是叉号调 hide()，
+                  于是「不用并排了」被执行成了「把这个面板关了」。 */}
+              <button type="button" aria-label={`把${panel.label}收回标签栏`} title="收回标签栏" onClick={() => mergeBack(panel.id)}>
+                <PanelRightClose size={13} />
               </button>
             </header>
             <div className="workbenchPanelColumnBody">
@@ -299,6 +333,23 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
                   <span>{panel.label}</span>
                   {!selected && hintIds.includes(panel.id) ? <i className="workbenchPanelTabDot" aria-label="有更新" /> : null}
                 </button>
+                {/* 「并列」摆在叉号左边：把这个标签摊成自己的一列。
+                    这一颗是给「我想同时看两块」用的最短路径——
+                    原来只能去「添加面板」菜单里勾，而那个菜单读起来是
+                    「有哪些标签」，不是「把这两个摆一起」。
+                    排不下就置灰，但不移除：位置一空一现，整条栏会跟着抖。 */}
+                {columns ? (
+                  <button
+                    type="button"
+                    className="workbenchPanelTabSplit"
+                    aria-label={`并列显示${panel.label}`}
+                    title={capacity > 1 ? "并列显示" : "面板放宽后可并列显示"}
+                    disabled={capacity < 2}
+                    onClick={() => splitOut(panel.id)}
+                  >
+                    <Columns2 size={12} />
+                  </button>
+                ) : null}
                 {/* 叉号始终占位，只切换可见性——否则 hover 时 tab 变宽，整条栏会抖 */}
                 <button
                   type="button"
@@ -379,12 +430,11 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
         ) : null}
       </div>
       <div className="workbenchPanelBody" role="tabpanel">
-        {/* 勾了但排不下：说清楚为什么，以及怎么才排得下。
-            只说「放不下」而不给出路，用户只会以为坏了。 */}
-        {crowded ? (
+        {/* 只有「要并列的排不下」才说话——标签比列多是常态，不是错。 */}
+        {deniedColumns > 0 ? (
           <p className="workbenchPanelCrowded">
-            还有 {visiblePanels.length - capacity} 个面板没能并列显示，先用上面的标签切换。
-            {focus ? "全屏下最多并列三个。" : "把面板往左拖宽，或收起左侧任务栏，就能多并一列。"}
+            还有 {deniedColumns} 个面板宽度不够，暂时留在标签里。
+            {focus ? "全屏下最多并列三个。" : "把面板往左拖宽，或收起左侧任务栏。"}
           </p>
         ) : null}
         {trailingActive ? <PanelContent panel={trailingActive} /> : null}

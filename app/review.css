@@ -6271,6 +6271,43 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-primary);
 }
 
+/* 「并列」：把这个标签摊成自己的一列。
+   和叉号同一套尺寸与显隐规则——它俩是一对，一个把面板摊开、一个把面板关掉，
+   长得不一样反而要人重新认一遍。 */
+.workbenchPanelTabSplit {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  margin: 0 2px 0 0;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+  visibility: hidden;
+  cursor: pointer;
+  transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
+}
+
+.workbenchPanelTab:hover .workbenchPanelTabSplit,
+.workbenchPanelTabSplit:focus-visible {
+  visibility: visible;
+}
+
+/* 排不下时置灰但**留着**：这颗按钮消失会让整条标签栏的宽度跟着变，
+   一排标签在你眼前横跳，比一颗灰按钮更难受。 */
+.workbenchPanelTabSplit:disabled {
+  visibility: hidden;
+  cursor: default;
+}
+
+.workbenchPanelTabSplit:hover:not(:disabled) {
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
 .workbenchPanelCollapse {
   display: grid;
   width: 28px;

@@ -124,6 +124,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   /** 用户自己点过 tab 之后，阶段推进不再抢视图，只在 tab 上打点 */
   const [tabPinnedByUser, setTabPinnedByUser] = useState(false);
   const [panelHintIds, setPanelHintIds] = useState<string[]>([]);
+  /* 哪几个面板摊成自己的一列。退回到达时自动填上，用户也能自己并/收。 */
+  const [columnPanelIds, setColumnPanelIds] = useState<string[]>([]);
   const visiblePanelIdsRef = useRef(visiblePanelIds);
   visiblePanelIdsRef.current = visiblePanelIds;
   const [parametersExpanded, setParametersExpanded] = useState(false);
@@ -212,8 +214,22 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     window.setTimeout(() => {
       setStage("collecting");
       appendRun("rework");
-      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。批注已收在右侧「退回批注」，要对照原件看就摊开成画布；改在参数收集里改，改完在下方确认发送。`);
+      appendMessage("agent", `收到 ${rework.by} 的退回，共 ${reworkNotes.length} 条批注${blocking ? `，其中 ${blocking} 条必须修订` : ""}。批注和参数收集已并排放在右侧，对照着改就行；要核对原件再摊开成画布。改完在下方确认发送。`);
+      /* 从站内信进来处理退回，要干的事是确定的：读批注、改参数。
+         那就直接把这两块并排铺好，而不是让人先去菜单里勾一遍——
+         系统已经知道这一单是被退回的，还要用户再说一次，是在明知故问。
+
+         顺序是「批注在左、参数在右」：从左到右正好是这件事的次序，
+         对话说发生了什么、批注说哪里不对、参数是动手的地方。
+
+         排不排得下仍由宽度说了算，窄屏上它会自动退回标签，不会硬挤。
+
+         两句都要：openInspector 负责把「退回批注」加进可见标签集，
+         columnIds 只是从**已经可见**的那些里挑谁摊开——
+         少了前一句，后一句挑不到任何东西。 */
       openInspector("rework");
+      setColumnPanelIds(["rework"]);
+      openInspector("parameters");
     }, 900);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rework]);
@@ -590,7 +606,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           onFocusChange={setPanelFocus}
           /* 退回处理这一屏要「边看批注边改参数」，所以允许并列。
              排不排得下由量出来的宽度说了算，不是这里说了算。 */
-          columns
+          columnIds={columnPanelIds}
+          onColumnIdsChange={setColumnPanelIds}
           onPanelChange={(panelId) => {
             setTabPinnedByUser(true);
             setPanelHintIds((ids) => ids.filter((id) => id !== panelId));
