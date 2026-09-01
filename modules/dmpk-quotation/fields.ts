@@ -88,8 +88,43 @@ export function parseDmpkRequest(text: string): Record<string, string> {
   if (groupMatch) patch.groupCount = groupMatch[1];
   const cycleMatch = text.match(/(?:周期|试验周期)\s*(\d+)\s*周/);
   if (cycleMatch) patch.cycle = `${cycleMatch[1]} 周`;
-  // 「时间点」「采样点」和「采血点」在客户嘴里是一个意思，输入框自己的例句用的还是「时间点」
-  const bloodMatch = text.match(/(\d+)\s*个?(?:非加班)?(?:采血点|采样点|时间点)/);
+
+  /* 采血点：**两种语序都要认**。
+     「8 个采血点」和「采血点 8 个」在中文里一样自然，而原来只认前者，
+     写成后者整条掉地上——识别结果里少一项，人得把刚说过的话再说一遍。
+     一个数字识别不出来事小，「它没读懂我」这个印象事大。
+
+     「时间点」「采样点」和「采血点」在客户嘴里是一个意思，
+     输入框自己的例句用的还是「时间点」。 */
+  const points = "(?:采血点|采样点|时间点)";
+  const bloodMatch =
+    text.match(new RegExp(`(\\d+)\\s*个?(?:非加班)?${points}`)) ??
+    text.match(new RegExp(`${points}\\s*(\\d+)\\s*个?`));
   if (bloodMatch) patch.bloodPoints = bloodMatch[1];
+
+  /* 下面四项以前一条规则都没有，可选项表里明明列着。
+     用户一句话里把样品、方法、格式都说了，识别结果却只回四项，
+     剩下的还要一项项点——演示时这一下最伤，因为它看起来像没在听。
+     认的都是选项表里的原词，认不出就留空走补全，不猜。 */
+  if (/lc\s*-?\s*ms\s*\/?\s*ms|lcms/i.test(text)) patch.method = "LC-MS/MS";
+  else if (/elisa/i.test(text)) patch.method = "ELISA";
+  else if (/qpcr/i.test(text)) patch.method = "qPCR";
+  else if (/lba|配体结合/i.test(text)) patch.method = "LBA";
+
+  if (/血浆/.test(text)) patch.sampleType = "血浆";
+  else if (/血清/.test(text)) patch.sampleType = "血清";
+  else if (/组织匀浆|匀浆/.test(text)) patch.sampleType = "组织匀浆";
+  else if (/尿液|尿样/.test(text)) patch.sampleType = "尿液";
+
+  const wantsWord = /word|文档报告/i.test(text);
+  const wantsExcel = /excel|表格|明细/i.test(text);
+  if (wantsWord && wantsExcel) patch.format = "Word + Excel";
+  else if (wantsWord) patch.format = "Word";
+  else if (wantsExcel) patch.format = "Excel";
+
+  if (/中英双语|中英文/.test(text)) patch.language = "中英双语";
+  else if (/英文报告|英文版|english/i.test(text)) patch.language = "英文";
+  else if (/中文报告|中文版/.test(text)) patch.language = "中文";
+
   return patch;
 }

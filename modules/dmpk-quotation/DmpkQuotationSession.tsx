@@ -80,16 +80,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [handedOff, setHandedOff] = useState(false);
   const reworkNotes = (rework?.notes ?? []) as QuoteNote[];
   const reworkGreetedRef = useRef(false);
-  /* 退回批注铺成中间那块画布了没有。
+  /* 原件画布铺开了没有。
      ----------------------------------------------------------------------
-     它跟 panelFocus 不是一回事。panelFocus 是「面板铺满整个工作区」，
-     对话和右侧栏一起消失；而这里要的是 QA 审核台那个形状——
-     **中间是要看的东西，右边仍然是那 320px 的面板，底部一颗药丸**。
-     读在中间，改在右边，确认在药丸，三样同屏。
+     它跟 panelFocus 不是一回事：panelFocus 是面板铺满整个工作区，
+     这里是把原件搬到**中间那一列**去看，右侧面板照旧在。
 
-     所以展开退回批注不是 setPanelFocus(true)，是把它搬到中间去当画布，
-     面板顺势切回参数收集。收起来的时候，对话回到中间，
-     退回批注变回面板里的一个 tab。 */
+     它现在是**纯阅读态，没有任何输入控件**——要改就先收起来
+     （点参数的「编辑」会自动收）。读和改分开之后，
+     原来那套「画布里放胶囊输入框、参数卡跟着走」的联动整个不需要了。
+
+     它也不再是这一屏的第一步：进会话时批注和参数已经并排在右侧，
+     第一步直接是改，画布只在「原文我要再核一眼」时才用。 */
   const [reworkCanvas, setReworkCanvas] = useState(false);
   /* 这一单出过几版报价。每生成一次追加一条，旧版不删——
      报价被退过一次这件事，一个月后回来看还得能查到。 */
@@ -176,19 +177,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     appendMessage("agent", `已交接给 ${to}，本次的 Word 报价单与 Excel 报价明细已随行。对方将在站内信中收到。`);
   };
 
-  /* 从站内信进来时：先跑一次，再把原件摊开。
+  /* 从站内信进来时：先跑一次，再把要用的两块并排铺好。
      ----------------------------------------------------------------------
-     数字同事在这一步只做三件事——读、说清楚、把东西摊到你面前。
+     数字同事在这一步只做三件事——读、说清楚、把东西摆到你面前。
      **它不替你决定要改成什么**：上一版给的是一张「逐条采纳」的方案卡，
      等于让它替人做主，改动也就绕过了参数收集。现在改回来：
-     它把批注和原件摊开在右侧画布里，改由人在参数卡上动手。
+     它只负责把批注和参数摆好，改由人在参数卡上动手。
 
-     顺序是有意的，而且这三步都在对话里留了痕：
+     顺序是有意的，而且都在对话里留了痕：
        1. 跑一次「读取退回批注」——run 记录，能展开看它读了什么
-       2. 说一句话，讲清楚有几条、去哪儿看、在哪儿改
-       3. 把「退回批注」这个 tab 打开
-     画布**不自动铺开**：那是一屏很重的东西，凭空盖住对话会让人不知道
-     它是哪来的。由 composer 上那张入口卡领进去，人点了才铺。 */
+       2. 说一句话，只报告有几条、几条必须改（该做什么交给输入框上那张卡）
+       3. 把「退回批注」和「参数收集」并排铺开
+
+     并排是自动的，**画布仍然不自动铺开**：这一单是被退回的、有批注要读、
+     有参数要改，这件事系统已经知道，再让人去菜单里勾一遍是明知故问；
+     而画布是一屏很重的东西，凭空盖住对话会让人不知道它是哪来的。 */
   useEffect(() => {
     if (!rework || reworkGreetedRef.current) return;
     reworkGreetedRef.current = true;
@@ -505,7 +508,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
-    expanded: panelFocus,
+    /* expanded 的意思是「这一栏放得下报价单那张纸」，不是「面板全屏了」。
+       并列之前两者等价，现在不了：全屏 + 并列时每一列还是三五百像素，
+       纸摆进去照样读不了。
+
+       实测过的后果是**反的**：批注列在全屏并列时会去显示那张读不了的纸，
+       同时把真正读得了的批注列表藏起来。
+
+       所以只要摊了列就一律按窄的算——列宽由外壳按可用宽度分配，
+       这里拿不到也不该拿具体像素，「有没有并列」是够用的判据。 */
+    expanded: panelFocus && columnPanelIds.length === 0,
     quoteVersions,
   });
   /* 参数面板只负责改「参数的值」——逐项点编辑图标即可。
@@ -558,8 +570,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         </header>
         {!reworkCanvas ? <SessionMinimap scrollerRef={chatScrollerRef} /> : null}
         {reworkCanvas && rework ? (
-          /* 中间这块画布 = 要照着改的原件。右侧那 320px 面板照旧在，
-             底部是药丸——读、改、确认三样同屏，谁也不用切走。 */
+          /* 中间这块画布 = 要核对的原件，**只读**。
+             右侧面板照旧在，但底部没有输入框——要改就收起画布，
+             改和确认都回到主对话那一路。 */
           <section className="dmpkReworkCanvas" aria-label="退回批注">
             {/* 驳回理由收进标题块里，不再单开一条通栏。
                 原来是「标题 / 理由条 / 形态切换」三段各占一行，纸面被压到 225px

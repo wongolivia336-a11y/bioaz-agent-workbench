@@ -67,7 +67,9 @@ export type DmpkInspectorContext = {
   reworkBy?: string;
   reworkAt?: string;
   reworkReason?: string;
-  /** 画布铺开了没有。铺开才排三列，320px 的侧栏里排不下。 */
+  /* 这一栏放不放得下报价单那张纸。
+     **不等于「面板全屏了」**：并列之后，全屏时每一列还是三五百像素，
+     纸摆进去照样读不了。放不下就只显示批注列表——列表窄了仍然读得了。 */
   expanded?: boolean;
   /* 这一单出过几版报价。返工场景里「出过第二版」本身就是要给人看的信息。 */
   quoteVersions: { id: string; label: string; at: string; origin: string }[];
@@ -167,9 +169,9 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
     render: (context) => <RulesPanel context={context} />,
   },
   {
-    /* 退回批注。它不是「过程」也不是「结果」，是一份**要照着改的原件**。
-       给它自己的 tab，并且默认铺开成画布——报价单、批注、参数三样并排，
-       在 320px 的侧栏里读不了。 */
+    /* 退回批注。它不是「过程」也不是「结果」，是一份**要照着改的参照**。
+       给它自己的 tab，并且在退回场景里默认和参数收集并排成两列——
+       读批注和改参数要同时在眼前，来回切标签等于让人拿脑子记。 */
     id: "rework",
     label: "退回批注",
     icon: CornerDownLeft,
@@ -210,9 +212,11 @@ export function getDmpkInspectorPanels(context: DmpkInspectorContext): ResolvedI
  *   参数收集       是**动手的地方**
  *   对话           是**落笔的地方**（确认发生在这里）
  *
- * 所以画布里排两栏：左边参照（原件 + 批注），右边动手（参数收集）；
- * 对话在画布模式下自动收成底部那颗浮动 dock，一直在，但不占列宽。
- * 三样同屏，谁也不用切走。
+ * 所以右侧面板并成两列：左列参照（批注列表），右列动手（参数收集）；
+ * 对话和输入框始终在中间那一路，落笔就在那儿。三样同屏，谁也不用切走。
+ *
+ * 原件那张纸不在这里——它太宽，320 到 400 的一列摆不下。
+ * 要核对原文时把它铺成中间的画布（只读），核完收起来接着改。
  *
  * 最要紧的一条：**批注和参数之间的对应关系要画出来，不能靠人记。**
  * 能映射到参数的批注，卡上直接给「去改这一项」；映射不到的（比如表述类），
@@ -238,9 +242,10 @@ function ReworkPanel({ context }: { context: DmpkInspectorContext }) {
           而两条路径迟早会对不上。 */}
       <AnnotatedQuote notes={context.reworkNotes} className="isPanel" />
 
-      {/* 收在 320px 侧栏里时，报价单那一面放不下，但**批注本身放得下**。
+      {/* 一列放不下报价单那张纸，但**批注本身放得下**。
           原来这儿只剩标题和驳回理由，等于告诉人「有 3 条批注」却不给看，
-          还得先摊开画布才知道是哪 3 条。 */}
+          还得先摊开画布才知道是哪 3 条——而现在并列之后，
+          这份列表就是左列的正文，是这一屏最常看的东西。 */}
       <ul className="dmpkReworkList">
         {context.reworkNotes.map((note) => (
           <li key={note.anchorId} className={`is-${note.severity}`}>
