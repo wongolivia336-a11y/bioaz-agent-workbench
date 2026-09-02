@@ -6302,15 +6302,43 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 被拎起来的那个留个淡影，说明它还在原位、只是暂时离手 */
 .workbenchPanelTab.isDragging { opacity: 0.4; }
 
-/* 落点提示：整块目标区域泛一层色，比画一条插入线更好懂——
-   这里要回答的是「松手会去哪一侧」，不是「插到第几个」。 */
-.workbenchPanel.isDropToColumn .workbenchPanelColumn,
+/* 新列的占位。它是网格里一个真的格子，旁边几列会当场让开——
+   人看到的是松手之后的样子，而不是一层「这里可以放」的提示色。
+   虚线加淡底是「还没定下来」的通用说法，实线会读成已经放好了。 */
+.workbenchPanelDropSlot {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  grid-row: 1 / -1;
+  min-width: 0;
+  border: 1px dashed var(--bioaz-agent-accent-border);
+  border-radius: 12px;
+  margin: 10px 6px;
+  background: var(--bioaz-agent-accent-soft);
+  padding: 12px;
+  text-align: center;
+}
+.workbenchPanelDropSlot > span {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--bioaz-agent-accent);
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workbenchPanelDropSlot > em {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11.5px;
+  font-style: normal;
+}
+
+/* 收回标签栏时，把标签栏本身标出来——它就是落点。
+   只压一层底色太弱，加一条底边把「东西会排进这条栏」说明白。 */
 .workbenchPanel.isDropToTabs .workbenchPanelTabs {
   background: var(--bioaz-agent-accent-soft);
-}
-.workbenchPanel.isDropToColumn:not(.isColumns) .workbenchPanelBody {
-  /* 一列都还没摊开时，左边没有可染的列，就染内容区并画出未来那条边界 */
-  box-shadow: inset 3px 0 0 var(--bioaz-agent-accent);
+  box-shadow: inset 0 -2px 0 var(--bioaz-agent-accent);
 }
 
 .workbenchPanelDragGhost {
@@ -6340,6 +6368,19 @@ button { -webkit-tap-highlight-color: transparent; }
   font-style: normal;
   font-weight: 500;
 }
+
+/* 松手什么都不会发生的时候，整片压淡、边框回到中性。
+   它仍然跟着手指走（要让人知道东西还在手上），但不再假装能落下。 */
+.workbenchPanelDragGhost.isInert {
+  border-color: var(--bioaz-border);
+  opacity: 0.72;
+}
+.workbenchPanelDragGhost.isInert > em { color: var(--bioaz-text-tertiary); }
+
+/* 想放但放不下：说明原因和出路，颜色走警示而不是主色——
+   主色会读成「可以放」。 */
+.workbenchPanelDragGhost.isBlocked { border-color: var(--bioaz-warning, #7b705a); }
+.workbenchPanelDragGhost.isBlocked > em { color: var(--bioaz-warning, #7b705a); }
 
 @media (prefers-reduced-motion: reduce) {
   .workbenchPanelTab.isDragging { opacity: 1; }

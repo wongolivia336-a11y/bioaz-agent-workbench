@@ -25,10 +25,16 @@ const COLUMN_MIN_WIDTH = 320;
 const COLUMN_GAP = 16;
 const COLUMN_MAX = 3;
 
+/* 布局回来的宽度是小数（网格分配余数），而 widenFor 恰好按下限设宽——
+   于是设了 656、量回来 655.1875，差 0.8px 就掉一档，两列永远排不出来。
+   留 1px 容差，正好覆盖这种「按下限设、按小数量」的情况。
+   （这条是在设计系统那边复现出来的：那边的外壳恰好分到了小数余量。） */
+const COLUMN_EPSILON = 1;
+
 /** 这个宽度能排下几列 */
 function columnCapacity(width: number) {
   if (!width) return 1;
-  const fit = Math.floor((width + COLUMN_GAP) / (COLUMN_MIN_WIDTH + COLUMN_GAP));
+  const fit = Math.floor((width + COLUMN_GAP + COLUMN_EPSILON) / (COLUMN_MIN_WIDTH + COLUMN_GAP));
   return Math.min(COLUMN_MAX, Math.max(1, fit));
 }
 
@@ -303,6 +309,35 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
   const [drag, setDrag] = useState<{ id: string; label: string; x: number; y: number; toColumn: boolean } | null>(null);
   const dragRef = useRef<{ id: string; label: string; startX: number; startY: number; moved: boolean } | null>(null);
 
+  /* 再摊一列，宽度够不够？
+     算的是「加宽到头之后」能排几列，不是此刻能排几列——落地时 widenFor
+     会去争取那点宽度，判据得和它对齐，否则会把明明能成的拒掉。 */
+  const maxCapacity = (() => {
+    if (!columns) return 1;
+    if (focus) return columnCapacity(panelWidth);
+    const room = panelRef.current?.parentElement?.getBoundingClientRect().width ?? 0;
+    const ceiling = Math.max(PANEL_WIDTH_MIN, Math.min(PANEL_WIDTH_MAX, room - CONVERSATION_MIN_WIDTH));
+    return columnCapacity(Math.max(panelWidth, ceiling));
+  })();
+  // 最后一列永远留给标签，所以能摊出来的是 maxCapacity - 1 个
+  const canSplitMore = maxCapacity - 1 > leadingPanels.length;
+
+  /* 松手到底会发生什么——**只在这里算一次**。
+     提示文案、落区高亮、占位列全都读它。
+
+     以前提示和落区各自判断，于是出现过「拖的是标签、指针还在标签侧，
+     提示却写着松手收回标签栏」——它其实什么都不会做。
+     一个不会发生的动作被写成了承诺，比没有提示更糟。
+
+     "full" 是同一个毛病的另一半：宽度已经排不下第二列了，却照样画出
+     占位列、写着「松手并列显示」，松手之后那一列并不会出现。
+     许一个兑现不了的布局，比不许更伤——人会以为是坏了。 */
+  const dragEffect: "split" | "merge" | "full" | "none" = !drag
+    ? "none"
+    : (columnIds ?? []).includes(drag.id)
+      ? (drag.toColumn ? "none" : "merge")
+      : (drag.toColumn ? (canSplitMore ? "split" : "full") : "none");
+
   /* 分界线：左边＝摊成一列，右边＝收回标签栏。
 
      已经有列的时候，它就是标签那一列的左边界——那条线是看得见的。
@@ -315,7 +350,12 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
     const panel = panelRef.current;
     if (!panel) return Number.NEGATIVE_INFINITY;
     if (leadingPanels.length) {
-      const tabs = panel.querySelector(".workbenchPanelTabs");
+      /* 必须是**直接子元素**那条标签栏。
+         每一列内部现在也有一条自己的标签栏（结构统一之后的结果），
+         不加 :scope > 的话 querySelector 抓到的是最左那一列的，
+         它的左边界就是面板左边界——「左边」又成了不存在的区域，
+         于是往左怎么拖都判成「回到原处」。 */
+      const tabs = panel.querySelector(":scope > .workbenchPanelTabs");
       if (tabs) return tabs.getBoundingClientRect().left;
     }
     const rect = panel.getBoundingClientRect();
@@ -350,6 +390,10 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
     const wantsColumn = event.clientX < splitBoundary();
     // 拖回原来那一侧＝反悔，什么都不做
     if (wantsColumn === isColumn) return;
+    /* 排不下就真的不做。写进 columnIds 而屏幕上不出现那一列，
+       等于悄悄改了状态又不告诉人——刚才拖影已经说了「宽度不够」，
+       这里就得跟它一致。 */
+    if (wantsColumn && !canSplitMore) return;
     if (wantsColumn) splitOut(state.id); else mergeBack(state.id);
   };
 
@@ -361,8 +405,12 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
   return (
     <aside
       ref={panelRef}
-      className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""} ${leadingPanels.length ? "isColumns" : ""} ${drag ? (drag.toColumn ? "isDropToColumn" : "isDropToTabs") : ""}`}
-      style={leadingPanels.length ? ({ "--panel-columns": leadingPanels.length + 1 } as React.CSSProperties) : undefined}
+      className={`workbenchPanel ${open ? "isOpen" : ""} ${focus ? "isFocus" : ""} ${leadingPanels.length || dragEffect === "split" ? "isColumns" : ""} ${dragEffect === "merge" ? "isDropToTabs" : ""}`}
+      /* 拖出新列时先把网格多算一列，让占位块真的占住地方——
+         人看到的是「松手之后就长这样」，而不是一片提示色。 */
+      style={leadingPanels.length || dragEffect === "split"
+        ? ({ "--panel-columns": leadingPanels.length + 1 + (dragEffect === "split" ? 1 : 0) } as React.CSSProperties)
+        : undefined}
       aria-hidden={!open}
     >
       {/* 全屏态没有中间那一列可分，抓手就没有意义 */}
@@ -434,6 +482,16 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
           </section>
         );
       })}
+
+      {/* 新列会落在这儿。画成一整列而不是给现有内容染色：
+          要回答的是「它会变成什么样」，一个占住位置的空位说得比一层提示色清楚，
+          而且旁边那几列会当场让开——布局先演一遍，再让人决定要不要。 */}
+      {dragEffect === "split" ? (
+        <div className="workbenchPanelDropSlot" aria-hidden="true">
+          <span>{drag?.label}</span>
+          <em>松手放这儿</em>
+        </div>
+      ) : null}
 
       <div className="workbenchPanelTabs">
         <div className="workbenchPanelTabScroll" role="tablist" aria-label="工作面板">
@@ -568,12 +626,20 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
           写成 transform 而不是 left/top：那两个每帧都要重排。 */}
       {drag ? (
         <span
-          className="workbenchPanelDragGhost"
+          className={`workbenchPanelDragGhost ${dragEffect === "none" ? "isInert" : ""} ${dragEffect === "full" ? "isBlocked" : ""}`}
           style={{ transform: `translate3d(${drag.x}px, ${drag.y}px, 0)` }}
           aria-hidden="true"
         >
           {drag.label}
-          <em>{drag.toColumn ? "松手并列显示" : "松手收回标签栏"}</em>
+          {/* 说的必须是**真的会发生的事**。回到原来那一侧就是什么都不发生，
+              那就照实说「回到原处」并把整片提示压淡，而不是继续许一个
+              松手之后并不会兑现的承诺。 */}
+          <em>
+            {dragEffect === "split" ? "松手并列显示"
+              : dragEffect === "merge" ? "松手收回标签栏"
+              : dragEffect === "full" ? "宽度不够，先拖宽面板"
+              : "回到原处"}
+          </em>
         </span>
       ) : null}
     </aside>

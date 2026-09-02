@@ -322,6 +322,35 @@ button {
   cursor: not-allowed;
 }
 
+/* 按下去要有反应。
+   全产品原来只有 hover 和 disabled，按下那一刻什么都不变——
+   点了之后要等界面回应才知道系统收到没有，中间那一段是空的。
+   0.97 很轻，轻到没人会专门注意；但少了它，按钮摸起来像贴纸。
+
+   只动 transform，走 --bioaz-motion-fast（120ms，正落在按压反馈该有的区间），
+   不新引入一个时长取值——体检脚本盯着「同一个维度跑出多少种取值」。 */
+.primaryButton,
+.secondaryButton,
+.iconButton,
+.sendIconButton {
+  /* 不写回退字面量：令牌是全局定义的，写 `, 120ms` 只会给
+     「过渡时长跑出多少种取值」那项体检再添一种——刚被它抓到过。 */
+  transition: transform var(--bioaz-motion-fast) var(--bioaz-ease-out-2);
+}
+.primaryButton:active:not(:disabled),
+.secondaryButton:active:not(:disabled),
+.iconButton:active:not(:disabled),
+.sendIconButton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton,
+  .iconButton,
+  .sendIconButton { transition: none; }
+}
+
 .primaryButton.compact,
 .secondaryButton.compact {
   height: 44px;
@@ -7645,7 +7674,6 @@ button {
   display: grid;
   gap: 6px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
   border-radius: 8px;
   background: #fff;
   padding: 10px;
@@ -8116,15 +8144,16 @@ button {
 }
 .ticketDetailNotes h2 small { color: var(--muted); font-size: 12px; font-weight: 400; }
 .ticketDetailNotes ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+/* 这里原来给「必须修订」加一道琥珀左边，「建议修订」再把它收掉。
+   那个收法的理由是对的（全都标成琥珀，必须修订就不再是信号），
+   只是没走到底：卡上已经有一枚 chip 在说轻重，那道边任何一档都是第二遍。
+   现在整条去掉，轻重只由 chip 说。 */
 .ticketDetailNotes > ul > li {
   display: grid; gap: 5px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
   border-radius: 8px;
   padding: 10px 12px;
 }
-/* 建议修订收掉左侧那道琥珀:全都标成琥珀,「必须修订」就不再是个信号。 */
-.ticketDetailNotes > ul > li.is-advisory { border-left-color: var(--line); }
 .ticketDetailNoteHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ticketDetailNoteHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .ticketDetailNotes p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.7; }
@@ -8323,7 +8352,7 @@ button {
 /* 外框长在 li 上,不长在 button 上。卡里那颗按钮铺满整条,
    把 width/padding 写到 button 上就会跟外框打架。 */
 .quotePreviewNotes > ul > li {
-  border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border: 1px solid var(--line);
   border-radius: 8px; overflow: hidden;
   transition: border-color var(--bioaz-motion-standard) ease, background var(--bioaz-motion-standard) ease;
 }
@@ -8390,7 +8419,6 @@ button {
 .dmpkHandoffUnresolved {
   display: grid; gap: 6px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
   border-radius: 10px; background: var(--soft, #f7f8fb); padding: 11px 13px;
 }
 .dmpkHandoffUnresolved > strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
@@ -8405,12 +8433,12 @@ button {
 /* 从会话外面进来的一件事：产物被退回、被通过、被转交。
    它靠左但不是气泡——那句话不是当前这个人说的，也不是数字同事说的，
    是发生在他俩之外的一件事。所以既不给气泡底色，也不给头像，
-   只给一条竖线和一枚方向图标。 */
+   **只靠那枚方向图标**：一个带回转箭头的圆标已经足够说明「东西是从外面回来的」，
+   再加一条彩色竖线是同一句话说两遍。 */
 .dmpkInboundEvent {
   display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 10px;
   margin: 14px 0 4px;
-  border-left: 2px solid var(--sidebar-dot-attention, #9a7a3a);
-  padding: 8px 0 8px 12px;
+  padding: 8px 0;
 }
 .dmpkInboundMark {
   display: grid; width: 26px; height: 26px; place-items: center;
@@ -8454,12 +8482,16 @@ button {
 
 /* 收起态的批注清单。侧栏放不下报价单，但放得下批注本身。 */
 .dmpkReworkList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+/* 不给左侧强调竖条。
+   每张卡上已经有一枚「必须修订 / 建议修订」的 chip 在说同一件事，
+   竖条是第二遍——而且「圆角卡片配一条彩色左边」这个组合本身
+   已经成了一种套路，用多了整屏都在喊，谁也不比谁响。
+   轻重交给 chip，卡片只负责把话装好。 */
 .dmpkReworkList > li {
   display: grid; gap: 4px;
-  border: 1px solid var(--line); border-left: 3px solid var(--sidebar-dot-attention, #9a7a3a);
+  border: 1px solid var(--line);
   border-radius: 8px; padding: 10px 11px;
 }
-.dmpkReworkList > li.is-advisory { border-left-color: var(--line); }
 .dmpkReworkListHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .dmpkReworkListHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .dmpkReworkList p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.6; }
