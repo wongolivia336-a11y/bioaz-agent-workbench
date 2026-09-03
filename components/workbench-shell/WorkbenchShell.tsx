@@ -707,7 +707,18 @@ export default function WorkbenchShell() {
           ? activeLibraryFolder?.name ?? "项目文件"
           : null;
   if (quotationTarget) return <QuotationManagement onBack={() => setQuotationTarget(null)} initialBusiness={quotationTarget.business} initialTab={quotationTarget.tab} initialDraft={quotationTarget.draft} />;
-  return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${activeModule ? `${activeModule.moduleId}ModuleShell` : ""}`}>
+  /* 外壳类名：自己的 + 借来的。
+     ----------------------------------------------------------------------
+     `${moduleId}ModuleShell` 是每个模块自己的钩子。`shellVariant` 是「我跟那个
+     模块长同一副外壳」——肿瘤报价跟 DMPK 报价是同一种会话形状（同一条对话流、
+     同一个 composer、同一套参数卡与右栏），而这副外壳的样式是照着
+     `.dmpk-quotationModuleShell` 写的，光 review.css 里就 116 条。
+     让它多挂一个类名，比把那 116 条逐个改成 `:is(...)` 白名单可靠得多——
+     那种白名单一旦漏掉 responsive.css 里的两处，窄屏会**静默**塌掉。 */
+  const shellClasses = activeModule
+    ? [`${activeModule.moduleId}ModuleShell`, activeModule.shellVariant ? `${activeModule.shellVariant}ModuleShell` : ""].filter(Boolean).join(" ")
+    : "";
+  return <main className={`dmpkShell ${collapsed ? "sidebarCollapsed" : ""} ${shellView ? "workbenchShell" : "moduleSessionShell"} ${shellClasses}`}>
     <WorkspaceSidebar collapsed={collapsed} activeRoute={route} activeTaskId={activeTaskId} currentProject={project} projects={projects} runtimeTasks={runtimeTasks} pinnedItemIds={pinnedItemIds} unreadTaskIds={unreadTaskIds} attentionTaskIds={attentionTaskIds} deletedProjectIds={deletedProjectIds} deletedTaskIds={deletedTaskIds} renamedTaskTitles={renamedTaskTitles} libraryFolders={libraryFolders} activeLibraryFolderId={libraryFolderId} activeLibrarySpace={route === "library" ? libraryProject : null} highlightedProjectId={highlightedProjectId} account={account} inboxCount={inboxCount} lens={lens} onLensChange={changeLens} switchableAccounts={lensAccounts} onAccountChange={changeAccount} onOpenInbox={() => setRoute("inbox")} onOpenLibraryFolder={(projectName, folderId) => { setLibraryProject(projectName); setLibraryFolderId(folderId); setLibraryView(folderId ? "folder" : "overview"); setRoute("library"); }} onCreateProject={createProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onRenameTask={renameTask} onDeleteTask={deleteTask} onTogglePinnedItem={togglePin} onRouteChange={navigateShellRoute} onStartTask={resetNewTask} onOpenTask={openTask} onOpenQuotationManagement={() => setQuotationTarget({ business: "root" })} onToggleCollapsed={() => setCollapsed((value) => !value)} />
     {handoffOpen ? <TicketHandoffDialog currentUser={account.name} projects={visibleProjects.filter((item) => item.type === "client").map((item) => item.name)} defaultProject={project} onSubmit={submitHandoff} onClose={() => setHandoffOpen(false)} /> : null}
     <button className="mobileSidebarBackdrop" type="button" aria-label="关闭侧边栏" onClick={() => setCollapsed(true)} />

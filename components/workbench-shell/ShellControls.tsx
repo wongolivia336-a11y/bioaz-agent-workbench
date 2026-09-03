@@ -6,10 +6,26 @@ import type { ComposerAttachment } from "../../lib/workbench/composerAttachments
 import { WorkbenchComposer } from "./WorkbenchComposer";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-export function CompactSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (value: string) => void }) {
+/**
+ * 值触发的下拉。浮层走 useDismissableLayer——点外部关闭、不压暗页面，
+ * 这不是弹窗。
+ *
+ * `placeholder` 和 `className` 是为报价参数行加的：那里的下拉一开始是空的
+ * （原生 `<select>` 的空选项在这套设计里是一块没人管的系统皮肤），而且
+ * 「CDX/syngeneic drug resistance model CDX/鼠源耐药模型」这类中英双语选项
+ * 有 437px 宽，得让菜单放得开、让文字换行。
+ */
+export function CompactSelect({ value, options, onChange, placeholder, className = "" }: {
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  /** 没选中时显示的灰字。不传就照旧显示 value 本身。 */
+  placeholder?: string;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return <div ref={ref} className={`compactSelect ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>{value}<ChevronDown size={12} /></button>{open ? <div className="compactSelectMenu">{options.map((option) => <button type="button" className={option === value ? "active" : ""} aria-current={option === value ? "true" : undefined} key={option} onClick={() => { onChange(option); setOpen(false); }}><span>{option}</span></button>)}</div> : null}</div>;
+  return <div ref={ref} className={`compactSelect ${className} ${open ? "isOpen" : ""}`}><button type="button" aria-expanded={open} aria-haspopup="listbox" onClick={() => setOpen((current) => !current)}><span className={value ? "" : "isPlaceholder"}>{value || placeholder}</span><ChevronDown size={12} /></button>{open ? <div className="compactSelectMenu" role="listbox">{options.map((option) => <button type="button" role="option" className={option === value ? "active" : ""} aria-selected={option === value} key={option} onClick={() => { onChange(option); setOpen(false); }}><span>{option}</span></button>)}</div> : null}</div>;
 }
 
 type LibraryAssistantContext = {

@@ -1965,6 +1965,232 @@ button.inspectorParameterField:hover { background: var(--surface); }
   font-size: 12px;
 }
 
+/* ===== 参数行的另外四种控件：下拉 / 文本 / 多选 / 可重复行 =====
+
+   肿瘤报价带来的四种。它们跟选项按钮**共用同一副骨架**——序号圆点、标签、
+   必填 chip、间距、行高全都不变，只有控件本身分叉。
+
+   为什么不逼所有字段都用选项按钮：实测把肿瘤那 8 个中英双语模型选项塞进
+   `.optionGrid`（可用宽 795px），渲染出来是 127px 高、折 4 行、最宽一项
+   437px，而 DMPK 现在一行 28px。那不是统一，是散架。
+
+   作用域沿用 `:is(.parameterTaskCard, .dmpkParamModalBody)`：全屏参数弹窗
+   portal 到了 body 上，够不着卡片作用域，两边必须写在同一条规则里——
+   **不要在别处复制一份**，复制的那份迟早跟本体分叉。 */
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramFieldHint {
+  display: block;
+  margin-top: 1px;
+  color: var(--bioaz-text-tertiary);
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* 依赖没满足时的占位。中性灰，不是红字——这一项还没轮到，不是填错了。
+   一张还没动过的空表单上先铺一片红，是在为尚未发生的错误问责。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramLockedNote {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  border: 1px dashed var(--bioaz-border-strong);
+  border-radius: 8px;
+  padding: 0 9px;
+  background: var(--bioaz-surface-subtle);
+  color: var(--bioaz-text-disabled);
+  font-size: 12px;
+}
+
+/* 下拉和文本框共用的外框。上边距和最大宽度写在框上，控件本身只管自己的样子——
+   两边各写一份的话，同一个选择器会出现两次，改一处就漏一处。
+   重复行里的输入框不套这个框：它们是 grid 的直接子元素，多一层就没法跟表头
+   共用同一条列宽规则了。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramControlWrap {
+  margin-top: 5px;
+  max-width: 420px;
+}
+
+/* 下拉用的是仓库里现成的 .compactSelect（浮层走 useDismissableLayer），
+   这里只把它调到参数行的尺寸：跟文本框同高 30px、同字号 12px，
+   跟选项按钮同圆角 8px。原生 <select> 展开的是系统皮肤，在这张卡里
+   明显是另一个东西，而这次要的恰恰是「和 DMPK 长一个样」。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect > button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramTextInput {
+  width: 100%;
+  min-height: 30px;
+  height: 30px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  padding: 0 9px;
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  outline: 0;
+}
+
+/* 触发器上显示的是「选中的那一项」，跟选项按钮的选中态同重。
+   一行放不下就省略号——按钮是**一行高**的，让它换行会把整行顶开。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect > button > span {
+  overflow: hidden;
+  flex: 1;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect > button > span.isPlaceholder {
+  color: var(--bioaz-text-disabled);
+  font-weight: 500;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect.isOpen > button,
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramTextInput:focus {
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+}
+
+/* 菜单要放得开：模型那八条中英双语选项最宽 437px，而 .compactSelectMenu
+   的通用规则把宽度封在 min(320px, …)。封在那儿的后果是每一条都被截断，
+   而这八条的区别恰恰在后半截（常规 / 耐药 / hPBMC+）。
+   三个类选中，赢过 iteration.css 那条单类规则。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect .compactSelectMenu {
+  width: max(280px, 100%);
+  max-width: min(520px, calc(100vw - 48px));
+}
+
+/* 换行而不是省略号：菜单是**读选项**的地方，截断了就选不对。
+   行高随内容变，所以 min-height 而不是 height。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect .compactSelectMenu button {
+  min-height: 32px;
+  align-items: flex-start;
+  padding: 7px 9px;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect .compactSelectMenu button > span {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* 重复行里的下拉不留上边距，也不封宽——它已经在 grid 的一格里了。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRow .compactSelect.paramSelect {
+  min-width: 0;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramMultiWrap {
+  display: grid;
+  gap: 6px;
+}
+
+/* 自己补的那一项：选中态 + 一枚叉。点一下就摘掉，
+   否则输错一个字只能整条重来。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .optionGrid button.isCustomPick {
+  gap: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramMultiAdd {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 5px;
+  align-items: center;
+  max-width: 420px;
+}
+
+/* 按名字选中这颗按钮，不写 `.paramMultiAdd button`——本仓库有过教训：
+   给主体写的 width:100% 把后加的图标按钮撑成了一整条误点带。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramMultiAddButton {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 8px;
+  padding: 0;
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-secondary);
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramMultiAddButton:hover {
+  border-color: var(--bioaz-border-strong);
+  background: var(--bioaz-surface-hover);
+}
+
+/* 可重复行：一行就是一个实验组。列宽由 grid 统一给，
+   表头和数据行**共用同一条规则**——只要有一格是 auto，
+   两个 grid 就各算各的，永远对不上。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeat {
+  display: grid;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatHead,
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) 26px;
+  gap: 5px;
+  align-items: center;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatHead > em {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRemove {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  padding: 0;
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRemove:hover:not(:disabled) {
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-danger);
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRemove:disabled {
+  opacity: .3;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatAdd {
+  min-height: 28px;
+  gap: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  border: 1px dashed var(--bioaz-border-strong);
+  border-radius: 8px;
+  padding: 0 9px;
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatAdd:hover {
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
 .parameterTaskCard .parameterPager {
   gap: 10px;
   margin-top: 2px;

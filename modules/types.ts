@@ -204,6 +204,18 @@ export type AgentModuleDefinition = {
   requiredFiles: RequiredFileDefinition[];
   validationRules: ValidationRuleDefinition[];
   handoffNotes: string[];
+  /**
+   * 借用另一个模块的外壳类名。
+   *
+   * 外壳会渲染 `${moduleId}ModuleShell`；声明了这个，就再挂一个
+   * `${shellVariant}ModuleShell`。用在「两个模块是同一种会话形状」的时候——
+   * 肿瘤报价和 DMPK 报价共用同一条对话流、同一个 composer、同一套参数卡，
+   * 而那副外壳的样式是照着 `.dmpk-quotationModuleShell` 写的（review.css 116 条、
+   * session-column.css 3 条、iteration.css 与 responsive.css 各 2 条）。
+   * 借类名 = 共用那一份；不借就得把这 123 条逐个改成 `:is()` 白名单，
+   * 而漏掉的那几条不会报错，只会在某个断点上塌掉。
+   */
+  shellVariant?: string;
   Session: ComponentType<AgentModuleSessionProps>;
 };
 

@@ -76,7 +76,10 @@ export const directory: InboxAccount[] = [
   { id: "acct-sun", name: "孙桦", email: "sunh@bioaz.com", role: "author", roleLabel: "DMPK 实验负责人", team: "DMPK" },
   { id: "acct-lin", name: "林一一", email: "lin@bioaz.com", role: "author", roleLabel: "一线实验员", team: "QA", switchable: true },
   { id: "acct-zhou", name: "周颖", email: "zhouy@bioaz.com", role: "author", roleLabel: "QA 审核员", team: "QA" },
-  { id: "acct-chen", name: "陈默", email: "chenm@bioaz.com", role: "author", roleLabel: "药效实验员", team: "药效" },
+  /* 肿瘤报价这条线的撰写人，跟 DMPK 的赵敏是对称的一位：同样是 author、
+     同样可切换、同样对着审批人王林彬。他原来叫「药效实验员」且不可切换，
+     那个身份在别处一次都没被引用过——改成报价线的岗位，比再造一个人干净。 */
+  { id: "acct-chen", name: "陈默", email: "chenm@bioaz.com", role: "author", roleLabel: "肿瘤报价同事", team: "肿瘤", switchable: true },
   { id: "acct-wang", name: "王林彬", email: "wanglb@bioaz.com", role: "approver", roleLabel: "审批人", team: "审批与管理", switchable: true },
   { id: "acct-li", name: "李林", email: "lil@bioaz.com", role: "owner", roleLabel: "项目负责人", team: "审批与管理", switchable: true },
   { id: "acct-he", name: "何雯", email: "hew@bioaz.com", role: "owner", roleLabel: "商务经理", team: "商务" },

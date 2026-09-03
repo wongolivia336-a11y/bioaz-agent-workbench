@@ -85,6 +85,31 @@ export const digitalTeamData: DigitalCoworker[] = [
     taskExamples: ["新建一个 PK 报价任务", "根据客户需求生成 BA Only 报价", "检查一条 DMPK 计价规则"],
     recentGrowth: "正在补充规则维护能力",
   },
+  /* 肿瘤报价。跟 DMPK 报价是同一类工作（收参数 → 匹规则 → 出产物），
+     所以技能与子 Agent 的骨架是对称的；分叉在参数本身：肿瘤这条线的参数
+     互相有依赖（模型决定品系和细胞系），而 DMPK 十四项是彼此独立的。
+     「模型方案校验」这条技能就是为这个依赖存在的。 */
+  {
+    id: "tumor-quotation-coworker",
+    displayName: "肿瘤报价同事",
+    domain: "肿瘤报价",
+    description: "确认肿瘤模型方案与分组给药，匹配计价规则，并生成肿瘤药效报价产物。",
+    status: "active",
+    moduleId: "tumor-quotation",
+    skills: [
+      { id: "tumor-quote-parameter-collection", name: "报价参数收集", category: "参数管理", description: "识别模型、动物品系、细胞系、接种方式、分组给药和检测指标。", status: "active" },
+      { id: "tumor-quote-model-check", name: "模型方案校验", category: "规则引擎", description: "校验模型、品系与细胞系是否互相成立，拦下接不上的组合。", status: "active" },
+      { id: "tumor-quote-rule-match", name: "计价规则匹配", category: "规则引擎", description: "按动物数、周期、给药组数和检测指标匹配价格与管理费。", status: "active" },
+      { id: "tumor-quote-template-output", name: "报价模板生成", category: "交付", description: "把报价结果整理成 Word 报价单与 Excel 报价明细。", status: "active" },
+    ],
+    subAgents: [
+      { id: "tumor-quote-param-agent", name: "参数提取 Agent", role: "NLP 提取", description: "从客户需求中抽取模型、品系、分组和检测字段。", status: "active" },
+      { id: "tumor-quote-calc-agent", name: "报价计算 Agent", role: "计价", description: "基于规则和价格表计算费用明细。", status: "active" },
+      { id: "tumor-quote-design-agent", name: "方案校验 Agent", role: "校验", description: "检查模型与品系、给药分组与对照组是否成立。", status: "planned" },
+    ],
+    taskExamples: ["新建一个 CDX 药效评价报价", "按 MC38 皮下模型出一版报价", "改一下分组及给药剂量再重出报价"],
+    recentGrowth: "新增模型与品系联动校验",
+  },
   {
     id: "file-assistant",
     displayName: "项目助手",
@@ -144,6 +169,7 @@ export const digitalTeamData: DigitalCoworker[] = [
 export const digitalScenarios: DigitalScenario[] = [
   { id: "scenario-tumor", name: "肿瘤药效评价", description: "从原始数据到药效报告与专家审核", coworkerIds: ["tumor-report-coworker", "qa-review-coworker", "file-assistant"] },
   { id: "scenario-dmpk", name: "DMPK 报价", description: "参数收集、规则匹配到报价交付", coworkerIds: ["dmpk-quotation-coworker", "bioaz-helper"] },
+  { id: "scenario-tumor-quote", name: "肿瘤报价", description: "模型方案确认、分组给药到报价交付", coworkerIds: ["tumor-quotation-coworker", "bioaz-helper"] },
   { id: "scenario-delivery", name: "交付质量把关", description: "交付包复核、证据追溯与风险提示", coworkerIds: ["qa-review-coworker", "tumor-report-coworker"] },
   { id: "scenario-research", name: "项目资料检索", description: "跨项目搜索、总结与思路拓展", coworkerIds: ["file-assistant", "bioaz-helper"] },
 ];
@@ -151,7 +177,9 @@ export const digitalScenarios: DigitalScenario[] = [
 export const mcpData: McpConnector[] = [
   { id: "mcp-library", name: "项目文件库", system: "内部存储", status: "connected", scope: "全部项目", usedBy: ["file-assistant", "tumor-report-coworker", "qa-review-coworker"], lastSync: "刚刚" },
   { id: "mcp-pubmed", name: "PubMed", system: "外部数据库", status: "connected", scope: "全局只读", usedBy: ["tumor-report-coworker"], lastSync: "1 小时前" },
-  { id: "mcp-pricing", name: "计价规则库", system: "内部系统", status: "connected", scope: "DMPK 报价", usedBy: ["dmpk-quotation-coworker"], lastSync: "昨天" },
+  /* 两条报价线读的是同一个计价规则库——scope 写成「DMPK 报价」的话，
+     肿瘤报价的价格看起来像是从别处来的，而后台其实只有这一份。 */
+  { id: "mcp-pricing", name: "计价规则库", system: "内部系统", status: "connected", scope: "报价业务线", usedBy: ["dmpk-quotation-coworker", "tumor-quotation-coworker"], lastSync: "昨天" },
   { id: "mcp-lims", name: "实验数据平台", system: "内部系统", status: "pending", scope: "需审批", usedBy: [], lastSync: "未同步" },
   { id: "mcp-crm", name: "客户管理系统", system: "外部系统", status: "disconnected", scope: "未授权", usedBy: [], lastSync: "未连接" },
 ];

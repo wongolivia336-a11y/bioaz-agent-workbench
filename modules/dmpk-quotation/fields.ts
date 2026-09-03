@@ -1,63 +1,72 @@
+import type { ParamDraft, ParamField, ParamGroup } from "../../components/params";
+
 export type DmpkStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
 export type DmpkGroupId = "assay" | "animal" | "analysis" | "delivery";
 
-export type DmpkField = {
-  id: string;
-  label: string;
-  value: string;
-  required: boolean;
-  group: DmpkGroupId;
-};
+/* 字段形状搬到了 components/params：肿瘤报价用的是同一副骨架、同一套类名。
+   这里只把 group 收窄成 DMPK 自己的四组，别的一个字没改——十四项仍然全是
+   选项按钮（kind 缺省就是 options）。 */
+export type DmpkField = ParamField & { group: DmpkGroupId };
+export type DmpkDraftTab = ParamDraft;
 
-export type DmpkDraftTab = {
-  fieldId: string;
-  label: string;
-  value: string;
-};
-
-export const dmpkGroups: Array<{ id: DmpkGroupId; title: string }> = [
+export const dmpkGroups: Array<ParamGroup & { id: DmpkGroupId }> = [
   { id: "assay", title: "检测类型" },
   { id: "animal", title: "动物实验" },
   { id: "analysis", title: "生物分析" },
   { id: "delivery", title: "报告与报价" },
 ];
 
-export const initialDmpkFields: DmpkField[] = [
-  { id: "assayType", label: "检测类型", value: "", required: true, group: "assay" },
-  { id: "molecule", label: "分子类型", value: "", required: true, group: "assay" },
-  { id: "species", label: "动物种属", value: "", required: true, group: "animal" },
-  { id: "animalsPerGroup", label: "每组动物数", value: "", required: true, group: "animal" },
-  { id: "groupCount", label: "组数", value: "", required: true, group: "animal" },
-  { id: "cycle", label: "试验周期", value: "", required: true, group: "animal" },
-  { id: "compoundType", label: "化合物类别", value: "", required: true, group: "analysis" },
-  { id: "method", label: "分析方法", value: "", required: true, group: "analysis" },
-  { id: "sampleType", label: "样品类型", value: "", required: true, group: "analysis" },
-  { id: "bloodPoints", label: "采血点数", value: "", required: true, group: "analysis" },
-  { id: "analyteCount", label: "待测物数量", value: "", required: true, group: "analysis" },
-  { id: "format", label: "报告格式", value: "", required: true, group: "delivery" },
-  { id: "language", label: "报告语言", value: "", required: true, group: "delivery" },
-  { id: "region", label: "报价区域", value: "", required: true, group: "delivery" },
-];
-
 export const dmpkFieldOptions: Record<string, string[]> = {
   assayType: ["PK", "BA Only", "TOX"],
   molecule: ["小分子", "多肽", "抗体", "寡核苷酸"],
   species: ["SD 大鼠", "小鼠", "Beagle 犬", "食蟹猴"],
-  animalsPerGroup: ["3", "6", "10", "自定义"],
+  animalsPerGroup: ["3", "6", "10"],
   // 2 是当前值、3 是批注建议值，两个都要能点到
-  groupCount: ["2", "3", "4", "6", "自定义"],
-  cycle: ["1 周", "2 周", "4 周", "自定义"],
+  groupCount: ["2", "3", "4", "6"],
+  cycle: ["1 周", "2 周", "4 周"],
   compoundType: ["普通小分子", "寡核苷酸", "多肽", "抗体"],
   method: ["LC-MS/MS", "ELISA", "qPCR", "LBA"],
   sampleType: ["血浆", "血清", "组织匀浆", "尿液"],
   /* 10 是审批人批注里给的建议值。选项表里没有它的话，照着批注改这条路
      只能走「自定义」——演示时那一下会很别扭，而且它本来就是个常见取值。 */
-  bloodPoints: ["3", "6", "8", "10", "自定义"],
-  analyteCount: ["1", "2", "3", "自定义"],
+  bloodPoints: ["3", "6", "8", "10"],
+  analyteCount: ["1", "2", "3"],
   format: ["Word + Excel", "Word", "Excel"],
   language: ["中文", "英文", "中英双语"],
   region: ["国内", "欧美", "亚太"],
 };
+
+/* 「自定义」不再写进选项表，改成字段上的 allowCustom 由行渲染器统一补在末尾。
+   写进表里的那份迟早跟渲染器分叉。开的仍然是原来那五项——数量、组数、周期、
+   采血点、待测物数，它们天然是开放取值；封闭词表（报告格式、分析方法）不开。 */
+const OPEN_VALUE_FIELDS = new Set(["animalsPerGroup", "groupCount", "cycle", "bloodPoints", "analyteCount"]);
+
+const field = (id: string, label: string, group: DmpkGroupId): DmpkField => ({
+  id,
+  label,
+  value: "",
+  required: true,
+  group,
+  options: dmpkFieldOptions[id] ?? [],
+  allowCustom: OPEN_VALUE_FIELDS.has(id),
+});
+
+export const initialDmpkFields: DmpkField[] = [
+  field("assayType", "检测类型", "assay"),
+  field("molecule", "分子类型", "assay"),
+  field("species", "动物种属", "animal"),
+  field("animalsPerGroup", "每组动物数", "animal"),
+  field("groupCount", "组数", "animal"),
+  field("cycle", "试验周期", "animal"),
+  field("compoundType", "化合物类别", "analysis"),
+  field("method", "分析方法", "analysis"),
+  field("sampleType", "样品类型", "analysis"),
+  field("bloodPoints", "采血点数", "analysis"),
+  field("analyteCount", "待测物数量", "analysis"),
+  field("format", "报告格式", "delivery"),
+  field("language", "报告语言", "delivery"),
+  field("region", "报价区域", "delivery"),
+];
 
 export const dmpkGroupDescriptions: Record<DmpkGroupId, string> = {
   assay: "确认 DMPK 下的检测业务线与分子类型。",

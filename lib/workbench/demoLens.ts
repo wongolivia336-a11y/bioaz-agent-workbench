@@ -15,13 +15,13 @@
    若之后要独立域名，按 docs/REPOSITORY_STRATEGY.md：同一仓库连多个 Vercel
    project，用环境变量决定默认镜头，**不 fork 代码**。 */
 
-export type DemoLens = "all" | "qa-review" | "dmpk-quotation";
+export type DemoLens = "all" | "qa-review" | "dmpk-quotation" | "tumor-quotation" | "tumor-report";
 
 export type DemoLensDefinition = {
   value: DemoLens;
   label: string;
   /** 只留这个 module 的任务与工单。null = 不筛。 */
-  moduleId: "qa-review" | "dmpk-quotation" | null;
+  moduleId: "qa-review" | "dmpk-quotation" | "tumor-quotation" | "tumor-report" | null;
   /** 工单类型筛选用的显示名，跟 ticketKindLabel 对齐。 */
   kindLabel: string | null;
   /** 这条线上可切换的账号。空数组 = 全部。 */
@@ -34,6 +34,19 @@ export const DEMO_LENSES: DemoLensDefinition[] = [
   { value: "qa-review", label: "QA 审核", moduleId: "qa-review", kindLabel: "QA 审核", accountIds: ["acct-lin", "acct-wang"] },
   /* 撰写人是 DMPK 报价同事赵敏，审批人是王林彬。 */
   { value: "dmpk-quotation", label: "DMPK 报价", moduleId: "dmpk-quotation", kindLabel: "DMPK 报价", accountIds: ["acct-zhao", "acct-wang"] },
+  /* 撰写人是肿瘤报价同事陈默，审批人同样是王林彬——两条报价线共用一位审批人，
+     这不是偷懒：CRO 里报价审批本来就归同一个岗位，让他在两条线上都出现，
+     「同一个人手上压着两条线的单」这件事才演得出来。 */
+  { value: "tumor-quotation", label: "肿瘤报价", moduleId: "tumor-quotation", kindLabel: "肿瘤报价", accountIds: ["acct-chen", "acct-wang"] },
+  /* 肿瘤报告。撰写人是一线实验员林一一（她上传数据、数字同事写报告、她送审），
+     审批人是王林彬。
+     kindLabel 用「QA 审核」不是笔误：**报告的送审单就是 QA 审核单**。
+     这条线和 QA 审核那条看的是同一张单的两端——报告线站在交出去的人一侧，
+     QA 线站在接住的人一侧。给它另造一个工单类型，等于把一件事记成两笔账，
+     而「这份报告审了几轮、现在在谁手上」正是工单存在的理由。
+     两条镜头的差别在**任务**：切到这里，侧栏只剩报告任务，点进去开的是
+     报告工作台；切到 QA，点进去开的是审核台。 */
+  { value: "tumor-report", label: "肿瘤报告", moduleId: "tumor-report", kindLabel: "QA 审核", accountIds: ["acct-lin", "acct-wang"] },
 ];
 
 export const getDemoLens = (value: DemoLens) =>
@@ -54,12 +67,18 @@ const LENS_PARAM: Record<DemoLens, string> = {
   "all": "all",
   "qa-review": "qa",
   "dmpk-quotation": "dmpk",
+  "tumor-quotation": "tumor",
+  "tumor-report": "report",
 };
 
 /** 从地址栏读。认不出来就用默认档。 */
 export function readDemoLens(search: string): DemoLens {
   const value = new URLSearchParams(search).get(LENS_PARAM_NAME);
   if (value === "dmpk" || value === "dmpk-quotation") return "dmpk-quotation";
+  /* tumor 和 tumor-report 都以 tumor 开头，长的那个必须先判——
+     否则 ?line=tumor-report 会被前一条吃掉，落到肿瘤报价上。 */
+  if (value === "report" || value === "tumor-report") return "tumor-report";
+  if (value === "tumor" || value === "tumor-quotation") return "tumor-quotation";
   if (value === "qa" || value === "qa-review") return "qa-review";
   if (value === "all" || value === "overview") return "all";
   return DEFAULT_LENS;
