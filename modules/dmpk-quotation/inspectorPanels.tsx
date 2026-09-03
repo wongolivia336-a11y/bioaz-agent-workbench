@@ -23,7 +23,9 @@ import {
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { ParameterLedger, type ParamField } from "../../components/params";
 import { useModalDismiss } from "../../components/ui/useModalDismiss";
+import { dmpkGroups } from "./fields";
 import {
   resolveInspectorPanels,
   type InspectorContentState,
@@ -290,17 +292,19 @@ function ProcessPanel({ context }: { context: DmpkInspectorContext }) {
   );
 }
 
+/* 台账搬到了 components/params/ParameterLedger——跟肿瘤报价共用同一份。
+   DMPK 十四项全是必填，所以按必填算进度和原来按全量算是同一个数。 */
 function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
-  const completed = context.fields.filter((field) => field.value).length;
-  const pct = context.fields.length ? Math.round((completed / context.fields.length) * 100) : 0;
-  return <div className="dmpkInspectorList paramCollectList"><div className="paramCollectProgress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${pct}%` }} /></div>{(Object.keys(groupLabels) as DmpkInspectorGroup[]).map((group) => {
-    const fields = context.fields.filter((field) => field.group === group);
-    const open = context.openGroups[group];
-    const groupCompleted = fields.filter((field) => field.value).length;
-    const progressClass = groupCompleted === fields.length ? "isComplete" : groupCompleted ? "isPartial" : "isEmpty";
-    const stateLabel = groupCompleted === fields.length ? "已完成" : groupCompleted ? "进行中" : "未开始";
-    return <section className={`inspectorParameterGroup ${progressClass} ${open ? "isOpen" : ""}`} key={group}><button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => context.onToggleGroup(group)}><i className="paramGroupDot" aria-hidden="true" /><strong>{groupLabels[group]}</strong><span className={progressClass}><em className="paramGroupState">{stateLabel}</em><ChevronDown size={14} /></span></button>{open ? <div className="inspectorParameterFields">{fields.map((field) => field.value ? <button className={`inspectorParameterField ${context.editingFieldId === field.id ? "isEditing" : ""}`} type="button" key={field.id} onClick={() => context.onEditField(field.id)}><span>{field.label}</span><strong>{field.value}</strong><Edit3 size={13} /></button> : <div className="inspectorParameterField isEmpty" key={field.id}><span>{field.label}</span><strong>待填写</strong><span aria-hidden="true" /></div>)}</div> : null}</section>;
-  })}</div>;
+  return (
+    <ParameterLedger
+      groups={dmpkGroups}
+      fields={context.fields as ParamField[]}
+      openGroups={context.openGroups}
+      editingFieldId={context.editingFieldId}
+      onToggleGroup={(groupId) => context.onToggleGroup(groupId as DmpkInspectorGroup)}
+      onEditField={context.onEditField}
+    />
+  );
 }
 
 /**

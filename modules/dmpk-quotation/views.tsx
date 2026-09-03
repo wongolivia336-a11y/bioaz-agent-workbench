@@ -2,8 +2,9 @@
 
 import { ArrowRight, Check, ChevronDown, CircleDollarSign, CornerDownLeft, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { ComposerChipTray as SharedComposerChipTray, ParameterTaskCard } from "../../components/params";
 import { PersonPicker } from "../../components/ui";
+import { PreviewModal } from "../../components/ui/PreviewModal";
 import { ScrollTopButton } from "../../components/ui/ScrollTopButton";
 import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import { directory } from "../../lib/workbench/mockInbox";
@@ -18,7 +19,6 @@ import { ChangeConfirmCard, type QuoteChange } from "../../components/workbench-
 import type { QuoteNote } from "../../lib/workbench/quoteData";
 import { priceCatalog, scenarioShortLabels } from "../quotation-management/dmpk/catalog";
 import {
-  dmpkFieldOptions,
   dmpkGroups,
   getDmpkGroupTitle,
   initialDmpkFields,
@@ -311,8 +311,6 @@ export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHa
   );
 }
 
-const draftGroupById = new Map(initialDmpkFields.map((field) => [field.id, field.group]));
-
 /**
  * Composer 里的已选参数托盘。
  *
@@ -378,252 +376,22 @@ export function DmpkReworkNoticeCard({ total, blocking, onOpenCanvas }: {
 }
 
 export function ComposerChipTray({ tabs, onRemove }: { tabs: DmpkDraftTab[]; onRemove: (fieldId: string) => void }) {
-  const [expanded, setExpanded] = useState(false);
-  // chips 被清空后（发送完一轮）自动回到收起态，否则下次进来是个空的大盒子
-  useEffect(() => { if (!tabs.length) setExpanded(false); }, [tabs.length]);
-  if (!tabs.length) return null;
-
-  const grouped = dmpkGroups
-    .map((group) => ({ group, items: tabs.filter((tab) => draftGroupById.get(tab.fieldId) === group.id) }))
-    .filter((entry) => entry.items.length);
-  const ungrouped = tabs.filter((tab) => !draftGroupById.has(tab.fieldId));
-
-  const chip = (tab: DmpkDraftTab) => (
-    <button type="button" key={tab.fieldId} onClick={() => onRemove(tab.fieldId)} aria-label={`移除 ${tab.label}`}>
-      <span>{tab.label}：{tab.value}</span>
-      <X size={13} />
-    </button>
-  );
-
-  const toggle = (
-    <button className="composerChipToggle" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
-      {/* 报的是总数不是隐藏数——没测量就不知道露出了几个，写「+4」会骗人。
-          「4 项 ˅」在任何数量下都成立：已选这么多，点开看全部。 */}
-      {expanded ? <>收起<ChevronDown size={12} className="isOpen" /></> : <>{tabs.length} 项<ChevronDown size={12} /></>}
-    </button>
-  );
-
-  if (!expanded) {
-    // 收起态就一行：chips 裁到头渐隐，计数紧跟在断口后面——
-    // 内容在哪儿断的，「还有更多」就出现在哪儿。
-    return (
-      <div className="composerChipTray">
-        <div className="draftTabs composerChipStrip">{tabs.map(chip)}</div>
-        {toggle}
-      </div>
-    );
-  }
-
-  return (
-    <div className="composerChipTray isExpanded">
-      <div className="composerChipTrayHead">
-        <span className="composerChipCount">已选 {tabs.length} 项参数</span>
-        {toggle}
-      </div>
-      <div className="composerChipGroups">
-        {grouped.map((entry) => (
-          <section key={entry.group.id}>
-            <h5>{entry.group.title}<i>{entry.items.length}</i></h5>
-            <div className="draftTabs">{entry.items.map(chip)}</div>
-          </section>
-        ))}
-        {ungrouped.length ? (
-          <section>
-            <h5>其他<i>{ungrouped.length}</i></h5>
-            <div className="draftTabs">{ungrouped.map(chip)}</div>
-          </section>
-        ) : null}
-      </div>
-    </div>
-  );
+  return <SharedComposerChipTray tabs={tabs} groups={dmpkGroups} fields={initialDmpkFields} onRemove={onRemove} />;
 }
 
-/** 一项参数的选项行。行内卡和全屏弹窗共用一份——两套实现迟早会分叉。 */
-function ParameterOptionRow({ field, index, selectedValue, editingCustom, customValue, onPick, onCustomOpen, onCustomChange, onCustomCommit, onCustomCancel }: {
-  field: DmpkField;
-  index: number;
-  selectedValue: string;
-  editingCustom: boolean;
-  customValue: string;
-  onPick: (value: string) => void;
-  onCustomOpen: () => void;
-  onCustomChange: (value: string) => void;
-  onCustomCommit: () => void;
-  onCustomCancel: () => void;
-}) {
-  return (
-    <article className={`decisionRow ${selectedValue ? "done" : ""}`}>
-      <div className="decisionCopy">
-        <div className="decisionTitleRow">
-          <span className="decisionIndex">{selectedValue ? <Check size={15} /> : index}</span>
-          <strong>{field.label}</strong>
-          <span className="requiredTag">{field.required ? "必填" : "可选"}</span>
-        </div>
-        <div className="optionGrid">
-          {(dmpkFieldOptions[field.id] ?? ["1", "2", "3"]).map((option) => option === "自定义" && editingCustom ? (
-            <input
-              autoFocus
-              className="customOptionInput"
-              key={option}
-              value={customValue}
-              placeholder="输入"
-              onBlur={onCustomCommit}
-              onChange={(event) => onCustomChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") onCustomCommit();
-                if (event.key === "Escape") {
-                  /* 全屏时 Esc 是关弹窗的。这里必须拦住,否则想取消一个自定义输入,
-                     会连整张弹窗一起关掉——把人填到一半的东西收走。 */
-                  event.stopPropagation();
-                  onCustomCancel();
-                }
-              }}
-            />
-          ) : (
-            <button className={selectedValue === option ? "selected" : ""} type="button" key={option} onClick={() => option === "自定义" ? onCustomOpen() : onPick(option)}>{option}</button>
-          ))}
-        </div>
-      </div>
-    </article>
-  );
-}
-
+/* 卡片本体搬到了 components/params/ParameterTaskCard——DMPK 和肿瘤报价共用同一份。
+   这里只剩把 DMPK 自己的四个分组绑上去。 */
 export function DmpkParameterTaskCard({ activeGroup, fields, allFields, draftTabs, mode, onSelect }: { activeGroup: DmpkGroupId; fields: DmpkField[]; allFields: DmpkField[]; draftTabs: DmpkDraftTab[]; mode: "collect" | "edit"; onSelect: (field: DmpkField, value: string) => void }) {
-  const [editingCustom, setEditingCustom] = useState<string | null>(null);
-  const [customValues, setCustomValues] = useState<Record<string, string>>({});
-  const [fullscreen, setFullscreen] = useState(false);
-  const [page, setPage] = useState(() => Math.max(0, dmpkGroups.findIndex((group) => group.id === activeGroup)));
-  const safePage = Math.min(page, dmpkGroups.length - 1);
-  const pageGroup = dmpkGroups[safePage];
-  const pageFields = mode === "edit" ? fields : fields.filter((field) => field.group === pageGroup.id);
-  useEffect(() => {
-    const activePage = dmpkGroups.findIndex((group) => group.id === activeGroup);
-    if (activePage >= 0) setPage(activePage);
-  }, [activeGroup]);
-  const selectValue = (field: DmpkField, value: string) => {
-    onSelect(field, value);
-    if (mode !== "collect" || pageFields.length !== 1 || pageFields[0]?.id !== field.id) return;
-    const nextPage = dmpkGroups.findIndex((group, index) => index > safePage && fields.some((item) => item.id !== field.id && item.group === group.id));
-    if (nextPage >= 0) window.requestAnimationFrame(() => setPage(nextPage));
-  };
-  const commitCustom = (field: DmpkField) => {
-    const value = customValues[field.id]?.trim();
-    if (value) selectValue(field, value);
-    setEditingCustom(null);
-  };
-  /* 待发草稿优先于已落库的值:同一项被改过,行内要显示的是那个改动,不是旧值。 */
-  const valueOf = (field: DmpkField) => draftTabs.find((tab) => tab.fieldId === field.id)?.value ?? field.value ?? "";
-
-  const row = (field: DmpkField, index: number, onPick: (value: string) => void) => (
-    <ParameterOptionRow
-      key={field.id}
-      field={field}
-      index={index}
-      selectedValue={valueOf(field)}
-      editingCustom={editingCustom === field.id}
-      customValue={customValues[field.id] ?? ""}
-      onPick={onPick}
-      onCustomOpen={() => setEditingCustom(field.id)}
-      onCustomChange={(value) => setCustomValues((current) => ({ ...current, [field.id]: value }))}
-      onCustomCommit={() => commitCustom(field)}
-      onCustomCancel={() => setEditingCustom(null)}
-    />
-  );
-
-  const modal = fullscreen ? (
-    <DmpkParameterFullscreenModal
-      allFields={allFields}
-      draftTabs={draftTabs}
-      renderRow={row}
-      onSelect={onSelect}
-      onClose={() => { setEditingCustom(null); setFullscreen(false); }}
-    />
-  ) : null;
-
-  /* 行内卡在没有待填项时收起,但**弹窗开着的时候不能跟着消失**——在全屏里填完
-     最后一项,整个面板凭空蒸发会让人以为出错了。让它留到你自己点关闭。 */
-  if (!fields.length) return modal;
-
   return (
-    <>
-      <section
-        className={`warningDecision parameterTaskCard ${mode === "collect" ? "canExpand" : ""}`}
-        /* 整张卡的空白处都能展开,不只是那颗图标——参数一多,人会先去点卡片
-           本身。选项、分页 tab、上一页这些自己有事做的元素要放行,否则选一个
-           值会顺手把弹窗也开了。 */
-        onClick={mode === "collect" ? (event) => {
-          if ((event.target as HTMLElement).closest("button, input, a, label")) return;
-          setFullscreen(true);
-        } : undefined}
-      >
-        <header className="warningDecisionHeader">
-          <div><span>参数补全</span><strong>{mode === "edit" ? `修改${fields[0]?.label ?? "参数"}` : "请补全报价参数"}</strong>{mode === "edit" ? <p>选择新值后发送，即可更新右侧参数。</p> : null}</div>
-          {/* 计数和入口平排一行,图标在右端。上下堆两行会在卡片右上角叠出
-              一块比标题还高的方块,把「参数补全 / 请补全报价参数」压偏。 */}
-          <div className="parameterCardHeadActions">
-            <small>还需填写 {fields.length} 项</small>
-            {/* 分页是为了在这个高度里放得下,不是因为这些参数该被分批问。
-                参数一多,「先填后面那组」在行内卡里是做不到的——后面的页在你
-                填完前是禁用的。全屏的价值就在这儿:一屏看全,哪项都能先填。 */}
-            {mode === "collect" ? <button className="parameterExpandButton" type="button" onClick={() => setFullscreen(true)} aria-label="全屏填写全部参数" title="全屏填写全部参数"><Maximize2 size={15} /></button> : null}
-          </div>
-        </header>
-        {mode === "collect" ? <div className="parameterPages">{dmpkGroups.map((group, index) => <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > safePage} onClick={() => setPage(index)}>{group.title}</button>)}</div> : null}
-        <div className="warningDecisionList">
-          {pageFields.length
-            ? pageFields.map((field, index) => row(field, index + 1, (value) => selectValue(field, value)))
-            : <p className="emptyPageNote">{pageGroup.title}参数已齐全，可切换下一页继续补全。</p>}
-        </div>
-        <div className="parameterPager"><p className="responsibilityNote">还需填写 {fields.length} 项</p>{mode === "collect" && safePage > 0 ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))}>上一页</button></div> : null}</div>
-      </section>
-      {modal}
-    </>
-  );
-}
-
-/** 全屏参数面板。取消分页,四组一次列全,哪一项都能先填。 */
-function DmpkParameterFullscreenModal({ allFields, draftTabs, renderRow, onSelect, onClose }: {
-  allFields: DmpkField[];
-  draftTabs: DmpkDraftTab[];
-  renderRow: (field: DmpkField, index: number, onPick: (value: string) => void) => ReactNode;
-  onSelect: (field: DmpkField, value: string) => void;
-  onClose: () => void;
-}) {
-  const dismiss = useModalDismiss(onClose);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const remaining = allFields.filter((field) => field.required && !field.value && !draftTabs.some((tab) => tab.fieldId === field.id)).length;
-
-  /* 挂到 body 上,不留在参数卡子树里——review.css 有一条
-     `.parameterTaskCard *` 把 transition / transform 全清零,留在里面
-     回顶按钮的进出动画会被那条一起清掉。 */
-  return createPortal(
-    <div className="modalBackdrop" role="presentation" {...dismiss}>
-      <section className="previewModal dmpkParamModal" role="dialog" aria-modal="true" aria-label="报价参数">
-        <header>
-          <div><span>参数补全</span><h2>报价参数</h2></div>
-          <button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button>
-        </header>
-        <div className="dmpkParamModalBody" ref={scrollRef}>
-          {dmpkGroups.map((group) => {
-            const groupFields = allFields.filter((field) => field.group === group.id);
-            if (!groupFields.length) return null;
-            const groupLeft = groupFields.filter((field) => field.required && !field.value && !draftTabs.some((tab) => tab.fieldId === field.id)).length;
-            return (
-              <section className="dmpkParamModalGroup" key={group.id}>
-                <h3>{group.title}<em>{groupLeft ? `还需 ${groupLeft} 项` : "已齐全"}</em></h3>
-                {groupFields.map((field, index) => renderRow(field, index + 1, (value) => onSelect(field, value)))}
-              </section>
-            );
-          })}
-        </div>
-        <footer className="dmpkParamModalFoot">
-          <p>{remaining ? `还需填写 ${remaining} 项` : "参数已齐全，关闭后发送即可"}</p>
-          <button className="primaryButton compact" type="button" onClick={onClose}>完成</button>
-        </footer>
-        <ScrollTopButton targetRef={scrollRef} />
-      </section>
-    </div>,
-    document.body,
+    <ParameterTaskCard
+      groups={dmpkGroups}
+      fields={fields}
+      allFields={allFields}
+      activeGroup={activeGroup}
+      draftTabs={draftTabs}
+      mode={mode}
+      onSelect={(field, value) => onSelect(field as DmpkField, value)}
+    />
   );
 }
 
@@ -711,11 +479,9 @@ export function DmpkParameterPanel({ fields, activeGroup, openGroups, completedC
 }
 
 export function DmpkQuotationPreviewModal({ fields, onClose }: { fields: DmpkField[]; onClose: () => void }) {
-  const dismiss = useModalDismiss(onClose);
   const scrollRef = useRef<HTMLDivElement>(null);
-  /* role="dialog" 归面板，遮罩是 presentation——原来两个都挂在遮罩上，
-     读屏软件会把整个背景层当成对话框。 */
-  return <div className="modalBackdrop" role="presentation" {...dismiss}><section className="previewModal" role="dialog" aria-modal="true" aria-label="完整参数与计价规则预览"><header><div><span>报价前确认</span><h2>完整参数与计价规则预览</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button></header><div className="previewBody"><div className="previewContent" ref={scrollRef}><PreviewTable title="报价参数" rows={fields.map((field) => [getDmpkGroupTitle(field.group), field.label, field.value])} /><div className="previewNotice"><Check size={17} /><span>计价关键字段已齐全。Word 报价单使用 30% 管理费，Excel 报价明细使用 15% 管理费，生成后将进行金额一致性校验。</span></div></div></div><ScrollTopButton targetRef={scrollRef} /></section></div>;
+  /* 遮罩、层级、Esc、关闭键都归 PreviewModal——这层皮原本在三处各手写一遍。 */
+  return <PreviewModal eyebrow="报价前确认" title="完整参数与计价规则预览" onClose={onClose}><div className="previewBody"><div className="previewContent" ref={scrollRef}><PreviewTable title="报价参数" rows={fields.map((field) => [getDmpkGroupTitle(field.group), field.label, field.value])} /><div className="previewNotice"><Check size={17} /><span>计价关键字段已齐全。Word 报价单使用 30% 管理费，Excel 报价明细使用 15% 管理费，生成后将进行金额一致性校验。</span></div></div></div><ScrollTopButton targetRef={scrollRef} /></PreviewModal>;
 }
 /* DmpkArtifactPreviewModal 已删除：它渲染的是一张四行摘要表，既不是 Word 也不是
    Excel，撰写人对着它核对不了任何一行。产物预览统一走 QuotePreviewModal。 */
