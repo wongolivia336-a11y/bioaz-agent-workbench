@@ -25,8 +25,14 @@ export const workspacePinCatalog: PinItem[] = [
   { id: "task-ba", type: "task", title: "Balb/c nude BA 报价", project: workspaceProjects[1].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "3 天前", status: "done", priority: "low" },
   /* ZZ 项目原本一条任务都没有，展开是空的。给它一条待确认的，顺便让「要你动手」
      这件事在侧栏出现在两个不同项目下——只有一条时，看的人会以为那是那条任务的
-     特例，而不是一种状态。 */
-  { id: "task-ct26-quote", type: "task", title: "CT26 模型评价报价", project: workspaceProjects[2].name, moduleId: "dmpk-quotation", coworkerId: "dmpk-quotation-coworker", coworkerName: "DMPK报价同事", time: "1 天前", status: "pending", priority: "medium" },
+     特例，而不是一种状态。
+
+     它原来挂在 dmpk-quotation 下，但 CT26 是鼠源肿瘤细胞系，这一单从头到尾
+     是肿瘤药效评价——挂错线的后果是「肿瘤报价」这个演示镜头里一条任务都没有，
+     而 DMPK 镜头里躺着一条不属于它的。 */
+  { id: "task-ct26-quote", type: "task", title: "CT26 模型评价报价", project: workspaceProjects[2].name, moduleId: "tumor-quotation", coworkerId: "tumor-quotation-coworker", coworkerName: "肿瘤报价同事", time: "1 天前", status: "pending", priority: "medium" },
+  /* 一条在跑、一条待确认。只有一条时，侧栏那条线看起来像个孤例。 */
+  { id: "task-mc38-quote", type: "task", title: "MC38 皮下模型报价", project: workspaceProjects[2].name, moduleId: "tumor-quotation", coworkerId: "tumor-quotation-coworker", coworkerName: "肿瘤报价同事", time: "刚刚", status: "running", priority: "high" },
 ];
 
 /* agent 在你不在场时交付、你还没点开的任务。运行时也会往里加（离开一条还在

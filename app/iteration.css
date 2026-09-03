@@ -2003,18 +2003,24 @@ button.inspectorParameterField:hover { background: var(--surface); }
   font-size: 12px;
 }
 
-/* 外框不给上边距——上边距在 .paramSelect 自己身上，两边都给会叠成 10px。 */
-:is(.parameterTaskCard, .dmpkParamModalBody) .paramSelectWrap {
-  position: relative;
+/* 下拉和文本框共用的外框。上边距和最大宽度写在框上，控件本身只管自己的样子——
+   两边各写一份的话，同一个选择器会出现两次，改一处就漏一处。
+   重复行里的输入框不套这个框：它们是 grid 的直接子元素，多一层就没法跟表头
+   共用同一条列宽规则了。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramControlWrap {
+  margin-top: 5px;
+  max-width: 420px;
 }
 
-:is(.parameterTaskCard, .dmpkParamModalBody) .paramSelect,
+/* 下拉用的是仓库里现成的 .compactSelect（浮层走 useDismissableLayer），
+   这里只把它调到参数行的尺寸：跟文本框同高 30px、同字号 12px，
+   跟选项按钮同圆角 8px。原生 <select> 展开的是系统皮肤，在这张卡里
+   明显是另一个东西，而这次要的恰恰是「和 DMPK 长一个样」。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect > button,
 :is(.parameterTaskCard, .dmpkParamModalBody) .paramTextInput {
   width: 100%;
-  max-width: 420px;
   min-height: 30px;
   height: 30px;
-  margin-top: 5px;
   border: 1px solid var(--bioaz-border);
   border-radius: 8px;
   padding: 0 9px;
@@ -2022,20 +2028,60 @@ button.inspectorParameterField:hover { background: var(--surface); }
   color: var(--bioaz-text-primary);
   font-family: inherit;
   font-size: 12px;
-  /* 下拉是「选中的那一项」，跟选项按钮的选中态同重；文本框是人自己敲的，
-     不该比周围更重。同一条规则里分不开，所以下面单独给 select 加重。 */
   font-weight: 500;
   outline: 0;
 }
 
-:is(.parameterTaskCard, .dmpkParamModalBody) .paramSelect {
+/* 触发器上显示的是「选中的那一项」，跟选项按钮的选中态同重。
+   一行放不下就省略号——按钮是**一行高**的，让它换行会把整行顶开。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect > button > span {
+  overflow: hidden;
+  flex: 1;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 600;
 }
 
-:is(.parameterTaskCard, .dmpkParamModalBody) .paramSelect:focus,
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect > button > span.isPlaceholder {
+  color: var(--bioaz-text-disabled);
+  font-weight: 500;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect.isOpen > button,
 :is(.parameterTaskCard, .dmpkParamModalBody) .paramTextInput:focus {
   border-color: var(--bioaz-agent-accent-border);
   background: var(--bioaz-agent-accent-soft);
+}
+
+/* 菜单要放得开：模型那八条中英双语选项最宽 437px，而 .compactSelectMenu
+   的通用规则把宽度封在 min(320px, …)。封在那儿的后果是每一条都被截断，
+   而这八条的区别恰恰在后半截（常规 / 耐药 / hPBMC+）。
+   三个类选中，赢过 iteration.css 那条单类规则。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect .compactSelectMenu {
+  width: max(280px, 100%);
+  max-width: min(520px, calc(100vw - 48px));
+}
+
+/* 换行而不是省略号：菜单是**读选项**的地方，截断了就选不对。
+   行高随内容变，所以 min-height 而不是 height。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect .compactSelectMenu button {
+  min-height: 32px;
+  align-items: flex-start;
+  padding: 7px 9px;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+:is(.parameterTaskCard, .dmpkParamModalBody) .compactSelect.paramSelect .compactSelectMenu button > span {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* 重复行里的下拉不留上边距，也不封宽——它已经在 grid 的一格里了。 */
+:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRow .compactSelect.paramSelect {
+  min-width: 0;
 }
 
 :is(.parameterTaskCard, .dmpkParamModalBody) .paramMultiWrap {
@@ -2102,11 +2148,6 @@ button.inspectorParameterField:hover { background: var(--surface); }
   font-weight: 600;
 }
 
-:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRow .paramSelect,
-:is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRow .paramTextInput {
-  max-width: none;
-  margin-top: 0;
-}
 
 :is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRemove {
   width: 26px;

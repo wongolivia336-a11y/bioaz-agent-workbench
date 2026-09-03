@@ -20,7 +20,7 @@ export type MailResourceRef = {
   source: "uploaded" | "task-output" | "mail-copy";
 };
 
-export type MailModuleId = "qa-review" | "dmpk-quotation";
+export type MailModuleId = "qa-review" | "dmpk-quotation" | "tumor-quotation";
 
 export type MailItem = {
   id: string;

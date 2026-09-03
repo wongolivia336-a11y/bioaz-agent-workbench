@@ -2,6 +2,7 @@
 
 import { Check, Plus, X } from "lucide-react";
 import { useState } from "react";
+import { CompactSelect } from "../workbench-shell/ShellControls";
 import {
   joinMulti,
   joinRepeat,
@@ -139,8 +140,11 @@ function OptionsControl({ field, value, values, onChange }: {
 /**
  * 下拉。给选项长到平铺会占掉半屏的那些字段用（模型、动物品系、细胞系）。
  *
- * 用原生 <select> 而不是自绘浮层：这一行经常出现在 340px 高的内滚动区里，
- * 自绘浮层要处理裁切、翻转和滚动跟随，而原生下拉在这些情况下本来就是对的。
+ * 用 CompactSelect 而不是原生 `<select>`：原生下拉展开的是系统皮肤，
+ * 白底、行高和字号都不归这套设计管，在参数卡里明显是另一个东西
+ * ——而这次要的恰恰是「和 DMPK 长一个样」。CompactSelect 是仓库里现成的
+ * 那一个（`.compactSelect`，浮层走 useDismissableLayer），
+ * 站内信的交接弹窗、助手上下文条用的都是它。
  */
 function SelectControl({ field, value, values, onChange }: {
   field: ParamField;
@@ -150,15 +154,14 @@ function SelectControl({ field, value, values, onChange }: {
 }) {
   const options = resolveOptions(field, values);
   return (
-    <div className="paramSelectWrap">
-      <select
+    <div className="paramControlWrap">
+      <CompactSelect
         className="paramSelect"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="">{field.placeholder ?? `选择${field.label}`}</option>
-        {options.map((option) => <option key={option} value={option}>{option}</option>)}
-      </select>
+        options={options}
+        placeholder={field.placeholder ?? `选择${field.label}`}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -168,13 +171,18 @@ function TextControl({ field, value, onChange }: {
   value: string;
   onChange: (value: string) => void;
 }) {
+  /* 跟下拉共用同一个外框：上边距和最大宽度写在框上，两种控件本身只管
+     自己的样子。重复行里的输入框**不套这个框**——它们是 grid 的直接子元素，
+     多一层就没法跟表头共用同一条列宽规则了。 */
   return (
-    <input
-      className="paramTextInput"
-      value={value}
-      placeholder={field.placeholder ?? `填写${field.label}`}
-      onChange={(event) => onChange(event.target.value)}
-    />
+    <div className="paramControlWrap">
+      <input
+        className="paramTextInput"
+        value={value}
+        placeholder={field.placeholder ?? `填写${field.label}`}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
   );
 }
 
@@ -292,15 +300,14 @@ function RepeatControl({ field, value, onChange }: {
       {display.map((row, rowIndex) => (
         <div className="paramRepeatRow" key={rowIndex}>
           {columns.map((column, colIndex) => column.options?.length ? (
-            <select
+            <CompactSelect
               className="paramSelect"
               key={column.id}
               value={row[colIndex] ?? ""}
-              onChange={(event) => setCell(rowIndex, colIndex, event.target.value)}
-            >
-              <option value="">{column.placeholder ?? column.label}</option>
-              {column.options.map((option) => <option key={option} value={option}>{option}</option>)}
-            </select>
+              options={column.options}
+              placeholder={column.placeholder ?? column.label}
+              onChange={(next) => setCell(rowIndex, colIndex, next)}
+            />
           ) : (
             <input
               className="paramTextInput"

@@ -15,13 +15,13 @@
    若之后要独立域名，按 docs/REPOSITORY_STRATEGY.md：同一仓库连多个 Vercel
    project，用环境变量决定默认镜头，**不 fork 代码**。 */
 
-export type DemoLens = "all" | "qa-review" | "dmpk-quotation";
+export type DemoLens = "all" | "qa-review" | "dmpk-quotation" | "tumor-quotation";
 
 export type DemoLensDefinition = {
   value: DemoLens;
   label: string;
   /** 只留这个 module 的任务与工单。null = 不筛。 */
-  moduleId: "qa-review" | "dmpk-quotation" | null;
+  moduleId: "qa-review" | "dmpk-quotation" | "tumor-quotation" | null;
   /** 工单类型筛选用的显示名，跟 ticketKindLabel 对齐。 */
   kindLabel: string | null;
   /** 这条线上可切换的账号。空数组 = 全部。 */
@@ -34,6 +34,10 @@ export const DEMO_LENSES: DemoLensDefinition[] = [
   { value: "qa-review", label: "QA 审核", moduleId: "qa-review", kindLabel: "QA 审核", accountIds: ["acct-lin", "acct-wang"] },
   /* 撰写人是 DMPK 报价同事赵敏，审批人是王林彬。 */
   { value: "dmpk-quotation", label: "DMPK 报价", moduleId: "dmpk-quotation", kindLabel: "DMPK 报价", accountIds: ["acct-zhao", "acct-wang"] },
+  /* 撰写人是肿瘤报价同事陈默，审批人同样是王林彬——两条报价线共用一位审批人，
+     这不是偷懒：CRO 里报价审批本来就归同一个岗位，让他在两条线上都出现，
+     「同一个人手上压着两条线的单」这件事才演得出来。 */
+  { value: "tumor-quotation", label: "肿瘤报价", moduleId: "tumor-quotation", kindLabel: "肿瘤报价", accountIds: ["acct-chen", "acct-wang"] },
 ];
 
 export const getDemoLens = (value: DemoLens) =>
@@ -54,12 +58,14 @@ const LENS_PARAM: Record<DemoLens, string> = {
   "all": "all",
   "qa-review": "qa",
   "dmpk-quotation": "dmpk",
+  "tumor-quotation": "tumor",
 };
 
 /** 从地址栏读。认不出来就用默认档。 */
 export function readDemoLens(search: string): DemoLens {
   const value = new URLSearchParams(search).get(LENS_PARAM_NAME);
   if (value === "dmpk" || value === "dmpk-quotation") return "dmpk-quotation";
+  if (value === "tumor" || value === "tumor-quotation") return "tumor-quotation";
   if (value === "qa" || value === "qa-review") return "qa-review";
   if (value === "all" || value === "overview") return "all";
   return DEFAULT_LENS;

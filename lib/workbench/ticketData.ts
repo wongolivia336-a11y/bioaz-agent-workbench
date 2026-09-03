@@ -23,7 +23,7 @@ import type { MailResourceRef, MailModuleId } from "./mailboxData";
  *  流转记录说的是发生过什么,状态说的是现在欠着什么。 */
 export type TicketStatus = "open" | "rejected" | "done" | "dropped";
 
-export type TicketKind = "qa-review" | "dmpk-quotation";
+export type TicketKind = "qa-review" | "dmpk-quotation" | "tumor-quotation";
 
 /** 流转记录的一格。工单页的「详情」看的就是这条链。 */
 export type TicketStep = {
@@ -76,6 +76,7 @@ export const ticketStatusTone: Record<TicketStatus, "neutral" | "running" | "war
 export const ticketKindLabel: Record<TicketKind, string> = {
   "qa-review": "QA 审核",
   "dmpk-quotation": "DMPK 报价",
+  "tumor-quotation": "肿瘤报价",
 };
 
 const file = (id: string, name: string, meta: string): MailResourceRef => ({ id, name, kind: "file", meta, source: "task-output" });
@@ -127,6 +128,32 @@ export const initialTickets: Ticket[] = [
     steps: [
       { id: "s1", at: "今天 08:10", actor: "赵敏", actorRole: "DMPK 报价同事", action: "提交送审", note: "报价参数已按最新模板整理，请确认价格偏差项。" },
       { id: "s2", at: "2 小时前", actor: "系统", actorRole: "流转", action: "分派给王林彬" },
+    ],
+  },
+  /* 肿瘤报价这条线的第一张单。跟 TK-2046 是同一副骨架（撰写人送审、
+     系统分派给王林彬、随单两份产物），只是业务线换了——两条报价线在
+     审批人的收件箱里应该长得一样，因为他做的是同一件事。 */
+  {
+    id: "TK-2045",
+    title: "待确认：CT26 模型评价报价交付包",
+    kind: "tumor-quotation",
+    status: "open",
+    project: "ZZ药业-CT26模型评价",
+    from: "陈默",
+    fromRole: "肿瘤报价同事",
+    assignee: "王林彬",
+    assigneeRole: "审批人",
+    createdAt: "今天 09:05",
+    updatedAt: "1 小时前",
+    attachments: [
+      file("tk-2045-a", "CT26_模型评价报价书.docx", "DOCX · 客户版 · 0.7 MB"),
+      file("tk-2045-b", "CT26_模型评价报价计算表.xlsx", "XLSX · 内部底稿 · 0.4 MB"),
+    ],
+    taskId: "task-ct26-quote",
+    moduleId: "tumor-quotation",
+    steps: [
+      { id: "s1", at: "今天 09:05", actor: "陈默", actorRole: "肿瘤报价同事", action: "提交送审", note: "模型、品系与给药分组已确认，检测指标按 IVIS 计价，请复核动物数与周期。" },
+      { id: "s2", at: "1 小时前", actor: "系统", actorRole: "流转", action: "分派给王林彬" },
     ],
   },
   {
@@ -237,19 +264,22 @@ export const initialTickets: Ticket[] = [
       { id: "s3", at: "昨天", actor: "王林彬", actorRole: "审批人", action: "流转给李林终审归档" },
     ],
   },
+  /* CT26 是鼠源肿瘤细胞系，这一单从头到尾是肿瘤药效评价——原来挂在 DMPK 线上，
+     跟它指向的 task-ct26-quote 一样是挂错了。同一条任务在工单里写「DMPK 报价」、
+     点进去开的却是肿瘤报价会话，是这套演示里最容易被当场问住的地方。 */
   {
     id: "TK-2033",
     title: "待确认：CT26 模型评价报价交付包",
-    kind: "dmpk-quotation",
+    kind: "tumor-quotation",
     status: "done",
     project: "ZZ药业-CT26模型评价",
-    from: "赵敏",
-    fromRole: "DMPK 报价同事",
+    from: "陈默",
+    fromRole: "肿瘤报价同事",
     /* 通过之后交回提交人。这条是给演示准备的「已通过」样本:
-       赵敏的收件箱里要能看到一件已经审完的事,附件可预览可下载,
+       陈默的收件箱里要能看到一件已经审完的事,附件可预览可下载,
        随行的建议修订也还在——通过不等于批注消失。 */
-    assignee: "赵敏",
-    assigneeRole: "DMPK 报价同事",
+    assignee: "陈默",
+    assigneeRole: "肿瘤报价同事",
     createdAt: "5 天前",
     updatedAt: "3 天前",
     attachments: [
@@ -257,9 +287,9 @@ export const initialTickets: Ticket[] = [
       file("tk-2033-b", "CT26_报价计算表.xlsx", "XLSX · 内部底稿 · 0.4 MB"),
     ],
     taskId: "task-ct26-quote",
-    moduleId: "dmpk-quotation",
+    moduleId: "tumor-quotation",
     steps: [
-      { id: "s1", at: "5 天前", actor: "赵敏", actorRole: "DMPK 报价同事", action: "提交送审" },
+      { id: "s1", at: "5 天前", actor: "陈默", actorRole: "肿瘤报价同事", action: "提交送审" },
       { id: "s2", at: "4 天前", actor: "王林彬", actorRole: "审批人", action: "开始审核" },
       { id: "s3", at: "3 天前", actor: "王林彬", actorRole: "审批人", action: "审批通过", note: "1 条建议修订随行留档，不影响通过。" },
     ],
@@ -454,7 +484,7 @@ export const noticeSourceLabel: Record<NoticeSource, string> = {
 
 export const initialNotices: Notice[] = [
   {
-    id: "NT-118", source: "coworker", from: "DMPK报价同事", fromRole: "数字同事",
+    id: "NT-118", source: "coworker", from: "肿瘤报价同事", fromRole: "数字同事",
     title: "已把 CT26 报价产物交给 QA 审核同事预检",
     body: "CT26 模型评价的报价单与明细已生成，已按规则交 QA 审核同事做交付前预检。预检通过后会直接进入你的待办；如果预检发现问题，会连同问题清单一起退回给我重做。此条仅知会，你现在不需要做任何事。",
     project: "ZZ药业-CT26模型评价", at: "18 分钟前",
