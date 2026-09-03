@@ -1533,7 +1533,7 @@ body:has(.bioazDesignSystemPage) {
 .workbenchView::-webkit-scrollbar-thumb,
 .digitalTeamView::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: rgba(17, 19, 24, 0.16);
   background-clip: content-box;
 }

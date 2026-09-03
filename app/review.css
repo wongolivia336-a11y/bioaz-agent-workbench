@@ -43,7 +43,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 40px 高的主按钮属于控件层，不是小件层 */
 .newChat { height: 40px; border-color: var(--review-line-strong); border-radius: var(--bioaz-radius-control); box-shadow: none; }
 .newChat:hover { border-color: #b9b4ed; box-shadow: none; transform: none; }
-.workspaceViewRow, .pinnedProjectRow, .sidebarTaskRow { border-radius: 8px; }
+.workspaceViewRow, .pinnedProjectRow, .sidebarTaskRow { border-radius: var(--bioaz-radius-tool); }
 .workspaceViewRow.active, .chatRow.active, .sidebarTaskRow.active { background: #eeeff2; color: var(--review-ink); }
 .dmpkShell .sidebar .workspaceViewRow.active::before,
 .dmpkShell .sidebar .chatRow.active::before { background: #2a2d33; }
@@ -91,7 +91,7 @@ button { -webkit-tap-highlight-color: transparent; }
   min-height: 118px;
   gap: 22px;
   border-color: var(--review-line);
-  border-radius: var(--review-radius-md);
+  border-radius: var(--bioaz-radius-control);
   background: rgba(255, 255, 255, .92);
   padding: 15px;
   box-shadow: none;
@@ -175,13 +175,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .roleSelector { display: flex; align-items: center; gap: 4px; }
 .roleSelectorCurrent { border-color: var(--review-line); border-radius: 10px; background: #fff; color: var(--review-ink); box-shadow: none; }
 .roleSelectorCurrent:hover { border-color: var(--review-line-strong); background: #f7f8fa; }
-.roleSelectorHelp { position: relative; display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--review-muted); }
+.roleSelectorHelp { position: relative; display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
 .roleSelectorHelp:hover { background: #eef0f3; color: var(--review-ink); }
 .roleSelectorHelp > span { position: absolute; z-index: 80; bottom: calc(100% + 8px); left: 0; display: none; width: 240px; gap: 4px; border: 1px solid var(--review-line); border-radius: 10px; background: #fff; padding: 10px 11px; color: var(--review-body); box-shadow: var(--review-shadow-float); font-size: 12px; line-height: 1.45; text-align: left; }
 .roleSelectorHelp:hover > span, .roleSelectorHelp:focus-visible > span { display: grid; }
 .roleSelectorHelp > span strong { color: var(--review-ink); font-size: 12px; }
-.roleSelectorMenu { border-color: var(--review-line); border-radius: 12px; box-shadow: var(--review-shadow-float); }
-.roleSelectorMenu > button { align-items: start; border-radius: 8px; }
+.roleSelectorMenu { border-color: var(--review-line); border-radius: var(--bioaz-radius-control); box-shadow: var(--review-shadow-float); }
+.roleSelectorMenu > button { align-items: start; border-radius: var(--bioaz-radius-tool); }
 .roleSelectorMenu > button:hover { background: #f2f3f5; }
 .roleSelectorMenu > button.active { background: #eef0f3; color: var(--review-ink); }
 .roleSelectorOptionCopy { display: grid; min-width: 0; gap: 2px; text-align: left; }
@@ -199,7 +199,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .persistentParameterCard.isConfirmed .persistentParameterToggle:hover { background: #f4f6f4; }
 .persistentParameterCard.isConfirmed .persistentParameterToggle > span:first-child svg { color: var(--review-success); }
 .legacyComposerStack .requirementChip.ok { border-color: #dce6e0; background: #f3f7f4; color: var(--review-success); }
-.legacyComposerStack .validationStartButton { display: inline-flex; width: auto; min-width: 112px; gap: 6px; padding: 0 14px; border-radius: 12px; }
+.legacyComposerStack .validationStartButton { display: inline-flex; width: auto; min-width: 112px; gap: 6px; padding: 0 14px; border-radius: var(--bioaz-radius-control); }
 .legacyComposerStack .validationStartButton span { font-size: 12px; font-weight: 650; white-space: nowrap; }
 .legacyComposerStack .composer.workbenchComposer:has(.validationStartButton) {
   grid-template-columns: 44px minmax(0, 1fr) auto;
@@ -250,7 +250,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 24px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: #7f8998;
 }
@@ -267,7 +267,7 @@ button { -webkit-tap-highlight-color: transparent; }
   visibility: hidden;
   transform: translate(-50%, -4px);
   border: 1px solid var(--review-line);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 14px;
   color: var(--review-ink);
@@ -348,7 +348,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .assistantContextBar .compactSelect > button {
   min-height: 32px;
   border-color: transparent;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding-inline: 10px 8px;
   color: #4f5968;
@@ -1806,7 +1806,10 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 7px;
   border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-pill);
+  /* --bioaz-radius-pill 从来没有被定义过，所以这两处一直渲染成直角——
+     var() 解不开又没有兜底值时，属性回落到初始值 0，而且不报错。
+     两处都是 chip，本意就是全圆。 */
+  border-radius: var(--bioaz-radius-full);
   background: #fff;
   color: var(--bioaz-text-secondary);
   padding: 0 11px;
@@ -2033,7 +2036,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: min(560px, calc(100vw - 32px));
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-modal);
+  /* --bioaz-radius-modal 同样没有定义过，这张新建文件夹弹窗一直是直角。 */
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   box-shadow: var(--bioaz-shadow-overlay);
 }
@@ -2151,14 +2155,17 @@ button { -webkit-tap-highlight-color: transparent; }
   min-width: 18px;
   height: 18px;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: rgba(255, 255, 255, 0.16);
   font-size: 10px;
 }
 .previewContextChip {
   max-width: 44%;
   overflow: hidden;
-  border-radius: var(--bioaz-radius-pill);
+  /* --bioaz-radius-pill 从来没有被定义过，所以这两处一直渲染成直角——
+     var() 解不开又没有兜底值时，属性回落到初始值 0，而且不报错。
+     两处都是 chip，本意就是全圆。 */
+  border-radius: var(--bioaz-radius-full);
   background: var(--library-accent-soft);
   color: var(--library-accent);
   padding: 6px 10px;
@@ -2224,7 +2231,7 @@ button { -webkit-tap-highlight-color: transparent; }
   inset: 24px calc((100% - 260px) / 2);
   height: 44px;
   border: 1px solid var(--bioaz-border-strong);
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #fff;
   color: var(--bioaz-text-primary);
   gap: 8px;
@@ -2656,7 +2663,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 24px;
   height: 24px;
   border: 0;
-  border-radius: var(--bioaz-radius-sm, 6px);
+  /* --bioaz-radius-sm 也不存在，一直走的是 6px 兜底。24px 的图标按钮走 tool 档。 */
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -3133,7 +3141,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   border: 1px solid #e4e7ec;
   padding: 12px 18px;
@@ -3192,7 +3200,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 6px;
   border: 1px solid #e4e7ec;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   padding: 8px 14px;
   color: #475467;
@@ -3476,7 +3484,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: min(480px, 100%);
   max-height: 80vh;
   background: #fff;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   border: 1px solid #e4e7ec;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
   display: flex;
@@ -3531,7 +3539,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 100%;
   text-align: left;
   border: 1px solid #e4e7ec;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   padding: 10px 12px;
   cursor: pointer;
@@ -3558,7 +3566,7 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f2f4f7;
   color: #475467;
   flex-shrink: 0;
@@ -3629,7 +3637,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-top: 4px;
   background: #fff;
   border: 1px solid #e4e7ec;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   padding: 4px;
   min-width: 160px;
@@ -4263,7 +4271,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell .agentRun.settled.collapsed,
 .agentRun.settled.collapsed {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #ffffff;
   box-shadow: none;
 }
@@ -4378,7 +4386,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: min(480px, calc(100vw - 32px));
   gap: var(--bioaz-space-4);
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   box-shadow: none;
   padding: var(--bioaz-space-5);
@@ -5000,7 +5008,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 28px;
   min-width: 28px;
   height: 28px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   font-size: 12px;
   font-weight: 600;
 }
@@ -5011,7 +5019,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 100%;
   max-width: 720px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   box-shadow: none;
   padding: 0;
@@ -5072,7 +5080,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .analysisRiskDot {
   width: 7px;
   height: 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
 }
 .analysisRiskDot.is-high { background: #dc2626; }
 .analysisRiskDot.is-medium { background: #d97706; margin-left: 10px; }
@@ -5312,7 +5320,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .dmpkComposerWrap > .parameterTaskCard {
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   box-shadow: none;
 }
@@ -5366,7 +5374,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 34px;
   flex: none;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-surface-subtle);
   color: var(--bioaz-text-secondary);
   place-items: center;
@@ -5384,7 +5392,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .paramCollectProgress {
   height: 4px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #eceef2;
   margin: var(--bioaz-space-3) 0 var(--bioaz-space-1);
 }
@@ -5417,7 +5425,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 10px;
   flex: none;
   border: 1.5px solid #c9cdd6;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
 }
 .inspectorParameterGroup.isComplete .paramGroupDot { border-color: #5c60b8; background: #5c60b8; }
 .inspectorParameterGroup.isPartial .paramGroupDot { border-color: #5c60b8; background: transparent; }
@@ -5435,7 +5443,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-left: auto;
 }
 .paramGroupState {
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #f3f4f6;
   color: #6b7280;
   font-size: 11px;
@@ -5475,7 +5483,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .activityChain,
 .activityChain {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   box-shadow: none;
 }
@@ -5508,7 +5516,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .paramFloatCard > .persistentParameterBody::-webkit-scrollbar { width: 6px; }
 .paramFloatCard > .persistentParameterBody::-webkit-scrollbar-thumb {
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: rgba(17, 19, 24, 0.14);
 }
 .paramFloatCard > .persistentParameterBody::-webkit-scrollbar-track { background: transparent; }
@@ -5587,7 +5595,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* Chatflow 卡片圆角统一为 8px（附录 A.1），气泡保留 12px 以区分对话与内容 */
 .dmpk-quotationModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .artifactCard),
 .tumor-reportModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .analysisContextCard) {
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
 }
 
 /* ===================================================================
@@ -5813,7 +5821,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0;
   border: 1px solid var(--bioaz-border);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   overflow: hidden;
 }
@@ -5978,7 +5986,7 @@ button { -webkit-tap-highlight-color: transparent; }
    =================================================================== */
 .parameterTaskCard {
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-surface);
   box-shadow: none;
 }
@@ -6009,7 +6017,7 @@ button { -webkit-tap-highlight-color: transparent; }
 :is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow {
   position: static;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-surface);
   box-shadow: none;
   min-height: 0;
@@ -6133,7 +6141,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin: 0 6px 0 0;
   border: 0;
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
   color: var(--bioaz-text-tertiary);
   cursor: pointer;
@@ -6200,7 +6208,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 6px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 6px 10px;
   color: inherit;
@@ -6232,7 +6240,7 @@ button { -webkit-tap-highlight-color: transparent; }
   /* 按钮的 UA 默认 padding 是 1px 6px，18px 的盒子里只剩 6px 内容宽，
      12px 的叉号顶到右边缘，于是图标和圆形 hover 底不同心。必须归零。 */
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
   color: var(--bioaz-text-tertiary);
   visibility: hidden;
@@ -6267,7 +6275,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin: 0 2px 0 0;
   border: 0;
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
   color: var(--bioaz-text-tertiary);
   visibility: hidden;
@@ -6313,7 +6321,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-row: 1 / -1;
   min-width: 0;
   border: 1px dashed var(--bioaz-agent-accent-border);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   margin: 10px 6px;
   background: var(--bioaz-agent-accent-soft);
   padding: 12px;
@@ -6393,7 +6401,7 @@ button { -webkit-tap-highlight-color: transparent; }
   flex: none;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -6418,7 +6426,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 28px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -6525,7 +6533,7 @@ button { -webkit-tap-highlight-color: transparent; }
   justify-content: center;
   gap: 6px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   padding: 8px 10px;
   color: var(--bioaz-text-primary);
@@ -7027,14 +7035,14 @@ button { -webkit-tap-highlight-color: transparent; }
    =================================================================== */
 .paramCollectProgress {
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-surface-subtle);
   margin: var(--bioaz-space-3) 0 var(--bioaz-space-2);
 }
 
 .paramCollectProgress > i {
   min-width: 8px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   transition: none;
 }
 
@@ -7230,7 +7238,7 @@ button { -webkit-tap-highlight-color: transparent; }
   justify-content: center;
   gap: 6px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   padding: 8px 10px;
   color: var(--bioaz-text-primary);
@@ -7451,7 +7459,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 28px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -7494,7 +7502,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .floatingChatCard {
   max-height: min(46vh, 420px);
   overflow-y: auto;
-  border-radius: var(--bioaz-radius-container, 16px);
+  border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface, #fff);
   box-shadow: var(--bioaz-shadow-floating, 0 12px 32px rgba(17, 19, 24, .08));
 }
@@ -7505,7 +7513,7 @@ button { -webkit-tap-highlight-color: transparent; }
    没有这一格的话，画布态下选完一个值屏幕上什么都不留，
    用户既不知道生效没有，也没法反悔。 */
 .floatingChatChips {
-  border-radius: var(--bioaz-radius-container, 16px);
+  border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface, #fff);
   padding: 8px 10px;
   box-shadow: var(--bioaz-shadow-floating, 0 12px 32px rgba(17, 19, 24, .08));
@@ -7644,7 +7652,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-rows: 40px minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 18px 48px rgba(17, 19, 24, 0.16);
   backdrop-filter: blur(16px) saturate(1.6);
@@ -7696,7 +7704,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .floatingChatList p {
   max-width: 82%;
   margin: 0;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   padding: 8px 11px;
   font-size: 13px;
   line-height: 1.6;
@@ -7755,7 +7763,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkRuleScopeHit b{color:var(--body);font-weight:500}
 .dmpkRuleScopeTags{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0}
 .dmpkRuleScopeTags span{color:var(--muted);font-size:11px}
-.dmpkRuleScopeTags i{border:1px solid var(--line);border-radius:99px;background:#fff;padding:2px 8px;color:var(--body);font-size:11px;font-style:normal}
+.dmpkRuleScopeTags i{border:1px solid var(--line);border-radius:var(--bioaz-radius-full);background:#fff;padding:2px 8px;color:var(--body);font-size:11px;font-style:normal}
 .dmpkRuleScopePreview small{display:flex;align-items:flex-start;gap:6px;color:var(--amber);font-size:11px;line-height:1.6}
 .dmpkRuleScopePreview small svg{flex-shrink:0;margin-top:2px}
 

@@ -16,7 +16,7 @@
   width: min(680px, calc(100vw - 40px));
   max-height: min(620px, calc(100vh - 80px));
   transform: translate(-50%, -50%);
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
 }
 
 .quotationAssistantWorkspace {
@@ -93,7 +93,7 @@
   height: 30px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: #64748b;
   cursor: pointer;
@@ -301,7 +301,7 @@
 }
 
 .quotationWorkflowPreview > header span {
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #f1f5f9;
   color: #64748b;
   padding: 4px 9px;
@@ -317,7 +317,7 @@
   min-height: 220px;
   overflow: hidden;
   border: 1px solid #eef2f7;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background-image: radial-gradient(#d9dee7 1px, transparent 1px);
   background-size: 18px 18px;
   padding: 28px;

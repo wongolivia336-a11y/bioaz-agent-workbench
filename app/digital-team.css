@@ -84,7 +84,7 @@
   align-items: center;
   gap: 9px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 0 12px;
   color: var(--muted);
@@ -114,7 +114,7 @@
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 0 12px;
   color: var(--ink);
@@ -235,7 +235,7 @@
 .digitalCoworkerCard em,
 .digitalTeamDetail em,
 .digitalSkillList em {
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #f5f7fa;
   color: var(--body);
   padding: 4px 8px;
@@ -272,7 +272,7 @@
   flex-direction: column;
   overflow: auto;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
   background: rgba(255, 255, 255, .96);
   padding: 20px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, .055);
@@ -434,7 +434,7 @@
   position: absolute;
   top: 10px;
   left: 12px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #f5f7fa;
   color: var(--body);
   padding: 3px 7px;
@@ -667,7 +667,7 @@
   display: grid;
   gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 12px;
 }
@@ -699,7 +699,7 @@
   align-items: flex-start;
   gap: 10px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 12px;
 }
