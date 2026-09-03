@@ -6,7 +6,6 @@ import { ComposerChipTray as SharedComposerChipTray, ParameterTaskCard } from ".
 import { PersonPicker } from "../../components/ui";
 import { PreviewModal } from "../../components/ui/PreviewModal";
 import { ScrollTopButton } from "../../components/ui/ScrollTopButton";
-import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import { directory } from "../../lib/workbench/mockInbox";
 import { AgentReply, PanelLink, UserBubble } from "../../components/workbench-shell/AgentPrimitives";
 import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelector";
