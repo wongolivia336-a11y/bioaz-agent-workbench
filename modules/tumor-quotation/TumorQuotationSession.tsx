@@ -90,11 +90,23 @@ export default function TumorQuotationSession({
   /* 卡里列出来的：还缺的、且还没进 chips 的。
      **依赖没满足的也要列**——它仍然是缺的，把它藏起来人会以为参数已经齐了，
      而卡头的计数又说还差三项，对不上。列出来配一句「请先选择模型」就够了。 */
-  const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
+  const isDrafted = (field: TumorField) => draftTabs.some((tab) => tab.fieldId === field.id);
+  /* 一次点完的控件（选项按钮、下拉）进了 chips 就该让位给下一项——这是 DMPK 的节奏。
+     **但多选、重复行、文本框一次交互填不完。** 照 DMPK 那样一进 chips 就把行收走，
+     等于只让人勾一项检测指标、只让人给剂量组打一个字符：
+     敲下第一个键，正在填的那一行当场消失。 */
+  const settlesInOneGo = (field: TumorField) => (field.kind ?? "options") === "options" || field.kind === "select";
+  /** 还没动过的必填项。「还需填写 N 项」和发送按钮的可用性看这个。 */
+  const pendingFields = missingFields.filter((field) => !isDrafted(field));
+  /** 卡里要列出来的。多轮输入的控件即使已经进了 chips 也留着，让人接着填。 */
+  const visibleCardFields = missingFields.filter((field) => !(settlesInOneGo(field) && isDrafted(field)));
   const editingField = fields.find((field) => field.id === editingFieldId) ?? null;
   const composerFields = editingField
-    ? [editingField].filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id))
+    ? [editingField].filter((field) => !(settlesInOneGo(field) && isDrafted(field)))
     : visibleCardFields;
+  /* 「这一步还欠着输入没有」。改单项时只看那一项，否则看全局——
+     用全局的话，改一项参数会被其它还缺的项挡住，发不出去。 */
+  const composerPending = editingField ? (isDrafted(editingField) ? [] : [editingField]) : pendingFields;
 
   // 一组参数收齐后自动折叠，把注意力交给还缺的那组
   useEffect(() => {
@@ -272,9 +284,15 @@ export default function TumorQuotationSession({
   const submitComposer = () => {
     const text = composerText.trim();
     /* 只有「没打字」的时候才走草稿分支。参数卡还没填完就直接 return——
-       但如果人另外打了字，那句话不能被吞掉。 */
+       但如果人另外打了字，那句话不能被吞掉。
+
+       这里看的必须是 composerPending，**不能是 composerFields**：多选和重复行
+       填过之后仍然留在卡上（好让人接着改），composerFields 就一直不为空，
+       于是这一条会永远 return —— 而按钮的 disabled 看的是 composerPending，
+       已经放行了。两处判据不一致的后果是「按钮看着能点，点了没反应」，
+       这比按钮灰着更糟：灰着至少说明了它现在不该被点。 */
     if (draftTabs.length && !text) {
-      if (stage === "collecting" && composerFields.length) return;
+      if (stage === "collecting" && composerPending.length) return;
       sendDraft();
       return;
     }
@@ -362,6 +380,7 @@ export default function TumorQuotationSession({
           fields={composerFields}
           allFields={fields}
           mode={editingField ? "edit" : "collect"}
+          remainingCount={composerPending.length}
           draftTabs={draftTabs}
           onSelect={addDraft}
           onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))}
@@ -372,7 +391,7 @@ export default function TumorQuotationSession({
           attachments={attachments}
           onAttachmentsChange={setAttachments}
           activeCoworkerId={activeCoworkerId}
-          disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())}
+          disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerPending.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())}
         />
         <WorkbenchPanelBody
           panels={railPanels}

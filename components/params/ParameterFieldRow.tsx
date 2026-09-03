@@ -279,11 +279,20 @@ function RepeatControl({ field, value, onChange }: {
 }) {
   const columns = field.columns ?? [];
   const rows = splitRepeat(value);
-  /* 一行都没有时先摆一行空的：给一个「点这里开始」的空白框，
+  /* **空行不进 value**——`joinRepeat` 会把全空的一行滤掉，否则取值末尾会挂一串
+     没意义的分隔符。所以「屏幕上有几行」只能由组件自己记：少了这一笔，
+     点「添加一行」是毫无反应的——新行全空、当场被滤掉、再渲染回来还是原样。 */
+  const [blankRows, setBlankRows] = useState(0);
+  /* 一行都没有时至少摆一行空的：给一个「点这里开始」的空白框，
      比给一颗孤零零的「添加」按钮更清楚这一项要填什么。 */
-  const display = rows.length ? rows : [columns.map(() => "")];
+  const blanks = rows.length ? blankRows : Math.max(blankRows, 1);
+  const display = [...rows, ...Array.from({ length: blanks }, () => columns.map(() => ""))];
 
-  const write = (next: string[][]) => onChange(joinRepeat(next));
+  const write = (next: string[][]) => {
+    const kept = next.filter((cells) => cells.some((cell) => cell.trim()));
+    setBlankRows(next.length - kept.length);
+    onChange(joinRepeat(next));
+  };
   const setCell = (rowIndex: number, colIndex: number, cell: string) => {
     const next = display.map((row, index) => index !== rowIndex
       ? [...row]

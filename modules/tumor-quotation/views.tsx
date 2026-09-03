@@ -184,7 +184,7 @@ export function TumorQuotationPreviewModal({ fields, title, onClose }: { fields:
 }
 
 export function TumorComposer({
-  attention, stage, text, setText, activeGroup, fields, allFields, mode, draftTabs,
+  attention, stage, text, setText, activeGroup, fields, allFields, mode, remainingCount, draftTabs,
   onSelect, onRemove, onSend, onPreview, onGenerate, disabled, projectName,
   attachments, onAttachmentsChange, activeCoworkerId, notice,
 }: {
@@ -196,6 +196,9 @@ export function TumorComposer({
   fields: TumorField[];
   allFields: TumorField[];
   mode: "collect" | "edit";
+  /** 还欠着输入的项数。跟卡里列出来的行数不是一回事——多选和重复行填过之后
+      仍然留在卡上让人接着改，但它们已经不欠了。 */
+  remainingCount?: number;
   draftTabs: TumorDraftTab[];
   onSelect: (field: ParamField, value: string) => void;
   onRemove: (fieldId: string) => void;
@@ -228,6 +231,7 @@ export function TumorComposer({
           activeGroup={activeGroup}
           draftTabs={draftTabs}
           mode={mode}
+          remainingCount={remainingCount}
           onSelect={onSelect}
         />
       ) : null}

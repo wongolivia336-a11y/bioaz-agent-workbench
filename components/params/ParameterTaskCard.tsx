@@ -26,6 +26,7 @@ export function ParameterTaskCard({
   activeGroup,
   draftTabs,
   mode,
+  remainingCount,
   onSelect,
   eyebrow = "参数补全",
   collectTitle = "请补全报价参数",
@@ -39,6 +40,12 @@ export function ParameterTaskCard({
   activeGroup: string;
   draftTabs: ParamDraft[];
   mode: "collect" | "edit";
+  /**
+   * 还欠着输入的项数。不传就等于卡里的行数——DMPK 十四项都是一次点完的控件，
+   * 两者永远相等。会分叉的是多选和重复行：它们填过之后仍然留在卡上让人接着改，
+   * 但已经不算欠着，卡头再报「还需填写 1 项」就是在催一件已经做完的事。
+   */
+  remainingCount?: number;
   onSelect: (field: ParamField, value: string) => void;
   eyebrow?: string;
   collectTitle?: string;
@@ -55,6 +62,16 @@ export function ParameterTaskCard({
   }, [activeGroup, groups]);
 
   const values = effectiveValues(allFields, draftTabs);
+  const remaining = remainingCount ?? fields.length;
+
+  /* 能翻到第几页，由**数据**说了算，不是由「自动翻页把你推到了哪儿」说了算。
+     原来写的是 `index > safePage` 就禁用，靠自动翻页往前推。而自动翻页只对
+     一次点完的控件成立（多选和重复行不能一填就跳走，见 selectValue），于是
+     一页的最后一项是多选或重复行时，下一页永远解不开——卡里没路可走，
+     人只能去开全屏，而全屏本来是「想一次看全」时才用的东西。
+     现在的判据是：前面每一页都不欠输入了，下一页就开。 */
+  const firstPendingPage = groups.findIndex((group) => fields.some((field) => field.group === group.id && !values[field.id]));
+  const maxReachablePage = Math.max(firstPendingPage < 0 ? groups.length - 1 : firstPendingPage, safePage);
 
   const selectValue = (field: ParamField, value: string) => {
     onSelect(field, value);
@@ -116,7 +133,7 @@ export function ParameterTaskCard({
           {/* 计数和入口平排一行，图标在右端。上下堆两行会在卡片右上角叠出
               一块比标题还高的方块，把标题压偏。 */}
           <div className="parameterCardHeadActions">
-            <small>还需填写 {fields.length} 项</small>
+            <small>{remaining ? `还需填写 ${remaining} 项` : "可继续调整，或直接发送"}</small>
             {/* 分页是为了在这个高度里放得下，不是因为这些参数该被分批问。
                 全屏的价值在于一屏看全，哪项都能先填。 */}
             {mode === "collect" ? <button className="parameterExpandButton" type="button" onClick={() => setFullscreen(true)} aria-label="全屏填写全部参数" title="全屏填写全部参数"><Maximize2 size={15} /></button> : null}
@@ -125,7 +142,7 @@ export function ParameterTaskCard({
         {mode === "collect" ? (
           <div className="parameterPages">
             {groups.map((group, index) => (
-              <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > safePage} onClick={() => setPage(index)}>{group.title}</button>
+              <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > maxReachablePage} onClick={() => setPage(index)}>{group.title}</button>
             ))}
           </div>
         ) : null}
@@ -135,7 +152,7 @@ export function ParameterTaskCard({
             : <p className="emptyPageNote">{pageGroup?.title}参数已齐全，可切换下一页继续补全。</p>}
         </div>
         <div className="parameterPager">
-          <p className="responsibilityNote">还需填写 {fields.length} 项</p>
+          <p className="responsibilityNote">{remaining ? `还需填写 ${remaining} 项` : "可继续调整，或直接发送"}</p>
           {mode === "collect" && safePage > 0 ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))}>上一页</button></div> : null}
         </div>
       </section>
