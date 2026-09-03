@@ -1978,11 +1978,14 @@ button.inspectorParameterField:hover { background: var(--surface); }
    portal 到了 body 上，够不着卡片作用域，两边必须写在同一条规则里——
    **不要在别处复制一份**，复制的那份迟早跟本体分叉。 */
 
+/* 字号取 11px，跟重复行表头那一档同高。
+   这里原来写的是 11.5px——**它是这个仓库里的第 37 种字号**，而且没有任何依据，
+   纯粹是当场拍的。体检数的就是这种账：56 种圆角、36 种字号都是这么一次一次长出来的。 */
 :is(.parameterTaskCard, .dmpkParamModalBody) .paramFieldHint {
   display: block;
   margin-top: 1px;
   color: var(--bioaz-text-tertiary);
-  font-size: 11.5px;
+  font-size: 11px;
   font-style: normal;
   font-weight: 400;
   line-height: 1.5;
@@ -1996,7 +1999,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   align-items: center;
   margin-top: 5px;
   border: 1px dashed var(--bioaz-border-strong);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 9px;
   background: var(--bioaz-surface-subtle);
   color: var(--bioaz-text-disabled);
@@ -2022,7 +2025,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   min-height: 30px;
   height: 30px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 9px;
   background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
@@ -2113,7 +2116,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   display: grid;
   place-items: center;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0;
   background: var(--bioaz-surface);
   color: var(--bioaz-text-secondary);
@@ -2149,13 +2152,15 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 
+/* 圆角走令牌，不写 7px。7px 也是当场拍的——它会成为第 57 种圆角，
+   而 tool 档(8px)本来就是给这种小控件用的。 */
 :is(.parameterTaskCard, .dmpkParamModalBody) .paramRepeatRemove {
   width: 26px;
   height: 26px;
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0;
   background: transparent;
   color: var(--bioaz-text-tertiary);
@@ -2177,7 +2182,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   align-items: center;
   justify-self: start;
   border: 1px dashed var(--bioaz-border-strong);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 9px;
   background: var(--bioaz-surface);
   color: var(--bioaz-text-secondary);
