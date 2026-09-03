@@ -129,10 +129,10 @@ button { -webkit-tap-highlight-color: transparent; }
 .taskExampleGrid small { color: var(--review-muted); font-size: 11.5px; }
 .newTaskComposerDock { width: min(860px, 100%); gap: 7px; }
 .newTaskWelcomePrompt { min-height: 18px; color: var(--review-muted); font-size: 12px; }
-.projectSelector > button { height: 44px; border-color: var(--review-line); border-radius: 10px; background: rgba(255,255,255,.82); box-shadow: none; }
+.projectSelector > button { height: 44px; border-color: var(--review-line); border-radius: var(--bioaz-radius-tool); background: rgba(255,255,255,.82); box-shadow: none; }
 .projectSelector > button:hover { border-color: var(--review-line-strong); background: #f7f8fa; box-shadow: none; }
 .projectSelector.isOpen > button { border-color: #aaa3e5; box-shadow: var(--review-focus); }
-.newTaskComposer { min-height: 88px; border-color: var(--review-line-strong); border-radius: 14px; background: #fff; box-shadow: 0 5px 18px rgba(18, 24, 38, .045); }
+.newTaskComposer { min-height: 88px; border-color: var(--review-line-strong); border-radius: var(--bioaz-radius-container); background: #fff; box-shadow: 0 5px 18px rgba(18, 24, 38, .045); }
 .newTaskComposer:focus-within { border-color: #aaa3e5; box-shadow: var(--review-focus), 0 8px 22px rgba(18, 24, 38, .055); }
 .workbenchComposer:focus-within,
 .sidebarSearch:focus-within,
@@ -173,11 +173,11 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* Coworker identity and confirmed handoff */
 .roleSelector { display: flex; align-items: center; gap: 4px; }
-.roleSelectorCurrent { border-color: var(--review-line); border-radius: 10px; background: #fff; color: var(--review-ink); box-shadow: none; }
+.roleSelectorCurrent { border-color: var(--review-line); border-radius: var(--bioaz-radius-control); background: #fff; color: var(--review-ink); box-shadow: none; }
 .roleSelectorCurrent:hover { border-color: var(--review-line-strong); background: #f7f8fa; }
 .roleSelectorHelp { position: relative; display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
 .roleSelectorHelp:hover { background: #eef0f3; color: var(--review-ink); }
-.roleSelectorHelp > span { position: absolute; z-index: 80; bottom: calc(100% + 8px); left: 0; display: none; width: 240px; gap: 4px; border: 1px solid var(--review-line); border-radius: 10px; background: #fff; padding: 10px 11px; color: var(--review-body); box-shadow: var(--review-shadow-float); font-size: 12px; line-height: 1.45; text-align: left; }
+.roleSelectorHelp > span { position: absolute; z-index: 80; bottom: calc(100% + 8px); left: 0; display: none; width: 240px; gap: 4px; border: 1px solid var(--review-line); border-radius: var(--bioaz-radius-control); background: #fff; padding: 10px 11px; color: var(--review-body); box-shadow: var(--review-shadow-float); font-size: 12px; line-height: 1.45; text-align: left; }
 .roleSelectorHelp:hover > span, .roleSelectorHelp:focus-visible > span { display: grid; }
 .roleSelectorHelp > span strong { color: var(--review-ink); font-size: 12px; }
 .roleSelectorMenu { border-color: var(--review-line); border-radius: var(--bioaz-radius-control); box-shadow: var(--review-shadow-float); }
@@ -187,7 +187,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .roleSelectorOptionCopy { display: grid; min-width: 0; gap: 2px; text-align: left; }
 .roleSelectorOptionCopy strong { color: var(--review-ink); font-size: 12px; }
 .roleSelectorOptionCopy small { overflow: hidden; color: var(--review-muted); font-size: 10.5px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
-.coworkerSwitchCard { grid-template-columns: minmax(0, 1fr) auto auto; border-color: var(--review-line); border-radius: 14px; background: #fff; padding: 12px; box-shadow: 0 10px 28px rgba(18, 24, 38, .065); }
+.coworkerSwitchCard { grid-template-columns: minmax(0, 1fr) auto auto; border-color: var(--review-line); border-radius: var(--bioaz-radius-container); background: #fff; padding: 12px; box-shadow: 0 10px 28px rgba(18, 24, 38, .065); }
 .coworkerSwitchCard > div { gap: 4px; }
 .coworkerSwitchCard > div > span { color: var(--review-muted); font-size: 10.5px; font-weight: 650; text-transform: uppercase; }
 .coworkerSwitchCard > div > strong { display: flex; align-items: center; gap: 7px; color: var(--review-ink); font-size: 13px; }
@@ -362,7 +362,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: max(220px, 100%);
   gap: 1px;
   border-color: var(--review-line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   padding: 5px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
 }
@@ -6154,7 +6154,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanelCrowded {
   margin: 0 0 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--surface);
   padding: 8px 11px;
   color: var(--muted);
@@ -6359,7 +6359,7 @@ button { -webkit-tap-highlight-color: transparent; }
   /* 偏开指针一点，别让指尖压住自己要看的字 */
   margin: 12px 0 0 14px;
   border: 1px solid var(--bioaz-agent-accent-border);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--bioaz-surface);
   padding: 7px 11px;
   color: var(--bioaz-text-primary);
@@ -6444,7 +6444,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 224px;
   gap: 1px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 6px;
   box-shadow: 0 16px 40px rgba(17, 19, 24, 0.12);
@@ -7627,7 +7627,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: -webkit-box;
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: rgba(255, 255, 255, 0.92);
   padding: 9px 14px;
   color: var(--bioaz-text-secondary);
@@ -7756,7 +7756,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ---- 全局规则草稿卡上的作用域预告 ---- */
 /* 「你正在离开这一单」这个信号以前只由跳转那一下承担，跳完就没了；写成常驻文字它才一直在 */
-.dmpkRuleScopePreview{display:grid;gap:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px}
+.dmpkRuleScopePreview{display:grid;gap:6px;border:1px solid var(--line);border-radius: var(--bioaz-radius-control);background:var(--surface);padding:10px 12px}
 .dmpkRuleScopeHit{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px;margin:0;font-size:13px}
 .dmpkRuleScopeHit span{color:var(--muted);font-size:11px}
 .dmpkRuleScopeHit strong{color:var(--ink);font-weight:600}

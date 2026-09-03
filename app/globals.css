@@ -539,7 +539,7 @@ button {
   display: none;
   width: 210px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   box-shadow: var(--shadow);
   padding: 6px;
@@ -646,7 +646,7 @@ button {
   width: 100%;
   min-height: 48px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: transparent;
   color: var(--ink-soft);
   padding: 8px 9px;
@@ -812,7 +812,7 @@ button {
   height: 32px;
   place-items: center;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--ink-soft);
 }
@@ -1338,7 +1338,7 @@ button {
   height: 30px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: var(--body);
 }
@@ -1880,7 +1880,7 @@ button {
   align-items: center;
   gap: 14px;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   padding: 12px 14px;
   animation: artifactIn 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -2033,7 +2033,7 @@ button {
   height: 42px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: #f8fafc;
   color: var(--body);
 }
@@ -2050,7 +2050,7 @@ button {
   height: 42px;
   place-items: center;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--ink);
   color: #fff;
 }
@@ -2093,7 +2093,7 @@ button {
   gap: 14px;
   align-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 14px 14px 14px 16px;
 }
@@ -2280,7 +2280,7 @@ button {
   display: grid;
   gap: 5px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 12px;
 }
 
@@ -2318,7 +2318,7 @@ button {
 
 .issueRowWithAction .issueRowMain > span {
   width: fit-content;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft-strong);
   color: var(--body);
   padding: 3px 8px;
@@ -2365,7 +2365,7 @@ button {
 
 .issueRow > span {
   width: fit-content;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft-strong);
   color: var(--body);
   padding: 3px 8px;
@@ -2384,7 +2384,7 @@ button {
   grid-template-columns: 26px minmax(0, 1fr);
   gap: 10px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 12px;
 }
 
@@ -2476,7 +2476,7 @@ button {
   gap: 8px;
   align-items: center;
   border: 1px solid rgba(11, 143, 83, 0.2);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--green-soft);
   color: var(--green);
   padding: 12px;
@@ -2646,7 +2646,7 @@ button {
   height: 44px;
   place-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   color: var(--ink);
 }
@@ -2670,7 +2670,7 @@ button {
   display: grid;
   min-width: 168px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   box-shadow: var(--shadow);
   padding: 6px;
@@ -2724,7 +2724,7 @@ button {
   max-height: min(760px, calc(100vh - 64px));
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   box-shadow: var(--shadow);
   animation: modalIn 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -2805,7 +2805,7 @@ button {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   overflow: hidden;
   font-size: 14px;
 }
@@ -2857,7 +2857,7 @@ button {
   display: grid;
   gap: 14px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   padding: 16px 18px;
 }
@@ -3084,7 +3084,7 @@ button {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 12px 14px;
   color: var(--ink-soft);
@@ -3231,7 +3231,7 @@ button {
   display: none;
   width: 300px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   box-shadow: var(--shadow);
   padding: 10px;
@@ -3323,7 +3323,7 @@ button {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   color: var(--ink);
   font-size: 13px;
@@ -3381,7 +3381,7 @@ button {
   display: none;
   width: 300px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   box-shadow: var(--shadow);
   padding: 10px;
@@ -3570,7 +3570,7 @@ button {
   display: none;
   width: 260px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   box-shadow: var(--shadow);
   padding: 12px;
@@ -3757,7 +3757,7 @@ button {
   height: 28px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
 }
 
@@ -4082,7 +4082,7 @@ button {
   display: grid;
   gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: var(--surface);
   padding: 12px 14px;
 }
@@ -4190,7 +4190,7 @@ button {
   height: 32px;
   place-items: center;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0;
   background: transparent;
   color: var(--ink-soft);
@@ -4344,7 +4344,7 @@ button {
   width: 30px;
   height: 30px;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0;
 }
 
@@ -4450,7 +4450,7 @@ button {
 .panelArtifactRow,
 .sidePanelBlock {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
 }
 
@@ -4799,7 +4799,7 @@ button {
   height: 32px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: var(--ink-soft);
 }
@@ -4816,7 +4816,7 @@ button {
   gap: 8px;
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 0 12px;
   color: var(--ink-soft);
@@ -4955,7 +4955,7 @@ button {
   display: none;
   width: 236px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: #fff;
   box-shadow: 0 18px 50px rgba(17, 19, 24, 0.11);
   padding: 8px;
@@ -5042,7 +5042,7 @@ button {
   gap: 5px;
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: var(--ink-soft);
   padding: 0 11px;
@@ -5063,7 +5063,7 @@ button {
 .knowledgeCard {
   grid-template-columns: 28px minmax(0, 1fr) auto;
   min-height: 64px;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 12px 14px;
 }
 
@@ -5124,7 +5124,7 @@ button {
 .dispatchConfirmCard > button:not(.primaryButton) {
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: var(--ink-soft);
   padding: 0 12px;
@@ -5133,7 +5133,7 @@ button {
 
 .primaryButton.compact {
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 13px;
   font-size: 13px;
 }
@@ -5217,7 +5217,7 @@ button {
 .roleSelectorMenu {
   width: 436px;
   bottom: calc(100% + 12px);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 18px 18px 16px;
   box-shadow: 0 20px 56px rgba(17, 19, 24, 0.1);
 }
@@ -5233,7 +5233,7 @@ button {
   grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
   min-height: 48px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 8px;
 }
 
@@ -5856,7 +5856,7 @@ button {
   grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   padding: 6px 8px;
 }
@@ -5897,7 +5897,7 @@ button {
 .sidebarMenu.chatMenu,
 .pinnedProjectRow > .sidebarMenu {
   width: 190px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12);
 }
 
@@ -6001,7 +6001,7 @@ button {
   grid-template-columns: minmax(0, 1fr) 28px;
   align-items: center;
   min-height: 38px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 3px 5px;
 }
 
@@ -6064,7 +6064,7 @@ button {
 
 .dispatchConfirmCard {
   grid-template-columns: minmax(0, 1fr) auto auto auto;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
 }
 
 .dispatchCoworkerSelect {
@@ -6093,7 +6093,7 @@ button {
   width: 220px;
   gap: 2px;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12);
   padding: 6px;
@@ -6175,7 +6175,7 @@ button {
   width: 168px;
   gap: 2px;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   box-shadow: 0 12px 34px rgba(16, 24, 40, 0.13);
   padding: 6px;
@@ -6231,7 +6231,7 @@ button {
   width: max(190px, 100%);
   gap: 2px;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   box-shadow: 0 12px 34px rgba(16, 24, 40, 0.12);
   padding: 6px;
@@ -6264,7 +6264,7 @@ button {
   min-height: 96px;
   place-items: center;
   border: 1px dashed #d0d5dd;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   color: #667085;
   font-size: 13px;
 }
@@ -6496,7 +6496,7 @@ button {
 .knowledgeTable {
   overflow: visible;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
 }
 
@@ -6614,7 +6614,7 @@ button {
   width: 44px;
   height: 44px;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f2f4f7;
   color: #344054;
 }
@@ -7590,7 +7590,7 @@ button {
    有名字的行比一段坐标更好定位,下一版也更容易验证「那一条改了没有」。 */
 .quotationReviewGroup + .quotationReviewGroup { margin-top: 18px; }
 .quotationReviewGroup h3 { margin: 0 0 8px; color: var(--body); font-size: 12px; font-weight: 700; }
-.quotationReviewLine { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.quotationReviewLine { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); padding: 10px 12px; }
 .quotationReviewLine + .quotationReviewLine { margin-top: 8px; }
 .quotationReviewLine.hasNote { border-color: color-mix(in srgb, var(--bioaz-agent-accent, #5c60b8) 34%, transparent); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
 .quotationReviewMeta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 12px; }
@@ -7629,7 +7629,7 @@ button {
 .quoteReviewBody { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; }
 .quoteDocPane { min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--soft, #f7f8fb); padding: 20px; }
 
-.quoteDoc { max-width: 660px; margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 26px 28px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
+.quoteDoc { max-width: 660px; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: #fff; padding: 26px 28px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
 .quoteDoc > header { display: grid; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 16px; }
 .quoteDoc > header strong { font-size: 17px; }
 .quoteDoc > header small { color: var(--muted); font-size: 12px; }
@@ -7659,7 +7659,7 @@ button {
 .quoteNotePane > header small { color: var(--muted); font-size: 12px; }
 .quoteNoteHint, .quoteNoteEmpty { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
 
-.quoteNoteEditor { display: grid; gap: 8px; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: 10px; background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 12px; }
+.quoteNoteEditor { display: grid; gap: 8px; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: var(--bioaz-radius-control); background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 12px; }
 .quoteNoteEditor > span { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteNoteEditor textarea { min-height: 76px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: #fff; padding: 8px 10px; color: var(--ink); font: inherit; font-size: 13px; resize: vertical; }
 .quoteNoteEditor textarea:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
@@ -7730,7 +7730,7 @@ button {
 }
 .quoteFormSwitch button.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(15, 23, 42, .1); }
 
-.quoteSheet, .quoteDoc { max-width: 900px; margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 22px 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
+.quoteSheet, .quoteDoc { max-width: 900px; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: #fff; padding: 22px 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
 .quoteSheet > header, .quoteDoc > header { display: grid; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 14px; }
 .quoteSheet > header strong, .quoteDoc > header strong { font-size: 15px; }
 .quoteSheet > header small, .quoteDoc > header small { color: var(--muted); font-size: 12px; }
@@ -8041,7 +8041,7 @@ button {
 /* ═══ 批注卡:操作与内容分层 ═══════════════════════════════════════════════
    删除按钮跟标签同排,不再绝对定位压在卡上——它是这条批注的一个操作,
    不是浮在上面的另一层。 */
-.quoteNoteList li { display: grid; gap: 6px; border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; background: #fff; padding: 10px 12px; }
+.quoteNoteList li { display: grid; gap: 6px; border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--bioaz-radius-control); background: #fff; padding: 10px 12px; }
 .quoteNoteList li.is-blocking { border-left-color: var(--sidebar-dot-attention, #9a7a3a); }
 .quoteNoteList li.is-advisory { border-left-color: var(--line-strong, #cfd6e2); }
 
@@ -8062,7 +8062,7 @@ button {
 
 /* ═══ 落定前的确认 ═══════════════════════════════════════════════════════ */
 .quoteDecisionDialog { width: min(520px, 100%); }
-.quoteDecisionFacts { display: grid; gap: 0; margin: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.quoteDecisionFacts { display: grid; gap: 0; margin: 0; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); overflow: hidden; }
 .quoteDecisionFacts > div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 9px 12px; }
 .quoteDecisionFacts > div + div { border-top: 1px solid var(--line); }
 .quoteDecisionFacts dt { color: var(--muted); font-size: 12px; }
@@ -8419,7 +8419,7 @@ button {
 .dmpkHandoffUnresolved {
   display: grid; gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 10px; background: var(--soft, #f7f8fb); padding: 11px 13px;
+  border-radius: var(--bioaz-radius-control); background: var(--soft, #f7f8fb); padding: 11px 13px;
 }
 .dmpkHandoffUnresolved > strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
 .dmpkHandoffUnresolved ul { display: grid; gap: 3px; margin: 0; padding-left: 18px; }
