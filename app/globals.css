@@ -1021,7 +1021,7 @@ button {
   height: 40px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   color: var(--ink);
 }
@@ -1157,7 +1157,7 @@ button {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   color: var(--ink);
   padding: 0 12px;
@@ -1173,7 +1173,7 @@ button {
 
 .altarActions .requirementChip {
   min-height: 38px;
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
 }
 
 .altarFileList {
@@ -1190,7 +1190,7 @@ button {
   width: fit-content;
   max-width: 100%;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--soft);
   color: var(--ink-soft);
   padding: 8px 11px;
@@ -1256,7 +1256,7 @@ button {
   align-items: center;
   gap: 7px;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   color: var(--body);
   padding: 7px 10px;
@@ -2222,7 +2222,7 @@ button {
   height: 32px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
 }
 
@@ -2461,7 +2461,7 @@ button {
   height: 31px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   color: var(--ink);
 }
@@ -3411,7 +3411,7 @@ button {
   align-items: center;
   gap: 5px;
   border: 1px solid var(--line-strong);
-  border-radius: 11px;
+  border-radius: var(--bioaz-radius-control);
   background: #fff;
   color: var(--ink);
   padding: 0 9px;

@@ -3,7 +3,7 @@
 .strategyDrawer>header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .strategyDrawer>header h2{margin:0;font-size:18px}
 .strategyDrawer>header button{display:grid;width:31px;height:31px;place-items:center;border:0;border-radius:var(--bioaz-radius-tool);background:var(--soft);color:var(--body)}
-.strategyAssistantIntro{display:flex;align-items:center;gap:9px;border-radius:11px;background:var(--brand-soft);padding:11px}
+.strategyAssistantIntro{display:flex;align-items:center;gap:9px;border-radius:var(--bioaz-radius-control);background:var(--brand-soft);padding:11px}
 .strategyAssistantIntro>span{display:grid;width:28px;height:28px;place-items:center;border-radius:var(--bioaz-radius-tool);background:#fff;color:var(--brand)}
 .strategyAssistantIntro>div{display:grid;gap:2px}.strategyAssistantIntro small{color:var(--body);font-size:11px}
 .strategyParseButton{display:flex;width:100%;align-items:center;justify-content:center;gap:6px;border:1px solid var(--brand);border-radius:var(--bioaz-radius-tool);background:#fff;color:var(--brand);padding:9px 12px;margin-top:10px;font-weight:650}

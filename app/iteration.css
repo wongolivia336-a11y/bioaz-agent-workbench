@@ -1103,14 +1103,14 @@ textarea {
 .newTaskComposer > .sendIconButton {
   width: 42px;
   height: 42px;
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
 }
 
 .workbenchComposer .composerAddButton,
 .workbenchComposer .attachIconButton {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
+  border-radius: var(--bioaz-radius-control);
 }
 
 .inspectorParameterGroup {
@@ -2353,15 +2353,15 @@ body > main.dmpkShell::after { content: none; }
 .newTaskComposerDock { z-index: 20; width: min(920px, 100%); gap: 8px; margin: 0 auto; opacity: .88; transform: translateY(6px); }
 .introSequenceStarted .newTaskComposerDock { animation: introComposerArrival 300ms cubic-bezier(.22,1,.36,1) 300ms both; }
 .newTaskWelcomePrompt { display: block; min-height: 20px; padding: 0 4px; color: var(--home-body); font-size: 13px; }
-.projectSelector > button { height: 52px; grid-template-columns: 22px minmax(0,1fr) 18px; border-color: var(--home-line); border-radius: 13px; padding-inline: 16px; color: #475569; box-shadow: 0 1px 2px rgba(15,23,42,.02); transition: border-color var(--bioaz-motion-standard) ease, box-shadow var(--bioaz-motion-standard) ease; }
+.projectSelector > button { height: 52px; grid-template-columns: 22px minmax(0,1fr) 18px; border-color: var(--home-line); border-radius: var(--bioaz-radius-control); padding-inline: 16px; color: #475569; box-shadow: 0 1px 2px rgba(15,23,42,.02); transition: border-color var(--bioaz-motion-standard) ease, box-shadow var(--bioaz-motion-standard) ease; }
 .projectSelector > button:hover,
 .projectSelector.isOpen > button { border-color: rgba(41,0,255,.25); box-shadow: 0 0 0 3px rgba(41,0,255,.045); }
-.projectSelectorMenu { border-color: var(--home-line); border-radius: 13px; box-shadow: 0 16px 36px rgba(15,23,42,.09); }
+.projectSelectorMenu { border-color: var(--home-line); border-radius: var(--bioaz-radius-control); box-shadow: 0 16px 36px rgba(15,23,42,.09); }
 .newTaskComposer { min-height: 100px; grid-template-columns: minmax(0,1fr) 44px; gap: 12px; border-color: var(--home-line); border-radius: 14px; box-shadow: 0 4px 18px rgba(15,23,42,.045); padding: 16px; }
 .newTaskComposer:focus-within { border-color: rgba(41,0,255,.3); box-shadow: 0 4px 18px rgba(15,23,42,.045), 0 0 0 3px rgba(41,0,255,.05); }
 .newTaskComposer textarea { min-height: 64px; color: var(--home-ink); font-size: 15px; }
 .newTaskComposer textarea::placeholder { color: var(--home-muted); }
-.newTaskComposer > .sendIconButton { width: 44px; height: 44px; border-radius: 13px; background: #17113f; }
+.newTaskComposer > .sendIconButton { width: 44px; height: 44px; border-radius: var(--bioaz-radius-control); background: #17113f; }
 .newTaskComposer > .sendIconButton:disabled { background: #cbd5e1; }
 
 .newTaskComposerDock > .roleSelector {
@@ -3441,7 +3441,7 @@ body > main.dmpkShell::after { content: none; }
   place-items: center;
   align-self: center;
   border: 0;
-  border-radius: 11px;
+  border-radius: var(--bioaz-radius-control);
   background: transparent;
   color: #667085;
   box-shadow: none;
