@@ -130,32 +130,6 @@ export const initialTickets: Ticket[] = [
       { id: "s2", at: "2 小时前", actor: "系统", actorRole: "流转", action: "分派给王林彬" },
     ],
   },
-  /* 肿瘤报价这条线的第一张单。跟 TK-2046 是同一副骨架（撰写人送审、
-     系统分派给王林彬、随单两份产物），只是业务线换了——两条报价线在
-     审批人的收件箱里应该长得一样，因为他做的是同一件事。 */
-  {
-    id: "TK-2045",
-    title: "待确认：CT26 模型评价报价交付包",
-    kind: "tumor-quotation",
-    status: "open",
-    project: "ZZ药业-CT26模型评价",
-    from: "陈默",
-    fromRole: "肿瘤报价同事",
-    assignee: "王林彬",
-    assigneeRole: "审批人",
-    createdAt: "今天 09:05",
-    updatedAt: "1 小时前",
-    attachments: [
-      file("tk-2045-a", "CT26_模型评价报价书.docx", "DOCX · 客户版 · 0.7 MB"),
-      file("tk-2045-b", "CT26_模型评价报价计算表.xlsx", "XLSX · 内部底稿 · 0.4 MB"),
-    ],
-    taskId: "task-ct26-quote",
-    moduleId: "tumor-quotation",
-    steps: [
-      { id: "s1", at: "今天 09:05", actor: "陈默", actorRole: "肿瘤报价同事", action: "提交送审", note: "模型、品系与给药分组已确认，检测指标按 IVIS 计价，请复核动物数与周期。" },
-      { id: "s2", at: "1 小时前", actor: "系统", actorRole: "流转", action: "分派给王林彬" },
-    ],
-  },
   {
     id: "TK-2044",
     title: "请审批：样本 9 双批次报告（第三版）",
@@ -174,6 +148,34 @@ export const initialTickets: Ticket[] = [
     steps: [
       { id: "s1", at: "昨天 16:20", actor: "林一一", actorRole: "一线实验员", action: "提交送审" },
       { id: "s2", at: "36 分钟前", actor: "王林彬", actorRole: "审批人", action: "开始审批" },
+    ],
+  },
+  /* 肿瘤报价这条线的第一张单。跟 TK-2046 是同一副骨架（撰写人送审、
+     系统分派给王林彬、随单两份产物），只是业务线换了——两条报价线在
+     审批人的收件箱里应该长得一样，因为他做的是同一件事。
+     编号是 2043 不是 2045：2045 已经被下面那张「SD 大鼠 PK 预试报价」占了，
+     两张单同号会让按 id 取单的地方（详情、附件、流转记录）取到先命中的那一张。 */
+  {
+    id: "TK-2043",
+    title: "待确认：CT26 模型评价报价交付包",
+    kind: "tumor-quotation",
+    status: "open",
+    project: "ZZ药业-CT26模型评价",
+    from: "陈默",
+    fromRole: "肿瘤报价同事",
+    assignee: "王林彬",
+    assigneeRole: "审批人",
+    createdAt: "今天 09:05",
+    updatedAt: "1 小时前",
+    attachments: [
+      file("tk-2043-a", "CT26_模型评价报价书.docx", "DOCX · 客户版 · 0.7 MB"),
+      file("tk-2043-b", "CT26_模型评价报价计算表.xlsx", "XLSX · 内部底稿 · 0.4 MB"),
+    ],
+    taskId: "task-ct26-quote",
+    moduleId: "tumor-quotation",
+    steps: [
+      { id: "s1", at: "今天 09:05", actor: "陈默", actorRole: "肿瘤报价同事", action: "提交送审", note: "模型、品系与给药分组已确认，检测指标按 IVIS 计价，请复核动物数与周期。" },
+      { id: "s2", at: "1 小时前", actor: "系统", actorRole: "流转", action: "分派给王林彬" },
     ],
   },
   {
@@ -213,8 +215,8 @@ export const initialTickets: Ticket[] = [
     createdAt: "今天 10:20",
     updatedAt: "40 分钟前",
     attachments: [
-      file("tk-2045-a", "SD大鼠_PK预试_报价书.docx", "DOCX · 客户版 · 0.5 MB"),
-      file("tk-2045-b", "SD大鼠_PK预试_计算表.xlsx", "XLSX · 内部底稿 · 0.3 MB"),
+      file("tk-2043-a", "SD大鼠_PK预试_报价书.docx", "DOCX · 客户版 · 0.5 MB"),
+      file("tk-2043-b", "SD大鼠_PK预试_计算表.xlsx", "XLSX · 内部底稿 · 0.3 MB"),
     ],
     taskId: "task-balbc",
     moduleId: "dmpk-quotation",
