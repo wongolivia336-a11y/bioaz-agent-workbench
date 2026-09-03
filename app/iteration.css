@@ -366,7 +366,7 @@ textarea {
   justify-content: space-between;
   gap: 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 0 9px;
   color: #344054;
@@ -587,7 +587,7 @@ textarea {
   min-height: 34px;
   align-items: center;
   gap: 8px;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 9px;
   color: #344054;
   font-size: 13px;
@@ -747,7 +747,7 @@ textarea {
   align-items: center;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f5f5f6;
   color: var(--ink);
   padding: 0 12px;
@@ -973,7 +973,7 @@ textarea {
   height: 30px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: var(--body);
 }
@@ -1128,7 +1128,7 @@ textarea {
   justify-content: space-between;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--ink);
   padding: 0 6px;
@@ -1155,7 +1155,7 @@ textarea {
   align-items: center;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--body);
   padding: 0 6px;
@@ -1174,7 +1174,7 @@ textarea {
 .priorSessionEntries p { max-width: 78%; margin: 0; color: var(--body); padding: 2px 0; font-size: 13px; line-height: 1.55; }
 .priorSessionEntries p.user { justify-self: end; border-radius: 10px; background: var(--surface-strong); color: var(--ink); padding: 8px 10px; }
 .priorSessionBlock dl { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
-.priorSessionBlock dl div { display: inline-flex; gap: 5px; border: 1px solid var(--line); border-radius: 7px; background: #fff; padding: 5px 7px; font-size: 10px; }
+.priorSessionBlock dl div { display: inline-flex; gap: 5px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: #fff; padding: 5px 7px; font-size: 10px; }
 .priorSessionBlock dt { color: var(--muted); }
 .priorSessionBlock dd { margin: 0; color: var(--ink-soft); font-weight: 600; }
 .inspectorParameterField > span:first-child { font-size: 12px; }
@@ -1238,7 +1238,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   margin-right: 10px;
   padding: 0 9px;
   border: 1px solid rgba(41, 0, 255, 0.14);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: var(--ink);
   font-size: 11px;
@@ -1273,7 +1273,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 .dmpkEditProposalCard > header { display: flex; align-items: center; gap: 10px; }
-.dmpkEditProposalCard > header > span { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: var(--brand-soft); color: var(--brand); }
+.dmpkEditProposalCard > header > span { display: grid; width: 32px; height: 32px; place-items: center; border-radius: var(--bioaz-radius-tool); background: var(--brand-soft); color: var(--brand); }
 .dmpkEditProposalCard > header > div { display: grid; gap: 2px; }
 .dmpkEditProposalCard > header small,.dmpkEditProposalCard > footer small { color: var(--body); }
 .dmpkPriceChange,.dmpkRuleSentencePreview { display: flex; align-items: center; gap: 8px; border-radius: 10px; background: var(--surface); padding: 11px 12px; }
@@ -1282,7 +1282,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .dmpkRuleSentencePreview { flex-wrap: wrap; }
 .dmpkRuleSentencePreview span,.dmpkRuleSentencePreview b,.dmpkRuleSentencePreview strong { border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: #fff; padding: 7px 9px; font-size: 12px; }
 .dmpkEditProposalCard > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.dmpkEditProposalCard > footer button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ink); border-radius: 9px; background: var(--ink); color: #fff; padding: 8px 11px; font-weight: 650; }
+.dmpkEditProposalCard > footer button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ink); border-radius: var(--bioaz-radius-tool); background: var(--ink); color: #fff; padding: 8px 11px; font-weight: 650; }
 
 .persistentParameterBody {
   min-height: 0;
@@ -1391,7 +1391,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   width: 34px;
   height: 34px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 6px;
 }
 
@@ -1447,7 +1447,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   min-height: 24px;
   gap: 0;
   border-color: #e4e7ec;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f7f8fa;
   padding: 3px 8px;
   color: #667085;
@@ -1539,7 +1539,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .tumorMaterialRow,
 .tumorRiskRow,
 .tumorReviewRow,
-.tumorArtifactRow { display: grid; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 10px; }
+.tumorArtifactRow { display: grid; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: #fff; padding: 10px; }
 .tumorMaterialRow { grid-template-columns: 20px minmax(0,1fr) auto; }
 .tumorMaterialRow > div,
 .tumorArtifactRow > div,
@@ -1583,7 +1583,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .libraryAssistant .assistantSuggestions button svg { width: 24px; height: 24px; color: var(--brand); }
 .libraryAssistant .assistantSuggestions button:hover { border-color: rgba(41,67,255,0.28); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(17,19,24,0.08), 0 0 0 4px rgba(41,67,255,0.06), 0 0 24px rgba(41,67,255,0.09); }
 .assistantReferences { display: grid; gap: 8px; }
-.assistantReferences button { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 11px 12px; text-align: left; }
+.assistantReferences button { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: #fff; padding: 11px 12px; text-align: left; }
 .assistantReferences button span { display: grid; gap: 2px; }
 .assistantReferences button small { color: var(--muted); font-size: 11px; }
 
@@ -1659,7 +1659,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   height: 34px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: var(--body);
 }
@@ -1679,7 +1679,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .assistantContextBar span {
   flex: 0 0 auto;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--surface);
   color: var(--body);
   padding: 6px 9px;
@@ -1814,7 +1814,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   align-items: center;
   gap: 9px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 0 9px;
   color: var(--ink);
@@ -1894,7 +1894,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 
 .parameterTaskCard .parameterPages button {
   min-height: 30px;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 9px;
   font-size: 12px;
 }

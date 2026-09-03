@@ -82,7 +82,7 @@
   width: 30px;
   height: 30px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--brand-soft);
   color: var(--brand);
 }
@@ -238,7 +238,7 @@
 
 .quotationChangeProposal footer button {
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   padding: 8px 10px;
   font-weight: 650;
@@ -338,7 +338,7 @@
   min-height: 48px;
   place-items: center;
   border: 1px solid #dfe5ee;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: #fff;
   color: #334155;
   padding: 8px 10px;

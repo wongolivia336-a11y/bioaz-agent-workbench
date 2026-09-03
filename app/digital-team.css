@@ -157,7 +157,7 @@
   align-items: center;
   gap: 8px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 9px 10px;
   color: var(--ink);
@@ -710,7 +710,7 @@
   height: 28px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--brand-soft);
   color: var(--brand);
 }

@@ -61,7 +61,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 这里曾把「新建项目」做成带文字的实体按钮，已回退为加号图标钮：
    侧边栏两栏的头部动作保持同一副长相，比强调其中一个更要紧。 */
 .navSectionHeader button:hover { background: #eef0f3; color: var(--review-ink); }
-.projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: 9px; background: #fff; padding: 4px 5px 4px 8px; }
+.projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: var(--bioaz-radius-tool); background: #fff; padding: 4px 5px 4px 8px; }
 .projectCreateRow > svg { color: var(--review-muted); }
 .projectCreateRow input { min-width: 0; border: 0; outline: 0; background: transparent; font-size: 12px; }
 .projectCreateRow input:focus-visible { outline: 0; }
@@ -117,7 +117,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .taskExampleGrid button:hover, .taskExampleGrid button:focus-visible { border-color: #c6c2ed; box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
 .taskExampleGrid button:disabled { background: rgba(247, 248, 250, .8); opacity: .64; }
 .taskExampleTop { display: flex; align-items: center; justify-content: space-between; color: var(--review-muted); }
-.taskExampleIcon { position: relative; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border: 1px solid rgba(47,34,211,.08); border-radius: 9px; background: #f4f3ff; color: var(--review-brand); }
+.taskExampleIcon { position: relative; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border: 1px solid rgba(47,34,211,.08); border-radius: var(--bioaz-radius-tool); background: #f4f3ff; color: var(--review-brand); }
 .taskExampleIcon::after { position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border: 1px solid rgba(47,34,211,.35); border-radius: 2px; content: ""; }
 .taskExampleGrid button[data-ability="tumor-report"] .taskExampleIcon::after { width: 9px; height: 3px; border-width: 1px 0; border-radius: 0; }
 .taskExampleGrid button[data-ability="tumor-quotation"] .taskExampleIcon::after { width: 7px; height: 7px; border-radius: 50%; }
@@ -369,7 +369,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .assistantContextBar .compactSelectMenu button {
   min-height: 36px;
   justify-content: flex-start;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   padding-inline: 11px;
   color: #566071;
   font-size: 12px;
@@ -6474,7 +6474,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 7px 8px;
   color: var(--bioaz-text-secondary);
@@ -7205,7 +7205,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 4px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 4px 8px;
   color: var(--bioaz-text-tertiary);
@@ -7682,7 +7682,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 26px;
   place-items: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
