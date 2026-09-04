@@ -277,7 +277,7 @@
   flex: none;
   border: 1px solid var(--bioaz-border);
   border-radius: 2px;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 40px 44px 28px;
   box-shadow: var(--bioaz-shadow-subtle);
 }

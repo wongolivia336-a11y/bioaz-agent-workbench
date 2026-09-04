@@ -787,7 +787,7 @@ body:has(.bioazDesignSystemPage) {
   gap: var(--bioaz-space-3);
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   cursor: pointer;
   font-family: inherit;
   padding: var(--bioaz-space-3);

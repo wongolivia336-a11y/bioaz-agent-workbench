@@ -1,18 +1,22 @@
 /**
- * 圆角收敛的验收脚本。
+ * 令牌收敛的验收脚本。
  *
  * 为什么需要它
  * ----------------------------------------------------------------------
- * 收敛圆角是几百处机械替换，而 CSS 改错了**不会报错**——它只是渲染成别的样子。
- * 截图证明不了 1px 差异（见 SKILL 第三节），逐个肉眼看几百处也不现实。
+ * 把裸值换成令牌是几百处机械替换，而 CSS 改错了**不会报错**——它只是渲染成
+ * 别的样子。截图证明不了 1px 或一个色阶的差异（见 SKILL 第三节），
+ * 逐个肉眼看几百处也不现实。
  *
- * 所以改成「量」：把改动前后每一条 `border-radius` 声明**解析 var() 到最终值**
- * 再逐条比对。别名替换（8px → var(--bioaz-radius-tool)）解析后完全相同，
- * 应当报 0 处变化；1px 吸附（9px → 8px）会报出来，条数必须跟预期对得上。
+ * 所以改成「量」：把改动前后每一条声明**解析 var() 到最终值**再逐条比对。
+ * 别名替换（`8px → var(--bioaz-radius-tool)`、`#fff → var(--bioaz-surface)`）
+ * 解析后完全相同，应当报 **0 处变化**；吸附（`9px → 8px`）会报出来，
+ * 条数必须跟预期对得上。
  *
  * 用法：
- *   node scripts/radius-diff.mjs            跟 HEAD 比
- *   node scripts/radius-diff.mjs <git-ref>  跟指定提交比
+ *   node scripts/token-diff.mjs                        圆角，跟 HEAD 比
+ *   node scripts/token-diff.mjs --prop background      换个属性
+ *   node scripts/token-diff.mjs --prop 'background|color|border-color'
+ *   node scripts/token-diff.mjs <git-ref>              跟指定提交比
  *
  * 退出码永远是 0——这个脚本给的是**账**，不是判决。哪些该变、变几处，
  * 由改的人在提交信息里说清楚。
@@ -20,7 +24,12 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
-const ref = process.argv[2] ?? "HEAD";
+const args = process.argv.slice(2);
+const propIndex = args.indexOf("--prop");
+/* 属性名参与正则，所以不能直接插进去——`border-radius` 里的连字符无所谓，
+   但使用方给的是一串用 | 分隔的属性，得整个包起来再要求后面紧跟冒号。 */
+const propPattern = propIndex >= 0 ? args[propIndex + 1] : "border-radius";
+const ref = args.filter((a, i) => a !== "--prop" && i !== propIndex + 1)[0] ?? "HEAD";
 
 const files = fs.readdirSync("app").filter((f) => f.endsWith(".css")).map((f) => "app/" + f)
   .concat(["styles/design-system.css"]);
@@ -48,9 +57,15 @@ function resolve(value, depth = 0) {
   return next === value ? value : resolve(next, depth + 1);
 }
 
+/* `#fff` 和 `#ffffff` 是同一个颜色。不归一的话，把 `#fff` 换成
+   `var(--bioaz-surface)`（值是 `#ffffff`）会被报成一处变化——
+   那是假的，会把真正的差异淹掉。 */
+const normalizeHex = (value) =>
+  value.replace(/#([0-9a-f]{3})\b/g, (_, h) => "#" + h.split("").map((c) => c + c).join(""));
+
 const declarations = (css) =>
-  [...css.matchAll(/border-radius:\s*([^;}]+)[;}]/g)]
-    .map((m) => resolve(m[1].trim().toLowerCase()).replace(/\s+/g, " "));
+  [...css.matchAll(new RegExp(`(?:^|[;{\\s])(?:${propPattern}):\\s*([^;}]+)[;}]`, "g"))]
+    .map((m) => normalizeHex(resolve(m[1].trim().toLowerCase())).replace(/\s+/g, " "));
 
 let unchanged = 0;
 const changes = new Map();
@@ -80,7 +95,7 @@ for (const file of files) {
   }
 }
 
-console.log(`圆角声明比对（解析 var 之后）  基准 ${ref}`);
+console.log(`声明比对（解析 var 之后）  属性 ${propPattern}  ·  基准 ${ref}`);
 console.log("=".repeat(58));
 console.log(`  值不变的  ${unchanged}`);
 console.log(`  值变了的  ${[...changes.values()].reduce((n, v) => n + v.length, 0)}`);

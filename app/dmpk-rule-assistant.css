@@ -31,7 +31,7 @@
 .quotationRuleAssistant .ambientAssistantEntry {
   width: 224px;
   inset-inline: calc((100% - 224px) / 2);
-  color: #111318;
+  color: var(--bioaz-text-primary);
   font-weight: 750;
 }
 
@@ -101,7 +101,7 @@
 
 .quotationAssistantPanel > header button:hover {
   background: rgba(15, 23, 42, .06);
-  color: #111318;
+  color: var(--bioaz-text-primary);
 }
 
 .quotationAssistantComposer {
@@ -145,7 +145,7 @@
   place-items: center;
   border: 1px solid var(--line);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   overflow: hidden;
 }
 
@@ -239,7 +239,7 @@
 .quotationChangeProposal footer button {
   border: 1px solid var(--line);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 8px 10px;
   font-weight: 650;
   cursor: pointer;
@@ -282,7 +282,7 @@
   margin-top: 16px;
   border: 1px solid var(--line);
   border-radius: var(--bioaz-radius-container);
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 16px;
 }
 
@@ -339,7 +339,7 @@
   place-items: center;
   border: 1px solid #dfe5ee;
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: #334155;
   padding: 8px 10px;
   text-align: center;
