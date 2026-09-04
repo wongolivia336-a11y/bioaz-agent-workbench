@@ -87,7 +87,7 @@ button {
   overflow: hidden;
   flex-direction: column;
   border-right: 1px solid var(--line);
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 18px 14px 14px;
 }
 
@@ -154,7 +154,7 @@ button {
   justify-content: center;
   gap: 8px;
   border: 1px solid transparent;
-  border-radius: var(--radius-control);
+  border-radius: var(--bioaz-radius-control);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0;
@@ -165,7 +165,7 @@ button {
   height: 38px;
   line-height: 1;
   border-color: var(--line-strong);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--ink);
   box-shadow: 0 1px 0 rgba(17, 19, 24, 0.02);
 }
@@ -210,8 +210,8 @@ button {
   display: none;
   width: min(410px, calc(100vw - 28px));
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   box-shadow: var(--shadow);
   padding: 14px 14px 12px;
 }
@@ -236,7 +236,7 @@ button {
   gap: 9px;
   min-height: 40px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: transparent;
   color: var(--ink);
   padding: 0 8px;
@@ -266,8 +266,8 @@ button {
   height: 38px;
   place-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-control);
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink-soft);
 }
 
@@ -285,8 +285,8 @@ button {
   gap: 7px;
   height: 38px;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-control);
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 0 8px;
 }
 
@@ -304,7 +304,7 @@ button {
   height: 24px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--body);
 }
@@ -362,7 +362,7 @@ button {
   height: 40px;
   padding: 0 18px;
   border-color: var(--line-strong);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--ink);
 }
 
@@ -405,7 +405,7 @@ button {
   height: 26px;
   place-items: center;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--muted);
   opacity: 0;
@@ -454,14 +454,14 @@ button {
   align-items: center;
   gap: 10px;
   min-height: 42px;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   padding: 7px 9px;
 }
 
 .projectRow:hover,
 .projectRowWrap:hover .projectRow,
 .chatRow:hover {
-  background: #fafbfc;
+  background: var(--bioaz-surface-subtle);
 }
 
 .projectRow > svg:first-child {
@@ -518,8 +518,8 @@ button {
   height: 26px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   color: var(--body);
 }
 
@@ -539,8 +539,8 @@ button {
   display: none;
   width: 210px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   box-shadow: var(--shadow);
   padding: 6px;
 }
@@ -556,7 +556,7 @@ button {
   align-items: center;
   gap: 9px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--ink-soft);
   padding: 0 10px;
@@ -582,7 +582,7 @@ button {
   align-items: center;
   gap: 8px;
   min-height: 39px;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   padding: 7px 9px;
   cursor: pointer;
 }
@@ -646,7 +646,7 @@ button {
   width: 100%;
   min-height: 48px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: transparent;
   color: var(--ink-soft);
   padding: 8px 9px;
@@ -662,7 +662,7 @@ button {
 }
 
 .sidebarRow:hover {
-  background: #fafbfc;
+  background: var(--bioaz-surface-subtle);
 }
 
 .sidebarRow svg.isOpen {
@@ -738,7 +738,7 @@ button {
   justify-self: center;
   width: 7px;
   height: 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--muted);
 }
 
@@ -765,8 +765,8 @@ button {
   width: 26px;
   height: 26px;
   place-items: center;
-  border-radius: 9px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   color: var(--body);
 }
 
@@ -812,7 +812,7 @@ button {
   height: 32px;
   place-items: center;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--ink-soft);
 }
@@ -839,7 +839,7 @@ button {
   width: 34px;
   height: 34px;
   place-items: center;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--soft-strong);
   font-size: 13px;
   font-weight: 750;
@@ -981,7 +981,7 @@ button {
 .panelToggle {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   margin-right: 1px;
 }
 
@@ -1001,7 +1001,7 @@ button {
 .emptyIcon {
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft-strong);
 }
 
@@ -1021,8 +1021,8 @@ button {
   height: 40px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 13px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
 }
 
@@ -1071,8 +1071,8 @@ button {
   height: 48px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
 }
 
 .altarMark img {
@@ -1119,7 +1119,7 @@ button {
   gap: 9px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 18px;
 }
 
@@ -1157,8 +1157,8 @@ button {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 13px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
   padding: 0 12px;
   font-size: 13px;
@@ -1173,7 +1173,7 @@ button {
 
 .altarActions .requirementChip {
   min-height: 38px;
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
 }
 
 .altarFileList {
@@ -1190,7 +1190,7 @@ button {
   width: fit-content;
   max-width: 100%;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--soft);
   color: var(--ink-soft);
   padding: 8px 11px;
@@ -1256,8 +1256,8 @@ button {
   align-items: center;
   gap: 7px;
   border: 1px solid var(--line);
-  border-radius: 13px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--body);
   padding: 7px 10px;
   font-size: 12px;
@@ -1268,7 +1268,7 @@ button {
 .readySignal i {
   width: 7px;
   height: 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--muted);
 }
 
@@ -1309,7 +1309,7 @@ button {
   min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 15px;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 10px 12px;
 }
 
@@ -1338,8 +1338,8 @@ button {
   height: 30px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   color: var(--body);
 }
 
@@ -1444,8 +1444,8 @@ button {
   align-items: center;
   gap: 7px;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   padding: 7px 12px;
   color: var(--body);
   font-size: 13px;
@@ -1457,7 +1457,7 @@ button {
 .agentRun {
   border: 1px solid rgba(215, 220, 229, 0.75);
   border-radius: var(--bioaz-radius-container);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 .agentRun.collapsed {
@@ -1479,7 +1479,7 @@ button {
   border: 0;
   border-bottom: 1px solid rgba(231, 234, 240, 0.72);
   border-radius: 14px 14px 0 0;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 12px 15px;
   text-align: left;
 }
@@ -1487,7 +1487,7 @@ button {
 .agentRun.collapsed .runHeader {
   grid-template-columns: 24px minmax(0, 1fr) auto;
   border-bottom: 0;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: transparent;
   padding: 6px 0;
   color: var(--body);
@@ -1543,7 +1543,7 @@ button {
 .motionLogo span {
   position: absolute;
   inset: 3px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: radial-gradient(circle at 30% 30%, rgba(41, 23, 216, 0.26), transparent 62%);
   opacity: 0;
 }
@@ -1669,8 +1669,8 @@ button {
   height: 10px;
   place-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--muted);
   animation: nodePulseIn 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -1690,7 +1690,7 @@ button {
 
 .timelineItem.active .timelineDot {
   border-color: var(--bioaz-agent-accent);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--bioaz-agent-accent) 14%, transparent);
 }
 
@@ -1751,7 +1751,7 @@ button {
   max-width: 760px;
   overflow-x: auto;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft);
   color: var(--ink-soft);
   padding: 12px 14px;
@@ -1830,7 +1830,7 @@ button {
   width: 7px;
   height: 7px;
   flex: 0 0 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--muted);
 }
 
@@ -1847,7 +1847,7 @@ button {
   width: 38px;
   height: 38px;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--green-soft);
   color: var(--green);
 }
@@ -1880,8 +1880,8 @@ button {
   align-items: center;
   gap: 14px;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   padding: 12px 14px;
   animation: artifactIn 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -1900,7 +1900,7 @@ button {
   height: 44px;
   place-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
 }
 
 .artifactCard h2 {
@@ -1935,8 +1935,8 @@ button {
   align-items: center;
   gap: 7px;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 0 12px;
   font-weight: 600;
 }
@@ -1965,8 +1965,8 @@ button {
   align-items: center;
   gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--body);
   padding: 5px 11px;
   font-size: 13px;
@@ -1991,8 +1991,8 @@ button {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 10px 12px;
 }
 
@@ -2012,7 +2012,7 @@ button {
   height: 26px;
   place-items: center;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
 }
 
@@ -2023,7 +2023,7 @@ button {
   align-items: center;
   border: 1px solid var(--line-strong);
   border-radius: 18px;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 10px;
 }
 
@@ -2033,7 +2033,7 @@ button {
   height: 42px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: #f8fafc;
   color: var(--body);
 }
@@ -2050,7 +2050,7 @@ button {
   height: 42px;
   place-items: center;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--ink);
   color: #fff;
 }
@@ -2093,8 +2093,8 @@ button {
   gap: 14px;
   align-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 14px 14px 14px 16px;
 }
 
@@ -2127,7 +2127,7 @@ button {
 .confirmCard button {
   min-height: 36px;
   border: 1px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--ink);
   color: #fff;
   padding: 0 14px;
@@ -2222,8 +2222,8 @@ button {
   height: 32px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 11px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
 }
 
 .inspectorSection {
@@ -2247,8 +2247,8 @@ button {
   height: 18px;
   place-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
 }
 
 .inspectorStep > span.done {
@@ -2280,7 +2280,7 @@ button {
   display: grid;
   gap: 5px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 12px;
 }
 
@@ -2318,7 +2318,7 @@ button {
 
 .issueRowWithAction .issueRowMain > span {
   width: fit-content;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft-strong);
   color: var(--body);
   padding: 3px 8px;
@@ -2346,7 +2346,7 @@ button {
 .issueRowWithAction .deliverableActions button {
   width: 34px;
   height: 34px;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
 }
 
 .issueRow.compact:hover {
@@ -2365,7 +2365,7 @@ button {
 
 .issueRow > span {
   width: fit-content;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft-strong);
   color: var(--body);
   padding: 3px 8px;
@@ -2384,7 +2384,7 @@ button {
   grid-template-columns: 26px minmax(0, 1fr);
   gap: 10px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 12px;
 }
 
@@ -2426,7 +2426,7 @@ button {
   grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  background: #fff;
+  background: var(--bioaz-surface);
   transition:
     border-color var(--bioaz-motion-standard) ease,
     box-shadow var(--bioaz-motion-standard) ease,
@@ -2444,7 +2444,7 @@ button {
   width: 32px;
   height: 32px;
   place-items: center;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--brand-soft);
   color: var(--brand);
 }
@@ -2461,8 +2461,8 @@ button {
   height: 31px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 11px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
 }
 
@@ -2476,7 +2476,7 @@ button {
   gap: 8px;
   align-items: center;
   border: 1px solid rgba(11, 143, 83, 0.2);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--green-soft);
   color: var(--green);
   padding: 12px;
@@ -2568,7 +2568,7 @@ button {
   gap: 18px;
   border: 1px solid var(--line);
   border-radius: 24px;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 22px 24px;
 }
 
@@ -2597,8 +2597,8 @@ button {
 }
 
 .warningDecisionHeader small {
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   border: 1px solid var(--line);
   color: var(--amber);
   padding: 6px 11px;
@@ -2646,8 +2646,8 @@ button {
   height: 44px;
   place-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
 }
 
@@ -2670,8 +2670,8 @@ button {
   display: grid;
   min-width: 168px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   box-shadow: var(--shadow);
   padding: 6px;
 }
@@ -2693,7 +2693,7 @@ button {
   width: 100%;
   min-height: 34px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 10px;
   font-size: 13px;
 }
@@ -2724,8 +2724,8 @@ button {
   max-height: min(760px, calc(100vh - 64px));
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   box-shadow: var(--shadow);
   animation: modalIn 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -2770,14 +2770,14 @@ button {
   display: grid;
   gap: 4px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 12px;
   text-align: left;
 }
 
 .previewNav button.active {
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
@@ -2805,7 +2805,7 @@ button {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   overflow: hidden;
   font-size: 14px;
 }
@@ -2857,8 +2857,8 @@ button {
   display: grid;
   gap: 14px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   padding: 16px 18px;
 }
 
@@ -2875,7 +2875,7 @@ button {
   height: 42px;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--amber-soft);
   color: var(--amber);
   font-size: 13px;
@@ -2934,7 +2934,7 @@ button {
   align-content: start;
   gap: 10px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
   background: var(--surface);
   padding: 16px;
 }
@@ -3007,7 +3007,7 @@ button {
   align-items: flex-start;
   gap: 10px;
   border: 1px solid rgba(41, 0, 255, 0.16);
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
   background: rgba(41, 0, 255, 0.035);
   padding: 14px 16px;
   color: var(--ink-soft);
@@ -3017,8 +3017,8 @@ button {
 
 .packageGroup {
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   padding: 16px 18px;
 }
 
@@ -3084,8 +3084,8 @@ button {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 12px 14px;
   color: var(--ink-soft);
   font-size: 13px;
@@ -3102,7 +3102,7 @@ button {
   height: 8px;
   margin-top: 7px;
   flex: 0 0 auto;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--success);
 }
 
@@ -3144,8 +3144,8 @@ button {
   align-items: center;
   gap: 18px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   padding: 15px 16px;
   cursor: pointer;
   transition:
@@ -3174,7 +3174,7 @@ button {
   align-items: center;
   justify-content: center;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--soft-strong);
   color: var(--body);
   font-size: 14px;
@@ -3194,7 +3194,7 @@ button {
   display: inline-block;
   width: 8px;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--muted);
 }
 
@@ -3231,8 +3231,8 @@ button {
   display: none;
   width: 300px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   box-shadow: var(--shadow);
   padding: 10px;
 }
@@ -3251,7 +3251,7 @@ button {
   align-items: center;
   gap: 7px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--ink-soft);
   padding: 0 8px;
@@ -3323,8 +3323,8 @@ button {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
   font-size: 13px;
   font-weight: 700;
@@ -3381,8 +3381,8 @@ button {
   display: none;
   width: 300px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   box-shadow: var(--shadow);
   padding: 10px;
 }
@@ -3411,8 +3411,8 @@ button {
   align-items: center;
   gap: 5px;
   border: 1px solid var(--line-strong);
-  border-radius: 11px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
   padding: 0 9px;
   font-size: 12px;
@@ -3444,7 +3444,7 @@ button {
   height: 26px;
   place-items: center;
   justify-self: center;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--surface);
   color: var(--muted);
 }
@@ -3482,8 +3482,8 @@ button {
   align-items: center;
   gap: 7px;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   padding: 5px 11px 5px 8px;
   color: var(--muted);
   font-size: 12px;
@@ -3547,7 +3547,7 @@ button {
 .squadStep i {
   width: 6px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--brand);
 }
 
@@ -3570,8 +3570,8 @@ button {
   display: none;
   width: 260px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   box-shadow: var(--shadow);
   padding: 12px;
   color: var(--ink);
@@ -3757,8 +3757,8 @@ button {
   height: 28px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
 }
 
 .replyLogoMark img {
@@ -3833,7 +3833,7 @@ button {
   margin: 14px 0 0;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
+  background: var(--bioaz-surface);
   overflow: hidden;
   animation: panelIn 180ms ease-out both;
 }
@@ -3930,7 +3930,7 @@ button {
   width: 10px;
   height: 10px;
   margin-top: 5px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--blue);
 }
 
@@ -3975,8 +3975,8 @@ button {
 .parameterPages button {
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--body);
   padding: 0 12px;
   font-size: 13px;
@@ -3985,7 +3985,7 @@ button {
 
 .parameterPages button.active {
   border-color: var(--line-strong);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px rgba(17, 19, 24, 0.04);
 }
@@ -4013,8 +4013,8 @@ button {
 .parameterPager button {
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--ink-soft);
   padding: 0 13px;
   font-size: 13px;
@@ -4052,8 +4052,8 @@ button {
 .customOptionInput {
   min-height: 32px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink-soft);
   padding: 0 11px;
   font-size: 13px;
@@ -4082,7 +4082,7 @@ button {
   display: grid;
   gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   background: var(--surface);
   padding: 12px 14px;
 }
@@ -4109,8 +4109,8 @@ button {
   align-items: center;
   gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   padding: 16px;
   animation: artifactIn 220ms ease-out both;
 }
@@ -4121,7 +4121,7 @@ button {
   height: 42px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   color: var(--ink);
 }
 
@@ -4157,8 +4157,8 @@ button {
   justify-content: center;
   gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
   padding: 0 12px;
   font-weight: 800;
@@ -4170,8 +4170,8 @@ button {
   height: 34px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   color: var(--ink);
 }
 
@@ -4190,7 +4190,7 @@ button {
   height: 32px;
   place-items: center;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0;
   background: transparent;
   color: var(--ink-soft);
@@ -4221,8 +4221,8 @@ button {
   align-items: center;
   gap: 7px;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--ink-soft);
   padding: 0 11px;
   font-size: 12px;
@@ -4293,7 +4293,7 @@ button {
   gap: 14px;
   min-height: 0;
   overflow-y: auto;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 22px 18px;
 }
 
@@ -4302,7 +4302,7 @@ button {
   gap: 14px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 18px;
 }
 
@@ -4335,7 +4335,7 @@ button {
 }
 
 .rightPanelCard > header > span {
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   padding: 4px 9px;
 }
 
@@ -4344,13 +4344,13 @@ button {
   width: 30px;
   height: 30px;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0;
 }
 
 .rightPanelCard > header > button:hover {
   color: var(--ink);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 .paramGroups,
@@ -4389,7 +4389,7 @@ button {
   width: 14px;
   height: 14px;
   border: 1.5px dashed var(--line-strong);
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
 }
 
 .paramGroupHeader i.active {
@@ -4408,7 +4408,7 @@ button {
 
 .paramGroupHeader span {
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--surface);
   color: var(--body);
   padding: 3px 8px;
@@ -4450,8 +4450,8 @@ button {
 .panelArtifactRow,
 .sidePanelBlock {
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
 }
 
 .secondaryPanel {
@@ -4478,7 +4478,7 @@ button {
   width: 6px;
   height: 6px;
   margin-top: 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--blue);
 }
 
@@ -4504,7 +4504,7 @@ button {
   width: 9px;
   height: 9px;
   margin-top: 5px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--blue);
 }
 
@@ -4673,7 +4673,7 @@ button {
   width: 100%;
   min-height: 38px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: transparent;
   color: var(--ink-soft);
   padding: 0 10px;
@@ -4750,8 +4750,8 @@ button {
   gap: 12px;
   min-height: 72px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   padding: 14px 16px;
   color: var(--ink);
   text-align: left;
@@ -4785,7 +4785,7 @@ button {
 
 .workbenchTaskCard em {
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   padding: 3px 9px;
   color: var(--body);
   font-size: 12px;
@@ -4799,8 +4799,8 @@ button {
   height: 32px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   color: var(--ink-soft);
 }
 
@@ -4816,8 +4816,8 @@ button {
   gap: 8px;
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 0 12px;
   color: var(--ink-soft);
   font-size: 13px;
@@ -4842,7 +4842,7 @@ button {
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 18px 60px rgba(17, 19, 24, 0.1);
 }
 
@@ -4856,7 +4856,7 @@ button {
   display: grid;
   gap: 4px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background: transparent;
   padding: 10px 11px;
   text-align: left;
@@ -4955,8 +4955,8 @@ button {
   display: none;
   width: 236px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   box-shadow: 0 18px 50px rgba(17, 19, 24, 0.11);
   padding: 8px;
 }
@@ -4969,7 +4969,7 @@ button {
 
 .archiveMenu em,
 .archiveMenu i {
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 7px 8px;
   color: var(--ink-soft);
   font-size: 12.5px;
@@ -5042,8 +5042,8 @@ button {
   gap: 5px;
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   color: var(--ink-soft);
   padding: 0 11px;
   font-size: 13px;
@@ -5063,13 +5063,13 @@ button {
 .knowledgeCard {
   grid-template-columns: 28px minmax(0, 1fr) auto;
   min-height: 64px;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 12px 14px;
 }
 
 .workbenchTaskCard.actionRequired {
   border-color: #dfe4ec;
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 .workbenchTaskCard > svg,
@@ -5097,7 +5097,7 @@ button {
   gap: 10px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 16px 46px rgba(17, 19, 24, 0.08);
   padding: 14px;
 }
@@ -5124,8 +5124,8 @@ button {
 .dispatchConfirmCard > button:not(.primaryButton) {
   min-height: 34px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   color: var(--ink-soft);
   padding: 0 12px;
   font-size: 13px;
@@ -5133,7 +5133,7 @@ button {
 
 .primaryButton.compact {
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 13px;
   font-size: 13px;
 }
@@ -5203,7 +5203,7 @@ button {
 
 .roleSelectorCurrent {
   min-height: 38px;
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
   padding: 0 12px;
   gap: 8px;
   color: var(--ink);
@@ -5217,7 +5217,7 @@ button {
 .roleSelectorMenu {
   width: 436px;
   bottom: calc(100% + 12px);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   padding: 18px 18px 16px;
   box-shadow: 0 20px 56px rgba(17, 19, 24, 0.1);
 }
@@ -5233,7 +5233,7 @@ button {
   grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
   min-height: 48px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 8px;
 }
 
@@ -5346,7 +5346,7 @@ button {
 .dmpkShell.workbenchShell .primaryButton.compact,
 .dmpkShell.workbenchShell .secondaryButton.compact {
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 13px;
   font-size: 13px;
 }
@@ -5388,7 +5388,7 @@ button {
 .knowledgeCard {
   min-height: 66px;
   border-color: #e4e7ec;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.02);
   transition: border-color var(--bioaz-motion-standard) ease, box-shadow var(--bioaz-motion-standard) ease, background var(--bioaz-motion-standard) ease;
 }
@@ -5396,7 +5396,7 @@ button {
 .workbenchTaskCard:hover,
 .knowledgeCard:hover {
   border-color: #cfd5df;
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 6px 18px rgba(16, 24, 40, 0.05);
   transform: none;
 }
@@ -5447,18 +5447,18 @@ button {
 .knowledgeCard button {
   width: 30px;
   height: 30px;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
 }
 
 .taskFilters button {
   min-height: 32px;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
 }
 
 .taskFilters button:hover {
   border-color: #cfd5df;
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 .workspaceAssistant {
@@ -5502,8 +5502,8 @@ button {
   grid-template-rows: 54px minmax(0, 1fr) 64px;
   overflow: hidden;
   border: 1px solid #dfe3ea;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   box-shadow: 0 24px 70px rgba(16, 24, 40, 0.16);
   animation: workspaceAssistantIn 150ms ease-out;
 }
@@ -5527,7 +5527,7 @@ button {
   width: 28px;
   height: 28px;
   place-items: center;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f2f4f7;
   color: #101828;
 }
@@ -5543,7 +5543,7 @@ button {
   height: 30px;
   place-items: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: #667085;
 }
@@ -5583,8 +5583,8 @@ button {
 .assistantSuggestions button {
   min-height: 44px;
   border: 1px solid #e4e7ec;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 0 13px;
   color: #1d2939;
   font-size: 13px;
@@ -5639,7 +5639,7 @@ button {
   min-width: 0;
   height: 40px;
   border: 1px solid #dfe3ea;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   outline: none;
   padding: 0 12px;
   color: #101828;
@@ -5836,7 +5836,7 @@ button {
   display: grid;
   width: 300px;
   gap: 4px;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   padding: 10px;
 }
 
@@ -5856,8 +5856,8 @@ button {
   grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 6px 8px;
 }
 
@@ -5865,8 +5865,8 @@ button {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 6px 8px;
   color: var(--ink);
   font: inherit;
@@ -5897,7 +5897,7 @@ button {
 .sidebarMenu.chatMenu,
 .pinnedProjectRow > .sidebarMenu {
   width: 190px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12);
 }
 
@@ -6001,12 +6001,12 @@ button {
   grid-template-columns: minmax(0, 1fr) 28px;
   align-items: center;
   min-height: 38px;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 3px 5px;
 }
 
 .pinnedProjectRow:hover {
-  background: #f5f7fa;
+  background: var(--bioaz-surface-hover);
 }
 
 .pinnedProjectRow > button:first-child {
@@ -6034,7 +6034,7 @@ button {
   height: 28px;
   place-items: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: #667085;
 }
@@ -6064,7 +6064,7 @@ button {
 
 .dispatchConfirmCard {
   grid-template-columns: minmax(0, 1fr) auto auto auto;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
 }
 
 .dispatchCoworkerSelect {
@@ -6077,8 +6077,8 @@ button {
   align-items: center;
   gap: 5px;
   border: 1px solid var(--line);
-  border-radius: 9px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 0 10px;
   color: #344054;
   font-size: 13px;
@@ -6093,8 +6093,8 @@ button {
   width: 220px;
   gap: 2px;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12);
   padding: 6px;
 }
@@ -6105,7 +6105,7 @@ button {
   align-items: center;
   justify-content: space-between;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 0 9px;
   color: #1d2939;
@@ -6175,8 +6175,8 @@ button {
   width: 168px;
   gap: 2px;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   box-shadow: 0 12px 34px rgba(16, 24, 40, 0.13);
   padding: 6px;
 }
@@ -6187,7 +6187,7 @@ button {
   align-items: center;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 0 9px;
   color: #344054;
@@ -6210,8 +6210,8 @@ button {
   align-items: center;
   gap: 5px;
   border: 1px solid #e0e4ea;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 0 10px;
   color: #344054;
   font-size: 13px;
@@ -6231,8 +6231,8 @@ button {
   width: max(190px, 100%);
   gap: 2px;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   box-shadow: 0 12px 34px rgba(16, 24, 40, 0.12);
   padding: 6px;
 }
@@ -6244,7 +6244,7 @@ button {
   justify-content: space-between;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 0 9px;
   color: #344054;
@@ -6264,7 +6264,7 @@ button {
   min-height: 96px;
   place-items: center;
   border: 1px dashed #d0d5dd;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   color: #667085;
   font-size: 13px;
 }
@@ -6276,8 +6276,8 @@ button {
   max-height: calc(100dvh - 64px);
   overflow: hidden;
   border: 1px solid #e4e7ec;
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   box-shadow: 0 24px 80px rgba(16, 24, 40, 0.18);
 }
 
@@ -6383,7 +6383,7 @@ button {
   min-width: 0;
   height: 38px;
   border: 1px solid #d0d5dd;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 0 11px;
 }
 
@@ -6426,8 +6426,8 @@ button {
   gap: 6px;
   height: 36px;
   border: 1px solid #e0e4ea;
-  border-radius: 9px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 0 10px;
   color: #667085;
 }
@@ -6496,8 +6496,8 @@ button {
 .knowledgeTable {
   overflow: visible;
   border: 1px solid #e4e7ec;
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
 }
 
 .knowledgeTableHeader,
@@ -6557,7 +6557,7 @@ button {
   width: 30px;
   height: 30px;
   place-items: center;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f2f4f7;
   color: #475467;
 }
@@ -6614,7 +6614,7 @@ button {
   width: 44px;
   height: 44px;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f2f4f7;
   color: #344054;
 }
@@ -6758,7 +6758,7 @@ button {
   bottom: -1px;
   width: 7px;
   height: 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   box-shadow: 0 0 0 1.5px var(--sidebar-row-bg);
 }
 
@@ -6908,8 +6908,8 @@ button {
   height: 36px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--body);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
   cursor: pointer;
@@ -7065,7 +7065,7 @@ button {
   flex: none;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--body);
   padding: 0;
@@ -7075,7 +7075,7 @@ button {
 
 .parameterExpandButton:hover {
   border-color: #cfd6e2;
-  background: #fafbfc;
+  background: var(--bioaz-surface-subtle);
   color: var(--ink);
 }
 
@@ -7114,8 +7114,8 @@ button {
   max-height: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
 }
 
 /* 列名和行必须在同一个滚动容器里。分成两个 grid 行的话,列表一出滚动条,
@@ -7142,8 +7142,8 @@ button {
   align-items: center;
   gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 0 9px;
   color: var(--muted);
   min-height: 32px;
@@ -7174,8 +7174,8 @@ button {
   min-height: 0;
   overflow: auto;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
 }
 
 .ticketsTable {
@@ -7206,7 +7206,7 @@ button {
 }
 
 .ticketsTable tbody tr:last-child td { border-bottom: 0; }
-.ticketsTable tbody tr:hover { background: #fafbfc; }
+.ticketsTable tbody tr:hover { background: var(--bioaz-surface-subtle); }
 
 .ticketsId { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ticketsTime { color: var(--muted); white-space: nowrap; }
@@ -7268,8 +7268,8 @@ button {
   height: 28px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 7px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 0 7px;
   color: var(--ink-soft);
   font-size: 12.5px;
@@ -7343,8 +7343,8 @@ button {
 .ticketHandoffField input,
 .ticketHandoffField textarea {
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 9px 11px;
   color: var(--ink);
   font: inherit;
@@ -7371,7 +7371,7 @@ button {
   align-items: center;
   gap: 9px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 8px 10px;
   color: var(--muted);
 }
@@ -7388,7 +7388,7 @@ button {
   justify-content: center;
   gap: 6px;
   border: 1px dashed var(--line-strong, #d0d5dd);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--body);
   font-size: 12.5px;
@@ -7436,8 +7436,8 @@ button {
 .dmpkHandoffFields input {
   min-height: 32px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 0 10px;
   color: var(--ink);
   font-size: 13px;
@@ -7484,7 +7484,7 @@ button {
   top: 0;
   z-index: 1;
   /* 不透明底色是 sticky 的前提:透明的话滚上来的行会从列名底下透出来。 */
-  background: #fff;
+  background: var(--bioaz-surface);
   border-bottom: 1px solid var(--line);
   padding: 10px 14px;
   color: var(--muted);
@@ -7511,12 +7511,12 @@ button {
 .messageList > li:last-child .messageRow,
 .messageList > li:last-child.messageEmpty { border-bottom: 0; }
 
-.messageRow:hover { background: #fafbfc; }
+.messageRow:hover { background: var(--bioaz-surface-subtle); }
 
 .messageDot {
   width: 7px;
   height: 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
 }
 
@@ -7557,7 +7557,7 @@ button {
 .ticketDetailTitle h1 { margin: 0; font-size: 20px; }
 .ticketDetailTitle p { margin: 0; color: var(--body); font-size: 13px; }
 
-.ticketDetailFiles, .ticketDetailFlow, .quotationReviewPane { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 16px 18px; }
+.ticketDetailFiles, .ticketDetailFlow, .quotationReviewPane { border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 16px 18px; }
 .ticketDetailFiles h2, .ticketDetailFlow h2, .quotationReviewPane h2 { margin: 0 0 12px; font-size: 13px; font-weight: 700; }
 
 /* 附件行不再自带边框:外面这张卡已经把「随单产物」圈出来了,里面每条再描一圈
@@ -7574,7 +7574,7 @@ button {
 
 .ticketFileActions { display: flex; align-items: center; gap: 4px; }
 .ticketFileActions button {
-  min-height: 26px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+  min-height: 26px; border: 1px solid transparent; border-radius: var(--bioaz-radius-tool); background: transparent;
   padding: 0 9px; color: var(--body); font-size: 12.5px; cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease;
 }
@@ -7590,14 +7590,14 @@ button {
    有名字的行比一段坐标更好定位,下一版也更容易验证「那一条改了没有」。 */
 .quotationReviewGroup + .quotationReviewGroup { margin-top: 18px; }
 .quotationReviewGroup h3 { margin: 0 0 8px; color: var(--body); font-size: 12px; font-weight: 700; }
-.quotationReviewLine { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.quotationReviewLine { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); padding: 10px 12px; }
 .quotationReviewLine + .quotationReviewLine { margin-top: 8px; }
 .quotationReviewLine.hasNote { border-color: color-mix(in srgb, var(--bioaz-agent-accent, #5c60b8) 34%, transparent); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
 .quotationReviewMeta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 12px; }
 .quotationReviewMeta strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .quotationReviewMeta small { grid-column: 1; color: var(--muted); font-size: 12px; }
 .quotationReviewMeta b { grid-row: 1 / 3; grid-column: 2; color: var(--ink); font-size: 14px; font-weight: 700; }
-.quotationReviewLine input { min-height: 32px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 10px; color: var(--ink); font-size: 13px; }
+.quotationReviewLine input { min-height: 32px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 0 10px; color: var(--ink); font-size: 13px; }
 .quotationReviewLine input:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
 
 /* ═══ 收件箱:工单台账那一档的状态筛选 ═══════════════════════════════════
@@ -7606,16 +7606,16 @@ button {
 .ticketStatusFilter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .ticketStatusFilter button {
   display: inline-flex; align-items: center; gap: 6px; min-height: 30px;
-  border: 1px solid var(--line); border-radius: 999px; background: #fff;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface);
   padding: 0 12px; color: var(--body); font-size: 12.5px; cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
-.ticketStatusFilter button:hover { border-color: #cfd6e2; background: #fafbfc; }
+.ticketStatusFilter button:hover { border-color: #cfd6e2; background: var(--bioaz-surface-subtle); }
 .ticketStatusFilter button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
 .ticketStatusFilter button i { font-style: normal; font-size: 11px; opacity: .8; }
 
 .ticketsRow { cursor: pointer; }
-.ticketsRow:hover { background: #fafbfc; }
+.ticketsRow:hover { background: var(--bioaz-surface-subtle); }
 .ticketsRow:focus-visible { outline: 2px solid rgba(41, 0, 255, .22); outline-offset: -2px; }
 
 /* ═══ 报价审核画布 ═══════════════════════════════════════════════════════
@@ -7627,9 +7627,9 @@ button {
 .quoteReviewHead .ticketDetailBack { grid-column: 1 / -1; }
 
 .quoteReviewBody { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; }
-.quoteDocPane { min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--soft, #f7f8fb); padding: 20px; }
+.quoteDocPane { min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--soft, #f7f8fb); padding: 20px; }
 
-.quoteDoc { max-width: 660px; margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 26px 28px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
+.quoteDoc { max-width: 660px; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 26px 28px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
 .quoteDoc > header { display: grid; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 16px; }
 .quoteDoc > header strong { font-size: 17px; }
 .quoteDoc > header small { color: var(--muted); font-size: 12px; }
@@ -7639,29 +7639,29 @@ button {
 .quoteDocLine {
   position: relative; display: grid; width: 100%;
   grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
-  border: 1px solid transparent; border-radius: 8px; background: transparent;
+  border: 1px solid transparent; border-radius: var(--bioaz-radius-tool); background: transparent;
   padding: 9px 10px; text-align: left; cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease;
 }
-.quoteDocLine:hover { border-color: var(--line); background: #fafbfc; }
+.quoteDocLine:hover { border-color: var(--line); background: var(--bioaz-surface-subtle); }
 .quoteDocLine.isActive { border-color: var(--bioaz-agent-accent, #5c60b8); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
 /* 已批注的行在原件上留个记号——清单给结论,原件给证据,两边要能互相找到。 */
 .quoteDocLine.hasNote { background: rgba(154, 122, 58, .07); }
-.quoteDocMark { position: absolute; top: 50%; left: -9px; width: 3px; height: 20px; border-radius: 999px; background: var(--sidebar-dot-attention, #9a7a3a); transform: translateY(-50%); }
+.quoteDocMark { position: absolute; top: 50%; left: -9px; width: 3px; height: 20px; border-radius: var(--bioaz-radius-full); background: var(--sidebar-dot-attention, #9a7a3a); transform: translateY(-50%); }
 .quoteDocLabel { display: grid; min-width: 0; gap: 2px; }
 .quoteDocLabel strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .quoteDocLabel small { color: var(--muted); font-size: 12px; }
 .quoteDocLine b { color: var(--ink); font-size: 13.5px; font-weight: 700; }
 
-.quoteNotePane { display: grid; min-height: 0; align-content: start; gap: 12px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 16px; }
+.quoteNotePane { display: grid; min-height: 0; align-content: start; gap: 12px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 16px; }
 .quoteNotePane > header { display: flex; align-items: baseline; justify-content: space-between; }
 .quoteNotePane > header strong { font-size: 13px; }
 .quoteNotePane > header small { color: var(--muted); font-size: 12px; }
 .quoteNoteHint, .quoteNoteEmpty { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
 
-.quoteNoteEditor { display: grid; gap: 8px; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: 10px; background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 12px; }
+.quoteNoteEditor { display: grid; gap: 8px; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: var(--bioaz-radius-control); background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 12px; }
 .quoteNoteEditor > span { color: var(--ink); font-size: 12.5px; font-weight: 600; }
-.quoteNoteEditor textarea { min-height: 76px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 8px 10px; color: var(--ink); font: inherit; font-size: 13px; resize: vertical; }
+.quoteNoteEditor textarea { min-height: 76px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 8px 10px; color: var(--ink); font: inherit; font-size: 13px; resize: vertical; }
 .quoteNoteEditor textarea:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
 .quoteNoteEditor > div { display: flex; justify-content: flex-end; gap: 8px; }
 
@@ -7674,11 +7674,11 @@ button {
   display: grid;
   gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 10px;
 }
-.quoteNoteList > li:hover { background: #fafbfc; }
+.quoteNoteList > li:hover { background: var(--bioaz-surface-subtle); }
 .quoteNoteList > li.quoteNoteEmpty { border-left-color: var(--line); background: transparent; color: var(--muted); font-size: 12.5px; }
 .quoteNoteList strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteNoteList p { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.6; }
@@ -7697,14 +7697,14 @@ button {
    空白会被读成「状态还没定」。 */
 .messageNoticeTag {
   display: inline-flex; align-items: center; min-height: 22px;
-  border: 1px solid var(--line); border-radius: 999px; background: var(--soft, #f7f8fb);
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--soft, #f7f8fb);
   padding: 0 9px; color: var(--muted); font-size: 11.5px; font-style: normal;
 }
 .messageRow.isNotice strong { font-weight: 500; }
 .messageRow.isNotice .messageDot { background: transparent; }
 .messageRow.isNotice.isUnread .messageDot { background: var(--muted); }
 
-.noticeBody { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 18px 20px; }
+.noticeBody { border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 18px 20px; }
 .noticeBody p { margin: 0; color: var(--body); font-size: 13.5px; line-height: 1.9; white-space: pre-line; }
 
 @media (max-width: 900px) {
@@ -7722,15 +7722,15 @@ button {
    看不出数是怎么算出来的。 */
 .quoteReviewHeadMain { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; grid-column: 1 / -1; }
 
-.quoteFormSwitch { display: inline-flex; flex: none; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--soft, #f7f8fb); padding: 3px; }
+.quoteFormSwitch { display: inline-flex; flex: none; gap: 2px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--soft, #f7f8fb); padding: 3px; }
 .quoteFormSwitch button {
   display: inline-flex; align-items: center; gap: 6px; min-height: 28px;
-  border: 0; border-radius: 999px; background: transparent; padding: 0 12px;
+  border: 0; border-radius: var(--bioaz-radius-full); background: transparent; padding: 0 12px;
   color: var(--body); font-size: 12.5px; cursor: pointer; transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
-.quoteFormSwitch button.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(15, 23, 42, .1); }
+.quoteFormSwitch button.active { background: var(--bioaz-surface); color: var(--ink); box-shadow: 0 1px 3px rgba(15, 23, 42, .1); }
 
-.quoteSheet, .quoteDoc { max-width: 900px; margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 22px 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
+.quoteSheet, .quoteDoc { max-width: 900px; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 22px 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, .05); }
 .quoteSheet > header, .quoteDoc > header { display: grid; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 14px; }
 .quoteSheet > header strong, .quoteDoc > header strong { font-size: 15px; }
 .quoteSheet > header small, .quoteDoc > header small { color: var(--muted); font-size: 12px; }
@@ -7764,19 +7764,19 @@ button {
 .quoteNoteAnchor { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteNoteCurrent { color: var(--muted); font-size: 11.5px; }
 .quoteNoteCats { display: flex; flex-wrap: wrap; gap: 5px; }
-.quoteNoteCats button { min-height: 26px; border: 1px solid var(--line); border-radius: 999px; background: #fff; padding: 0 9px; color: var(--body); font-size: 11.5px; cursor: pointer; }
+.quoteNoteCats button { min-height: 26px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface); padding: 0 9px; color: var(--body); font-size: 11.5px; cursor: pointer; }
 .quoteNoteCats button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
 /* 自定义分类名。跟「现值 → 建议值」同一种排法:左边一个说明,右边一个输入框。 */
 .quoteNoteCustom { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 7px; }
 .quoteNoteCustom > span { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
-.quoteNoteCustom input { min-height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 9px; font-size: 12.5px; }
+.quoteNoteCustom input { min-height: 30px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 0 9px; font-size: 12.5px; }
 
 /* 现值按内容宽,别给它一格定死的窄列——「50.00」在 34px 里会跟箭头折成两行。 */
 .quoteNoteSuggest { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 7px; }
 .quoteNoteSuggest > svg { color: var(--muted); }
 .quoteNoteSuggestFrom { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
 .quoteNoteSuggestFrom b { color: var(--body); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.quoteNoteSuggest input { min-height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 9px; font-size: 12.5px; }
+.quoteNoteSuggest input { min-height: 30px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 0 9px; font-size: 12.5px; }
 
 /* 提醒项收掉左侧那道琥珀,退回中性色:全都标成琥珀,「阻断」就不再是个信号。 */
 .quoteNoteList > li.is-advisory { border-left-color: var(--line); }
@@ -7833,7 +7833,7 @@ button {
    顺序由圆点从上到下排列本身表达,不需要再连一条线。 */
 .ticketFlowDot {
   position: relative; z-index: 1; width: 7px; height: 7px; margin-top: 6px;
-  border-radius: 999px; background: var(--line-strong, #cfd6e2);
+  border-radius: var(--bioaz-radius-full); background: var(--line-strong, #cfd6e2);
 }
 .ticketDetailFlow li.isLatest .ticketFlowDot { background: var(--bioaz-agent-accent, #5c60b8); }
 .ticketFlowMain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
@@ -7847,7 +7847,7 @@ button {
 .ticketFlowNote {
   margin: 6px 0 0;
   grid-column: 2;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft, #f7f8fb);
   padding: 8px 10px;
   color: var(--body);
@@ -7916,8 +7916,8 @@ button {
   flex: none;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--muted);
   font-size: 11px;
   font-weight: 600;
@@ -7964,7 +7964,7 @@ button {
 .quoteHeadTools { display: flex; align-items: center; gap: 10px; }
 .quoteAnnotateToggle {
   display: inline-flex; align-items: center; gap: 6px; min-height: 30px;
-  border: 1px solid var(--line); border-radius: 999px; background: #fff;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface);
   padding: 0 12px; color: var(--body); font-size: 12.5px; cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease;
 }
@@ -7992,7 +7992,7 @@ button {
    不该非得跨到右栏才知道。 */
 .quoteRowBubble {
   display: inline-grid; width: 16px; height: 16px; margin-left: 6px; place-items: center;
-  border-radius: 999px; background: var(--sidebar-dot-attention, #9a7a3a); color: #fff;
+  border-radius: var(--bioaz-radius-full); background: var(--sidebar-dot-attention, #9a7a3a); color: #fff;
   vertical-align: middle;
 }
 .quoteSheetGrid tr.is-advisory .quoteRowBubble,
@@ -8001,8 +8001,8 @@ button {
 /* 就地气泡卡。跟 QA 的 qaAnnotationCard 一个量级:引用 + 一行输入 + 去向。 */
 .quoteNoteBubble {
   position: absolute; right: 18px; z-index: 6; display: grid; width: min(300px, 62%); gap: 8px;
-  border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: 12px;
-  background: #fff; padding: 12px; box-shadow: 0 12px 32px rgba(15, 23, 42, .14);
+  border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface); padding: 12px; box-shadow: 0 12px 32px rgba(15, 23, 42, .14);
   animation: quoteBubbleIn 140ms ease both;
 }
 @keyframes quoteBubbleIn { from { opacity: 0; } to { opacity: 1; } }
@@ -8013,12 +8013,12 @@ button {
 .quoteNoteBubble blockquote em { color: var(--muted); font-size: 11px; font-style: normal; }
 .quoteNoteRow { display: grid; grid-template-columns: minmax(0, 1fr) 28px; align-items: end; gap: 6px; }
 .quoteNoteRow textarea {
-  min-height: 32px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  min-height: 32px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
   padding: 7px 9px; color: var(--ink); font: inherit; font-size: 12.5px; resize: none;
 }
 .quoteNoteRow textarea:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
 .quoteNoteSend {
-  display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 8px;
+  display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-action-primary, #17191e); color: #fff; cursor: pointer;
 }
 .quoteNoteSend:disabled { background: var(--bioaz-border-strong, #cfd6e2); cursor: default; }
@@ -8041,7 +8041,7 @@ button {
 /* ═══ 批注卡:操作与内容分层 ═══════════════════════════════════════════════
    删除按钮跟标签同排,不再绝对定位压在卡上——它是这条批注的一个操作,
    不是浮在上面的另一层。 */
-.quoteNoteList li { display: grid; gap: 6px; border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; background: #fff; padding: 10px 12px; }
+.quoteNoteList li { display: grid; gap: 6px; border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 10px 12px; }
 .quoteNoteList li.is-blocking { border-left-color: var(--sidebar-dot-attention, #9a7a3a); }
 .quoteNoteList li.is-advisory { border-left-color: var(--line-strong, #cfd6e2); }
 
@@ -8062,7 +8062,7 @@ button {
 
 /* ═══ 落定前的确认 ═══════════════════════════════════════════════════════ */
 .quoteDecisionDialog { width: min(520px, 100%); }
-.quoteDecisionFacts { display: grid; gap: 0; margin: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.quoteDecisionFacts { display: grid; gap: 0; margin: 0; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); overflow: hidden; }
 .quoteDecisionFacts > div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 9px 12px; }
 .quoteDecisionFacts > div + div { border-top: 1px solid var(--line); }
 .quoteDecisionFacts dt { color: var(--muted); font-size: 12px; }
@@ -8073,7 +8073,7 @@ button {
 .quoteDecisionNotes ul { display: grid; gap: 8px; max-height: 220px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
 /* 四列:严重度、分类、锚点、建议值。列数必须跟子元素个数对上,少一列的话
    最后那个会掉进隐式行——收件箱那条列名浮在半空就是这么来的。 */
-.quoteDecisionNotes li { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: baseline; gap: 6px 8px; border-radius: 8px; background: var(--soft, #f7f8fb); padding: 8px 10px; }
+.quoteDecisionNotes li { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: baseline; gap: 6px 8px; border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb); padding: 8px 10px; }
 .quoteDecisionNotes strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteDecisionNotes b { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
 .quoteDecisionNotes p { grid-column: 1 / -1; margin: 0; color: var(--body); font-size: 12px; line-height: 1.6; }
@@ -8098,7 +8098,7 @@ button {
   gap: 2px;
   margin: 0 8px 6px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--soft, #f7f8fb);
   padding: 2px;
 }
@@ -8113,7 +8113,7 @@ button {
   min-height: 28px;
   align-items: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 0 10px;
   color: var(--body);
@@ -8127,7 +8127,7 @@ button {
 .accountMenu > .accountLensRow button:hover { color: var(--ink); }
 /* 选中那档抬成白底:分段控件里"当前在哪一档"必须比 hover 更明确。 */
 .accountMenu > .accountLensRow button.isOn {
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
   color: var(--ink);
   font-weight: 600;
@@ -8137,7 +8137,7 @@ button {
    之前批注只活在审批人的画布里,而要改的那个人走的是另一条路——
    他拿到的只有一行「批注 N 条」。suggested 建议值的全部意义就是让下一版
    能被逐条核验,看不见它,这个字段就白设计了。 */
-.ticketDetailNotes { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 16px 18px; }
+.ticketDetailNotes { border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 16px 18px; }
 .ticketDetailNotes h2 {
   display: flex; align-items: baseline; gap: 8px;
   margin: 0 0 12px; font-size: 13px; font-weight: 700;
@@ -8151,7 +8151,7 @@ button {
 .ticketDetailNotes > ul > li {
   display: grid; gap: 5px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   padding: 10px 12px;
 }
 .ticketDetailNoteHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -8180,7 +8180,7 @@ button {
   margin: 16px 0 10px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 18px 20px;
 }
 
@@ -8198,7 +8198,7 @@ button {
 .reworkCard.isOpen .reworkChevron { transform: rotate(180deg); }
 .reworkFullscreen {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
-  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
   padding: 0; color: var(--muted); cursor: pointer;
 }
 .reworkFullscreen:hover { background: var(--soft, #f7f8fb); color: var(--ink); }
@@ -8212,7 +8212,7 @@ button {
 .reworkFoot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .reworkBadge {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
-  border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
+  border-radius: var(--bioaz-radius-full); background: rgba(154, 122, 58, .14); color: #7d6229;
 }
 .reworkCard > header > div { display: grid; flex: 1; gap: 2px; }
 .reworkCard > header strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
@@ -8220,14 +8220,14 @@ button {
 
 /* 「还剩几条必须改」是这张卡唯一需要读一眼就知道的数字。 */
 .reworkRemaining {
-  flex: none; border-radius: 999px; background: rgba(154, 122, 58, .16);
+  flex: none; border-radius: var(--bioaz-radius-full); background: rgba(154, 122, 58, .16);
   padding: 3px 9px; color: #7d6229; font-size: 11.5px; font-style: normal;
 }
 .reworkRemaining.isClear { background: var(--soft, #f7f8fb); color: var(--muted); }
 
 /* 驳回理由是总的判断，逐条批注是具体的账。两者分开排，不要混成一段。 */
 .reworkReason {
-  margin: 0; border-radius: 8px; background: var(--soft, #f7f8fb);
+  margin: 0; border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb);
   padding: 10px 12px; color: var(--body); font-size: 12.5px; line-height: 1.7;
 }
 
@@ -8247,7 +8247,7 @@ button {
    按钮另起一行反而各自都松快。 */
 .reworkNote {
   display: grid; gap: 10px;
-  border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); padding: 11px 12px;
 }
 .reworkNoteMain { display: grid; min-width: 0; gap: 6px; }
 .reworkNoteSide {
@@ -8268,7 +8268,7 @@ button {
 .reworkNoteQuote { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
 .reworkNotePlan {
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 8px;
-  margin: 0; border-radius: 7px; background: var(--bioaz-agent-accent-soft, #f3f3fb);
+  margin: 0; border-radius: var(--bioaz-radius-tool); background: var(--bioaz-agent-accent-soft, #f3f3fb);
   padding: 8px 10px; color: var(--ink); font-size: 12.5px; line-height: 1.7;
 }
 .reworkNotePlan > span { color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; }
@@ -8337,14 +8337,14 @@ button {
 
    容器查询问的才是对的那个问题。不支持容器查询的浏览器落到默认的单列——
    窄容器里本来就该是单列，降级方向是安全的。 */
-.quotePreviewPaper { container-type: inline-size; min-height: 0; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--soft, #f7f8fb); padding: 20px; }
+.quotePreviewPaper { container-type: inline-size; min-height: 0; overflow: auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--soft, #f7f8fb); padding: 20px; }
 .quotePreviewPaper .quoteSheetGrid { grid-template-columns: minmax(0, 1fr); }
 @container (min-width: 880px) {
   .quotePreviewPaper .quoteSheetGrid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
 }
 .quotePreviewPaperWrap .scrollTopButton { right: 18px; bottom: 16px; }
 
-.quotePreviewNotes { display: grid; min-height: 0; align-content: start; gap: 10px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 14px 16px; }
+.quotePreviewNotes { display: grid; min-height: 0; align-content: start; gap: 10px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 14px 16px; }
 .quotePreviewNotes > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .quotePreviewNotes > header strong { font-size: 13px; }
 .quotePreviewNotes > header small { color: var(--muted); font-size: 12px; }
@@ -8353,7 +8353,7 @@ button {
    把 width/padding 写到 button 上就会跟外框打架。 */
 .quotePreviewNotes > ul > li {
   border: 1px solid var(--line);
-  border-radius: 8px; overflow: hidden;
+  border-radius: var(--bioaz-radius-tool); overflow: hidden;
   transition: border-color var(--bioaz-motion-standard) ease, background var(--bioaz-motion-standard) ease;
 }
 .quotePreviewNotes > ul > li.is-advisory { border-left-color: var(--line); }
@@ -8367,7 +8367,7 @@ button {
   border: 0; background: transparent; padding: 10px 11px;
   text-align: left; cursor: pointer;
 }
-.quotePreviewNotes > ul > li:hover { background: #fafbfc; }
+.quotePreviewNotes > ul > li:hover { background: var(--bioaz-surface-subtle); }
 .quotePreviewNotes > ul > li.isActive:hover { background: var(--bioaz-agent-accent-soft, #f3f3fb); }
 .quotePreviewNoteBody strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quotePreviewNoteText { color: var(--body); font-size: 12.5px; line-height: 1.6; }
@@ -8375,7 +8375,7 @@ button {
 /* 「这一条批在计算表上」是一句解释,不是第二颗按钮——整条已经能点了,
    里面再嵌一颗按钮只会多出一个不知道该点哪个的选择。 */
 .quoteNoteOffForm {
-  justify-self: start; border: 1px dashed var(--line); border-radius: 999px;
+  justify-self: start; border: 1px dashed var(--line); border-radius: var(--bioaz-radius-full);
   padding: 3px 9px; color: var(--muted); font-size: 11.5px;
 }
 
@@ -8400,7 +8400,7 @@ button {
 }
 /* 收在右侧面板里时它是独立一段，那儿地方够，给底色好读 */
 .dmpkReworkPanel .dmpkReworkReason {
-  margin: 0; border-radius: 8px; background: var(--soft, #f7f8fb);
+  margin: 0; border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb);
   padding: 10px 12px; line-height: 1.7;
 }
 
@@ -8419,14 +8419,14 @@ button {
 .dmpkHandoffUnresolved {
   display: grid; gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 10px; background: var(--soft, #f7f8fb); padding: 11px 13px;
+  border-radius: var(--bioaz-radius-control); background: var(--soft, #f7f8fb); padding: 11px 13px;
 }
 .dmpkHandoffUnresolved > strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
 .dmpkHandoffUnresolved ul { display: grid; gap: 3px; margin: 0; padding-left: 18px; }
 .dmpkHandoffUnresolved li { color: var(--body); font-size: 12.5px; }
 .dmpkHandoffUnresolved > span { color: var(--muted); font-size: 11.5px; line-height: 1.6; }
 .dmpkHandoffRequired {
-  margin-left: 6px; border-radius: 999px; background: rgba(154, 122, 58, .16);
+  margin-left: 6px; border-radius: var(--bioaz-radius-full); background: rgba(154, 122, 58, .16);
   padding: 1px 7px; color: #7d6229; font-size: 10.5px; font-style: normal;
 }
 
@@ -8442,7 +8442,7 @@ button {
 }
 .dmpkInboundMark {
   display: grid; width: 26px; height: 26px; place-items: center;
-  border-radius: 999px; background: rgba(154, 122, 58, .14); color: #7d6229;
+  border-radius: var(--bioaz-radius-full); background: rgba(154, 122, 58, .14); color: #7d6229;
 }
 .dmpkInboundEvent > div { display: grid; gap: 6px; min-width: 0; }
 .dmpkInboundEvent strong { color: var(--ink); font-size: 13px; font-weight: 600; }
@@ -8452,7 +8452,7 @@ button {
    「这一单出过几版」被藏在了点开之后——而返工场景里，出过第二版
    这件事本身就是要给人看的信息。最新那版展开，旧版收成一行留在原地。 */
 .dmpkQuoteVersions { display: grid; gap: 8px; }
-.dmpkQuoteVersion { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.dmpkQuoteVersion { border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); overflow: hidden; }
 .dmpkQuoteVersion.isCurrent { border-color: var(--bioaz-agent-accent-border, #dcddf2); }
 .dmpkQuoteVersion > button {
   display: grid; width: 100%; grid-template-columns: auto minmax(0, 1fr) auto auto;
@@ -8469,7 +8469,7 @@ button {
 .dmpkQuoteVersionMeta strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .dmpkQuoteVersionMeta small { color: var(--muted); font-size: 11.5px; }
 .dmpkQuoteVersionNow {
-  border-radius: 999px; background: var(--bioaz-status-success-soft, #d1fae5);
+  border-radius: var(--bioaz-radius-full); background: var(--bioaz-status-success-soft, #d1fae5);
   padding: 2px 8px; color: var(--bioaz-status-success, #065f46); font-size: 10.5px; font-style: normal;
 }
 .dmpkQuoteVersionChevron { color: var(--muted); transition: transform var(--bioaz-motion-standard) ease; }
@@ -8490,7 +8490,7 @@ button {
 .dmpkReworkList > li {
   display: grid; gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 8px; padding: 10px 11px;
+  border-radius: var(--bioaz-radius-tool); padding: 10px 11px;
 }
 .dmpkReworkListHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .dmpkReworkListHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
@@ -8506,14 +8506,14 @@ button {
   display: grid; gap: 10px;
   margin: 0 0 10px;
   border: 1px solid var(--line);
-  border-radius: 18px; background: #fff; padding: 16px 18px;
+  border-radius: 18px; background: var(--bioaz-surface); padding: 16px 18px;
 }
 .dmpkReworkNotice > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .dmpkReworkNotice > header > div { display: grid; gap: 2px; }
 .dmpkReworkNotice > header span { color: var(--muted); font-size: 11.5px; font-weight: 600; }
 .dmpkReworkNotice > header strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
 .dmpkReworkNotice > header i {
-  flex: none; border-radius: 999px; background: var(--soft, #f7f8fb);
+  flex: none; border-radius: var(--bioaz-radius-full); background: var(--soft, #f7f8fb);
   padding: 3px 9px; color: var(--muted); font-size: 11.5px; font-style: normal;
 }
 .dmpkReworkNotice > header i.isBlocking { background: rgba(154, 122, 58, .16); color: #7d6229; }
@@ -8521,7 +8521,7 @@ button {
 .dmpkReworkNotice > footer { display: flex; justify-content: flex-end; }
 .dmpkReworkNotice > footer button {
   display: inline-flex; min-height: 30px; align-items: center; gap: 6px;
-  border: 1px solid transparent; border-radius: 8px;
+  border: 1px solid transparent; border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-action-primary, #17191e); padding: 0 12px;
   color: #fff; font-size: 12.5px; cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease;
@@ -8583,7 +8583,7 @@ button {
 .dmpkReworkCanvas > header small { color: var(--muted); font-size: 12px; }
 .dmpkReworkCanvas > header > button {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
-  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
   color: var(--muted); cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
@@ -8608,13 +8608,13 @@ button {
    卡片里的按钮不去参与那场竞争，自己定死一套：同高、同圆角、同内距。 */
 .reworkAction {
   display: inline-flex; min-height: 30px; align-items: center; gap: 6px;
-  border: 1px solid var(--line); border-radius: 8px;
-  background: #fff; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface); padding: 0 12px;
   color: var(--body); font-size: 12.5px; font-weight: 500;
   white-space: nowrap; cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease;
 }
-.reworkAction:hover:not(:disabled) { border-color: var(--line-strong, #cfd6e2); background: #fafbfc; color: var(--ink); }
+.reworkAction:hover:not(:disabled) { border-color: var(--line-strong, #cfd6e2); background: var(--bioaz-surface-subtle); color: var(--ink); }
 .reworkAction.isPrimary {
   border-color: transparent;
   background: var(--bioaz-action-primary, #17191e);
@@ -8635,12 +8635,12 @@ button {
   display: grid; gap: 12px;
   margin: 0 0 10px;
   border: 1px solid var(--line);
-  border-radius: 18px; background: #fff; padding: 18px 20px;
+  border-radius: 18px; background: var(--bioaz-surface); padding: 18px 20px;
 }
 .changeConfirmCard > header { display: flex; align-items: center; gap: 10px; }
 .changeConfirmBadge {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-agent-accent-soft, #f3f3fb);
   color: var(--bioaz-agent-accent, #5c60b8);
 }
@@ -8658,7 +8658,7 @@ button {
 .changeConfirmGroup ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .changeConfirmGroup li {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
-  border-radius: 7px; background: var(--soft, #f7f8fb); padding: 8px 11px;
+  border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb); padding: 8px 11px;
 }
 .changeConfirmGroup li strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .changeConfirmCard > footer { display: flex; justify-content: flex-end; gap: 8px; }

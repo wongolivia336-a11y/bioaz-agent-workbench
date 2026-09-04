@@ -2,7 +2,7 @@
 
 import { ChevronDown, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { ParamDraft, ParamField, ParamGroup } from "./types";
+import { formatParamValue, type ParamDraft, type ParamField, type ParamGroup } from "./types";
 
 /**
  * Composer 里的已选参数托盘。
@@ -31,6 +31,7 @@ export function ComposerChipTray({ tabs, groups, fields, onRemove }: {
   // chips 被清空后（发送完一轮）自动回到收起态，否则下次进来是个空的大盒子
   useEffect(() => { if (!tabs.length) setExpanded(false); }, [tabs.length]);
   const groupById = useMemo(() => new Map(fields.map((field) => [field.id, field.group])), [fields]);
+  const fieldById = useMemo(() => new Map(fields.map((field) => [field.id, field])), [fields]);
   if (!tabs.length) return null;
 
   const grouped = groups
@@ -38,12 +39,15 @@ export function ComposerChipTray({ tabs, groups, fields, onRemove }: {
     .filter((entry) => entry.items.length);
   const ungrouped = tabs.filter((tab) => !groupById.has(tab.fieldId));
 
-  const chip = (tab: ParamDraft) => (
-    <button type="button" key={tab.fieldId} onClick={() => onRemove(tab.fieldId)} aria-label={`移除 ${tab.label}`} title={`${tab.label}：${tab.value}`}>
-      <span>{tab.label}：{tab.value}</span>
-      <X size={13} />
-    </button>
-  );
+  const chip = (tab: ParamDraft) => {
+    const text = formatParamValue(fieldById.get(tab.fieldId), tab.value);
+    return (
+      <button type="button" key={tab.fieldId} onClick={() => onRemove(tab.fieldId)} aria-label={`移除 ${tab.label}`} title={`${tab.label}：${text}`}>
+        <span>{tab.label}：{text}</span>
+        <X size={13} />
+      </button>
+    );
+  };
 
   const toggle = (
     <button className="composerChipToggle" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>

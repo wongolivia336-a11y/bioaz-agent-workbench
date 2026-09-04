@@ -2,10 +2,11 @@
 
 import { ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { effectiveValues, unmetDependencies, type ParamField } from "../../components/params";
+import { effectiveValues, formatParamValue, unmetDependencies, type ParamField } from "../../components/params";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
+import { useStickToBottom } from "../../components/workbench-shell/useStickToBottom";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
 import {
@@ -71,7 +72,11 @@ export default function TumorQuotationSession({
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [stage, setStage] = useState<TumorStage>("idle");
   const [preview, setPreview] = useState<null | "params" | "artifact">(null);
-  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "process", "artifacts"]);
+  /* tab 栏只放主面板，跟 DMPK 同一条规矩：**处理过程收进加号菜单，系统不会自己
+     把它加回来**。五个 tab 塞不进 320px 的右栏，多出来的会被挤进溢出里——
+     而「修改日志」正是那种「不主动去看就等于没有」的东西，不能让它排在溢出里。
+     报价结果自带 available（生成后才出现），所以生成前实际是三个 tab。 */
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "quote", "changelog", "artifacts"]);
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelFocus, setPanelFocus] = useState(false);
   const [inspectorPanelId, setInspectorPanelId] = useState<TumorInspectorPanelId>("parameters");
@@ -80,6 +85,28 @@ export default function TumorQuotationSession({
   const [columnPanelIds, setColumnPanelIds] = useState<string[]>([]);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
+  /* 参数表单开着没有。
+     ----------------------------------------------------------------------
+     原来是完全跟着 stage 走：collecting 显示、齐全了就消失。于是参数一填完，
+     **想回头整体看一眼或者改两项就没有入口了**——只剩右栏逐项点铅笔，
+     而那是单项修改，一次只能动一个。
+     现在给它一个常驻开关：collecting 默认开着（跟以前一样），
+     齐全之后人可以自己再打开，那时列的是全部参数而不只是缺的。 */
+  const [paramsOpen, setParamsOpen] = useState(true);
+  /* 参数改动流水。谁在什么时候把哪一项从什么改成了什么。
+     报价改过几轮、动过哪些参数，一个月后回来还得查得到——这是这套东西的
+     立身之本，不是附加功能。记在会话里而不是算出来：改动是事件，
+     从「当前值」反推不出发生过什么。 */
+  const [changeLog, setChangeLog] = useState<Array<{ id: string; at: string; label: string; from: string; to: string }>>([]);
+  /* 这一单出过报价没有，以及出过之后参数又动了没有。
+     ----------------------------------------------------------------------
+     `stage` 记不住这件事：点右栏铅笔改一项，stage 就退回 collecting，
+     「已经出过一版报价」这个事实当场丢了——按钮从「重新生成报价」变回
+     「保存并生成报价」，而对话里刚说完「当前报价将标记为待重新生成」。
+     说了要标记就得真的标记，而且要标在**报价表**上：那张表还照着新参数
+     算金额，跟已经发出去的 Word / Excel 已经对不上了。 */
+  const [quoted, setQuoted] = useState(false);
+  const [quoteStale, setQuoteStale] = useState(false);
   const visiblePanelIdsRef = useRef(visiblePanelIds);
   visiblePanelIdsRef.current = visiblePanelIds;
   const initialRequestHandledRef = useRef(false);
@@ -107,6 +134,10 @@ export default function TumorQuotationSession({
   /* 「这一步还欠着输入没有」。改单项时只看那一项，否则看全局——
      用全局的话，改一项参数会被其它还缺的项挡住，发不出去。 */
   const composerPending = editingField ? (isDrafted(editingField) ? [] : [editingField]) : pendingFields;
+  /* 表单开着的时候列什么：还在收集就列缺的（跟以前一样），
+     参数已经齐了还打开，说明人是来**回头改**的，那就列全部。 */
+  const formOpen = paramsOpen && stage !== "idle" && stage !== "thinking" && stage !== "generating";
+  const formFields = editingField || stage === "collecting" ? composerFields : fields;
 
   // 一组参数收齐后自动折叠，把注意力交给还缺的那组
   useEffect(() => {
@@ -131,7 +162,7 @@ export default function TumorQuotationSession({
       coworkerName: "肿瘤报价同事",
       stageLabel: stage === "generated" ? "报价已生成" : stage === "ready" ? "参数已齐全" : stage === "collecting" ? "参数补全中" : "报价处理中",
       entries: messages.filter((message) => message.role === "user" || message.role === "agent").map((message) => ({ id: message.id, role: message.role as "user" | "agent", text: message.text })),
-      facts: fields.filter((field) => field.value).map((field) => ({ label: field.label, value: field.value })),
+      facts: fields.filter((field) => field.value).map((field) => ({ label: field.label, value: formatParamValue(field, field.value) })),
     });
   }, [fields, messages, onSessionSnapshotChange, stage]);
 
@@ -186,6 +217,25 @@ export default function TumorQuotationSession({
     setOpenGroups({ model: group === "model", design: group === "design", dosing: group === "dosing", readout: group === "readout" });
   };
 
+  /**
+   * 记一批参数流水。
+   *
+   * 三个入口都要走这里：一句话识别出来的、补全卡发上来的、级联清空掉的。
+   * 原来只记了补全卡那一条，于是日志**从中途开始**——首轮一句话认出来的
+   * 六项参数在日志里毫无踪迹，翻日志的人看到「模型」有值却查不到它是
+   * 哪来的，只能猜是谁在哪一步填的。级联清空同样要记：不记的话日志里会
+   * 出现一个凭空消失的取值。
+   */
+  const logChanges = (before: TumorField[], after: TumorField[]) => {
+    const at = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+    const entries = after
+      .map((field, index) => ({ field, from: before[index]?.value ?? "" }))
+      .filter(({ field, from }) => field.value !== from)
+      .map(({ field, from }, index) => ({ id: `chg-${Date.now()}-${index}`, at, label: field.label, from, to: field.value }));
+    if (entries.length) setChangeLog((items) => [...items, ...entries]);
+    return entries;
+  };
+
   const handleRequest = (text: string, skipUserMessage = false) => {
     if (!skipUserMessage) appendMessage("user", text, consumeAttachments());
     setComposerText("");
@@ -196,6 +246,7 @@ export default function TumorQuotationSession({
       const nextFields = fields.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field);
       const recognized = nextFields.filter((field) => patch[field.id]);
       const remaining = nextFields.filter((field) => field.required && !field.value);
+      if (logChanges(fields, nextFields).length && quoted) setQuoteStale(true);
       setFields(nextFields);
       suggestPanel("parameters");
       focusGroup(nextGroupOf(remaining, nextFields));
@@ -227,9 +278,14 @@ export default function TumorQuotationSession({
   const requestFieldEdit = (fieldId: string) => {
     const field = fields.find((item) => item.id === fieldId);
     if (!field) return;
-    const invalidatesQuotation = stage === "generated";
+    const invalidatesQuotation = quoted;
     openInspector("parameters");
     setEditingFieldId(field.id);
+    /* 表单收起着的时候点铅笔，原来是**什么都不会出现**：这里只设了
+       editingFieldId，而卡片是否渲染由 paramsOpen 决定。人得到一句
+       「请在下方选择一个新值」，下方却空空如也。要人改，就得把要改的
+       那一项摆到他面前。 */
+    setParamsOpen(true);
     setDraftTabs((items) => items.filter((item) => item.fieldId !== field.id));
     focusGroup(field.group);
     setStage("collecting");
@@ -244,7 +300,7 @@ export default function TumorQuotationSession({
   const sendDraft = () => {
     if (!draftTabs.length) return;
     const sentTabs = draftTabs;
-    appendMessage("user", `补充报价参数：\n${sentTabs.map((tab) => `${tab.label}：${tab.value}`).join("\n")}`, consumeAttachments());
+    appendMessage("user", `补充报价参数：\n${sentTabs.map((tab) => `${tab.label}：${formatParamValue(fields.find((field) => field.id === tab.fieldId), tab.value)}`).join("\n")}`, consumeAttachments());
     setStage("thinking");
     suggestPanel("process");
     window.setTimeout(() => {
@@ -264,6 +320,10 @@ export default function TumorQuotationSession({
         return { ...field, value: "" };
       });
       const remaining = reconciled.filter((field) => field.required && !field.value);
+      /* 记流水。跟 reconciled 一起算，因为级联清空也是一次改动——
+         「品系被清掉了」跟「品系被改成别的」一样需要留痕，否则日志里
+         会出现一个凭空消失的取值。 */
+      if (logChanges(fields, reconciled).length && quoted) setQuoteStale(true);
       setFields(reconciled);
       setDraftTabs([]);
       setEditingFieldId(null);
@@ -307,6 +367,8 @@ export default function TumorQuotationSession({
     appendMessage("user", "确认参数，生成正式报价单。");
     window.setTimeout(() => {
       setStage("generated");
+      setQuoted(true);
+      setQuoteStale(false);
       suggestPanel("artifacts");
       appendRun("quote");
       appendMessage("agent", "报价单已生成。Word 与 Excel 金额校验一致。");
@@ -327,6 +389,8 @@ export default function TumorQuotationSession({
     onEditField: requestFieldEdit,
     editingFieldId,
     onPreviewArtifact: () => setPreview("artifact"),
+    changeLog,
+    quoteStale,
   });
 
   const completedRequired = fields.filter((field) => field.required && field.value).length;
@@ -337,11 +401,30 @@ export default function TumorQuotationSession({
       <>
         <div className="paramPanelToolbar">
           <span>
-            <strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数台账"}</strong>
+            <strong>{quoted && !quoteStale ? "报价参数 · 已确认" : quoted ? "报价参数 · 已改动" : "参数台账"}</strong>
             <em>{completedRequired}/{totalRequired}</em>
           </span>
         </div>
         {panel.content}
+        {/* 生成入口钉在台账底下。
+            原来它只长在对话里那张确认卡上——**滚上去看历史，入口就跟着滚走了**。
+            而「参数够不够、够了就出报价」这件事从头到尾都在这一栏里发生。
+            不齐全时不是灰一个按钮就完事，要说清还差什么。 */}
+        <div className="tumorRailAction">
+          <button
+            className="primaryButton"
+            type="button"
+            disabled={Boolean(missingFields.length) || stage === "generating"}
+            onClick={startGeneration}
+          >
+            {quoted ? "重新生成报价" : "保存并生成报价"}
+          </button>
+          {missingFields.length
+            ? <small>还差 {missingFields.length} 项必填：{missingFields.slice(0, 2).map((field) => field.label).join("、")}{missingFields.length > 2 ? "…" : ""}</small>
+            /* 参数动过之后，已经发出去的 Word / Excel 跟右边这张表已经对不上了。
+               不说的话人只会看到金额悄悄变了，而手里那份文件还是旧的。 */
+            : quoteStale ? <small className="isStale">参数已改动，当前报价单待重新生成</small> : null}
+        </div>
       </>
     ),
   });
@@ -352,6 +435,10 @@ export default function TumorQuotationSession({
   useEffect(() => {
     if (panelFocus && (!panelOpen || !activePanelExpandable)) setPanelFocus(false);
   }, [activePanelExpandable, panelFocus, panelOpen]);
+
+  /* 新消息要能看见。stage 也算一个触发点：正在跑的那条运行记录是按 stage
+     渲染的，不进 messages。 */
+  useStickToBottom(chatScrollerRef, [messages, stage]);
 
   return (
     <>
@@ -377,8 +464,10 @@ export default function TumorQuotationSession({
           text={composerText}
           setText={setComposerText}
           activeGroup={activeGroup}
-          fields={composerFields}
+          fields={formFields}
           allFields={fields}
+          formOpen={formOpen}
+          onToggleForm={() => setParamsOpen((value) => !value)}
           mode={editingField ? "edit" : "collect"}
           remainingCount={composerPending.length}
           draftTabs={draftTabs}

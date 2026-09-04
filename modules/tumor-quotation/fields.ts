@@ -217,6 +217,11 @@ export const initialTumorFields: TumorField[] = [
     group: "readout",
     kind: "multi",
     options: tumorReadoutOptions,
+    /* 「不需要检测」跟别的项同时亮着是一句自相矛盾的话。
+       计价那边已经把它滤掉了，所以金额一直是对的——但台账、chips、
+       报价前预览、修改日志会照原样显示「IVIS Imaging、不需要检测」，
+       客户看到的是一份自己打自己的参数表。 */
+    exclusiveOptions: ["不需要检测"],
   },
   {
     id: "monitoring",
@@ -333,7 +338,13 @@ export function parseTumorRequest(text: string): Record<string, string> {
     if (option === "2nd inoculation") return /二次接种|再接种/.test(text);
     return false;
   });
-  if (readouts.length) patch.readouts = readouts.join("、");
+  /* 「不需要检测，但要采个血」这种话客户是会说的，两条规则会同时命中。
+     控件那边已经互斥了，识别这边也得守同一条规矩——否则识别结果一进来
+     就是一对矛盾的选中态，而它绕过了控件。以「不需要检测」为准并不是
+     猜他想要哪个：这一项是必填，留一个明确的取值让人去改，
+     比留一份自相矛盾的表更容易发现问题。 */
+  if (readouts.includes("不需要检测")) patch.readouts = "不需要检测";
+  else if (readouts.length) patch.readouts = readouts.join("、");
 
   if (/双语|中英/.test(text)) patch.reportLanguage = "双语";
   else if (/英文报告|英文版|english/i.test(text)) patch.reportLanguage = "英文";

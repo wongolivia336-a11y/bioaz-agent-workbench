@@ -61,6 +61,16 @@ export type ParamField = {
    * multi 上则表示允许自己补一条。
    */
   allowCustom?: boolean;
+  /**
+   * multi 里那几个「选了它就不能再选别的」的选项。典型是「不需要检测」——
+   * 它跟 IVIS 同时亮着是一句自相矛盾的话，而这句话会一路走进报价表。
+   *
+   * **这件事只能由控件挡，不能靠计价时过滤。** 计价那边确实滤掉了
+   * 「不需要检测」（见 tumorPriceLines），所以金额是对的；但台账、chips、
+   * 报价前预览、修改日志四处照原样显示「IVIS Imaging、不需要检测」，
+   * 人看到的仍然是一份自相矛盾的参数——金额对不代表说法对。
+   */
+  exclusiveOptions?: string[];
 };
 
 export type ParamDraft = { fieldId: string; label: string; value: string };
@@ -119,6 +129,24 @@ export function unmetDependencies(field: ParamField, fields: ParamField[], value
 /** 锁住时的占位文案。「请先选择模型和动物品系」——照着缺的那几项拼。 */
 export function lockedPlaceholder(unmet: ParamField[]): string {
   return `请先选择${unmet.map((field) => field.label).join("和")}`;
+}
+
+/**
+ * 拿去给人看的取值。
+ *
+ * 序列化格式是给存储用的，不是给人读的：重复行落在 value 里是
+ * 「Vehicle:0.5% CMC-Na:0;G1:DrugA:10 mg/kg」，一串冒号分号。
+ * 台账、chips、修改日志、报价前预览、发出去的那句话——**五个地方都在显示
+ * 同一个 value**，各自写一套格式化迟早分叉，所以只有这一份。
+ *
+ * 非 repeat 的原样返回：DMPK 十四项全是 options，这个函数对它是空操作。
+ */
+export function formatParamValue(field: Pick<ParamField, "kind" | "columns"> | undefined, value: string): string {
+  if (!value || field?.kind !== "repeat") return value;
+  return splitRepeat(value)
+    .map((cells) => cells.map((cell) => cell.trim()).filter(Boolean).join(" / "))
+    .filter(Boolean)
+    .join("；");
 }
 
 /** 这一项此刻可选的列表。optionsBy 命中就用它，否则回落到 options。 */

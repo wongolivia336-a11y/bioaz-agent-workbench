@@ -7,6 +7,7 @@ import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-pane
 import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote";
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
+import { useStickToBottom } from "../../components/workbench-shell/useStickToBottom";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { AgentModuleSessionProps } from "../types";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
@@ -549,6 +550,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   useEffect(() => {
     if (editProposal && panelFocus) setPanelFocus(false);
   }, [editProposal, panelFocus]);
+
+  /* 新消息要能看见。这条一直缺着——会话短的时候看不出来，超过一屏之后
+     新消息全落在折叠线以下，而屏幕上什么都没变。 */
+  useStickToBottom(chatScrollerRef, [messages, stage]);
 
   useEffect(() => {
     if (!panelFocus) return;

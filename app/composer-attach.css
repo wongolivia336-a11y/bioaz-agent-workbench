@@ -331,7 +331,7 @@
 .workbenchComposer .composerAttachMenu .composerAddButton {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
+  border-radius: var(--bioaz-radius-control);
   color: var(--bioaz-text-secondary);
 }
 

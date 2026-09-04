@@ -787,7 +787,7 @@ body:has(.bioazDesignSystemPage) {
   gap: var(--bioaz-space-3);
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   cursor: pointer;
   font-family: inherit;
   padding: var(--bioaz-space-3);
@@ -1533,7 +1533,7 @@ body:has(.bioazDesignSystemPage) {
 .workbenchView::-webkit-scrollbar-thumb,
 .digitalTeamView::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: rgba(17, 19, 24, 0.16);
   background-clip: content-box;
 }

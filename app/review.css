@@ -43,7 +43,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 40px 高的主按钮属于控件层，不是小件层 */
 .newChat { height: 40px; border-color: var(--review-line-strong); border-radius: var(--bioaz-radius-control); box-shadow: none; }
 .newChat:hover { border-color: #b9b4ed; box-shadow: none; transform: none; }
-.workspaceViewRow, .pinnedProjectRow, .sidebarTaskRow { border-radius: 8px; }
+.workspaceViewRow, .pinnedProjectRow, .sidebarTaskRow { border-radius: var(--bioaz-radius-tool); }
 .workspaceViewRow.active, .chatRow.active, .sidebarTaskRow.active { background: #eeeff2; color: var(--review-ink); }
 .dmpkShell .sidebar .workspaceViewRow.active::before,
 .dmpkShell .sidebar .chatRow.active::before { background: #2a2d33; }
@@ -60,13 +60,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .navSectionHeader button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
 /* 这里曾把「新建项目」做成带文字的实体按钮，已回退为加号图标钮：
    侧边栏两栏的头部动作保持同一副长相，比强调其中一个更要紧。 */
-.navSectionHeader button:hover { background: #eef0f3; color: var(--review-ink); }
-.projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: 9px; background: #fff; padding: 4px 5px 4px 8px; }
+.navSectionHeader button:hover { background: var(--bioaz-surface-active); color: var(--review-ink); }
+.projectCreateRow { display: grid; grid-template-columns: 18px minmax(0, 1fr) 26px 26px; align-items: center; gap: 4px; margin: 2px 2px 7px; border: 1px solid var(--review-line-strong); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 4px 5px 4px 8px; }
 .projectCreateRow > svg { color: var(--review-muted); }
 .projectCreateRow input { min-width: 0; border: 0; outline: 0; background: transparent; font-size: 12px; }
 .projectCreateRow input:focus-visible { outline: 0; }
 .projectCreateRow button { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--review-muted); }
-.projectCreateRow button:hover:not(:disabled) { background: #eef0f3; color: var(--review-ink); }
+.projectCreateRow button:hover:not(:disabled) { background: var(--bioaz-surface-active); color: var(--review-ink); }
 .projectCreateRow button:disabled { opacity: .36; cursor: default; }
 
 /* Home: hierarchy first, decoration last */
@@ -91,7 +91,7 @@ button { -webkit-tap-highlight-color: transparent; }
   min-height: 118px;
   gap: 22px;
   border-color: var(--review-line);
-  border-radius: var(--review-radius-md);
+  border-radius: var(--bioaz-radius-control);
   background: rgba(255, 255, 255, .92);
   padding: 15px;
   box-shadow: none;
@@ -117,7 +117,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .taskExampleGrid button:hover, .taskExampleGrid button:focus-visible { border-color: #c6c2ed; box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
 .taskExampleGrid button:disabled { background: rgba(247, 248, 250, .8); opacity: .64; }
 .taskExampleTop { display: flex; align-items: center; justify-content: space-between; color: var(--review-muted); }
-.taskExampleIcon { position: relative; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border: 1px solid rgba(47,34,211,.08); border-radius: 9px; background: #f4f3ff; color: var(--review-brand); }
+.taskExampleIcon { position: relative; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border: 1px solid rgba(47,34,211,.08); border-radius: var(--bioaz-radius-tool); background: #f4f3ff; color: var(--review-brand); }
 .taskExampleIcon::after { position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border: 1px solid rgba(47,34,211,.35); border-radius: 2px; content: ""; }
 .taskExampleGrid button[data-ability="tumor-report"] .taskExampleIcon::after { width: 9px; height: 3px; border-width: 1px 0; border-radius: 0; }
 .taskExampleGrid button[data-ability="tumor-quotation"] .taskExampleIcon::after { width: 7px; height: 7px; border-radius: 50%; }
@@ -129,10 +129,10 @@ button { -webkit-tap-highlight-color: transparent; }
 .taskExampleGrid small { color: var(--review-muted); font-size: 11.5px; }
 .newTaskComposerDock { width: min(860px, 100%); gap: 7px; }
 .newTaskWelcomePrompt { min-height: 18px; color: var(--review-muted); font-size: 12px; }
-.projectSelector > button { height: 44px; border-color: var(--review-line); border-radius: 10px; background: rgba(255,255,255,.82); box-shadow: none; }
-.projectSelector > button:hover { border-color: var(--review-line-strong); background: #f7f8fa; box-shadow: none; }
+.projectSelector > button { height: 44px; border-color: var(--review-line); border-radius: var(--bioaz-radius-tool); background: rgba(255,255,255,.82); box-shadow: none; }
+.projectSelector > button:hover { border-color: var(--review-line-strong); background: var(--bioaz-canvas); box-shadow: none; }
 .projectSelector.isOpen > button { border-color: #aaa3e5; box-shadow: var(--review-focus); }
-.newTaskComposer { min-height: 88px; border-color: var(--review-line-strong); border-radius: 14px; background: #fff; box-shadow: 0 5px 18px rgba(18, 24, 38, .045); }
+.newTaskComposer { min-height: 88px; border-color: var(--review-line-strong); border-radius: var(--bioaz-radius-container); background: var(--bioaz-surface); box-shadow: 0 5px 18px rgba(18, 24, 38, .045); }
 .newTaskComposer:focus-within { border-color: #aaa3e5; box-shadow: var(--review-focus), 0 8px 22px rgba(18, 24, 38, .055); }
 .workbenchComposer:focus-within,
 .sidebarSearch:focus-within,
@@ -147,8 +147,8 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .newTaskComposer textarea { color: var(--review-ink); line-height: 1.55; }
 .newTaskComposer textarea::placeholder { color: #9299a5; }
-.sendIconButton { background: #17191e; color: #fff; }
-.sendIconButton:hover:not(:disabled) { background: #050608; }
+.sendIconButton { background: var(--bioaz-action-primary); color: #fff; }
+.sendIconButton:hover:not(:disabled) { background: var(--bioaz-action-primary-hover); }
 .sendIconButton:disabled { background: #c9ced5; color: #fff; }
 
 /* Repeated work surfaces share one density and state grammar */
@@ -157,8 +157,8 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: var(--review-radius-lg);
   box-shadow: none;
 }
-:where(.primaryButton, .compactPrimaryButton) { background: #17191e; border-color: #17191e; color: #fff; }
-:where(.primaryButton, .compactPrimaryButton):hover:not(:disabled) { background: #050608; border-color: #050608; }
+:where(.primaryButton, .compactPrimaryButton) { background: var(--bioaz-action-primary); border-color: #17191e; color: #fff; }
+:where(.primaryButton, .compactPrimaryButton):hover:not(:disabled) { background: var(--bioaz-action-primary-hover); border-color: #050608; }
 :where(.primaryButton, .compactPrimaryButton):disabled { background: #c9ced5; border-color: #c9ced5; color: #fff; }
 :where(.secondaryButton, .iconButton, .artifactActionButton, .previewIconOnlyButton) { border-color: var(--review-line-strong); box-shadow: none; }
 :where(.secondaryButton, .iconButton, .artifactActionButton, .previewIconOnlyButton):hover { border-color: var(--review-line-strong); background: #f2f3f5; color: var(--review-ink); }
@@ -173,21 +173,21 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* Coworker identity and confirmed handoff */
 .roleSelector { display: flex; align-items: center; gap: 4px; }
-.roleSelectorCurrent { border-color: var(--review-line); border-radius: 10px; background: #fff; color: var(--review-ink); box-shadow: none; }
-.roleSelectorCurrent:hover { border-color: var(--review-line-strong); background: #f7f8fa; }
-.roleSelectorHelp { position: relative; display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--review-muted); }
-.roleSelectorHelp:hover { background: #eef0f3; color: var(--review-ink); }
-.roleSelectorHelp > span { position: absolute; z-index: 80; bottom: calc(100% + 8px); left: 0; display: none; width: 240px; gap: 4px; border: 1px solid var(--review-line); border-radius: 10px; background: #fff; padding: 10px 11px; color: var(--review-body); box-shadow: var(--review-shadow-float); font-size: 12px; line-height: 1.45; text-align: left; }
+.roleSelectorCurrent { border-color: var(--review-line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); color: var(--review-ink); box-shadow: none; }
+.roleSelectorCurrent:hover { border-color: var(--review-line-strong); background: var(--bioaz-canvas); }
+.roleSelectorHelp { position: relative; display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: transparent; color: var(--review-muted); }
+.roleSelectorHelp:hover { background: var(--bioaz-surface-active); color: var(--review-ink); }
+.roleSelectorHelp > span { position: absolute; z-index: 80; bottom: calc(100% + 8px); left: 0; display: none; width: 240px; gap: 4px; border: 1px solid var(--review-line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 10px 11px; color: var(--review-body); box-shadow: var(--review-shadow-float); font-size: 12px; line-height: 1.45; text-align: left; }
 .roleSelectorHelp:hover > span, .roleSelectorHelp:focus-visible > span { display: grid; }
 .roleSelectorHelp > span strong { color: var(--review-ink); font-size: 12px; }
-.roleSelectorMenu { border-color: var(--review-line); border-radius: 12px; box-shadow: var(--review-shadow-float); }
-.roleSelectorMenu > button { align-items: start; border-radius: 8px; }
+.roleSelectorMenu { border-color: var(--review-line); border-radius: var(--bioaz-radius-control); box-shadow: var(--review-shadow-float); }
+.roleSelectorMenu > button { align-items: start; border-radius: var(--bioaz-radius-tool); }
 .roleSelectorMenu > button:hover { background: #f2f3f5; }
-.roleSelectorMenu > button.active { background: #eef0f3; color: var(--review-ink); }
+.roleSelectorMenu > button.active { background: var(--bioaz-surface-active); color: var(--review-ink); }
 .roleSelectorOptionCopy { display: grid; min-width: 0; gap: 2px; text-align: left; }
 .roleSelectorOptionCopy strong { color: var(--review-ink); font-size: 12px; }
 .roleSelectorOptionCopy small { overflow: hidden; color: var(--review-muted); font-size: 10.5px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
-.coworkerSwitchCard { grid-template-columns: minmax(0, 1fr) auto auto; border-color: var(--review-line); border-radius: 14px; background: #fff; padding: 12px; box-shadow: 0 10px 28px rgba(18, 24, 38, .065); }
+.coworkerSwitchCard { grid-template-columns: minmax(0, 1fr) auto auto; border-color: var(--review-line); border-radius: var(--bioaz-radius-container); background: var(--bioaz-surface); padding: 12px; box-shadow: 0 10px 28px rgba(18, 24, 38, .065); }
 .coworkerSwitchCard > div { gap: 4px; }
 .coworkerSwitchCard > div > span { color: var(--review-muted); font-size: 10.5px; font-weight: 650; text-transform: uppercase; }
 .coworkerSwitchCard > div > strong { display: flex; align-items: center; gap: 7px; color: var(--review-ink); font-size: 13px; }
@@ -199,7 +199,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .persistentParameterCard.isConfirmed .persistentParameterToggle:hover { background: #f4f6f4; }
 .persistentParameterCard.isConfirmed .persistentParameterToggle > span:first-child svg { color: var(--review-success); }
 .legacyComposerStack .requirementChip.ok { border-color: #dce6e0; background: #f3f7f4; color: var(--review-success); }
-.legacyComposerStack .validationStartButton { display: inline-flex; width: auto; min-width: 112px; gap: 6px; padding: 0 14px; border-radius: 12px; }
+.legacyComposerStack .validationStartButton { display: inline-flex; width: auto; min-width: 112px; gap: 6px; padding: 0 14px; border-radius: var(--bioaz-radius-control); }
 .legacyComposerStack .validationStartButton span { font-size: 12px; font-weight: 650; white-space: nowrap; }
 .legacyComposerStack .composer.workbenchComposer:has(.validationStartButton) {
   grid-template-columns: 44px minmax(0, 1fr) auto;
@@ -250,7 +250,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 24px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: #7f8998;
 }
@@ -267,8 +267,8 @@ button { -webkit-tap-highlight-color: transparent; }
   visibility: hidden;
   transform: translate(-50%, -4px);
   border: 1px solid var(--review-line);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 14px;
   color: var(--review-ink);
   text-align: left;
@@ -348,33 +348,33 @@ button { -webkit-tap-highlight-color: transparent; }
 .assistantContextBar .compactSelect > button {
   min-height: 32px;
   border-color: transparent;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding-inline: 10px 8px;
   color: #4f5968;
   font-weight: 600;
 }
 .assistantContextBar .compactSelect > button:hover,
-.assistantContextBar .compactSelect.isOpen > button { border-color: var(--review-line); background: #fff; color: var(--review-ink); }
+.assistantContextBar .compactSelect.isOpen > button { border-color: var(--review-line); background: var(--bioaz-surface); color: var(--review-ink); }
 .assistantContextBar .compactSelect > button svg { margin-left: 3px; color: #8a93a1; transition: transform var(--bioaz-motion-standard) ease; }
 .assistantContextBar .compactSelect.isOpen > button svg { transform: rotate(180deg); }
 .assistantContextBar .compactSelectMenu {
   width: max(220px, 100%);
   gap: 1px;
   border-color: var(--review-line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   padding: 5px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
 }
 .assistantContextBar .compactSelectMenu button {
   min-height: 36px;
   justify-content: flex-start;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   padding-inline: 11px;
   color: #566071;
   font-size: 12px;
 }
-.assistantContextBar .compactSelectMenu button:hover { background: #f5f7fa; color: var(--review-ink); }
+.assistantContextBar .compactSelectMenu button:hover { background: var(--bioaz-surface-hover); color: var(--review-ink); }
 .assistantContextBar .compactSelectMenu button.active { background: #eef1f5; color: var(--review-ink); font-weight: 680; }
 .assistantContextBar .compactSelectMenu button span {
   display: block;
@@ -505,9 +505,9 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before { animation: reviewAssistantEdgePass 1400ms var(--review-ease) 180ms both; }
 .ambientComposerFrame > * { z-index: 1; }
-.ambientComposerSend { background: #17191e; color: #fff; opacity: 1; }
-.ambientComposerSend:not(:disabled):hover { background: #050608; }
-.ambientComposerSend:disabled { background: #eef0f3; color: #7b8491; opacity: 1; }
+.ambientComposerSend { background: var(--bioaz-action-primary); color: #fff; opacity: 1; }
+.ambientComposerSend:not(:disabled):hover { background: var(--bioaz-action-primary-hover); }
+.ambientComposerSend:disabled { background: var(--bioaz-surface-active); color: #7b8491; opacity: 1; }
 @keyframes reviewAssistantEdgePass {
   0% { opacity: 0; transform: translateX(-55%); }
   18% { opacity: .88; }
@@ -845,13 +845,13 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .tumor-reportModuleShell :is(.decisionPrimary, .primaryButton, .validationStartButton):not(:disabled) {
   border-color: #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
   box-shadow: none;
 }
 .tumor-reportModuleShell :is(.decisionPrimary, .primaryButton, .validationStartButton):hover:not(:disabled) {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 .tumor-reportModuleShell .reviewDecision .warningDecisionHeader span {
   color: var(--tumor-process-accent);
@@ -1038,10 +1038,10 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* Batch 4: strict surface, compact Gates, and bounded process summaries. */
 .dmpkShell {
-  background: #f7f8fa;
+  background: var(--bioaz-canvas);
 }
 .dmpkShell > .sidebar {
-  background: #f7f8fa;
+  background: var(--bioaz-canvas);
 }
 .dmpkShell > :is(.dmpkWorkspace, .workspace),
 .dmpkShell.workbenchShell :is(.newTaskHome, .workbenchView),
@@ -1059,7 +1059,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   justify-content: space-between;
   min-width: 0;
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 .dmpkShell .agentRun.collapsed {
@@ -1306,7 +1306,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   justify-content: space-between;
   min-width: 0;
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle {
   display: grid;
@@ -1381,7 +1381,7 @@ button { -webkit-tap-highlight-color: transparent; }
     border: 1px solid var(--bioaz-border);
     border-left: 0;
     border-radius: 0 var(--bioaz-radius-container) var(--bioaz-radius-container) 0;
-    background: #fff;
+    background: var(--bioaz-surface);
   }
   .dmpk-quotationModuleShell:has(> .dmpkPanel.isOpen) > .dmpkWorkspace {
     border-right: 0;
@@ -1402,7 +1402,7 @@ button { -webkit-tap-highlight-color: transparent; }
     height: calc(100dvh - 24px);
     border: 1px solid var(--bioaz-border);
     border-radius: var(--bioaz-radius-container);
-    background: #fff;
+    background: var(--bioaz-surface);
     box-shadow: var(--bioaz-shadow-overlay);
   }
 }
@@ -1682,7 +1682,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .knowledgeBaseView .secondaryButton.compact {
   border-color: var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
 }
 .knowledgeBaseView .secondaryButton.compact:hover {
@@ -1731,16 +1731,16 @@ button { -webkit-tap-highlight-color: transparent; }
 .topbarPrimarySlot .primaryButton.compact,
 .topbarPrimarySlot .primaryButton.compact:hover {
   border-color: #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
 }
 .topbarPrimarySlot .primaryButton.compact:hover {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 .topbarToolLayer :is(.secondaryButton.compact, .libraryTrashButton) {
   border: 1px solid var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
 }
 .topbarToolLayer :is(.secondaryButton.compact, .libraryTrashButton):hover {
@@ -1749,12 +1749,12 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .knowledgeBaseView .projectLibraryActions .primaryButton {
   border-color: #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
 }
 .knowledgeBaseView .projectLibraryActions .primaryButton:hover {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 .libraryTrashButton,
 .libraryBackButton {
@@ -1769,7 +1769,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .libraryTrashButton {
   border: 1px solid var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 .libraryTrashButton.hasItems {
   color: var(--bioaz-text-primary);
@@ -1806,8 +1806,11 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 7px;
   border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-pill);
-  background: #fff;
+  /* --bioaz-radius-pill 从来没有被定义过，所以这两处一直渲染成直角——
+     var() 解不开又没有兜底值时，属性回落到初始值 0，而且不报错。
+     两处都是 chip，本意就是全圆。 */
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-secondary);
   padding: 0 11px;
   font: inherit;
@@ -1920,7 +1923,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .libraryListSurface .knowledgeTable {
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-control);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 .libraryListSurface .knowledgeTableHeader,
 .libraryListSurface .knowledgeFileRow {
@@ -1950,7 +1953,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 5px;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-secondary);
   padding: 0 9px;
   font: inherit;
@@ -1967,7 +1970,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
   border-left: 1px solid var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: -18px 0 44px rgba(18, 24, 38, 0.08);
   animation: libraryPanelIn var(--bioaz-motion-spatial) var(--bioaz-ease-emphasized);
 }
@@ -2000,7 +2003,7 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: center;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 .knowledgeDetailPanel dl {
   display: grid;
@@ -2033,8 +2036,9 @@ button { -webkit-tap-highlight-color: transparent; }
   width: min(560px, calc(100vw - 32px));
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
-  border-radius: var(--bioaz-radius-modal);
-  background: #fff;
+  /* --bioaz-radius-modal 同样没有定义过，这张新建文件夹弹窗一直是直角。 */
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   box-shadow: var(--bioaz-shadow-overlay);
 }
 .folderCreateDialog > header,
@@ -2090,7 +2094,7 @@ button { -webkit-tap-highlight-color: transparent; }
   min-height: 40px;
   border: 1px solid var(--bioaz-border-strong);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
   padding: 0 11px;
   font: inherit;
@@ -2108,7 +2112,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 10px;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-control);
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: 11px 12px;
   text-align: left;
 }
@@ -2144,21 +2148,24 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .deliveryPackageAction[aria-disabled="true"]:hover {
   border-color: var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 .deliveryPackageAction > span {
   display: grid;
   min-width: 18px;
   height: 18px;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: rgba(255, 255, 255, 0.16);
   font-size: 10px;
 }
 .previewContextChip {
   max-width: 44%;
   overflow: hidden;
-  border-radius: var(--bioaz-radius-pill);
+  /* --bioaz-radius-pill 从来没有被定义过，所以这两处一直渲染成直角——
+     var() 解不开又没有兜底值时，属性回落到初始值 0，而且不报错。
+     两处都是 chip，本意就是全圆。 */
+  border-radius: var(--bioaz-radius-full);
   background: var(--library-accent-soft);
   color: var(--library-accent);
   padding: 6px 10px;
@@ -2224,8 +2231,8 @@ button { -webkit-tap-highlight-color: transparent; }
   inset: 24px calc((100% - 260px) / 2);
   height: 44px;
   border: 1px solid var(--bioaz-border-strong);
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
   gap: 8px;
   box-shadow: 0 6px 18px rgba(18, 24, 38, 0.05);
@@ -2245,7 +2252,7 @@ button { -webkit-tap-highlight-color: transparent; }
    决定，hover 不该做出任何像是要发生什么的暗示。 */
 .knowledgeBaseView .ambientAssistantEntry:hover {
   border-color: rgba(92, 96, 184, 0.28);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 .knowledgeBaseView .ambientAssistantEntry svg {
   width: 16px;
@@ -2280,12 +2287,12 @@ button { -webkit-tap-highlight-color: transparent; }
 .knowledgePreviewDialog .primaryButton,
 .knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
   border-color: #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
 }
 .knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 
 @keyframes libraryPanelIn {
@@ -2585,8 +2592,8 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .projectPlanStep em {
   border-radius: var(--bioaz-radius-full);
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--bioaz-status-neutral-soft);
+  color: var(--bioaz-status-neutral);
   font-size: 11px;
   font-style: normal;
   padding: 2px 8px;
@@ -2597,8 +2604,8 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-agent-accent);
 }
 .projectPlanStep.is-done em {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--bioaz-status-success-soft);
+  color: var(--bioaz-status-success);
 }
 
 .projectTaskList .projectTaskCard {
@@ -2606,8 +2613,8 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .projectTaskStatus {
   border-radius: var(--bioaz-radius-full);
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--bioaz-status-neutral-soft);
+  color: var(--bioaz-status-neutral);
   font-size: 11px;
   font-style: normal;
   padding: 2px 9px;
@@ -2618,16 +2625,16 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-agent-accent);
 }
 .projectTaskStatus.status-awaitingReview {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--bioaz-status-warning-soft);
+  color: var(--bioaz-status-warning);
 }
 .projectTaskStatus.status-done {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--bioaz-status-success-soft);
+  color: var(--bioaz-status-success);
 }
 .projectTaskStatus.status-blocked {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--bioaz-status-danger-soft);
+  color: var(--bioaz-status-danger);
 }
 
 .libraryProjectCreateRow {
@@ -2656,7 +2663,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 24px;
   height: 24px;
   border: 0;
-  border-radius: var(--bioaz-radius-sm, 6px);
+  /* --bioaz-radius-sm 也不存在，一直走的是 6px 兜底。24px 的图标按钮走 tool 档。 */
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -2833,7 +2841,7 @@ button { -webkit-tap-highlight-color: transparent; }
   overflow-y: auto;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: var(--bioaz-shadow-floating);
   padding: var(--bioaz-space-1);
 }
@@ -3058,7 +3066,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: var(--bioaz-radius-tool);
   margin-inline: auto;
   margin-top: var(--bioaz-space-4);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: var(--bioaz-shadow-floating);
   padding: var(--bioaz-space-2) var(--bioaz-space-3);
 }
@@ -3133,8 +3141,8 @@ button { -webkit-tap-highlight-color: transparent; }
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   border: 1px solid #e4e7ec;
   padding: 12px 18px;
   min-width: 110px;
@@ -3192,8 +3200,8 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 6px;
   border: 1px solid #e4e7ec;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 8px 14px;
   color: #475467;
   font-size: 13px;
@@ -3224,18 +3232,18 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .kbStatusChip.is-parsed {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--bioaz-status-success-soft);
+  color: var(--bioaz-status-success);
 }
 
 .kbStatusChip.is-parsing {
   background: rgba(92, 96, 184, 0.08);
-  color: #5c60b8;
+  color: var(--bioaz-status-running);
 }
 
 .kbStatusChip.is-failed {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--bioaz-status-danger-soft);
+  color: var(--bioaz-status-danger);
 }
 
 .kbPagination {
@@ -3261,7 +3269,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 28px;
   border: 1px solid #e4e7ec;
   border-radius: 6px;
-  background: #fff;
+  background: var(--bioaz-surface);
   color: #475467;
   font-size: 12px;
   cursor: pointer;
@@ -3291,7 +3299,7 @@ button { -webkit-tap-highlight-color: transparent; }
   right: 0;
   width: 380px;
   height: 100vh;
-  background: #fff;
+  background: var(--bioaz-surface);
   border-left: 1px solid #e4e7ec;
   box-shadow: -8px 0 24px rgba(0, 0, 0, 0.06);
   z-index: 50;
@@ -3391,7 +3399,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: transparent;
   border: 0;
   padding: 2px 6px;
-  color: #5c60b8;
+  color: var(--bioaz-status-running);
   font-size: 12px;
   cursor: pointer;
   border-radius: 4px;
@@ -3419,7 +3427,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .kbScopeOption svg {
-  color: #5c60b8;
+  color: var(--bioaz-status-running);
 }
 
 .kbAssignedList {
@@ -3437,7 +3445,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: rgba(92, 96, 184, 0.06);
   padding: 3px 8px;
   font-size: 12px;
-  color: #5c60b8;
+  color: var(--bioaz-status-running);
 }
 
 .kbTagList {
@@ -3475,8 +3483,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .kbDialog {
   width: min(480px, 100%);
   max-height: 80vh;
-  background: #fff;
-  border-radius: 12px;
+  background: var(--bioaz-surface);
+  border-radius: var(--bioaz-radius-control);
   border: 1px solid #e4e7ec;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
   display: flex;
@@ -3531,8 +3539,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 100%;
   text-align: left;
   border: 1px solid #e4e7ec;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 10px 12px;
   cursor: pointer;
   transition: background-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), border-color var(--bioaz-motion-fast) var(--bioaz-ease-out-3), color var(--bioaz-motion-fast) var(--bioaz-ease-out-3);
@@ -3550,7 +3558,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .kbAssignOptions button svg:last-child {
   margin-left: auto;
-  color: #5c60b8;
+  color: var(--bioaz-status-running);
 }
 
 .kbAssignMark {
@@ -3558,7 +3566,7 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: #f2f4f7;
   color: #475467;
   flex-shrink: 0;
@@ -3566,7 +3574,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .kbAssignOptions button.active .kbAssignMark {
   background: rgba(92, 96, 184, 0.1);
-  color: #5c60b8;
+  color: var(--bioaz-status-running);
 }
 
 .kbAssignOptions button strong {
@@ -3627,9 +3635,9 @@ button { -webkit-tap-highlight-color: transparent; }
   top: 100%;
   right: 0;
   margin-top: 4px;
-  background: #fff;
+  background: var(--bioaz-surface);
   border: 1px solid #e4e7ec;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   padding: 4px;
   min-width: 160px;
@@ -3702,7 +3710,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-primary);
 }
 .taskViewSwitch button.active {
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
   color: var(--bioaz-text-primary);
   font-weight: 500;
@@ -3719,8 +3727,8 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 5px;
   border-radius: var(--bioaz-radius-full);
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--bioaz-status-neutral-soft);
+  color: var(--bioaz-status-neutral);
   font-size: 12px;
   font-style: normal;
   padding: 2px 9px;
@@ -3734,36 +3742,36 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .taskStatusChip.status-running {
   background: rgba(92, 96, 184, 0.08);
-  color: #5c60b8;
+  color: var(--bioaz-status-running);
 }
 .taskStatusChip.status-awaitingReview {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--bioaz-status-warning-soft);
+  color: var(--bioaz-status-warning);
 }
 .taskStatusChip.status-done {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--bioaz-status-success-soft);
+  color: var(--bioaz-status-success);
 }
 .taskStatusChip.status-blocked {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--bioaz-status-danger-soft);
+  color: var(--bioaz-status-danger);
 }
 .taskPriorityChip {
   display: inline-flex;
   border-radius: var(--bioaz-radius-full);
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--bioaz-status-neutral-soft);
+  color: var(--bioaz-status-neutral);
   font-size: 12px;
   font-style: normal;
   padding: 1px 9px;
 }
 .taskPriorityChip.priority-high {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--bioaz-status-danger-soft);
+  color: var(--bioaz-status-danger);
 }
 .taskPriorityChip.priority-medium {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--bioaz-status-warning-soft);
+  color: var(--bioaz-status-warning);
 }
 .taskFieldEmpty {
   color: var(--bioaz-text-disabled);
@@ -3906,7 +3914,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: var(--bioaz-space-2);
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   cursor: pointer;
   font-family: inherit;
   padding: var(--bioaz-space-3);
@@ -3984,7 +3992,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .tabViewSwitch button:hover { color: var(--bioaz-text-primary); }
 .tabViewSwitch button.active {
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
   color: var(--bioaz-text-primary);
   font-weight: 500;
@@ -4022,7 +4030,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .inlineSelectTrigger:hover {
   border-color: var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
 }
 .inlineSelectTrigger > span {
@@ -4041,13 +4049,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .inlineSelectTrigger[aria-expanded="true"] .inlineSelectCaret { opacity: 1; }
 .inlineSelectTrigger[aria-expanded="true"] {
   border-color: rgba(92, 96, 184, 0.28);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 .inlineSelectMenu { left: 0; right: auto; min-width: 168px; }
 .toolMenuItem > span { display: inline-flex; align-items: center; gap: 7px; }
 
-.planPriorityTrigger.is-urgent { color: #991b1b; }
-.planPriorityTrigger.is-high { color: #92400e; }
+.planPriorityTrigger.is-urgent { color: var(--bioaz-status-danger); }
+.planPriorityTrigger.is-high { color: var(--bioaz-status-warning); }
 
 .planAvatar {
   display: grid;
@@ -4126,7 +4134,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 5px;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   padding: var(--bioaz-space-3);
 }
 .planBoardCard > strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 500; line-height: 19px; }
@@ -4249,13 +4257,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .decisionRow,
 .decisionRow:hover {
   border-color: var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: none;
   transform: none;
 }
 .tumor-reportModuleShell .gateDecision .decisionRow:hover {
   border-color: var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 /* ===== 思考链完成折叠态：去掉蓝紫底，回到中性（附录 A.1 / C.8） ===== */
@@ -4263,8 +4271,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell .agentRun.settled.collapsed,
 .agentRun.settled.collapsed {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   box-shadow: none;
 }
 .dmpkShell .agentRun.settled .agentRunHeader strong,
@@ -4378,8 +4386,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: min(480px, calc(100vw - 32px));
   gap: var(--bioaz-space-4);
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   box-shadow: none;
   padding: var(--bioaz-space-5);
 }
@@ -4474,7 +4482,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: var(--bioaz-space-4);
   padding: var(--bioaz-space-4);
   border-color: var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: none;
   transform: none;
   transition: none;
@@ -4530,7 +4538,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .confirmDialog > footer .secondaryButton {
   border: 1px solid #d4d7dd;
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
 }
 .confirmDialog > footer .secondaryButton:hover {
@@ -4539,12 +4547,12 @@ button { -webkit-tap-highlight-color: transparent; }
 .confirmDialog > footer .primaryButton,
 .confirmDialog > footer .primaryButton:hover:not(:disabled) {
   border: 1px solid #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
 }
 .confirmDialog > footer .primaryButton:hover:not(:disabled) {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 
 /* ===== 分析上下文卡片：与其他 Chatflow 卡片同宽，整卡可点 ===== */
@@ -4673,7 +4681,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .kbStat > strong { color: var(--bioaz-text-primary); font-size: 22px; font-weight: 600; line-height: 1.2; }
 .kbStat > span { color: var(--bioaz-text-tertiary); font-size: 12px; }
-.kbStat.isAlert > strong { color: #991b1b; }
+.kbStat.isAlert > strong { color: var(--bioaz-status-danger); }
 
 .kbActionBar { gap: var(--bioaz-space-3); margin-bottom: var(--bioaz-space-3); }
 .kbActionBar .kbBreadcrumb { margin: 0; }
@@ -4707,7 +4715,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
   cursor: pointer;
   font-family: inherit;
@@ -4723,15 +4731,15 @@ button { -webkit-tap-highlight-color: transparent; }
 .kbStatusChip {
   display: inline-flex;
   border-radius: var(--bioaz-radius-full);
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--bioaz-status-success-soft);
+  color: var(--bioaz-status-success);
   font-size: 11px;
   font-style: normal;
   padding: 2px 9px;
   white-space: nowrap;
 }
-.kbStatusChip.is-parsing { background: #fef3c7; color: #92400e; }
-.kbStatusChip.is-failed { background: #fee2e2; color: #991b1b; }
+.kbStatusChip.is-parsing { background: var(--bioaz-status-warning-soft); color: var(--bioaz-status-warning); }
+.kbStatusChip.is-failed { background: var(--bioaz-status-danger-soft); color: var(--bioaz-status-danger); }
 
 .kbPagination {
   display: flex;
@@ -4743,7 +4751,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .kbPagination button {
   border: 1px solid var(--bioaz-border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-secondary);
   cursor: pointer;
   font-family: inherit;
@@ -4752,7 +4760,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 5px 9px;
 }
 .kbPagination button:hover:not(:disabled) { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
-.kbPagination button.active { border-color: #17191e; background: #17191e; color: #fff; }
+.kbPagination button.active { border-color: #17191e; background: var(--bioaz-action-primary); color: #fff; }
 .kbPagination button:disabled { color: var(--bioaz-text-disabled); cursor: not-allowed; }
 
 @media (max-width: 1100px) {
@@ -4806,19 +4814,19 @@ button { -webkit-tap-highlight-color: transparent; }
 .knowledgeHubView .primaryButton:not(:disabled),
 .kbDialog .primaryButton:not(:disabled) {
   border: 1px solid #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
   box-shadow: none;
 }
 .knowledgeHubView .primaryButton:hover:not(:disabled),
 .kbDialog .primaryButton:hover:not(:disabled) {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 .knowledgeHubView .secondaryButton,
 .kbDialog .secondaryButton {
   border: 1px solid #d4d7dd;
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
 }
 .knowledgeHubView .secondaryButton:hover,
@@ -4837,7 +4845,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
   border-left: 1px solid var(--bioaz-border);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: -18px 0 44px rgba(18, 24, 38, 0.10);
 }
 .knowledgeDetailPanel > header {
@@ -4923,7 +4931,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: var(--bioaz-space-2);
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-tool);
-  background: #fff;
+  background: var(--bioaz-surface);
   cursor: pointer;
   font-family: inherit;
   padding: 9px 12px;
@@ -4951,7 +4959,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: var(--bioaz-space-4);
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-container);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: var(--bioaz-shadow-overlay);
   padding: var(--bioaz-space-5);
 }
@@ -5000,7 +5008,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 28px;
   min-width: 28px;
   height: 28px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   font-size: 12px;
   font-weight: 600;
 }
@@ -5011,8 +5019,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 100%;
   max-width: 720px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   box-shadow: none;
   padding: 0;
 }
@@ -5072,7 +5080,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .analysisRiskDot {
   width: 7px;
   height: 7px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
 }
 .analysisRiskDot.is-high { background: #dc2626; }
 .analysisRiskDot.is-medium { background: #d97706; margin-left: 10px; }
@@ -5129,7 +5137,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--bioaz-text-primary);
 }
 .sidePanelSwitch .tumorInspectorToggle.isActive {
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 1px 2px rgba(18, 24, 38, 0.06);
   color: var(--bioaz-agent-accent);
 }
@@ -5169,7 +5177,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .confirmDialog > footer > .secondaryButton,
 .kbDialog > footer > .secondaryButton {
   border-color: #d4d7dd;
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
 }
 .tumor-reportModuleShell .confirmDialog > footer > .secondaryButton:hover,
@@ -5180,13 +5188,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .confirmDialog > footer > .primaryButton,
 .kbDialog > footer > .primaryButton {
   border-color: #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
 }
 .tumor-reportModuleShell .confirmDialog > footer > .primaryButton:hover:not(:disabled),
 .confirmDialog > footer > .primaryButton:hover:not(:disabled) {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 
 /* ===== DMPK 参数收集：独立浮层，与产物卡分栏解耦 ===== */
@@ -5208,7 +5216,7 @@ button { -webkit-tap-highlight-color: transparent; }
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-container);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: 0 18px 44px rgba(18, 24, 38, 0.12);
 }
 .paramFloatCard > .persistentParameterHeader {
@@ -5284,7 +5292,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .parameterPager button.primary,
 .dmpkShell .decisionPrimary:not(:disabled) {
   border-color: #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
   box-shadow: none;
 }
@@ -5294,7 +5302,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .strategyDialogActions .primary:hover,
 .dmpkShell .decisionPrimary:hover:not(:disabled) {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 
 /* 2) composer 区：去掉抖动与蓝色呼吸外发光 */
@@ -5312,8 +5320,8 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .dmpkComposerWrap > .parameterTaskCard {
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   box-shadow: none;
 }
 
@@ -5338,12 +5346,12 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 1px solid #e5e7eb;
   /* 这几个都是卡片，走容器级；原来钉死 8px，是小件层的值 */
   border-radius: var(--bioaz-radius-container);
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: none;
 }
 .dmpkShell .agentRun.settled:not(.collapsed) {
   border-color: #e5e7eb;
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 /* 折叠态的几何与外框由 .dmpkShell .agentRun.collapsed 统一提供，
    两个模块共用同一条 40px 紧凑行，这里不再另写一份。 */
@@ -5366,7 +5374,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 34px;
   flex: none;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-surface-subtle);
   color: var(--bioaz-text-secondary);
   place-items: center;
@@ -5384,7 +5392,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .paramCollectProgress {
   height: 4px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #eceef2;
   margin: var(--bioaz-space-3) 0 var(--bioaz-space-1);
 }
@@ -5392,7 +5400,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
 }
 .paramCollectList .inspectorParameterGroup {
   border: 0;
@@ -5417,7 +5425,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 10px;
   flex: none;
   border: 1.5px solid #c9cdd6;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
 }
 .inspectorParameterGroup.isComplete .paramGroupDot { border-color: #5c60b8; background: #5c60b8; }
 .inspectorParameterGroup.isPartial .paramGroupDot { border-color: #5c60b8; background: transparent; }
@@ -5435,15 +5443,15 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-left: auto;
 }
 .paramGroupState {
-  border-radius: 999px;
-  background: #f3f4f6;
-  color: #6b7280;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-status-neutral-soft);
+  color: var(--bioaz-status-neutral);
   font-size: 11px;
   font-style: normal;
   padding: 2px 9px;
 }
 .inspectorParameterGroup.isComplete .paramGroupState { background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
-.inspectorParameterGroup.isPartial .paramGroupState { background: #fef3c7; color: #92400e; }
+.inspectorParameterGroup.isPartial .paramGroupState { background: var(--bioaz-status-warning-soft); color: var(--bioaz-status-warning); }
 .paramCollectList .inspectorParameterFields { display: grid; gap: 0; padding-bottom: 6px; }
 .paramCollectList .inspectorParameterField {
   display: flex;
@@ -5475,8 +5483,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .activityChain,
 .activityChain {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   box-shadow: none;
 }
 
@@ -5508,7 +5516,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .paramFloatCard > .persistentParameterBody::-webkit-scrollbar { width: 6px; }
 .paramFloatCard > .persistentParameterBody::-webkit-scrollbar-thumb {
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: rgba(17, 19, 24, 0.14);
 }
 .paramFloatCard > .persistentParameterBody::-webkit-scrollbar-track { background: transparent; }
@@ -5539,17 +5547,17 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 主按钮走黑白，不用品牌亮蓝 */
 .dmpk-quotationModuleShell :is(.primaryButton, .decisionPrimary, .validationStartButton):not(:disabled) {
   border: 1px solid #17191e;
-  background: #17191e;
+  background: var(--bioaz-action-primary);
   color: #fff;
   box-shadow: none;
 }
 .dmpk-quotationModuleShell :is(.primaryButton, .decisionPrimary, .validationStartButton):hover:not(:disabled) {
   border-color: #050608;
-  background: #050608;
+  background: var(--bioaz-action-primary-hover);
 }
 .dmpk-quotationModuleShell .secondaryButton {
   border: 1px solid var(--bioaz-border-strong, #d4d7dd);
-  background: #fff;
+  background: var(--bioaz-surface);
   color: var(--bioaz-text-primary);
 }
 .dmpk-quotationModuleShell .secondaryButton:hover {
@@ -5587,7 +5595,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* Chatflow 卡片圆角统一为 8px（附录 A.1），气泡保留 12px 以区分对话与内容 */
 .dmpk-quotationModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .artifactCard),
 .tumor-reportModuleShell :is(.activityChain, .parameterTaskCard, .warningDecision, .analysisContextCard) {
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
 }
 
 /* ===================================================================
@@ -5813,8 +5821,8 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0;
   border: 1px solid var(--bioaz-border);
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   overflow: hidden;
 }
 
@@ -5978,7 +5986,7 @@ button { -webkit-tap-highlight-color: transparent; }
    =================================================================== */
 .parameterTaskCard {
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-surface);
   box-shadow: none;
 }
@@ -6009,7 +6017,7 @@ button { -webkit-tap-highlight-color: transparent; }
 :is(.parameterTaskCard, .dmpkParamModalBody) .decisionRow {
   position: static;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-surface);
   box-shadow: none;
   min-height: 0;
@@ -6085,7 +6093,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: none;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 .workbenchPanel.isOpen { display: grid; }
@@ -6133,7 +6141,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin: 0 6px 0 0;
   border: 0;
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
   color: var(--bioaz-text-tertiary);
   cursor: pointer;
@@ -6146,7 +6154,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .workbenchPanelCrowded {
   margin: 0 0 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--surface);
   padding: 8px 11px;
   color: var(--muted);
@@ -6200,7 +6208,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 6px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 6px 10px;
   color: inherit;
@@ -6232,7 +6240,7 @@ button { -webkit-tap-highlight-color: transparent; }
   /* 按钮的 UA 默认 padding 是 1px 6px，18px 的盒子里只剩 6px 内容宽，
      12px 的叉号顶到右边缘，于是图标和圆形 hover 底不同心。必须归零。 */
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
   color: var(--bioaz-text-tertiary);
   visibility: hidden;
@@ -6267,7 +6275,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin: 0 2px 0 0;
   border: 0;
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: transparent;
   color: var(--bioaz-text-tertiary);
   visibility: hidden;
@@ -6313,7 +6321,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-row: 1 / -1;
   min-width: 0;
   border: 1px dashed var(--bioaz-agent-accent-border);
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   margin: 10px 6px;
   background: var(--bioaz-agent-accent-soft);
   padding: 12px;
@@ -6351,7 +6359,7 @@ button { -webkit-tap-highlight-color: transparent; }
   /* 偏开指针一点，别让指尖压住自己要看的字 */
   margin: 12px 0 0 14px;
   border: 1px solid var(--bioaz-agent-accent-border);
-  border-radius: 10px;
+  border-radius: var(--bioaz-radius-control);
   background: var(--bioaz-surface);
   padding: 7px 11px;
   color: var(--bioaz-text-primary);
@@ -6393,7 +6401,7 @@ button { -webkit-tap-highlight-color: transparent; }
   flex: none;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -6418,7 +6426,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 28px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -6436,8 +6444,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 224px;
   gap: 1px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
   padding: 6px;
   box-shadow: 0 16px 40px rgba(17, 19, 24, 0.12);
 }
@@ -6466,7 +6474,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 7px 8px;
   color: var(--bioaz-text-secondary);
@@ -6525,8 +6533,8 @@ button { -webkit-tap-highlight-color: transparent; }
   justify-content: center;
   gap: 6px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 8px 10px;
   color: var(--bioaz-text-primary);
   font-size: 12.5px;
@@ -6719,7 +6727,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell .gateDecision .decisionRow,
 .tumor-reportModuleShell .gateDecision .decisionRow:hover,
 .tumor-reportModuleShell .gateDecision .decisionRow:focus-within {
-  background: #fff;
+  background: var(--bioaz-surface);
   box-shadow: none;
 }
 
@@ -7027,14 +7035,14 @@ button { -webkit-tap-highlight-color: transparent; }
    =================================================================== */
 .paramCollectProgress {
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-surface-subtle);
   margin: var(--bioaz-space-3) 0 var(--bioaz-space-2);
 }
 
 .paramCollectProgress > i {
   min-width: 8px;
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   transition: none;
 }
 
@@ -7137,7 +7145,7 @@ button { -webkit-tap-highlight-color: transparent; }
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
   border-radius: var(--bioaz-radius-control);
-  background: #fff;
+  background: var(--bioaz-surface);
 }
 
 .ruleScopeCard > header {
@@ -7197,7 +7205,7 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   gap: 4px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   padding: 4px 8px;
   color: var(--bioaz-text-tertiary);
@@ -7230,8 +7238,8 @@ button { -webkit-tap-highlight-color: transparent; }
   justify-content: center;
   gap: 6px;
   border: 1px solid var(--bioaz-border);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 8px 10px;
   color: var(--bioaz-text-primary);
   font-size: 12.5px;
@@ -7451,7 +7459,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 28px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -7494,7 +7502,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .floatingChatCard {
   max-height: min(46vh, 420px);
   overflow-y: auto;
-  border-radius: var(--bioaz-radius-container, 16px);
+  border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface, #fff);
   box-shadow: var(--bioaz-shadow-floating, 0 12px 32px rgba(17, 19, 24, .08));
 }
@@ -7505,7 +7513,7 @@ button { -webkit-tap-highlight-color: transparent; }
    没有这一格的话，画布态下选完一个值屏幕上什么都不留，
    用户既不知道生效没有，也没法反悔。 */
 .floatingChatChips {
-  border-radius: var(--bioaz-radius-container, 16px);
+  border-radius: var(--bioaz-radius-container);
   background: var(--bioaz-surface, #fff);
   padding: 8px 10px;
   box-shadow: var(--bioaz-shadow-floating, 0 12px 32px rgba(17, 19, 24, .08));
@@ -7619,7 +7627,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: -webkit-box;
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-control);
   background: rgba(255, 255, 255, 0.92);
   padding: 9px 14px;
   color: var(--bioaz-text-secondary);
@@ -7644,7 +7652,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-rows: 40px minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid var(--bioaz-border);
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 18px 48px rgba(17, 19, 24, 0.16);
   backdrop-filter: blur(16px) saturate(1.6);
@@ -7674,7 +7682,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 26px;
   place-items: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: var(--bioaz-text-secondary);
   cursor: pointer;
@@ -7696,7 +7704,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .floatingChatList p {
   max-width: 82%;
   margin: 0;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   padding: 8px 11px;
   font-size: 13px;
   line-height: 1.6;
@@ -7748,14 +7756,14 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ---- 全局规则草稿卡上的作用域预告 ---- */
 /* 「你正在离开这一单」这个信号以前只由跳转那一下承担，跳完就没了；写成常驻文字它才一直在 */
-.dmpkRuleScopePreview{display:grid;gap:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px}
+.dmpkRuleScopePreview{display:grid;gap:6px;border:1px solid var(--line);border-radius: var(--bioaz-radius-control);background:var(--surface);padding:10px 12px}
 .dmpkRuleScopeHit{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px;margin:0;font-size:13px}
 .dmpkRuleScopeHit span{color:var(--muted);font-size:11px}
 .dmpkRuleScopeHit strong{color:var(--ink);font-weight:600}
 .dmpkRuleScopeHit b{color:var(--body);font-weight:500}
 .dmpkRuleScopeTags{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0}
 .dmpkRuleScopeTags span{color:var(--muted);font-size:11px}
-.dmpkRuleScopeTags i{border:1px solid var(--line);border-radius:99px;background:#fff;padding:2px 8px;color:var(--body);font-size:11px;font-style:normal}
+.dmpkRuleScopeTags i{border:1px solid var(--line);border-radius:var(--bioaz-radius-full);background:var(--bioaz-surface);padding:2px 8px;color:var(--body);font-size:11px;font-style:normal}
 .dmpkRuleScopePreview small{display:flex;align-items:flex-start;gap:6px;color:var(--amber);font-size:11px;line-height:1.6}
 .dmpkRuleScopePreview small svg{flex-shrink:0;margin-top:2px}
 

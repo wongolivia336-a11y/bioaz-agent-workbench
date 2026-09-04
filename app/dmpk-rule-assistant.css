@@ -16,7 +16,7 @@
   width: min(680px, calc(100vw - 40px));
   max-height: min(620px, calc(100vh - 80px));
   transform: translate(-50%, -50%);
-  border-radius: 16px;
+  border-radius: var(--bioaz-radius-container);
 }
 
 .quotationAssistantWorkspace {
@@ -31,7 +31,7 @@
 .quotationRuleAssistant .ambientAssistantEntry {
   width: 224px;
   inset-inline: calc((100% - 224px) / 2);
-  color: #111318;
+  color: var(--bioaz-text-primary);
   font-weight: 750;
 }
 
@@ -82,7 +82,7 @@
   width: 30px;
   height: 30px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--bioaz-radius-tool);
   background: var(--brand-soft);
   color: var(--brand);
 }
@@ -93,7 +93,7 @@
   height: 30px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bioaz-radius-tool);
   background: transparent;
   color: #64748b;
   cursor: pointer;
@@ -101,7 +101,7 @@
 
 .quotationAssistantPanel > header button:hover {
   background: rgba(15, 23, 42, .06);
-  color: #111318;
+  color: var(--bioaz-text-primary);
 }
 
 .quotationAssistantComposer {
@@ -144,8 +144,8 @@
   height: 28px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   overflow: hidden;
 }
 
@@ -168,7 +168,7 @@
 .quotationAssistantBubble > p {
   margin: 0;
   padding: 12px 16px;
-  border-radius: 14px;
+  border-radius: var(--bioaz-radius-container);
   color: var(--ink-soft);
   font-size: 15px;
   line-height: 1.6;
@@ -205,7 +205,7 @@
   gap: 0;
   margin: 0;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: var(--bioaz-radius-control);
   overflow: hidden;
 }
 
@@ -238,8 +238,8 @@
 
 .quotationChangeProposal footer button {
   border: 1px solid var(--line);
-  border-radius: 9px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   padding: 8px 10px;
   font-weight: 650;
   cursor: pointer;
@@ -281,8 +281,8 @@
   gap: 14px;
   margin-top: 16px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
   padding: 16px;
 }
 
@@ -301,7 +301,7 @@
 }
 
 .quotationWorkflowPreview > header span {
-  border-radius: 999px;
+  border-radius: var(--bioaz-radius-full);
   background: #f1f5f9;
   color: #64748b;
   padding: 4px 9px;
@@ -317,7 +317,7 @@
   min-height: 220px;
   overflow: hidden;
   border: 1px solid #eef2f7;
-  border-radius: 12px;
+  border-radius: var(--bioaz-radius-control);
   background-image: radial-gradient(#d9dee7 1px, transparent 1px);
   background-size: 18px 18px;
   padding: 28px;
@@ -338,8 +338,8 @@
   min-height: 48px;
   place-items: center;
   border: 1px solid #dfe5ee;
-  border-radius: 9px;
-  background: #fff;
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
   color: #334155;
   padding: 8px 10px;
   text-align: center;

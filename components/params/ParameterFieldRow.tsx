@@ -201,15 +201,22 @@ function MultiControl({ field, value, values, onChange }: {
   const [customValue, setCustomValue] = useState("");
   const options = resolveOptions(field, values);
   const picked = splitMulti(value);
+  const exclusive = field.exclusiveOptions ?? [];
+  /* 互斥项两个方向都要清：选中「不需要检测」时把别的清掉，
+     选中别的时把「不需要检测」清掉。只做一个方向的话，先勾 IVIS 再勾
+     「不需要检测」是干净的，反过来就留下一对自相矛盾的选中态——
+     而人不会知道这两条路的结果不一样。 */
+  const withExclusion = (next: string[], added: string) =>
+    exclusive.includes(added) ? [added] : next.filter((item) => !exclusive.includes(item));
   const toggle = (option: string) => {
     onChange(joinMulti(picked.includes(option)
       ? picked.filter((item) => item !== option)
-      : [...picked, option]));
+      : withExclusion([...picked, option], option)));
   };
   const addCustom = () => {
     const next = customValue.trim();
     if (!next || picked.includes(next)) return;
-    onChange(joinMulti([...picked, next]));
+    onChange(joinMulti(withExclusion([...picked, next], next)));
     setCustomValue("");
   };
   /* 自己加的那几项：不在选项表里，但已经被选中。也要能点掉，
