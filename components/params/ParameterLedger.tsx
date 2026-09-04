@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Edit3 } from "lucide-react";
-import type { ParamField, ParamGroup } from "./types";
+import { formatParamValue, type ParamField, type ParamGroup } from "./types";
 
 /**
  * 右栏的参数台账。
@@ -55,10 +55,10 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, on
                     type="button"
                     key={field.id}
                     onClick={() => onEditField(field.id)}
-                    title={field.value}
+                    title={formatParamValue(field, field.value)}
                   >
                     <span>{field.label}</span>
-                    <strong>{field.value}</strong>
+                    <strong>{formatParamValue(field, field.value)}</strong>
                     <Edit3 size={13} />
                   </button>
                 ) : (

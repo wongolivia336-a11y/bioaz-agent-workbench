@@ -2246,6 +2246,26 @@ button.inspectorParameterField:hover { background: var(--surface); }
   line-height: 1.5;
 }
 
+/* 「参数改过、报价还没重出」不是一句普通说明：手里那份文件已经不对了。
+   跟「还差 N 项」用同一副骨架，只换配色——两者都是按钮上方那一行原因，
+   不该长成两种东西。 */
+.tumorRailAction > small.isStale {
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-status-warning-soft);
+  color: var(--bioaz-status-warning);
+  padding: 5px 8px;
+}
+
+.tumorQuoteStale {
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-status-warning-soft);
+  color: var(--bioaz-status-warning);
+  padding: 8px 10px;
+  margin: 0 0 4px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
 .tumorQuoteLine {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;

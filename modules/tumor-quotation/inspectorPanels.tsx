@@ -1,18 +1,28 @@
 "use client";
 
 import { ArrowRight, Eye, FileCheck2, FileSpreadsheet, FileText, History, ListChecks, SlidersHorizontal, Table2 } from "lucide-react";
-import { ParameterLedger } from "../../components/params";
+import { formatParamValue, ParameterLedger } from "../../components/params";
 import {
   resolveInspectorPanels,
   type InspectorPanelRegistry,
   type ResolvedInspectorPanel,
 } from "../../components/workbench-inspector/WorkbenchInspector";
-import { tumorGroups, type TumorField, type TumorGroupId, type TumorStage } from "./fields";
+import { initialTumorFields, tumorGroups, type TumorField, type TumorGroupId, type TumorStage } from "./fields";
 import { tumorPriceLines } from "./views";
 
 export type TumorInspectorPanelId = "parameters" | "quote" | "changelog" | "process" | "artifacts";
 
 export type TumorChangeEntry = { id: string; at: string; label: string; from: string; to: string };
+
+/* 日志里显示的取值要按它自己那一项的 kind 格式化——重复行落在 value 里是
+   「Vehicle:0.5% CMC-Na:0;G1:DrugA:10 mg/kg」，直接摆出来是一串冒号分号。
+   按 label 找字段而不是按 id，是因为流水记的就是 label。
+
+   **不在模块顶层建这张表**：这个文件和 views.tsx 是一对循环引用
+   （这边 import tumorPriceLines，那边 import 本文件的类型），
+   顶层直接读 initialTumorFields 会在某个加载顺序下撞上 TDZ——
+   实测报过一次 `ReferenceError: initialTumorFields is not defined`。 */
+const fieldByLabel = () => new Map(initialTumorFields.map((field) => [field.label, field]));
 
 export type TumorInspectorContext = {
   stage: TumorStage;
@@ -27,6 +37,9 @@ export type TumorInspectorContext = {
   /* 参数改动流水。空数组＝这一单还没改过任何参数，那个 tab 就显示空态而不是消失——
      「改过没有」本身是要看的信息，tab 一会儿在一会儿不在，人会以为自己记错了。 */
   changeLog: TumorChangeEntry[];
+  /** 出过一版报价、之后参数又动了。那张表还在按新参数算金额，
+      而客户手里那份 Word / Excel 是旧的——这件事只能明说。 */
+  quoteStale: boolean;
 };
 
 const stageLabels: Record<TumorStage, string> = {
@@ -69,7 +82,7 @@ const tumorInspectorPanelRegistry: InspectorPanelRegistry<TumorInspectorContext>
     expandable: true,
     state: (context) => (context.fields.some((field) => field.required && !field.value) ? "empty" : "populated"),
     emptyMessage: "参数补全后这里出现计价条目",
-    render: (context) => <QuoteTablePanel fields={context.fields} />,
+    render: (context) => <QuoteTablePanel fields={context.fields} stale={context.quoteStale} />,
   },
   {
     /* 「修改日志」。报价改过几轮、动过哪些参数，一个月后回来还得查得到。 */
@@ -111,12 +124,15 @@ export function getTumorInspectorPanels(context: TumorInspectorContext): Resolve
  * 人就再也不会信右边那个台账。计算口径跟报价前预览共用 `tumorPriceLines`，
  * 两处不能各算各的。
  */
-function QuoteTablePanel({ fields }: { fields: TumorField[] }) {
+function QuoteTablePanel({ fields, stale }: { fields: TumorField[]; stale: boolean }) {
   const { lines, subtotal, management, total } = tumorPriceLines(fields);
   const money = (value: number) => `¥${value.toLocaleString()}`;
   return (
     <div className="dmpkInspectorList tumorQuoteTable">
       <div className="dmpkInspectorIntro"><strong>计价条目</strong><span>演示单价，随参数变化</span></div>
+      {/* 这张表跟着参数走，已经发出去的文件不会。两者一分家就得说出来，
+          否则人对着一个已经变了的金额，以为手里那份文件也是这个数。 */}
+      {stale ? <p className="tumorQuoteStale">参数在上一版报价之后改过，下面是按新参数算的金额；已生成的 Word / Excel 仍是旧版。</p> : null}
       {lines.map((line) => (
         <div className="tumorQuoteLine" key={line.id}>
           <div><strong>{line.item}</strong><small>{line.detail}</small></div>
@@ -141,20 +157,24 @@ function QuoteTablePanel({ fields }: { fields: TumorField[] }) {
  * 凭空消失的取值。
  */
 function ChangeLogPanel({ entries }: { entries: TumorChangeEntry[] }) {
+  const byLabel = fieldByLabel();
   return (
     <div className="dmpkInspectorList tumorChangeLog">
       <div className="dmpkInspectorIntro"><strong>参数改动</strong><span>共 {entries.length} 条</span></div>
       {/* 新的在上。翻日志的人找的多半是「最近一次改了什么」。 */}
-      {[...entries].reverse().map((entry) => (
-        <div className="tumorChangeRow" key={entry.id}>
-          <div className="tumorChangeHead"><strong>{entry.label}</strong><small>{entry.at}</small></div>
-          <div className="tumorChangeDiff">
-            <s>{entry.from || "空"}</s>
-            <ArrowRight size={11} aria-hidden="true" />
-            <b>{entry.to || "已清空"}</b>
+      {[...entries].reverse().map((entry) => {
+        const field = byLabel.get(entry.label);
+        return (
+          <div className="tumorChangeRow" key={entry.id}>
+            <div className="tumorChangeHead"><strong>{entry.label}</strong><small>{entry.at}</small></div>
+            <div className="tumorChangeDiff">
+              <s>{formatParamValue(field, entry.from) || "空"}</s>
+              <ArrowRight size={11} aria-hidden="true" />
+              <b>{formatParamValue(field, entry.to) || "已清空"}</b>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

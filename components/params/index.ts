@@ -4,6 +4,7 @@ export { ParameterLedger } from "./ParameterLedger";
 export { ParameterTaskCard } from "./ParameterTaskCard";
 export {
   effectiveValues,
+  formatParamValue,
   joinMulti,
   joinRepeat,
   lockedPlaceholder,
