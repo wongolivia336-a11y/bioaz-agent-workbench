@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, FileSpreadsheet, FileText, Send } from "lucide-react";
+import { Eye, FileSpreadsheet, FileText, Send, SlidersHorizontal } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { ComposerChipTray, ParameterTaskCard, splitRepeat, type ParamField } from "../../components/params";
 import { PreviewModal } from "../../components/ui/PreviewModal";
@@ -185,6 +185,7 @@ export function TumorQuotationPreviewModal({ fields, title, onClose }: { fields:
 
 export function TumorComposer({
   attention, stage, text, setText, activeGroup, fields, allFields, mode, remainingCount, draftTabs,
+  formOpen, onToggleForm,
   onSelect, onRemove, onSend, onPreview, onGenerate, disabled, projectName,
   attachments, onAttachmentsChange, activeCoworkerId, notice,
 }: {
@@ -195,6 +196,9 @@ export function TumorComposer({
   activeGroup: TumorGroupId;
   fields: TumorField[];
   allFields: TumorField[];
+  /** 参数表单开着没有。跟 stage 解耦——参数齐了人也可以再打开回头改 */
+  formOpen: boolean;
+  onToggleForm: () => void;
   mode: "collect" | "edit";
   /** 还欠着输入的项数。跟卡里列出来的行数不是一回事——多选和重复行填过之后
       仍然留在卡上让人接着改，但它们已经不欠了。 */
@@ -223,7 +227,7 @@ export function TumorComposer({
   return (
     <footer ref={wrapRef} className={`dmpkComposerWrap ${attention ? "needsAttention" : ""}`}>
       {notice}
-      {stage === "collecting" ? (
+      {formOpen ? (
         <ParameterTaskCard
           groups={tumorGroups}
           fields={fields}
@@ -235,7 +239,18 @@ export function TumorComposer({
           onSelect={onSelect}
         />
       ) : null}
-      {stage === "ready" ? <TumorFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} /> : null}
+      {stage === "ready" && !formOpen ? <TumorFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} /> : null}
+      {/* 表单的常驻开关。放在 composer 上沿，跟输入框同一路——
+          「填参数」和「说话」是同一件事的两种输入方式，不该一个在手边、
+          一个要去右栏找。参数齐了之后打开列的是全部，那时它是「回头改」的入口。 */}
+      {stage !== "idle" && stage !== "thinking" && stage !== "generating" ? (
+        <div className="tumorFormToggleRow">
+          <button className="tumorFormToggle" type="button" aria-expanded={formOpen} onClick={onToggleForm}>
+            <SlidersHorizontal size={14} aria-hidden="true" />
+            {formOpen ? "收起报价参数" : "填写报价参数"}
+          </button>
+        </div>
+      ) : null}
       <WorkbenchComposer
         className="dmpkComposer"
         attachments={attachments}

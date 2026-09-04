@@ -70,7 +70,11 @@ export function ParameterTaskCard({
      一页的最后一项是多选或重复行时，下一页永远解不开——卡里没路可走，
      人只能去开全屏，而全屏本来是「想一次看全」时才用的东西。
      现在的判据是：前面每一页都不欠输入了，下一页就开。 */
-  const firstPendingPage = groups.findIndex((group) => fields.some((field) => field.group === group.id && !values[field.id]));
+  /* 只有**必填**项空着才锁后面的页。可选项留空是一种完成状态，不是欠着——
+     收集阶段这条差别看不出来（那时卡里本来就只有缺的必填项），
+     但人把参数填齐之后再打开表单回头改时，卡里列的是全部字段，
+     一个空着的「报告语言」会把它后面所有页都锁死。 */
+  const firstPendingPage = groups.findIndex((group) => fields.some((field) => field.group === group.id && field.required && !values[field.id]));
   const maxReachablePage = Math.max(firstPendingPage < 0 ? groups.length - 1 : firstPendingPage, safePage);
 
   const selectValue = (field: ParamField, value: string) => {

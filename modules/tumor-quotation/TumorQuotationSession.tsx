@@ -71,7 +71,11 @@ export default function TumorQuotationSession({
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [stage, setStage] = useState<TumorStage>("idle");
   const [preview, setPreview] = useState<null | "params" | "artifact">(null);
-  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "process", "artifacts"]);
+  /* tab 栏只放主面板，跟 DMPK 同一条规矩：**处理过程收进加号菜单，系统不会自己
+     把它加回来**。五个 tab 塞不进 320px 的右栏，多出来的会被挤进溢出里——
+     而「修改日志」正是那种「不主动去看就等于没有」的东西，不能让它排在溢出里。
+     报价结果自带 available（生成后才出现），所以生成前实际是三个 tab。 */
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "quote", "changelog", "artifacts"]);
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelFocus, setPanelFocus] = useState(false);
   const [inspectorPanelId, setInspectorPanelId] = useState<TumorInspectorPanelId>("parameters");
@@ -80,6 +84,19 @@ export default function TumorQuotationSession({
   const [columnPanelIds, setColumnPanelIds] = useState<string[]>([]);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
+  /* 参数表单开着没有。
+     ----------------------------------------------------------------------
+     原来是完全跟着 stage 走：collecting 显示、齐全了就消失。于是参数一填完，
+     **想回头整体看一眼或者改两项就没有入口了**——只剩右栏逐项点铅笔，
+     而那是单项修改，一次只能动一个。
+     现在给它一个常驻开关：collecting 默认开着（跟以前一样），
+     齐全之后人可以自己再打开，那时列的是全部参数而不只是缺的。 */
+  const [paramsOpen, setParamsOpen] = useState(true);
+  /* 参数改动流水。谁在什么时候把哪一项从什么改成了什么。
+     报价改过几轮、动过哪些参数，一个月后回来还得查得到——这是这套东西的
+     立身之本，不是附加功能。记在会话里而不是算出来：改动是事件，
+     从「当前值」反推不出发生过什么。 */
+  const [changeLog, setChangeLog] = useState<Array<{ id: string; at: string; label: string; from: string; to: string }>>([]);
   const visiblePanelIdsRef = useRef(visiblePanelIds);
   visiblePanelIdsRef.current = visiblePanelIds;
   const initialRequestHandledRef = useRef(false);
@@ -107,6 +124,10 @@ export default function TumorQuotationSession({
   /* 「这一步还欠着输入没有」。改单项时只看那一项，否则看全局——
      用全局的话，改一项参数会被其它还缺的项挡住，发不出去。 */
   const composerPending = editingField ? (isDrafted(editingField) ? [] : [editingField]) : pendingFields;
+  /* 表单开着的时候列什么：还在收集就列缺的（跟以前一样），
+     参数已经齐了还打开，说明人是来**回头改**的，那就列全部。 */
+  const formOpen = paramsOpen && stage !== "idle" && stage !== "thinking" && stage !== "generating";
+  const formFields = editingField || stage === "collecting" ? composerFields : fields;
 
   // 一组参数收齐后自动折叠，把注意力交给还缺的那组
   useEffect(() => {
@@ -264,6 +285,21 @@ export default function TumorQuotationSession({
         return { ...field, value: "" };
       });
       const remaining = reconciled.filter((field) => field.required && !field.value);
+      /* 记流水。跟 reconciled 一起算，因为级联清空也是一次改动——
+         「品系被清掉了」跟「品系被改成别的」一样需要留痕，否则日志里
+         会出现一个凭空消失的取值。 */
+      const at = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+      const entries = reconciled
+        .map((field, index) => ({ field, before: fields[index]?.value ?? "" }))
+        .filter(({ field, before }) => field.value !== before)
+        .map(({ field, before }, index) => ({
+          id: `chg-${Date.now()}-${index}`,
+          at,
+          label: field.label,
+          from: before,
+          to: field.value,
+        }));
+      if (entries.length) setChangeLog((items) => [...items, ...entries]);
       setFields(reconciled);
       setDraftTabs([]);
       setEditingFieldId(null);
@@ -327,6 +363,7 @@ export default function TumorQuotationSession({
     onEditField: requestFieldEdit,
     editingFieldId,
     onPreviewArtifact: () => setPreview("artifact"),
+    changeLog,
   });
 
   const completedRequired = fields.filter((field) => field.required && field.value).length;
@@ -342,6 +379,21 @@ export default function TumorQuotationSession({
           </span>
         </div>
         {panel.content}
+        {/* 生成入口钉在台账底下。
+            原来它只长在对话里那张确认卡上——**滚上去看历史，入口就跟着滚走了**。
+            而「参数够不够、够了就出报价」这件事从头到尾都在这一栏里发生。
+            不齐全时不是灰一个按钮就完事，要说清还差什么。 */}
+        <div className="tumorRailAction">
+          <button
+            className="primaryButton"
+            type="button"
+            disabled={Boolean(missingFields.length) || stage === "generating"}
+            onClick={startGeneration}
+          >
+            {stage === "generated" ? "重新生成报价" : "保存并生成报价"}
+          </button>
+          {missingFields.length ? <small>还差 {missingFields.length} 项必填：{missingFields.slice(0, 2).map((field) => field.label).join("、")}{missingFields.length > 2 ? "…" : ""}</small> : null}
+        </div>
       </>
     ),
   });
@@ -377,8 +429,10 @@ export default function TumorQuotationSession({
           text={composerText}
           setText={setComposerText}
           activeGroup={activeGroup}
-          fields={composerFields}
+          fields={formFields}
           allFields={fields}
+          formOpen={formOpen}
+          onToggleForm={() => setParamsOpen((value) => !value)}
           mode={editingField ? "edit" : "collect"}
           remainingCount={composerPending.length}
           draftTabs={draftTabs}

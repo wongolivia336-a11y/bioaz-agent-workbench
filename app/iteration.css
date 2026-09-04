@@ -2196,6 +2196,98 @@ button.inspectorParameterField:hover { background: var(--surface); }
   color: var(--bioaz-agent-accent);
 }
 
+/* ===== 肿瘤报价：表单开关、右栏生成入口、报价表与修改日志 ===== */
+
+/* 表单的常驻开关。贴在 composer 上沿，跟输入框同一路——「填参数」和「说话」
+   是同一件事的两种输入方式，不该一个在手边、一个要去右栏找。 */
+.tumorFormToggleRow {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.tumorFormToggle {
+  min-height: 30px;
+  gap: 5px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  padding: 0 10px;
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tumorFormToggle:hover {
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+/* 生成入口钉在台账底下，不跟着对话滚走。 */
+.tumorRailAction {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid var(--bioaz-border);
+  padding: 10px 0 2px;
+  background: var(--bioaz-surface);
+}
+
+.tumorRailAction > button { width: 100%; }
+
+/* 差什么写出来，不是灰一个按钮就完事——灰着只说明「现在不行」，
+   不说明「还差什么」。 */
+.tumorRailAction > small {
+  color: var(--bioaz-text-tertiary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.tumorQuoteLine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px 10px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 9px 2px;
+}
+
+.tumorQuoteLine > div { display: grid; gap: 2px; min-width: 0; }
+.tumorQuoteLine strong { font-size: 13px; }
+.tumorQuoteLine small { color: var(--bioaz-text-secondary); font-size: 11px; line-height: 1.45; }
+.tumorQuoteLine > span { color: var(--bioaz-text-tertiary); font-size: 11px; }
+.tumorQuoteLine > b { font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.tumorQuoteSum { display: grid; gap: 6px; padding: 10px 2px 0; }
+.tumorQuoteSum > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.tumorQuoteSum span { color: var(--bioaz-text-secondary); font-size: 12px; }
+.tumorQuoteSum b { font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* 合计跟小计不是同一级：它是这一栏的结论，其余是过程。 */
+.tumorQuoteSum > .isTotal { border-top: 1px solid var(--bioaz-border); padding-top: 8px; }
+.tumorQuoteSum > .isTotal span { color: var(--bioaz-text-primary); font-weight: 600; }
+.tumorQuoteSum > .isTotal b { font-size: 15px; }
+
+.tumorChangeRow {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid var(--bioaz-border);
+  padding: 9px 2px;
+}
+
+.tumorChangeHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.tumorChangeHead strong { font-size: 13px; }
+.tumorChangeHead small { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+.tumorChangeDiff { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+/* 旧值划掉但不藏起来：改动的意义在于「从什么变成什么」，只写新值等于没记。 */
+.tumorChangeDiff s { color: var(--bioaz-text-tertiary); text-decoration-thickness: 1px; }
+.tumorChangeDiff svg { color: var(--bioaz-text-disabled); flex: none; }
+.tumorChangeDiff b { color: var(--bioaz-text-primary); font-weight: 600; }
+
 .parameterTaskCard .parameterPager {
   gap: 10px;
   margin-top: 2px;
