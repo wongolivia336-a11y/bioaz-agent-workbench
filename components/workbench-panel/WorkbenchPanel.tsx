@@ -200,15 +200,30 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
     setPanelWidth((current) => (Math.abs(current - next) < 1 ? current : next));
   });
 
-  /* 拖拽和收任务栏不引起本组件重渲，所以还要一个观察者兜住那些变化。 */
+  /* 工作区（面板的父容器）有多宽。
+     ----------------------------------------------------------------------
+     「还能不能再摊一列」问的是**加宽到头之后**排得下几列，而那个上限由
+     工作区宽度决定，不由面板当前宽度决定。所以这个值必须自己是 state：
+     面板宽度被 clamp 在 320~760，把窗口从 1200 拉到 1600，**面板一个像素
+     都不会变**——只观察面板的话这里收不到任何通知，于是「并列」那颗按钮
+     会一直按着窗口还窄时算出来的结论保持灰色，拉宽了也不亮。 */
+  const [roomWidth, setRoomWidth] = useState(0);
+
+  /* 拖拽和收任务栏不引起本组件重渲，所以还要一个观察者兜住那些变化。
+     面板和工作区各观察一个：前者决定「此刻排得下几列」，后者决定「最多能排几列」。 */
   useEffect(() => {
     const node = panelRef.current;
     if (!node || !columns) return;
-    const observer = new ResizeObserver(([entry]) => {
-      const next = entry.contentRect.width;
-      setPanelWidth((current) => (Math.abs(current - next) < 1 ? current : next));
+    const room = node.parentElement;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const next = entry.contentRect.width;
+        if (entry.target === node) setPanelWidth((current) => (Math.abs(current - next) < 1 ? current : next));
+        else setRoomWidth((current) => (Math.abs(current - next) < 1 ? current : next));
+      }
     });
     observer.observe(node);
+    if (room) observer.observe(room);
     return () => observer.disconnect();
   }, [columns]);
 
@@ -251,6 +266,13 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
     const need = widthForColumns(fits);
     if (current >= need) return;
     workspace.style.setProperty("--panel-width", `${Math.round(need)}px`);
+    /* 设完宽度**自己把 state 也更新掉**，不要等 ResizeObserver 回来告诉我们
+       刚刚设了多少。这一步不是优化：`capacity` 读的是 panelWidth，
+       而 leadingPanels 又读 capacity——观察者晚一拍，这一次点击就渲染成
+       「面板变宽了，但列没出来」，而下一次点击才对。
+       页面不可见时观察者根本不投递（后台标签页、窗口最小化都算），
+       那种情况下它永远不会自己好。 */
+    setPanelWidth(Math.round(need));
   };
 
   const hide = (panelId: string) => {
@@ -315,7 +337,11 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
   const maxCapacity = (() => {
     if (!columns) return 1;
     if (focus) return columnCapacity(panelWidth);
-    const room = panelRef.current?.parentElement?.getBoundingClientRect().width ?? 0;
+    /* 读 state 而不是当场量 parentElement：当场量的值是**渲染时**的快照，
+       而首帧 panelRef 还是 null（量到 0，算出「只排得下一列」）。
+       之后工作区变宽并不会让面板变宽，于是没有任何东西触发重渲，
+       那个首帧结论就一直挂着——按钮永远是灰的。 */
+    const room = roomWidth || panelRef.current?.parentElement?.getBoundingClientRect().width || 0;
     const ceiling = Math.max(PANEL_WIDTH_MIN, Math.min(PANEL_WIDTH_MAX, room - CONVERSATION_MIN_WIDTH));
     return columnCapacity(Math.max(panelWidth, ceiling));
   })();
@@ -518,14 +544,22 @@ export function WorkbenchPanelBody({ panels, visibleIds, onVisibleIdsChange, act
                     这一颗是给「我想同时看两块」用的最短路径——
                     原来只能去「添加面板」菜单里勾，而那个菜单读起来是
                     「有哪些标签」，不是「把这两个摆一起」。
-                    排不下就置灰，但不移除：位置一空一现，整条栏会跟着抖。 */}
+                    排不下就置灰，但不移除：位置一空一现，整条栏会跟着抖。
+
+                    判据必须是 canSplitMore，**不能是 capacity**。
+                    capacity 是「此刻这个宽度排得下几列」，而点下去之后
+                    widenFor 会先把面板加宽再排——按 capacity 置灰，等于用
+                    加宽前的宽度否决一件加宽后能成的事。
+                    实际后果：面板默认 320，capacity 恒为 1，这颗按钮**从来就是灰的**，
+                    于是并列只剩拖拽一条路，而拖拽那条走的正是 canSplitMore。
+                    同一个动作两条路、两套判据，其中一条永远不通。 */}
                 {columns ? (
                   <button
                     type="button"
                     className="workbenchPanelTabSplit"
                     aria-label={`并列显示${panel.label}`}
-                    title={capacity > 1 ? "并列显示" : "面板放宽后可并列显示"}
-                    disabled={capacity < 2}
+                    title={canSplitMore ? "并列显示" : "宽度不够：放宽面板或收起任务栏后可并列"}
+                    disabled={!canSplitMore}
                     onClick={() => splitOut(panel.id)}
                   >
                     <Columns2 size={12} />
