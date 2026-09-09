@@ -390,7 +390,7 @@
   border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-action-primary);
   padding: 0 5px;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   font-size: 10px;
   font-style: normal;
   font-weight: 600;

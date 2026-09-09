@@ -16,6 +16,13 @@
   --bioaz-text-secondary: #5f6875;
   --bioaz-text-tertiary: #7c8593;
   --bioaz-text-disabled: #9aa3af;
+  /* 深色底上的文字：主按钮里的字、深色 chip、悬浮提示。
+     它今天的值跟 --bioaz-surface 一模一样，但**不是同一个东西**——
+     表面色以后可能调成米白，而深色底上的字必须一直是纯白。
+     写成 var(--bioaz-surface) 视觉上今天没差，语义上已经错了，
+     而错在哪儿要等有人改令牌那天才暴露。
+     这一条是为了那 117 处 `color: #fff` 补的：它们以前无处可归。 */
+  --bioaz-text-inverse: #ffffff;
 
   --bioaz-canvas: #f7f8fa;
   --bioaz-surface: #ffffff;

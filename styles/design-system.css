@@ -49,7 +49,7 @@
 
 .bioazUiButton--primary {
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .bioazUiButton--primary:hover:not(:disabled) {
