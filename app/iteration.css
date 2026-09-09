@@ -2197,6 +2197,42 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 
+/* ===== 参数卡的三级：折叠 → 展开 → 全屏 =====
+   每一级都得自己按一下。原来点卡片直接开全屏，把中间那一级跳过了，
+   而中间那级（就地填当前这一组）才是常用的。 */
+
+/* 卡头是开关，光标要说实话。 */
+.parameterTaskCard > .warningDecisionHeader[role="button"] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.parameterTaskCard > .warningDecisionHeader[role="button"]:focus-visible {
+  outline: 2px solid var(--bioaz-agent-focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--bioaz-radius-tool);
+}
+
+/* 折叠态只剩卡头，卡自己的 18px 行距就没有兄弟可分——留着会在
+   卡头底下多垫一条空白，看着像内容没加载出来。 */
+.parameterTaskCard.isCollapsed {
+  gap: 0;
+}
+
+.parameterCardChevron {
+  flex: none;
+  color: var(--bioaz-text-tertiary);
+  transition: transform var(--bioaz-motion-standard) var(--bioaz-ease-standard);
+}
+
+.parameterTaskCard.isExpanded .parameterCardChevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parameterCardChevron { transition: none; }
+}
+
 .parameterTaskCard .parameterPager {
   gap: 10px;
   margin-top: 2px;

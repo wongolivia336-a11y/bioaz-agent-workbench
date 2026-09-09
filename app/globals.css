@@ -7053,10 +7053,9 @@ button {
   white-space: nowrap;
 }
 
-/* 整张卡可点开全屏,所以光标要说实话。选项按钮自己是 button,不受影响。 */
-.parameterTaskCard.canExpand {
-  cursor: pointer;
-}
+/* 「整张卡可点开全屏」那条撤了：卡片现在是三级（折叠 → 展开 → 全屏），
+   点卡片直接跳到全屏会把中间那一级吞掉。开关移到卡头上，
+   光标和焦点环见 iteration.css 里 [role="button"] 那条。 */
 
 .parameterExpandButton {
   display: grid;
