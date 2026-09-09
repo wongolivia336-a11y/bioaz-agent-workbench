@@ -1,28 +1,16 @@
 "use client";
 
-import { ArrowRight, Eye, FileCheck2, FileSpreadsheet, FileText, History, ListChecks, SlidersHorizontal, Table2 } from "lucide-react";
-import { formatParamValue, ParameterLedger } from "../../components/params";
+import { ArrowUpRight, Calculator, Edit3, Eye, FileCheck2, FileSpreadsheet, FileText, ListChecks, ShieldCheck, SlidersHorizontal, Sparkles } from "lucide-react";
+import { ParameterLedger } from "../../components/params";
 import {
   resolveInspectorPanels,
   type InspectorPanelRegistry,
   type ResolvedInspectorPanel,
 } from "../../components/workbench-inspector/WorkbenchInspector";
-import { initialTumorFields, tumorGroups, type TumorField, type TumorGroupId, type TumorStage } from "./fields";
+import { tumorGroups, type TumorField, type TumorGroupId, type TumorStage } from "./fields";
 import { tumorPriceLines } from "./views";
 
-export type TumorInspectorPanelId = "parameters" | "quote" | "changelog" | "process" | "artifacts";
-
-export type TumorChangeEntry = { id: string; at: string; label: string; from: string; to: string };
-
-/* 日志里显示的取值要按它自己那一项的 kind 格式化——重复行落在 value 里是
-   「Vehicle:0.5% CMC-Na:0;G1:DrugA:10 mg/kg」，直接摆出来是一串冒号分号。
-   按 label 找字段而不是按 id，是因为流水记的就是 label。
-
-   **不在模块顶层建这张表**：这个文件和 views.tsx 是一对循环引用
-   （这边 import tumorPriceLines，那边 import 本文件的类型），
-   顶层直接读 initialTumorFields 会在某个加载顺序下撞上 TDZ——
-   实测报过一次 `ReferenceError: initialTumorFields is not defined`。 */
-const fieldByLabel = () => new Map(initialTumorFields.map((field) => [field.label, field]));
+export type TumorInspectorPanelId = "parameters" | "rules" | "process" | "artifacts";
 
 export type TumorInspectorContext = {
   stage: TumorStage;
@@ -34,12 +22,10 @@ export type TumorInspectorContext = {
   onEditField: (fieldId: string) => void;
   editingFieldId?: string | null;
   onPreviewArtifact: (kind: "word" | "excel") => void;
-  /* 参数改动流水。空数组＝这一单还没改过任何参数，那个 tab 就显示空态而不是消失——
-     「改过没有」本身是要看的信息，tab 一会儿在一会儿不在，人会以为自己记错了。 */
-  changeLog: TumorChangeEntry[];
-  /** 出过一版报价、之后参数又动了。那张表还在按新参数算金额，
-      而客户手里那份 Word / Excel 是旧的——这件事只能明说。 */
-  quoteStale: boolean;
+  /** 面板里的「改这条」把现成的话填进 composer 并聚焦，真正的修改交给对话流。 */
+  onDraftMessage: (text: string) => void;
+  /** 打开计价条目预览（费用明细）。它是个弹窗，不是常驻 tab。 */
+  onPreviewCost: () => void;
 };
 
 const stageLabels: Record<TumorStage, string> = {
@@ -51,13 +37,23 @@ const stageLabels: Record<TumorStage, string> = {
   generated: "报价已生成",
 };
 
-/* 三个 tab，不多给。DMPK 那边的「输入材料 / 缺失项 / 计算依据 / 审核记录」
-   都是它自己流程里长出来的东西；肿瘤报价现在没有那几步，先摆上一个
-   永远是空态的 tab，只会让人每次都去点一下确认它还是空的。 */
+/* 四个 tab，跟 DMPK 同一套：参数收集 / 报价规则 / 处理过程 / 报价结果。
+   DMPK 还有的「输入材料 / 缺失项 / 计算依据 / 审核记录」是它送审链路上
+   长出来的，肿瘤报价现在没有那几步——先摆上一个永远空态的 tab，
+   只会让人每次都去点一下确认它还是空的。
+
+   这里**没有**「当前报价表」和「修改日志」两个 tab，是有意的：
+   - 金额怎么算出来的，属于「本次命中了哪些规则」，看规则面板；
+     要看逐条金额，规则面板上那颗「查看费用明细」开弹窗——
+     它是随手一看的东西，不值得长期占一个 tab。
+   - 参数改动本身在对话流里就是一条条消息，滚上去就能看到谁在哪一步改了什么。
+     再开一个 tab 抄一遍，等于同一件事记两处，而两处迟早对不上。 */
 const tumorInspectorPanelRegistry: InspectorPanelRegistry<TumorInspectorContext> = [
   {
     id: "parameters",
-    label: "参数台账",
+    /* 跟 DMPK 同名。同一件事在两条业务线上叫两个名字（「参数收集」/「参数台账」），
+       人会以为它们是两个东西。 */
+    label: "参数收集",
     icon: SlidersHorizontal,
     primary: true,
     defaultWhen: (context) => context.stage !== "generated",
@@ -74,24 +70,17 @@ const tumorInspectorPanelRegistry: InspectorPanelRegistry<TumorInspectorContext>
     ),
   },
   {
-    /* 「当前报价表」。参数怎么变成钱，不该只有点开弹窗那一条路——
-       改一个参数想立刻看金额动没动，弹窗开一次关一次太重。 */
-    id: "quote",
-    label: "当前报价表",
-    icon: Table2,
+    /* 「报价规则」。跟 DMPK 是同一张面板、同一套分层：
+       上半段「本次命中的规则」有实体、可改，改动走对话流；
+       下半段「全局规则」是素文本行，只提供去后台的路径。 */
+    id: "rules",
+    label: "报价规则",
+    icon: ShieldCheck,
+    primary: true,
     expandable: true,
-    state: (context) => (context.fields.some((field) => field.required && !field.value) ? "empty" : "populated"),
-    emptyMessage: "参数补全后这里出现计价条目",
-    render: (context) => <QuoteTablePanel fields={context.fields} stale={context.quoteStale} />,
-  },
-  {
-    /* 「修改日志」。报价改过几轮、动过哪些参数，一个月后回来还得查得到。 */
-    id: "changelog",
-    label: "修改日志",
-    icon: History,
-    state: (context) => (context.changeLog.length ? "populated" : "empty"),
-    emptyMessage: "参数还没有改动记录",
-    render: (context) => <ChangeLogPanel entries={context.changeLog} />,
+    available: (context) => context.stage !== "idle",
+    state: () => "populated",
+    render: (context) => <RulesPanel context={context} />,
   },
   {
     id: "process",
@@ -118,63 +107,135 @@ export function getTumorInspectorPanels(context: TumorInspectorContext): Resolve
 }
 
 /**
- * 当前报价表。
+ * 本次命中的规则。
  *
- * 金额是**从参数算出来的**，不是一张静态表——改了组数回来看金额没动，
- * 人就再也不会信右边那个台账。计算口径跟报价前预览共用 `tumorPriceLines`，
+ * **从参数算出来，不是一张静态表**——摆一张跟参数无关的规则清单，
+ * 等于把「参数决定价格」这套说法自己拆了：人改了品系回来一看规则没动，
+ * 就再也不会信这一栏。计价口径跟报价前预览共用 `tumorPriceLines`，
  * 两处不能各算各的。
+ *
+ * `draft` 是点「改这条」时填进 composer 的现成句子——面板不直接改值，
+ * 它把话递到手边，真正的修改仍然走对话流已有的确认路径。这条跟 DMPK 一致：
+ * 右栏是「看」和「起个头」，不是第二个编辑器。
  */
-function QuoteTablePanel({ fields, stale }: { fields: TumorField[]; stale: boolean }) {
-  const { lines, subtotal, management, total } = tumorPriceLines(fields);
+function matchedTumorRules(fields: TumorField[]) {
+  const valueOf = (id: string) => fields.find((field) => field.id === id)?.value ?? "";
+  const { lines } = tumorPriceLines(fields);
+  const amountOf = (id: string) => lines.find((line) => line.id === id)?.amount ?? 0;
   const money = (value: number) => `¥${value.toLocaleString()}`;
-  return (
-    <div className="dmpkInspectorList tumorQuoteTable">
-      <div className="dmpkInspectorIntro"><strong>计价条目</strong><span>演示单价，随参数变化</span></div>
-      {/* 这张表跟着参数走，已经发出去的文件不会。两者一分家就得说出来，
-          否则人对着一个已经变了的金额，以为手里那份文件也是这个数。 */}
-      {stale ? <p className="tumorQuoteStale">参数在上一版报价之后改过，下面是按新参数算的金额；已生成的 Word / Excel 仍是旧版。</p> : null}
-      {lines.map((line) => (
-        <div className="tumorQuoteLine" key={line.id}>
-          <div><strong>{line.item}</strong><small>{line.detail}</small></div>
-          <span>{line.qty}</span>
-          <b>{money(line.amount)}</b>
-        </div>
-      ))}
-      <div className="tumorQuoteSum">
-        <div><span>小计</span><b>{money(subtotal)}</b></div>
-        <div><span>管理费 · Word 口径 30%</span><b>{money(management)}</b></div>
-        <div className="isTotal"><span>合计</span><b>{money(total)}</b></div>
-      </div>
-    </div>
-  );
+
+  return [
+    {
+      id: "animal",
+      label: "动物与饲养单价",
+      meta: `${valueOf("strain") || "待定品系"} · ${money(amountOf("animal"))}`,
+      draft: "把本次报价的动物使用费改为 ",
+    },
+    {
+      id: "model",
+      label: "模型建立与接种",
+      meta: `${valueOf("model") || "待定模型"} · ${money(amountOf("model"))}`,
+      draft: "把本次报价的模型建立费改为 ",
+    },
+    {
+      id: "dosing",
+      label: "给药与在体监测",
+      meta: `${valueOf("cycle") || "待定周期"} · ${money(amountOf("dosing"))}`,
+      draft: "把本次报价的给药与监测费改为 ",
+    },
+    {
+      id: "readout",
+      label: "检测指标单价",
+      meta: `¥2,800 / 项 · ${money(amountOf("readout"))}`,
+      draft: "把本次报价的检测指标单价改为 ",
+    },
+    {
+      id: "template",
+      label: "肿瘤报价模板",
+      meta: "Word 30% · Excel 15% 管理费",
+      draft: "把本次报价的管理费比例改为 ",
+    },
+  ];
 }
 
+/* 与后台报价管理里的配置一一对应。肿瘤线的规则集还没在后台建档，
+   所以这几行指向的是同一个入口——**不为一个还不存在的页面编一个链接**。 */
+const tumorGlobalRuleSources = [
+  { label: "标准价格", meta: "动物、模型、检测指标单价" },
+  { label: "计价规则", meta: "分组数、周期与组合折算" },
+  { label: "报价字段", meta: "参数字典 · 模型与品系词表" },
+  { label: "报价模板", meta: "肿瘤药效报价模板" },
+];
+
 /**
- * 修改日志。
+ * 报价规则面板。跟 DMPK 同一张，分两段：
  *
- * 记的是**事件**，不是当前值——「品系从 BALB/c nude 变成 CB-17 SCID」这件事，
- * 从最终状态里反推不出来。级联清空也算一次改动，否则日志里会出现一个
- * 凭空消失的取值。
+ * 上半段「本次命中的规则」**有实体**——卡片、边框、按钮，因为它可改；
+ * 下半段「全局规则」**没有实体**——素文本行，因为它在这儿只能看，改要去后台。
+ * 两段长得不一样，是为了让「哪些能在这儿改」不用读文字就看得出来。
  */
-function ChangeLogPanel({ entries }: { entries: TumorChangeEntry[] }) {
-  const byLabel = fieldByLabel();
+function RulesPanel({ context }: { context: TumorInspectorContext }) {
+  const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
+  const rules = matchedTumorRules(context.fields);
+
+  const goToBackOffice = () => {
+    window.location.href = "/?view=quotation-management";
+  };
+
   return (
-    <div className="dmpkInspectorList tumorChangeLog">
-      <div className="dmpkInspectorIntro"><strong>参数改动</strong><span>共 {entries.length} 条</span></div>
-      {/* 新的在上。翻日志的人找的多半是「最近一次改了什么」。 */}
-      {[...entries].reverse().map((entry) => {
-        const field = byLabel.get(entry.label);
-        return (
-          <div className="tumorChangeRow" key={entry.id}>
-            <div className="tumorChangeHead"><strong>{entry.label}</strong><small>{entry.at}</small></div>
-            <div className="tumorChangeDiff">
-              <s>{formatParamValue(field, entry.from) || "空"}</s>
-              <ArrowRight size={11} aria-hidden="true" />
-              <b>{formatParamValue(field, entry.to) || "已清空"}</b>
+    <div className="dmpkInspectorList ruleDisclosure">
+      <div className="dmpkInspectorIntro">
+        <strong>本次报价</strong>
+        <span>{hasQuoteDraft ? "以下规则只作用于这一份报价" : "参数补齐后开始匹配"}</span>
+      </div>
+
+      <section className="ruleScopeCard">
+        <header>
+          <strong>本次命中的规则</strong>
+          <small>仅影响这份报价</small>
+        </header>
+        {rules.map((rule) => (
+          <div className="ruleScopeRow" key={rule.id}>
+            <div>
+              <strong>{rule.label}</strong>
+              <small>{rule.meta}</small>
             </div>
+            <button type="button" disabled={!hasQuoteDraft} onClick={() => context.onDraftMessage(rule.draft)}>
+              <Edit3 size={13} />改这条
+            </button>
           </div>
-        );
-      })}
+        ))}
+        <div className="ruleScopeActions">
+          {/* 费用明细是弹窗不是 tab：它是「算出来多少」的一次核对，
+              看完就关。常驻一个 tab 的代价是每次切标签都要跨过它。 */}
+          <button type="button" disabled={!hasQuoteDraft} onClick={context.onPreviewCost}>
+            <Calculator size={14} />查看费用明细
+          </button>
+          <button className="primary" type="button" disabled={!hasQuoteDraft} onClick={() => context.onDraftMessage("我想调整本次报价：")}>
+            <Sparkles size={14} />对话编辑
+          </button>
+        </div>
+        <p className="ruleScopeNote">改动以对话形式提交，确认后只作用于当前报价并保留记录。</p>
+      </section>
+
+      <div className="ruleDisclosureDivider" />
+
+      <div className="dmpkInspectorIntro">
+        <strong>全局规则</strong>
+        <span>只读 · 影响后续所有肿瘤药效报价</span>
+      </div>
+      <div className="ruleGlobalList">
+        {tumorGlobalRuleSources.map((source) => (
+          <button type="button" className="ruleGlobalRow" key={source.label} onClick={goToBackOffice}>
+            <span>
+              <strong>{source.label}</strong>
+              <small>{source.meta}</small>
+            </span>
+            <ArrowUpRight size={14} />
+          </button>
+        ))}
+      </div>
+      <p className="ruleGlobalNote">全局规则需要在报价管理后台试算并发布，前台不提供直接修改。</p>
     </div>
   );
 }
