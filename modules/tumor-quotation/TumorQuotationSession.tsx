@@ -83,6 +83,11 @@ export default function TumorQuotationSession({
   const [panelHintIds, setPanelHintIds] = useState<string[]>([]);
   const [columnPanelIds, setColumnPanelIds] = useState<string[]>([]);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  /* 参数卡展开没有。**必须由会话持有**：卡片只在 collecting 时渲染，
+     而每发一轮参数都要经过 thinking，卡会卸载再挂载——状态放卡里的话，
+     每一轮都被重新折起来，人得反复点开同一张卡。
+     默认折叠：这张卡是数字同事说「还缺 N 项」时自己弹出来的，不是人要求的。 */
+  const [paramsOpen, setParamsOpen] = useState(false);
   const [composerAttention, setComposerAttention] = useState(false);
   /* 这一单出过报价没有。
      `stage` 记不住：点右栏铅笔改一项，stage 就退回 collecting，
@@ -411,6 +416,8 @@ export default function TumorQuotationSession({
           activeGroup={activeGroup}
           fields={formFields}
           allFields={fields}
+          paramsOpen={paramsOpen}
+          onParamsOpenChange={setParamsOpen}
           mode={editingField ? "edit" : "collect"}
           remainingCount={composerPending.length}
           draftTabs={draftTabs}

@@ -248,7 +248,7 @@
 .quotationChangeProposal footer button.primary {
   border-color: var(--ink);
   background: var(--ink);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .quotationIncomingPrompt > div {

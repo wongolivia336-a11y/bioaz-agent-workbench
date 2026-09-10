@@ -313,12 +313,12 @@ button {
   height: 44px;
   padding: 0 24px;
   background: var(--ink);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .primaryButton:disabled {
   background: #9ca3af;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   cursor: not-allowed;
 }
 
@@ -2052,7 +2052,7 @@ button {
   border: 0;
   border-radius: var(--bioaz-radius-control);
   background: var(--ink);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .sendIconButton:disabled {
@@ -2129,7 +2129,7 @@ button {
   border: 1px solid var(--ink);
   border-radius: var(--bioaz-radius-full);
   background: var(--ink);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   padding: 0 14px;
   font-size: 13px;
   font-weight: 700;
@@ -4279,7 +4279,7 @@ button {
   border: 0;
   border-radius: 15px;
   background: var(--ink);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .sendIconButton:disabled {
@@ -5486,7 +5486,7 @@ button {
   border-radius: 50%;
   background: #17181c;
   box-shadow: 0 10px 28px rgba(16, 24, 40, 0.18);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   transition: transform var(--bioaz-motion-standard) ease, box-shadow var(--bioaz-motion-standard) ease;
 }
 
@@ -5660,7 +5660,7 @@ button {
   border: 0;
   border-radius: 50%;
   background: #17181c;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .workspaceAssistantComposer button:disabled {
@@ -6395,7 +6395,7 @@ button {
   border: 0;
   border-radius: 50%;
   background: #17181c;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 /* Knowledge library: one dense searchable file view, separated by purpose. */
@@ -7053,10 +7053,9 @@ button {
   white-space: nowrap;
 }
 
-/* 整张卡可点开全屏,所以光标要说实话。选项按钮自己是 button,不受影响。 */
-.parameterTaskCard.canExpand {
-  cursor: pointer;
-}
+/* 「整张卡可点开全屏」那条撤了：卡片现在是三级（折叠 → 展开 → 全屏），
+   点卡片直接跳到全屏会把中间那一级吞掉。开关移到卡头上，
+   光标和焦点环见 iteration.css 里 [role="button"] 那条。 */
 
 .parameterExpandButton {
   display: grid;
@@ -7611,7 +7610,7 @@ button {
   transition: background var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
 .ticketStatusFilter button:hover { border-color: #cfd6e2; background: var(--bioaz-surface-subtle); }
-.ticketStatusFilter button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
+.ticketStatusFilter button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: var(--bioaz-text-inverse); }
 .ticketStatusFilter button i { font-style: normal; font-size: 11px; opacity: .8; }
 
 .ticketsRow { cursor: pointer; }
@@ -7765,7 +7764,7 @@ button {
 .quoteNoteCurrent { color: var(--muted); font-size: 11.5px; }
 .quoteNoteCats { display: flex; flex-wrap: wrap; gap: 5px; }
 .quoteNoteCats button { min-height: 26px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface); padding: 0 9px; color: var(--body); font-size: 11.5px; cursor: pointer; }
-.quoteNoteCats button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: #fff; }
+.quoteNoteCats button.active { border-color: transparent; background: var(--bioaz-action-primary, #17191e); color: var(--bioaz-text-inverse); }
 /* 自定义分类名。跟「现值 → 建议值」同一种排法:左边一个说明,右边一个输入框。 */
 .quoteNoteCustom { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 7px; }
 .quoteNoteCustom > span { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
@@ -7924,7 +7923,7 @@ button {
 }
 .ticketStageLabel { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
 
-.ticketStageBar li.is-done .ticketStageDot { border-color: transparent; background: var(--bioaz-agent-accent, #5c60b8); color: #fff; }
+.ticketStageBar li.is-done .ticketStageDot { border-color: transparent; background: var(--bioaz-agent-accent, #5c60b8); color: var(--bioaz-text-inverse); }
 .ticketStageBar li.is-done .ticketStageLabel { color: var(--body); }
 .ticketStageBar li.is-current .ticketStageDot { border-color: var(--bioaz-agent-accent, #5c60b8); color: var(--bioaz-agent-accent, #5c60b8); box-shadow: 0 0 0 3px var(--bioaz-agent-accent-soft, #f3f3fb); }
 .ticketStageBar li.is-current .ticketStageLabel { color: var(--ink); font-weight: 600; }
@@ -7992,7 +7991,7 @@ button {
    不该非得跨到右栏才知道。 */
 .quoteRowBubble {
   display: inline-grid; width: 16px; height: 16px; margin-left: 6px; place-items: center;
-  border-radius: var(--bioaz-radius-full); background: var(--sidebar-dot-attention, #9a7a3a); color: #fff;
+  border-radius: var(--bioaz-radius-full); background: var(--sidebar-dot-attention, #9a7a3a); color: var(--bioaz-text-inverse);
   vertical-align: middle;
 }
 .quoteSheetGrid tr.is-advisory .quoteRowBubble,
@@ -8019,7 +8018,7 @@ button {
 .quoteNoteRow textarea:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
 .quoteNoteSend {
   display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool);
-  background: var(--bioaz-action-primary, #17191e); color: #fff; cursor: pointer;
+  background: var(--bioaz-action-primary, #17191e); color: var(--bioaz-text-inverse); cursor: pointer;
 }
 .quoteNoteSend:disabled { background: var(--bioaz-border-strong, #cfd6e2); cursor: default; }
 .quoteNoteKind { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -8523,7 +8522,7 @@ button {
   display: inline-flex; min-height: 30px; align-items: center; gap: 6px;
   border: 1px solid transparent; border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-action-primary, #17191e); padding: 0 12px;
-  color: #fff; font-size: 12.5px; cursor: pointer;
+  color: var(--bioaz-text-inverse); font-size: 12.5px; cursor: pointer;
   transition: background var(--bioaz-motion-standard) ease;
 }
 .dmpkReworkNotice > footer button:hover { background: #2b2f37; }
@@ -8618,9 +8617,9 @@ button {
 .reworkAction.isPrimary {
   border-color: transparent;
   background: var(--bioaz-action-primary, #17191e);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
-.reworkAction.isPrimary:hover:not(:disabled) { background: #2b2f37; color: #fff; }
+.reworkAction.isPrimary:hover:not(:disabled) { background: #2b2f37; color: var(--bioaz-text-inverse); }
 .reworkAction:disabled { border-color: var(--line); background: var(--soft, #f7f8fb); color: var(--muted); cursor: not-allowed; }
 .reworkAction.isGhost { min-height: 26px; border-color: transparent; background: transparent; color: var(--muted); padding: 0 8px; }
 .reworkAction.isGhost:hover { background: var(--soft, #f7f8fb); color: var(--ink); }

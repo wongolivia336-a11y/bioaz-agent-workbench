@@ -429,7 +429,7 @@ textarea {
   border: 0;
   border-radius: 50%;
   background: #17181c;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .newTaskComposer > button:disabled {
@@ -1282,7 +1282,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
 .dmpkRuleSentencePreview { flex-wrap: wrap; }
 .dmpkRuleSentencePreview span,.dmpkRuleSentencePreview b,.dmpkRuleSentencePreview strong { border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 7px 9px; font-size: 12px; }
 .dmpkEditProposalCard > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.dmpkEditProposalCard > footer button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ink); border-radius: var(--bioaz-radius-tool); background: var(--ink); color: #fff; padding: 8px 11px; font-weight: 650; }
+.dmpkEditProposalCard > footer button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ink); border-radius: var(--bioaz-radius-tool); background: var(--ink); color: var(--bioaz-text-inverse); padding: 8px 11px; font-weight: 650; }
 
 .persistentParameterBody {
   min-height: 0;
@@ -1594,7 +1594,7 @@ button.inspectorParameterField:hover { background: var(--surface); }
   align-items: center;
 }
 .knowledgeFileCell.hasSelection { grid-template-columns: 18px minmax(0, 1fr); gap: 7px; }
-.deliveryToggle { display: grid; box-sizing: border-box; width: 16px; min-width: 16px; height: 16px; place-items: center; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--bioaz-surface); color: #fff; padding: 0; line-height: 0; }
+.deliveryToggle { display: grid; box-sizing: border-box; width: 16px; min-width: 16px; height: 16px; place-items: center; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--bioaz-surface); color: var(--bioaz-text-inverse); padding: 0; line-height: 0; }
 .deliveryToggle[aria-pressed="true"] { border-color: var(--ink-soft); background: var(--ink-soft); }
 .deliveryToggle svg { display: block; width: 12px; height: 12px; margin: 0; }
 .projectFileLanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; }
@@ -2197,6 +2197,42 @@ button.inspectorParameterField:hover { background: var(--surface); }
 }
 
 
+/* ===== 参数卡的三级：折叠 → 展开 → 全屏 =====
+   每一级都得自己按一下。原来点卡片直接开全屏，把中间那一级跳过了，
+   而中间那级（就地填当前这一组）才是常用的。 */
+
+/* 卡头是开关，光标要说实话。 */
+.parameterTaskCard > .warningDecisionHeader[role="button"] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.parameterTaskCard > .warningDecisionHeader[role="button"]:focus-visible {
+  outline: 2px solid var(--bioaz-agent-focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--bioaz-radius-tool);
+}
+
+/* 折叠态只剩卡头，卡自己的 18px 行距就没有兄弟可分——留着会在
+   卡头底下多垫一条空白，看着像内容没加载出来。 */
+.parameterTaskCard.isCollapsed {
+  gap: 0;
+}
+
+.parameterCardChevron {
+  flex: none;
+  color: var(--bioaz-text-tertiary);
+  transition: transform var(--bioaz-motion-standard) var(--bioaz-ease-standard);
+}
+
+.parameterTaskCard.isExpanded .parameterCardChevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parameterCardChevron { transition: none; }
+}
+
 .parameterTaskCard .parameterPager {
   gap: 10px;
   margin-top: 2px;
@@ -2614,7 +2650,7 @@ body > main.dmpkShell::after { content: none; }
 .ambientComposerSend { display: grid; width: 42px; height: 42px; place-items: center; border: 0; border-radius: var(--bioaz-radius-control); }
 .ambientComposerAdd { background: rgba(248, 250, 252, .72); color: #64748b; cursor: pointer; }
 .ambientComposerAdd input { display: none; }
-.ambientComposerSend { background: #172554; color: #fff; cursor: pointer; transition: opacity var(--bioaz-motion-standard) ease, background-color var(--bioaz-motion-standard) ease; }
+.ambientComposerSend { background: #172554; color: var(--bioaz-text-inverse); cursor: pointer; transition: opacity var(--bioaz-motion-standard) ease, background-color var(--bioaz-motion-standard) ease; }
 .ambientComposerSend:disabled { background: #cbd5e1; opacity: .75; cursor: default; }
 .ambientComposerSend:not(:disabled):hover { background: #1e1b4b; }
 
@@ -2883,7 +2919,7 @@ body > main.dmpkShell::after { content: none; }
 .ruleActions button.primary {
   border-color: #111318;
   background: #111318;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .fieldTree,
@@ -3259,12 +3295,12 @@ body > main.dmpkShell::after { content: none; }
 .primaryButton {
   border-color: transparent;
   background: var(--primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   box-shadow: none;
   transition: background-color var(--bioaz-motion-standard) ease, opacity var(--bioaz-motion-standard) ease;
 }
 .primaryButton:not(:disabled):hover { background: var(--primary-hover); }
-.primaryButton:disabled { background: #c9ced8; color: #fff; opacity: 1; }
+.primaryButton:disabled { background: #c9ced8; color: var(--bioaz-text-inverse); opacity: 1; }
 
 .secondaryButton,
 .iconButton,

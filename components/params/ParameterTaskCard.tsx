@@ -1,6 +1,6 @@
 "use client";
 
-import { Maximize2 } from "lucide-react";
+import { ChevronDown, Maximize2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PreviewModal } from "../ui/PreviewModal";
 import { ScrollTopButton } from "../ui/ScrollTopButton";
@@ -27,6 +27,8 @@ export function ParameterTaskCard({
   draftTabs,
   mode,
   remainingCount,
+  open,
+  onOpenChange,
   onSelect,
   eyebrow = "参数补全",
   collectTitle = "请补全报价参数",
@@ -47,11 +49,27 @@ export function ParameterTaskCard({
    */
   remainingCount?: number;
   onSelect: (field: ParamField, value: string) => void;
+  /**
+   * 展开没有。不传就自己管（默认折叠）。
+   *
+   * **会话最好传。** 卡片在 `stage === "collecting"` 时才渲染，而每发一轮
+   * 参数都会经过 thinking——卡就卸载再挂载一次，自己管的话每一轮都被重新
+   * 折起来，人得反复点开。展开是「这个人现在想填参数」，那是会话级的事实。
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   eyebrow?: string;
   collectTitle?: string;
   modalTitle?: string;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
+  const [selfOpen, setSelfOpen] = useState(false);
+  /* 单项修改不折叠：那一张卡是**人点了右栏铅笔之后**出现的，他已经说了要改
+     哪一项。再让他点一下才看得见，等于问他「你真的要改吗」。
+     折叠只对「系统主动弹出来的那张」成立。 */
+  const toggleable = mode === "collect";
+  const expanded = toggleable ? (open ?? selfOpen) : true;
+  const setExpanded = onOpenChange ?? setSelfOpen;
   const [page, setPage] = useState(() => Math.max(0, groups.findIndex((group) => group.id === activeGroup)));
   const safePage = Math.min(page, Math.max(0, groups.length - 1));
   const pageGroup = groups[safePage];
@@ -118,17 +136,36 @@ export function ParameterTaskCard({
 
   return (
     <>
-      <section
-        className={`warningDecision parameterTaskCard ${mode === "collect" ? "canExpand" : ""}`}
-        /* 整张卡的空白处都能展开，不只是那颗图标——参数一多，人会先去点卡片
-           本身。选项、分页 tab、上一页这些自己有事做的元素要放行，否则选一个
-           值会顺手把弹窗也开了。 */
-        onClick={mode === "collect" ? (event) => {
-          if ((event.target as HTMLElement).closest("button, input, select, textarea, a, label")) return;
-          setFullscreen(true);
-        } : undefined}
-      >
-        <header className="warningDecisionHeader">
+      <section className={`warningDecision parameterTaskCard ${expanded ? "isExpanded" : "isCollapsed"}`}>
+        {/* 卡头就是开关。
+            ----------------------------------------------------------------
+            整张卡的空白处原来点一下直接开全屏，跳过了「展开」这一级——
+            于是这张卡只有两个状态：铺开、和铺开之上再盖一张全屏。
+            现在是三级，一级比一级重，每一级都得自己按一下：
+
+              折叠（默认）→ 展开（就地填当前这一组）→ 全屏（一屏看全）
+
+            默认折叠是因为**这张卡不是人要求出现的**——是数字同事说「还缺 N 项」
+            时自己弹出来的。默认铺开等于每轮对话都往上顶掉半屏聊天记录，
+            而人这时候多半只是想看看它说缺什么。缺几项写在卡头上，
+            折叠态就已经把话说完了。 */}
+        <header
+          className="warningDecisionHeader"
+          role={toggleable ? "button" : undefined}
+          tabIndex={toggleable ? 0 : undefined}
+          aria-expanded={toggleable ? expanded : undefined}
+          onClick={toggleable ? (event) => {
+            // 计数右边那颗全屏键自己有事做，别顺手把卡折起来
+            if ((event.target as HTMLElement).closest("button")) return;
+            setExpanded(!expanded);
+          } : undefined}
+          onKeyDown={toggleable ? (event) => {
+            if (event.target !== event.currentTarget) return;
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            setExpanded(!expanded);
+          } : undefined}
+        >
           <div>
             <span>{eyebrow}</span>
             <strong>{mode === "edit" ? `修改${fields[0]?.label ?? "参数"}` : collectTitle}</strong>
@@ -138,27 +175,37 @@ export function ParameterTaskCard({
               一块比标题还高的方块，把标题压偏。 */}
           <div className="parameterCardHeadActions">
             <small>{remaining ? `还需填写 ${remaining} 项` : "可继续调整，或直接发送"}</small>
-            {/* 分页是为了在这个高度里放得下，不是因为这些参数该被分批问。
-                全屏的价值在于一屏看全，哪项都能先填。 */}
-            {mode === "collect" ? <button className="parameterExpandButton" type="button" onClick={() => setFullscreen(true)} aria-label="全屏填写全部参数" title="全屏填写全部参数"><Maximize2 size={15} /></button> : null}
+            {/* 全屏只在展开之后才给。折叠态放一颗「一屏看全」，是让人从
+                一个什么都没看见的状态直接跳到最重的那一级——中间那级
+                （就地填当前这一组）反而被跳过了，而它才是常用的。 */}
+            {toggleable && expanded ? (
+              <button className="parameterExpandButton" type="button" onClick={() => setFullscreen(true)} aria-label="全屏填写全部参数" title="全屏填写全部参数"><Maximize2 size={15} /></button>
+            ) : null}
+            {toggleable ? (
+              <ChevronDown className="parameterCardChevron" size={15} aria-hidden="true" />
+            ) : null}
           </div>
         </header>
-        {mode === "collect" ? (
-          <div className="parameterPages">
-            {groups.map((group, index) => (
-              <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > maxReachablePage} onClick={() => setPage(index)}>{group.title}</button>
-            ))}
-          </div>
+        {expanded ? (
+          <>
+            {mode === "collect" ? (
+              <div className="parameterPages">
+                {groups.map((group, index) => (
+                  <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > maxReachablePage} onClick={() => setPage(index)}>{group.title}</button>
+                ))}
+              </div>
+            ) : null}
+            <div className="warningDecisionList">
+              {pageFields.length
+                ? pageFields.map((field, index) => row(field, index + 1, (value) => selectValue(field, value)))
+                : <p className="emptyPageNote">{pageGroup?.title}参数已齐全，可切换下一页继续补全。</p>}
+            </div>
+            <div className="parameterPager">
+              <p className="responsibilityNote">{remaining ? `还需填写 ${remaining} 项` : "可继续调整，或直接发送"}</p>
+              {mode === "collect" && safePage > 0 ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))}>上一页</button></div> : null}
+            </div>
+          </>
         ) : null}
-        <div className="warningDecisionList">
-          {pageFields.length
-            ? pageFields.map((field, index) => row(field, index + 1, (value) => selectValue(field, value)))
-            : <p className="emptyPageNote">{pageGroup?.title}参数已齐全，可切换下一页继续补全。</p>}
-        </div>
-        <div className="parameterPager">
-          <p className="responsibilityNote">{remaining ? `还需填写 ${remaining} 项` : "可继续调整，或直接发送"}</p>
-          {mode === "collect" && safePage > 0 ? <div><button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))}>上一页</button></div> : null}
-        </div>
       </section>
       {modal}
     </>

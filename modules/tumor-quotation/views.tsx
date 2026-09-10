@@ -185,6 +185,7 @@ export function TumorQuotationPreviewModal({ fields, title, onClose }: { fields:
 
 export function TumorComposer({
   attention, stage, text, setText, activeGroup, fields, allFields, mode, remainingCount, draftTabs,
+  paramsOpen, onParamsOpenChange,
   onSelect, onRemove, onSend, onPreview, onGenerate, disabled, projectName,
   attachments, onAttachmentsChange, activeCoworkerId, notice,
 }: {
@@ -196,6 +197,9 @@ export function TumorComposer({
   fields: TumorField[];
   allFields: TumorField[];
   mode: "collect" | "edit";
+  /** 参数卡展开没有。会话持有它——卡片在 thinking 那一拍会卸载重挂 */
+  paramsOpen?: boolean;
+  onParamsOpenChange?: (open: boolean) => void;
   /** 还欠着输入的项数。跟卡里列出来的行数不是一回事——多选和重复行填过之后
       仍然留在卡上让人接着改，但它们已经不欠了。 */
   remainingCount?: number;
@@ -234,6 +238,8 @@ export function TumorComposer({
           draftTabs={draftTabs}
           mode={mode}
           remainingCount={remainingCount}
+          open={paramsOpen}
+          onOpenChange={onParamsOpenChange}
           onSelect={onSelect}
         />
       ) : null}

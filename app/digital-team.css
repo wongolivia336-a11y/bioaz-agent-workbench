@@ -618,7 +618,7 @@
   border-color: var(--ink);
   background: var(--ink);
   padding: 11px 14px;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   font-weight: 750;
 }
 
@@ -910,7 +910,7 @@
 }
 .digitalFilterChip.active {
   background: var(--bioaz-text-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   font-weight: 500;
 }
 

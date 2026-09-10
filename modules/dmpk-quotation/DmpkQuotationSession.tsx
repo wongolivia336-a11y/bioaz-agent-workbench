@@ -129,6 +129,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   visiblePanelIdsRef.current = visiblePanelIds;
   const [parametersExpanded, setParametersExpanded] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  /* 参数卡展开没有。**必须由会话持有**：卡片只在 collecting 时渲染，
+     而每发一轮参数都要经过 thinking，卡会卸载再挂载——状态放卡里的话，
+     每一轮都被重新折起来，人得反复点开同一张卡。
+     默认折叠：这张卡是数字同事说「还缺 N 项」时自己弹出来的，不是人要求的。 */
+  const [paramsOpen, setParamsOpen] = useState(false);
   const [conversationEditing, setConversationEditing] = useState(false);
   const [editProposal, setEditProposal] = useState<DmpkEditProposal | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
@@ -598,7 +603,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : (
           <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         )}
-        <DmpkComposer unresolvedNotes={reworkNotes
+        <DmpkComposer paramsOpen={paramsOpen} onParamsOpenChange={setParamsOpen} unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
           .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} /* 这张卡在「这一轮改完」之前一直在。
              以前条件里还有 !reworkCanvasSeen：画布看过一次它就永久退场，
@@ -662,6 +667,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
                 allFields={fields}
                 draftTabs={draftTabs}
                 mode={editingField ? "edit" : "collect"}
+                open={paramsOpen}
+                onOpenChange={setParamsOpen}
                 onSelect={addDraft}
               />
             ) : null}

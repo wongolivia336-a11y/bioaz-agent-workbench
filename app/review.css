@@ -147,9 +147,9 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .newTaskComposer textarea { color: var(--review-ink); line-height: 1.55; }
 .newTaskComposer textarea::placeholder { color: #9299a5; }
-.sendIconButton { background: var(--bioaz-action-primary); color: #fff; }
+.sendIconButton { background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); }
 .sendIconButton:hover:not(:disabled) { background: var(--bioaz-action-primary-hover); }
-.sendIconButton:disabled { background: #c9ced5; color: #fff; }
+.sendIconButton:disabled { background: #c9ced5; color: var(--bioaz-text-inverse); }
 
 /* Repeated work surfaces share one density and state grammar */
 :where(.rightPanelCard, .warningDecision, .artifactCard, .thinkingCard, .dispatchConfirmCard) {
@@ -157,9 +157,9 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: var(--review-radius-lg);
   box-shadow: none;
 }
-:where(.primaryButton, .compactPrimaryButton) { background: var(--bioaz-action-primary); border-color: #17191e; color: #fff; }
+:where(.primaryButton, .compactPrimaryButton) { background: var(--bioaz-action-primary); border-color: #17191e; color: var(--bioaz-text-inverse); }
 :where(.primaryButton, .compactPrimaryButton):hover:not(:disabled) { background: var(--bioaz-action-primary-hover); border-color: #050608; }
-:where(.primaryButton, .compactPrimaryButton):disabled { background: #c9ced5; border-color: #c9ced5; color: #fff; }
+:where(.primaryButton, .compactPrimaryButton):disabled { background: #c9ced5; border-color: #c9ced5; color: var(--bioaz-text-inverse); }
 :where(.secondaryButton, .iconButton, .artifactActionButton, .previewIconOnlyButton) { border-color: var(--review-line-strong); box-shadow: none; }
 :where(.secondaryButton, .iconButton, .artifactActionButton, .previewIconOnlyButton):hover { border-color: var(--review-line-strong); background: #f2f3f5; color: var(--review-ink); }
 .warningDecisionHeader > small, .requiredTag { border-color: var(--review-line); background: var(--review-surface-subtle); color: var(--review-muted); }
@@ -505,7 +505,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .ambientFileAssistant[data-expanded="true"] .ambientComposerFrame::before { animation: reviewAssistantEdgePass 1400ms var(--review-ease) 180ms both; }
 .ambientComposerFrame > * { z-index: 1; }
-.ambientComposerSend { background: var(--bioaz-action-primary); color: #fff; opacity: 1; }
+.ambientComposerSend { background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); opacity: 1; }
 .ambientComposerSend:not(:disabled):hover { background: var(--bioaz-action-primary-hover); }
 .ambientComposerSend:disabled { background: var(--bioaz-surface-active); color: #7b8491; opacity: 1; }
 @keyframes reviewAssistantEdgePass {
@@ -846,7 +846,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell :is(.decisionPrimary, .primaryButton, .validationStartButton):not(:disabled) {
   border-color: #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   box-shadow: none;
 }
 .tumor-reportModuleShell :is(.decisionPrimary, .primaryButton, .validationStartButton):hover:not(:disabled) {
@@ -911,7 +911,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tumor-reportModuleShell .tumorInspectorToggle.isActive:hover {
   border-color: var(--bioaz-agent-accent);
   background: var(--bioaz-agent-accent);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 /* 扫光层已撤除：它同时动 filter 与 mask-position，两者都无法交给合成器。
@@ -1332,7 +1332,7 @@ button { -webkit-tap-highlight-color: transparent; }
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle.isActive:hover {
   border-color: var(--bioaz-agent-accent);
   background: var(--bioaz-agent-accent);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle.suppressHover,
 :is(.tumor-reportModuleShell, .dmpk-quotationModuleShell) .tumorInspectorToggle.suppressHover:hover {
@@ -1732,7 +1732,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .topbarPrimarySlot .primaryButton.compact:hover {
   border-color: #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 .topbarPrimarySlot .primaryButton.compact:hover {
   border-color: #050608;
@@ -1750,7 +1750,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .knowledgeBaseView .projectLibraryActions .primaryButton {
   border-color: #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 .knowledgeBaseView .projectLibraryActions .primaryButton:hover {
   border-color: #050608;
@@ -2127,7 +2127,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .folderPinChoice[aria-pressed="true"] > span {
   border-color: var(--library-accent);
   background: var(--library-accent);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 .folderPinChoice > div {
   display: grid;
@@ -2288,7 +2288,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
   border-color: #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 .knowledgePreviewDialog .primaryButton:hover:not(:disabled) {
   border-color: #050608;
@@ -2567,7 +2567,7 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 18px;
   border: 1px solid var(--bioaz-border-strong);
   border-radius: var(--bioaz-radius-full);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   place-items: center;
 }
 .projectPlanStep.is-done .projectPlanStepMark {
@@ -2817,7 +2817,7 @@ button { -webkit-tap-highlight-color: transparent; }
   min-width: 14px;
   border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-agent-accent);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   font-size: 10px;
   font-weight: 600;
   line-height: 14px;
@@ -3289,7 +3289,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .kbPagination button.active {
   background: #101828;
   border-color: #101828;
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 /* Detail panel */
@@ -4548,7 +4548,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .confirmDialog > footer .primaryButton:hover:not(:disabled) {
   border: 1px solid #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 .confirmDialog > footer .primaryButton:hover:not(:disabled) {
   border-color: #050608;
@@ -4760,7 +4760,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 5px 9px;
 }
 .kbPagination button:hover:not(:disabled) { border-color: var(--bioaz-border-strong); color: var(--bioaz-text-primary); }
-.kbPagination button.active { border-color: #17191e; background: var(--bioaz-action-primary); color: #fff; }
+.kbPagination button.active { border-color: #17191e; background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); }
 .kbPagination button:disabled { color: var(--bioaz-text-disabled); cursor: not-allowed; }
 
 @media (max-width: 1100px) {
@@ -4815,7 +4815,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .kbDialog .primaryButton:not(:disabled) {
   border: 1px solid #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   box-shadow: none;
 }
 .knowledgeHubView .primaryButton:hover:not(:disabled),
@@ -5189,7 +5189,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .kbDialog > footer > .primaryButton {
   border-color: #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 .tumor-reportModuleShell .confirmDialog > footer > .primaryButton:hover:not(:disabled),
 .confirmDialog > footer > .primaryButton:hover:not(:disabled) {
@@ -5293,7 +5293,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .decisionPrimary:not(:disabled) {
   border-color: #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   box-shadow: none;
 }
 .dmpkShell .primaryButton:hover:not(:disabled),
@@ -5548,7 +5548,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpk-quotationModuleShell :is(.primaryButton, .decisionPrimary, .validationStartButton):not(:disabled) {
   border: 1px solid #17191e;
   background: var(--bioaz-action-primary);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
   box-shadow: none;
 }
 .dmpk-quotationModuleShell :is(.primaryButton, .decisionPrimary, .validationStartButton):hover:not(:disabled) {
@@ -7249,7 +7249,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .ruleScopeActions button.primary {
   border-color: transparent;
   background: var(--bioaz-agent-accent);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .ruleScopeActions button:disabled {
@@ -7596,7 +7596,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* 发送键属于 agent 界面，用 agent accent 不用 logo 蓝 */
 .floatingChatSend {
   background: var(--bioaz-agent-accent);
-  color: #fff;
+  color: var(--bioaz-text-inverse);
 }
 
 .floatingChatSend:hover:not(:disabled) {
