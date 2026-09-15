@@ -8745,3 +8745,81 @@ button {
   border: 0; background: transparent; padding: 0; color: var(--bioaz-agent-accent, #5c60b8);
   font-size: 12px; font-weight: 600; cursor: pointer;
 }
+
+/* ═══ 确认状态 ═════════════════════════════════════════════════════════
+   台账上只标「识别」——机器认出来、人还没点头的那几行。已确认的不标：
+   多数行都是确认过的，每行挂一枚等于什么都没说。 */
+.paramFieldStatus {
+  flex: none; border-radius: var(--bioaz-radius-full);
+  background: var(--soft, #f7f8fb); padding: 1px 7px;
+  color: var(--muted); font-size: 10.5px; font-style: normal; font-weight: 600; white-space: nowrap;
+}
+.paramConfirmAllButton {
+  flex: none; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface); padding: 4px 9px;
+  color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.paramConfirmAllButton:hover { border-color: var(--bioaz-agent-accent-border, #dcddf2); background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent, #5c60b8); }
+
+/* ═══ 报价明细 ═════════════════════════════════════════════════════════
+   按工作包分段，一行一项服务：范围与公式在小字，金额靠右；算不出的行
+   用状态 chip 顶替金额，原因写在算式那一行。 */
+.dmpkQuoteLines { gap: 10px; }
+.dmpkQuotePackage { display: grid; gap: 4px; }
+.dmpkQuotePackage > header {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding: 6px 2px 2px;
+}
+.dmpkQuotePackage > header strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
+.dmpkQuotePackage > header span { color: var(--body); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dmpkQuotePackage > header em { color: var(--muted); font-style: normal; }
+.dmpkQuotePackage ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.dmpkQuoteLine {
+  display: grid; gap: 4px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
+  padding: 8px 10px;
+}
+.dmpkQuoteLine:not(.is-priced) { border-style: dashed; background: var(--soft, #f7f8fb); }
+.dmpkQuoteLine.isManual { border-color: var(--bioaz-agent-accent-border, #dcddf2); }
+.dmpkQuoteLineHead { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; }
+.dmpkQuoteLineHead > div { display: grid; gap: 1px; min-width: 0; }
+.dmpkQuoteLineHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.dmpkQuoteLineHead small { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.dmpkQuoteLineHead > b { color: var(--ink); font-size: 12.5px; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dmpkQuoteLineStatus {
+  border-radius: var(--bioaz-radius-full); padding: 1px 7px;
+  font-size: 10.5px; font-style: normal; font-weight: 600; white-space: nowrap;
+  background: var(--soft, #f7f8fb); color: var(--muted);
+}
+.dmpkQuoteLineStatus.is-pending-confirm { background: rgba(154, 122, 58, .14); color: #7d6229; }
+.dmpkQuoteLineStatus.is-missing-param { background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkQuoteLineMath {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+  color: var(--body); font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.dmpkQuoteLineMath > small { flex-basis: 100%; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.dmpkQuoteLinePrice { display: inline-flex; align-items: baseline; gap: 5px; }
+.dmpkQuoteLinePrice b { color: var(--ink); font-weight: 600; }
+.dmpkQuoteLinePrice em {
+  border-radius: var(--bioaz-radius-full); background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 0 6px;
+  color: var(--bioaz-agent-accent, #5c60b8); font-size: 10.5px; font-style: normal; font-weight: 600;
+}
+.dmpkQuoteLinePrice s { color: var(--muted); }
+.dmpkQuoteLineMath input {
+  width: 92px; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface); padding: 3px 7px; color: var(--ink); font: inherit; font-size: 12px;
+}
+.dmpkQuoteLineActions { display: inline-flex; gap: 8px; margin-left: auto; }
+.dmpkQuoteLineActions button, .dmpkQuoteLineGo {
+  display: inline-flex; align-items: center; gap: 3px;
+  border: 0; background: transparent; padding: 0;
+  color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.dmpkQuoteLineMath > .dmpkQuoteLineGo { margin-left: auto; }
+.dmpkQuoteTotal {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  margin-top: 4px; border-top: 1px solid var(--line); padding: 10px 2px 2px;
+}
+.dmpkQuoteTotal > span { display: grid; gap: 1px; color: var(--body); font-size: 12.5px; font-weight: 600; }
+.dmpkQuoteTotal em { color: var(--muted); font-size: 11px; font-style: normal; font-weight: 400; }
+.dmpkQuoteTotal strong { color: var(--ink); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }

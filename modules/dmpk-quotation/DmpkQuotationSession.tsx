@@ -10,10 +10,12 @@ import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap"
 import { useStickToBottom } from "../../components/workbench-shell/useStickToBottom";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import { mergeParsePatches, parseSources, type ParseResult } from "../../lib/workbench/sources";
+import { formatCny, MANUAL_PRICE_BY, pricingSentence, summarizeLines, type ManualPrice } from "../../lib/workbench/quoteLines";
 import type { AgentModuleSessionProps } from "../types";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
 import { noteAnchorToField } from "./noteFieldMap";
 import { applyPendingToFields, dmpkSourceParsers } from "./parseFixtures";
+import { buildDmpkQuoteLines } from "./quoteLineFixtures";
 import {
   dmpkGroups,
   initialDmpkFields,
@@ -149,10 +151,24 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [liveParse, setLiveParse] = useState<{ text: string; runSteps: DmpkRunStep[] } | null>(null);
   /* 会话摘要生成过的话，交接卡的说明栏预填它。 */
   const [handoffNote, setHandoffNote] = useState("");
+  /* 确认状态（甲方 P0-2「转换确认模块」）。
+     ----------------------------------------------------------------------
+     文件里认出来的值和人确认过的值，在台账上原来长得一样——而这正是
+     「转换确认」要区分的：机器读出来的是**提议**，人点过头的才是**参数**。
+     两态就够：recognized（文件认的）/ confirmed（人经参数卡、铅笔或「确认」动作
+     落过的）。一句话里打出来的值是人自己说的，直接算 confirmed，不进这张表。 */
+  const [fieldStatus, setFieldStatus] = useState<Record<string, "recognized" | "confirmed">>({});
+  /* 临时调价（P0-2）：SD 手动单价按行 id 记在这里，压过价目表；价目表本身不动，
+     别的报价也看不见。行是从事实推出来的，重算就没了，所以手动价不能写在行上。 */
+  const [manualPrices, setManualPrices] = useState<Record<string, ManualPrice>>({});
   const initialRequestHandledRef = useRef(false);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
 
   const missingFields = useMemo(() => fields.filter((field) => field.required && !field.value), [fields]);
+  const recognizedFields = useMemo(() => fields.filter((field) => field.value && fieldStatus[field.id] === "recognized"), [fields, fieldStatus]);
+  /* 报价行从字段 + 来源推，每次渲染重算——它是账，不是状态。 */
+  const quoteLines = useMemo(() => buildDmpkQuoteLines(fields, sources), [fields, sources]);
+  const quoteSummary = useMemo(() => summarizeLines(quoteLines, manualPrices), [quoteLines, manualPrices]);
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
   const editingField = fields.find((field) => field.id === editingFieldId) ?? null;
   const composerFields = editingField ? [editingField].filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id)) : visibleCardFields;
@@ -365,7 +381,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       }, STEP_MS * index);
     });
     window.setTimeout(() => {
-      const patch = { ...parseDmpkRequest(text), ...mergeParsePatches(results) };
+      const filePatch = mergeParsePatches(results);
+      const patch = { ...parseDmpkRequest(text), ...filePatch };
       const pending = results.flatMap((result) => result.pending);
       const nextFields = applyPendingToFields(
         fields.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field),
@@ -376,9 +393,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const confirmCount = pending.filter((item) => item.kind === "confirm").length;
       const catalogCount = pending.filter((item) => item.kind === "catalog").length;
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
-      setSources((current) => [...current, ...results]);
+      const nextSources = [...sources, ...results];
+      setSources(nextSources);
       setLiveParse(null);
       setFields(nextFields);
+      /* 文件认出来的记「识别」；人已经确认过的那格不退回去——
+         第二份材料读到同一项，不该把人点过头的东西又变成提议。 */
+      setFieldStatus((current) => {
+        const next = { ...current };
+        for (const id of Object.keys(filePatch)) if (next[id] !== "confirmed") next[id] = "recognized";
+        return next;
+      });
       suggestPanel("parameters");
       setParametersExpanded(Boolean(patch.assayType));
       setActiveGroup(nextGroup);
@@ -393,7 +418,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       /* 一句话只报四个数：读到了什么、认出几项、几项要你拍板、几项等价目。
          细节各归各处——事实在「输入材料」，缺项在参数卡，无价目在「报价规则」。 */
       const facts = readable[0].facts.map((fact) => fact.brief).filter(Boolean).join("、");
-      appendMessage("agent", `已读取「${label}」：${readable[0].title}。${facts ? `读到 ${facts}。` : ""}已识别 ${recognized.length} 项报价参数${confirmCount ? `，其中 ${confirmCount} 项原文有歧义需你确认` : ""}${remaining.length - confirmCount > 0 ? `，${remaining.length - confirmCount} 项原文没写` : ""}${catalogCount ? `；另有 ${catalogCount} 项没有价目，见报价规则` : ""}。${remaining.length ? "请从下方参数卡继续。" : "计价关键字段已齐全。"}`);
+      /* 账当场就算：条件齐的行先计价，算不出的带原因。一句话只报数，明细在「报价明细」。 */
+      const pricing = summarizeLines(buildDmpkQuoteLines(nextFields, nextSources), manualPrices);
+      appendMessage("agent", `已读取「${label}」：${readable[0].title}。${facts ? `读到 ${facts}。` : ""}已识别 ${recognized.length} 项报价参数${confirmCount ? `，其中 ${confirmCount} 项原文有歧义需你确认` : ""}${remaining.length - confirmCount > 0 ? `，${remaining.length - confirmCount} 项原文没写` : ""}${catalogCount ? `；另有 ${catalogCount} 项没有价目，见报价规则` : ""}。${pricing.packages.length ? `${pricingSentence(pricing)}。` : ""}${remaining.length ? "请从下方参数卡继续。" : "计价关键字段已齐全。"}`);
       if (!remaining.length) setStage("ready");
     }, STEP_MS * steps.length + 200);
   };
@@ -465,12 +492,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setStage("thinking");
     suggestPanel("process");
     window.setTimeout(() => {
-      setFields((items) => items.map((field) => {
+      const nextFields = fields.map((field) => {
         const draft = sentTabs.find((tab) => tab.fieldId === field.id);
         return draft ? { ...field, value: draft.value } : field;
-      }));
-      const remaining = fields.filter((field) => field.required && !field.value && !sentTabs.some((tab) => tab.fieldId === field.id));
+      });
+      setFields(nextFields);
+      /* 人亲手选过发过的，就是确认过的。 */
+      setFieldStatus((current) => ({ ...current, ...Object.fromEntries(sentTabs.map((tab) => [tab.fieldId, "confirmed" as const])) }));
+      const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id;
+      const pricing = summarizeLines(buildDmpkQuoteLines(nextFields, sources), manualPrices);
+      const pricingNote = pricing.packages.length ? `${pricingSentence(pricing)}。` : "";
       setDraftTabs([]);
       setEditingFieldId(null);
       if (nextGroup) {
@@ -478,11 +510,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
         setStage("collecting");
         appendRun("params", remaining.length);
-        appendMessage("agent", `已更新报价参数。还需补充 ${remaining.length} 项参数，请继续在下方补全卡中选择。`);
+        appendMessage("agent", `已更新报价参数。${pricingNote}还需补充 ${remaining.length} 项参数，请继续在下方补全卡中选择。`);
       } else {
         setStage("ready");
         appendRun("params");
-        appendMessage("agent", "计价关键字段已齐全。请进行报价前确认，确认后生成 Word 报价单和 Excel 报价明细。");
+        appendMessage("agent", `计价关键字段已齐全。${pricingNote}请进行报价前确认，确认后生成 Word 报价单和 Excel 报价明细。`);
       }
     }, 700);
   };
@@ -539,11 +571,15 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const pending = missingFields.map((field) => field.label);
     const catalogGaps = sources.flatMap((source) => source.pending).filter((item) => item.kind === "catalog").length;
     const latestVersion = quoteVersions[quoteVersions.length - 1]?.label ?? "v1";
+    /* 有账就报账：已计价多少、多少没算出来。没账（没传过方案）才退回阶段描述。 */
+    const ledgerLine = quoteSummary.packages.length ? pricingSentence(quoteSummary) + (quoteSummary.manualCount ? `；${quoteSummary.manualCount} 项 ${MANUAL_PRICE_BY} 手动单价` : "") : "";
     const pricing = stage === "generated"
-      ? `报价单 ${latestVersion} 已生成，Word 与 Excel 金额校验一致`
-      : stage === "ready"
-        ? "参数已齐全，等待确认后生成报价单"
-        : `尚未计价：还缺 ${pending.length} 项参数${catalogGaps ? `，另有 ${catalogGaps} 项没有价目` : ""}`;
+      ? `报价单 ${latestVersion} 已生成，Word 与 Excel 金额校验一致${ledgerLine ? `；${ledgerLine}` : ""}`
+      : ledgerLine
+        ? ledgerLine
+        : stage === "ready"
+          ? "参数已齐全，等待确认后生成报价单"
+          : `尚未计价：还缺 ${pending.length} 项参数${catalogGaps ? `，另有 ${catalogGaps} 项没有价目` : ""}`;
     const next = handedOff
       ? "已交接，等待对方复核"
       : stage === "generated"
@@ -555,7 +591,46 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             : "确认参数";
     const summary: DmpkSessionSummary = { confirmed, pending, pricing, next };
     setMessages((items) => [...items, { id: `summary-${Date.now()}-${items.length}`, role: "summary", text: "会话摘要", summary }]);
-    setHandoffNote(`已确认 ${confirmed.length} 项参数；${pricing}。${catalogGaps ? `${catalogGaps} 项无价目未计入，请复核。` : ""}`.trim());
+    /* 有账时「无价目」的数已经在 pricing 那句里（按行数）；再按待处理项数说一遍，
+       同一件事会出现两个不同的数——4 组免疫分型采血是 4 个待处理项、1 行账。 */
+    setHandoffNote(`已确认 ${confirmed.length} 项参数；${pricing}。${!ledgerLine && catalogGaps ? `${catalogGaps} 项无价目未计入，请复核。` : quoteSummary.unpricedCount ? "未计价行请复核。" : ""}`.trim());
+  };
+
+  /**
+   * 把文件认出来的那些一次性点头。
+   * 逐项确认的路也在——铅笔改一项、参数卡发一轮，都算确认；这颗是给
+   * 「我核过了，没问题」的人用的，不用为了确认而把十一项各点一遍。
+   */
+  const confirmRecognized = () => {
+    if (!recognizedFields.length) return;
+    const count = recognizedFields.length;
+    setFieldStatus((current) => {
+      const next = { ...current };
+      for (const field of recognizedFields) next[field.id] = "confirmed";
+      return next;
+    });
+    appendMessage("user", `确认文件识别的 ${count} 项参数：${recognizedFields.map((field) => `${field.label} ${field.value}`).join("、")}。`);
+    appendMessage("agent", `已确认 ${count} 项识别结果。${missingFields.length ? `还缺 ${missingFields.length} 项，请继续补全。` : "计价关键字段已齐全。"}`);
+  };
+
+  /**
+   * 临时调价。只作用于这一单：写进会话自己的 manualPrices，价目表不动。
+   * 每一次改动都进对话——报价复核是算术，改过哪一档单价必须能翻到。
+   */
+  const setManualPrice = (lineId: string, price: number) => {
+    const line = quoteLines.find((item) => item.id === lineId);
+    if (!line || !Number.isFinite(price) || price < 0) return;
+    setManualPrices((current) => ({ ...current, [lineId]: { price, by: MANUAL_PRICE_BY, at: "刚刚" } }));
+    appendMessage("agent", `已将「${line.service}」单价改为 ${formatCny(price)} / ${line.unit}（${MANUAL_PRICE_BY} 手动，仅本单${line.catalogPrice !== undefined ? `；价目表 ${formatCny(line.catalogPrice)} 不变` : ""}）。`);
+  };
+  const clearManualPrice = (lineId: string) => {
+    const line = quoteLines.find((item) => item.id === lineId);
+    setManualPrices((current) => {
+      const next = { ...current };
+      delete next[lineId];
+      return next;
+    });
+    if (line) appendMessage("agent", `「${line.service}」已恢复价目表单价${line.catalogPrice !== undefined ? ` ${formatCny(line.catalogPrice)}` : ""}。`);
   };
 
   const startGeneration = () => {
@@ -563,7 +638,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setParametersExpanded(false);
     setStage("generating");
     suggestPanel("process");
-    appendMessage("user", "确认参数，生成正式报价单。");
+    /* 「确认并生成」：还挂着「识别」的这一下全部算确认。不另设门槛（P0-3），
+       但按钮上写明了，所以这不是静默确认。 */
+    if (recognizedFields.length) {
+      setFieldStatus((current) => {
+        const next = { ...current };
+        for (const field of recognizedFields) next[field.id] = "confirmed";
+        return next;
+      });
+    }
+    appendMessage("user", recognizedFields.length ? `确认参数（含 ${recognizedFields.length} 项文件识别结果），生成正式报价单。` : "确认参数，生成正式报价单。");
     window.setTimeout(() => {
       setStage("generated");
       suggestPanel("artifacts");
@@ -631,6 +715,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
        同一份东西不该同时占着中间和右边。settled 之后同理。 */
     reworkNotes: reworkSettled || reworkCanvas ? [] : reworkNotes,
     sources,
+    fieldStatus,
+    quoteLines,
+    manualPrices,
+    onSetManualPrice: setManualPrice,
+    onClearManualPrice: clearManualPrice,
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
@@ -656,7 +745,15 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           <span>
             <strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
             {identifiedAssayType ? <em>{completedCount}/{totalRequired}</em> : null}
+            {/* 三个数分开说：填了几项、几项还是机器的提议、几项没填。
+                只报 11/14 的话，「11」里混着人没看过的东西。 */}
+            {recognizedFields.length ? <em>· 识别待确认 {recognizedFields.length}</em> : null}
           </span>
+          {recognizedFields.length && stage !== "generating" && stage !== "generated" ? (
+            <button type="button" className="paramConfirmAllButton" onClick={confirmRecognized}>
+              确认全部识别项
+            </button>
+          ) : null}
         </div>
         {panel.content}
       </>
@@ -759,7 +856,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} handoffNote={handoffNote} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
-        ] }); }} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
+        ] }); }} onConfirmCurrentPrice={() => {
+          /* 对话里改报告费，和明细里改单价是**同一件事**，写进同一张 manualPrices——
+             有账的时候走那条路，账上的报告行跟着变；没账（没传过方案）才只说一句话。 */
+          const nextPrice = editProposal?.kind === "current-price" ? editProposal.nextPrice : 2500;
+          if (quoteLines.some((line) => line.id === "report")) setManualPrice("report", nextPrice);
+          else appendMessage("agent", `已将本次报价的报告费调整为 ¥${nextPrice.toLocaleString()}，仅对当前项目生效，并已保留调整记录。`);
+          setEditProposal(null);
+        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
         <WorkbenchPanelBody
           panels={railPanels}
           visibleIds={visiblePanelIds}

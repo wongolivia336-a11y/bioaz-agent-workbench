@@ -13,11 +13,18 @@ import { formatParamValue, type ParamField, type ParamGroup } from "./types";
  * 进度按必填项算：可选项不该把进度条撑到 100% 之外的任何一个位置去，
  * 「还能不能出报价」只由必填项决定。
  */
-export function ParameterLedger({ groups, fields, openGroups, editingFieldId, onToggleGroup, onEditField }: {
+export function ParameterLedger({ groups, fields, openGroups, editingFieldId, statusOf, onToggleGroup, onEditField }: {
   groups: ParamGroup[];
   fields: ParamField[];
   openGroups: Record<string, boolean>;
   editingFieldId?: string | null;
+  /**
+   * 这一项的值是机器认出来的还是人确认过的。
+   * 可选：不传就跟原来一模一样（肿瘤线没有文件识别，也就没有这一维）。
+   * 只标「识别」，不标「已确认」——台账上多数行都是确认过的，
+   * 每行挂一枚「已确认」等于什么都没说。
+   */
+  statusOf?: (fieldId: string) => "recognized" | "confirmed" | undefined;
   onToggleGroup: (groupId: string) => void;
   onEditField: (fieldId: string) => void;
 }) {
@@ -59,6 +66,7 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, on
                   >
                     <span>{field.label}</span>
                     <strong>{formatParamValue(field, field.value)}</strong>
+                    {statusOf?.(field.id) === "recognized" ? <em className="paramFieldStatus">识别</em> : null}
                     <Edit3 size={13} />
                   </button>
                 ) : (
