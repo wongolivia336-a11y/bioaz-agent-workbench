@@ -22,14 +22,17 @@ import type { ComposerAttachment } from "./composerAttachments";
  *                        的轨迹，而不是静默吞掉——人得知道它没读
  */
 
-export type SourceKind = "docx" | "pdf" | "xlsx" | "image" | "text" | "unknown";
+/* 甲方 P0-1 点名的材料：Word、PDF、PPT、图片、截图、聊天记录。
+   截图就是图片；聊天记录是「角色」不是「格式」——它可能是 txt 导出，也可能是截图。 */
+export type SourceKind = "docx" | "pdf" | "pptx" | "xlsx" | "image" | "text" | "unknown";
 
 /** 这份东西在报价里扮演什么角色。由解析第一步判定，决定它喂给哪一段。 */
-export type SourceRole = "protocol" | "sample-list" | "prior-quote" | "reference" | "unknown";
+export type SourceRole = "protocol" | "sample-list" | "prior-quote" | "chat" | "reference" | "unknown";
 
 export const sourceKindLabels: Record<SourceKind, string> = {
   docx: "Word 文档",
   pdf: "PDF 文档",
+  pptx: "PPT 演示稿",
   xlsx: "Excel 表格",
   image: "图片",
   text: "文本",
@@ -40,6 +43,7 @@ export const sourceRoleLabels: Record<SourceRole, string> = {
   protocol: "实验方案",
   "sample-list": "样品清单",
   "prior-quote": "上一版报价",
+  chat: "聊天记录",
   reference: "参考资料",
   unknown: "待判定",
 };
@@ -47,6 +51,7 @@ export const sourceRoleLabels: Record<SourceRole, string> = {
 const kindByExtension: Record<string, SourceKind> = {
   doc: "docx", docx: "docx",
   pdf: "pdf",
+  ppt: "pptx", pptx: "pptx",
   xls: "xlsx", xlsx: "xlsx", csv: "xlsx",
   png: "image", jpg: "image", jpeg: "image", webp: "image", heic: "image", gif: "image",
   txt: "text", md: "text",
@@ -55,6 +60,11 @@ const kindByExtension: Record<string, SourceKind> = {
 export function detectSourceKind(attachment: ComposerAttachment): SourceKind {
   const match = attachment.label.toLowerCase().match(/\.([a-z0-9]+)$/);
   return (match && kindByExtension[match[1]]) || "unknown";
+}
+
+/** 文件名里带「聊天 / 微信 / chat」的，当聊天记录读。真解析接进来之后换成看内容。 */
+export function looksLikeChat(attachment: ComposerAttachment): boolean {
+  return /聊天|微信|钉钉|chat|wechat/i.test(attachment.label);
 }
 
 /**
@@ -117,6 +127,12 @@ export type ParseResult = {
   steps: ParseStep[];
   /** 能落到现有字段上的取值。键是字段 id。 */
   patch: Record<string, string>;
+  /**
+   * patch 里每一项是从原文哪儿读的：位置 + 原句（P0-1「保留原文依据」）。
+   * 跟 patch 分开放，是因为 patch 的形状要跟一句话识别的输出一样——
+   * 两条路合进同一个 setFields，多一层嵌套就得两边都改。
+   */
+  patchSources?: Record<string, { anchor: string; quote: string }>;
   facts: ParsedFact[];
   pending: PendingItem[];
 };

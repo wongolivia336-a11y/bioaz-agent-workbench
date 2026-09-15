@@ -10,6 +10,7 @@ import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap"
 import { useStickToBottom } from "../../components/workbench-shell/useStickToBottom";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import { mergeParsePatches, parseSources, type ParseResult } from "../../lib/workbench/sources";
+import type { ParamSource } from "../../components/params";
 import { formatCny, MANUAL_PRICE_BY, pricingSentence, summarizeLines, type ManualPrice } from "../../lib/workbench/quoteLines";
 import type { AgentModuleSessionProps } from "../types";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
@@ -189,6 +190,23 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     });
   }, [activeCoworker?.name, fields, messages, onSessionSnapshotChange, stage]);
 
+  /**
+   * 给一格写新值，顺手维护它的原文依据。
+   * ----------------------------------------------------------------------
+   * 文件读出来的值带 document 来源；人改的值没有来源可带——但如果它**盖掉的是
+   * 一个原文来源**，原句留在 original 里，小标换成「人填」，浮层写「原文为 X，已改为 Y」。
+   * 原来就是人填的格子，改了还是人填，不长小标。改回跟原文一样的值也不恢复
+   * document——它是人拍的板，不是读出来的。
+   */
+  const withValue = (field: DmpkField, value: string, documentSource?: Extract<ParamSource, { kind: "document" }>): DmpkField => {
+    if (documentSource) return { ...field, value, source: documentSource };
+    if (value === field.value) return field;
+    if (field.source?.kind === "document") {
+      return { ...field, value, source: { kind: "manual", original: { sourceLabel: field.source.sourceLabel, anchor: field.source.anchor, quote: field.source.quote, value: field.value } } };
+    }
+    return { ...field, value };
+  };
+
   const appendMessage = (role: DmpkChatMessage["role"], text: string, attachments?: ComposerAttachment[]) => {
     setMessages((items) => [...items, { id: `${role}-${Date.now()}-${items.length}`, role, text, attachments }]);
   };
@@ -330,7 +348,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     suggestPanel("process");
     window.setTimeout(() => {
       const patch = parseDmpkRequest(text);
-      const nextFields = fields.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field);
+      const nextFields = fields.map((field) => patch[field.id] ? withValue(field, patch[field.id]) : field);
       const recognized = nextFields.filter((field) => patch[field.id]);
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
@@ -385,7 +403,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const patch = { ...parseDmpkRequest(text), ...filePatch };
       const pending = results.flatMap((result) => result.pending);
       const nextFields = applyPendingToFields(
-        fields.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field),
+        fields.map((field) => {
+          if (!patch[field.id]) return field;
+          /* 后传的盖前传的，来源也指向真正提供这个值的那份。 */
+          const provider = [...results].reverse().find((result) => result.patch[field.id] !== undefined);
+          const quoteRef = provider?.patchSources?.[field.id];
+          const documentSource = provider && quoteRef
+            ? { kind: "document" as const, sourceId: provider.sourceId, sourceLabel: provider.sourceLabel, anchor: quoteRef.anchor, quote: quoteRef.quote }
+            : undefined;
+          return withValue(field, patch[field.id], documentSource);
+        }),
         pending,
       );
       const recognized = nextFields.filter((field) => patch[field.id]);
@@ -412,7 +439,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       setMessages((current) => [...current, { id: `run-${Date.now()}-${current.length}`, role: "run", ...dmpkRunRecord("parse", { parse: { label, steps } }) }]);
       const readable = results.filter((result) => result.role !== "unknown");
       if (!readable.length) {
-        appendMessage("agent", `「${label}」的格式还读不了。请换成 Word / PDF / Excel，或者直接在下方描述检测类型、动物种属与数量、试验周期和采血点。`);
+        appendMessage("agent", `「${label}」的格式还读不了。请换成 Word / PDF / PPT / Excel、图片或聊天记录导出，或者直接在下方描述检测类型、动物种属与数量、试验周期和采血点。`);
         return;
       }
       /* 一句话只报四个数：读到了什么、认出几项、几项要你拍板、几项等价目。
@@ -494,7 +521,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     window.setTimeout(() => {
       const nextFields = fields.map((field) => {
         const draft = sentTabs.find((tab) => tab.fieldId === field.id);
-        return draft ? { ...field, value: draft.value } : field;
+        return draft ? withValue(field, draft.value) : field;
       });
       setFields(nextFields);
       /* 人亲手选过发过的，就是确认过的。 */

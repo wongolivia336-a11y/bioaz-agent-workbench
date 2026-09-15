@@ -8761,6 +8761,45 @@ button {
 }
 .paramConfirmAllButton:hover { border-color: var(--bioaz-agent-accent-border, #dcddf2); background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent, #5c60b8); }
 
+/* ═══ 原文依据 ═════════════════════════════════════════════════════════
+   值后面一枚小标写锚点；点开在这一行下面插一张小卡：材料名、位置、原句。
+   人改过的换成「人填」，卡里写原文为 X、已改为 Y。 */
+.paramFieldSource {
+  flex: none; max-width: 96px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface); padding: 0 7px;
+  color: var(--muted); font-size: 10.5px; font-weight: 600; line-height: 16px;
+  text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+}
+.paramFieldSource:hover, .paramFieldSource.isOpen { border-color: var(--bioaz-agent-accent-border, #dcddf2); background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent, #5c60b8); }
+.paramFieldSource.is-manual { border-style: dashed; }
+.paramFieldSourceCard {
+  display: grid; gap: 5px;
+  margin: 2px 0 6px; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface); padding: 9px 11px;
+}
+.paramFieldSourceCard.is-manual { border-style: dashed; border-color: var(--line); background: var(--soft, #f7f8fb); }
+.paramFieldSourceCard > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.paramFieldSourceCard > header strong { color: var(--ink); font-size: 12px; font-weight: 650; overflow-wrap: anywhere; }
+.paramFieldSourceCard > header em { color: var(--muted); font-size: 11px; font-style: normal; }
+.paramFieldSourceCard > small { color: var(--muted); font-size: 11px; }
+.paramFieldSourceCard blockquote {
+  margin: 0; border-left: 2px solid var(--bioaz-agent-accent-border, #dcddf2); padding: 2px 0 2px 9px;
+  color: var(--body); font-size: 12px; line-height: 1.6;
+}
+
+/* 输入材料里「这份材料喂了哪几项」：参数名、值、锚点，一行一项。 */
+.dmpkSourcePatchList { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.dmpkSourcePatchList li {
+  display: flex; align-items: baseline; gap: 6px; min-width: 0;
+  border-top: 1px dashed var(--line); padding: 4px 0;
+  font-size: 11.5px;
+}
+.dmpkSourcePatchList li:first-child { border-top: 0; }
+.dmpkSourcePatchList li > span { flex: none; color: var(--muted); }
+.dmpkSourcePatchList li > strong { min-width: 0; overflow: hidden; color: var(--ink); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.dmpkSourcePatchList li > em { flex: none; margin-left: auto; color: var(--muted); font-size: 10.5px; font-style: normal; }
+
 /* ═══ 报价明细 ═════════════════════════════════════════════════════════
    按工作包分段，一行一项服务：范围与公式在小字，金额靠右；算不出的行
    用状态 chip 顶替金额，原因写在算式那一行。 */

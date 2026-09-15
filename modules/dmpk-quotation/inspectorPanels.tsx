@@ -37,7 +37,7 @@ import {
   type ManualPrice,
   type QuoteLine,
 } from "../../lib/workbench/quoteLines";
-import { dmpkGroups } from "./fields";
+import { dmpkGroups, initialDmpkFields } from "./fields";
 import {
   resolveInspectorPanels,
   type InspectorContentState,
@@ -522,6 +522,19 @@ function SourceCard({ source }: { source: ParseResult }) {
         </div>
       </header>
       {readable ? <p className="dmpkSourceTitle">{source.title}</p> : null}
+      {/* 这份材料喂了哪几项参数、各从哪儿读的——「展示提取信息」那一半。
+          值不在这儿改（改在台账），这儿只说来处。 */}
+      {Object.keys(source.patch).length ? (
+        <ul className="dmpkSourcePatchList">
+          {Object.entries(source.patch).map(([fieldId, value]) => (
+            <li key={fieldId}>
+              <span>{initialDmpkFields.find((field) => field.id === fieldId)?.label ?? fieldId}</span>
+              <strong>{value}</strong>
+              {source.patchSources?.[fieldId] ? <em>{source.patchSources[fieldId].anchor}</em> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {source.facts.length ? (
         <ul className="dmpkFactList">
           {source.facts.map((fact) => {

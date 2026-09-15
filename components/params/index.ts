@@ -16,5 +16,6 @@ export {
   type ParamField,
   type ParamFieldKind,
   type ParamGroup,
+  type ParamSource,
   type RepeatColumn,
 } from "./types";
