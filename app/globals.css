@@ -8661,3 +8661,87 @@ button {
 }
 .changeConfirmGroup li strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .changeConfirmCard > footer { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ═══ 读文件 ═══════════════════════════════════════════════════════════
+   解析轨迹跟原来三种运行记录共用 .agentRun / .timeline 骨架，
+   只多两样：每步「读出了什么」走既有的 p，「原文在哪」是一枚小标。 */
+.timelineAnchor {
+  display: inline-block; margin-left: 8px; border-radius: var(--bioaz-radius-full);
+  background: var(--soft, #f7f8fb); padding: 1px 7px;
+  color: var(--muted); font-size: 11px; font-style: normal; font-weight: 600; white-space: nowrap;
+  vertical-align: 1px;
+}
+
+/* 顶栏右侧两颗图标钮并排。原来只有面板开关一颗，space-between 正好把它推到右边；
+   多一颗就得先并成一组，否则摘要钮会落在正中间。 */
+.dmpkTopbarTools { display: flex; align-items: center; gap: 4px; flex: none; }
+.dmpkTopbarTools > button:disabled { opacity: .45; cursor: default; }
+
+/* 会话摘要：一张台账快照，不是气泡。左边同一枚 logo 标，右边四段定义列表。 */
+.dmpkSessionSummary {
+  display: grid; gap: 10px;
+  border: 1px solid var(--line); border-radius: 18px; background: var(--bioaz-surface);
+  padding: 14px 18px;
+}
+.dmpkSessionSummary > header { display: flex; align-items: center; gap: 10px; }
+.dmpkSessionSummary > header strong { color: var(--ink); font-size: 13.5px; font-weight: 650; }
+.dmpkSessionSummary > header small { color: var(--muted); font-size: 12px; }
+.dmpkSessionSummary dl { display: grid; gap: 8px; margin: 0; }
+.dmpkSessionSummary dl > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.dmpkSessionSummary dt { color: var(--muted); font-size: 12px; font-weight: 600; }
+.dmpkSessionSummary dd { margin: 0; color: var(--body); font-size: 13px; line-height: 1.6; }
+
+/* 输入材料里的一份来源：文件名 + 格式/角色 + 判定出的标题 + 读出来的事实。 */
+.dmpkSourceCard {
+  display: grid; gap: 8px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface);
+  padding: 11px 12px;
+}
+.dmpkSourceCard.isUnread { border-style: dashed; }
+.dmpkSourceCard > header { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 9px; align-items: start; color: var(--muted); }
+.dmpkSourceCard > header svg { margin-top: 2px; }
+.dmpkSourceCard > header div { display: grid; gap: 1px; min-width: 0; }
+.dmpkSourceCard > header strong { color: var(--ink); font-size: 12.5px; font-weight: 600; overflow-wrap: anywhere; }
+.dmpkSourceCard > header small { color: var(--muted); font-size: 11.5px; }
+.dmpkSourceTitle { margin: 0; color: var(--body); font-size: 12.5px; line-height: 1.5; }
+
+/* 事实列表：一行一条，数量在标题上，明细折在下面。
+   37 行采样事件平铺在 320px 的一栏里是一堵墙，折成一行才扫得动。 */
+.dmpkFactList { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.dmpkFactList > li { border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb); }
+.dmpkFactList > li > button {
+  display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto;
+  align-items: center; column-gap: 8px; row-gap: 2px;
+  border: 0; background: transparent; padding: 7px 10px; text-align: left; cursor: pointer; color: inherit;
+}
+.dmpkFactList > li > button:disabled { cursor: default; }
+.dmpkFactList > li > button:not(:disabled):hover { background: var(--bioaz-surface-hover, rgba(0, 0, 0, .03)); border-radius: inherit; }
+.dmpkFactHead { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.dmpkFactHead strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
+.dmpkFactHead em { color: var(--muted); font-size: 11px; font-style: normal; }
+.dmpkFactList > li > button > small { grid-column: 1; color: var(--muted); font-size: 11.5px; }
+.dmpkFactChevron { grid-column: 2; grid-row: 1 / span 2; color: var(--muted); }
+.dmpkFactList > li > button[aria-expanded="true"] .dmpkFactChevron { transform: rotate(180deg); }
+.dmpkFactList ol { display: grid; gap: 3px; margin: 0; padding: 2px 10px 9px 26px; }
+.dmpkFactList ol li { color: var(--body); font-size: 12px; line-height: 1.5; }
+
+/* 报价规则里「没有价目」那一段。它是后台的事，所以放在本次规则和全局规则之间，
+   出口只有一个：去标准价格。不给输入框——填临时价等于绕过规则。 */
+.dmpkCatalogGaps {
+  display: grid; gap: 8px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-control);
+  background: var(--soft, #f7f8fb); padding: 11px 12px;
+}
+.dmpkCatalogGaps > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; color: #7d6229; }
+.dmpkCatalogGaps > header svg { align-self: center; }
+.dmpkCatalogGaps > header strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
+.dmpkCatalogGaps > header small { color: var(--muted); font-size: 11.5px; }
+.dmpkCatalogGaps ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.dmpkCatalogGaps li { display: grid; gap: 1px; }
+.dmpkCatalogGaps li strong { color: var(--body); font-size: 12px; font-weight: 600; }
+.dmpkCatalogGaps li small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.dmpkCatalogGaps > button {
+  display: inline-flex; align-items: center; gap: 4px; justify-self: start;
+  border: 0; background: transparent; padding: 0; color: var(--bioaz-agent-accent, #5c60b8);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}

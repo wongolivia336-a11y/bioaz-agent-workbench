@@ -28,7 +28,8 @@ type Props = {
   projectNotice: string | null;
   onProjectChange: (project: string) => void;
   onTextChange: (value: string) => void;
-  onSubmit: () => void;
+  /** 随这句话一起发出去的附件。壳层要把它们带进会话——传一份方案再让人到会话里再传一次，是明知故问。 */
+  onSubmit: (attachments: ComposerAttachment[]) => void;
   /** project 是当场选的那个：state 要下一次渲染才生效，得直接递过去。 */
   onQuickStart: (id: string, project?: string) => void;
   onCoworkerChange: (id: string) => void;
@@ -58,7 +59,7 @@ export function NewTaskHome(props: Props) {
       setSentAttachments(attachments);
       setAttachments([]);
     }
-    props.onSubmit();
+    props.onSubmit(props.project ? attachments : []);
   };
 
   return <section className={`newTaskHome introSequenceStarted ${props.conversationStarted ? "introSequenceSettled isConversation" : ""}`}>

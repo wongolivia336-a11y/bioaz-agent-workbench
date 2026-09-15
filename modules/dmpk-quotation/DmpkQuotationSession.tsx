@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Minimize2, WandSparkles } from "lucide-react";
+import { ChevronRight, Minimize2, ScrollText, WandSparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FloatingChatDock } from "../../components/workbench-panel/FloatingChatDock";
 import { PanelToggle, WorkbenchPanelBody } from "../../components/workbench-panel/WorkbenchPanel";
@@ -9,9 +9,11 @@ import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelpe
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import { useStickToBottom } from "../../components/workbench-shell/useStickToBottom";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
+import { mergeParsePatches, parseSources, type ParseResult } from "../../lib/workbench/sources";
 import type { AgentModuleSessionProps } from "../types";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
 import { noteAnchorToField } from "./noteFieldMap";
+import { applyPendingToFields, dmpkSourceParsers } from "./parseFixtures";
 import {
   dmpkGroups,
   initialDmpkFields,
@@ -35,6 +37,8 @@ import {
   type DmpkChatMessage,
   type DmpkEditProposal,
   type DmpkInspectorPanelId,
+  type DmpkRunStep,
+  type DmpkSessionSummary,
 } from "./views";
 
 export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, rework, onReworkResolved, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
@@ -73,8 +77,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     /* 开场白在前、被带进来的那句请求在后。反过来读是这样的：
        用户先说了一整段需求，数字同事接着自我介绍并请他「描述检测类型、
        分子类型……」——而那些他刚刚说完。 */
-    return initialRequest
-      ? [{ id: "context", role: "agent", text: openingMessage }, { id: "initial-request", role: "user", text: initialRequest, attachments: initialAttachments }]
+    return initialRequest || initialAttachments?.length
+      ? [{ id: "context", role: "agent", text: openingMessage }, { id: "initial-request", role: "user", text: initialRequest ?? "", attachments: initialAttachments }]
       : [{ id: "context", role: "agent", text: openingMessage }];
   });
   /* 这一单交出去了没有。交接是一次性动作,不该留一张还能再点一次的卡在那儿。 */
@@ -138,6 +142,13 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [editProposal, setEditProposal] = useState<DmpkEditProposal | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
+  /* 这条会话读过的来源。轨迹钉在消息流里，这里留的是**读出来的东西**——
+     「输入材料」面板列来源和事实，「报价规则」面板列无价目的那几项。 */
+  const [sources, setSources] = useState<ParseResult[]>([]);
+  /* 正在读文件时逐步揭开的那条链。跑完置空，完整的一条进消息流。 */
+  const [liveParse, setLiveParse] = useState<{ text: string; runSteps: DmpkRunStep[] } | null>(null);
+  /* 会话摘要生成过的话，交接卡的说明栏预填它。 */
+  const [handoffNote, setHandoffNote] = useState("");
   const initialRequestHandledRef = useRef(false);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
 
@@ -320,13 +331,82 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     }, 900);
   };
 
+  /**
+   * 读文件。
+   * ----------------------------------------------------------------------
+   * 跟一句话识别走的是**同一条落库路**：读出来的取值也是一份 patch，
+   * 也是 setFields 合进去、也是照旧弹参数卡补缺的。差别只在前面多了一条
+   * 逐步揭开的轨迹——每一步说读出了什么、从原文哪儿读的。
+   *
+   * 文字和文件同发时，**文件为准，文字只补文件没写的**。
+   * 跟着一份方案一起发的那句话多半是指令（「按这份方案出 DMPK 报价」），
+   * 不是数据——一句话识别会把里面的「DMPK」认成检测类型 PK，盖掉方案里
+   * 写明的 TOX。真要纠正文件，下一句话或参数卡都走正常路径，照样能盖。
+   */
+  const handleSources = (items: ComposerAttachment[], text = "", skipUserMessage = false) => {
+    if (!skipUserMessage) appendMessage("user", text, items);
+    setComposerText("");
+    const results = parseSources(items, dmpkSourceParsers);
+    if (!results.length) {
+      /* 没有一份是文件（只挂了技能/连接器）——照旧当一句话处理。 */
+      if (text) handleInitialRequest(text, true);
+      return;
+    }
+    const steps = results.flatMap((result) => result.steps);
+    const label = results.length === 1 ? results[0].sourceLabel : `${results.length} 份文件`;
+    setStage("thinking");
+    suggestPanel("process");
+    /* 一步一步揭开，而不是一次亮全。看的人跟着它读：先是判类型，再是
+       翻目录，再是一节一节读——这个节奏本身就在说「它是怎么读的」。 */
+    const STEP_MS = 360;
+    steps.forEach((_, index) => {
+      window.setTimeout(() => {
+        setLiveParse({ text: dmpkRunRecord("parse", { running: true, parse: { label, steps } }).text, runSteps: steps.slice(0, index + 1) });
+      }, STEP_MS * index);
+    });
+    window.setTimeout(() => {
+      const patch = { ...parseDmpkRequest(text), ...mergeParsePatches(results) };
+      const pending = results.flatMap((result) => result.pending);
+      const nextFields = applyPendingToFields(
+        fields.map((field) => patch[field.id] ? { ...field, value: patch[field.id] } : field),
+        pending,
+      );
+      const recognized = nextFields.filter((field) => patch[field.id]);
+      const remaining = nextFields.filter((field) => field.required && !field.value);
+      const confirmCount = pending.filter((item) => item.kind === "confirm").length;
+      const catalogCount = pending.filter((item) => item.kind === "catalog").length;
+      const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
+      setSources((current) => [...current, ...results]);
+      setLiveParse(null);
+      setFields(nextFields);
+      suggestPanel("parameters");
+      setParametersExpanded(Boolean(patch.assayType));
+      setActiveGroup(nextGroup);
+      setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
+      setStage("collecting");
+      setMessages((current) => [...current, { id: `run-${Date.now()}-${current.length}`, role: "run", ...dmpkRunRecord("parse", { parse: { label, steps } }) }]);
+      const readable = results.filter((result) => result.role !== "unknown");
+      if (!readable.length) {
+        appendMessage("agent", `「${label}」的格式还读不了。请换成 Word / PDF / Excel，或者直接在下方描述检测类型、动物种属与数量、试验周期和采血点。`);
+        return;
+      }
+      /* 一句话只报四个数：读到了什么、认出几项、几项要你拍板、几项等价目。
+         细节各归各处——事实在「输入材料」，缺项在参数卡，无价目在「报价规则」。 */
+      const facts = readable[0].facts.map((fact) => fact.brief).filter(Boolean).join("、");
+      appendMessage("agent", `已读取「${label}」：${readable[0].title}。${facts ? `读到 ${facts}。` : ""}已识别 ${recognized.length} 项报价参数${confirmCount ? `，其中 ${confirmCount} 项原文有歧义需你确认` : ""}${remaining.length - confirmCount > 0 ? `，${remaining.length - confirmCount} 项原文没写` : ""}${catalogCount ? `；另有 ${catalogCount} 项没有价目，见报价规则` : ""}。${remaining.length ? "请从下方参数卡继续。" : "计价关键字段已齐全。"}`);
+      if (!remaining.length) setStage("ready");
+    }, STEP_MS * steps.length + 200);
+  };
+
   /* 从新建任务分派进来时，initialRequest 不只是历史消息，也应真正启动识别流程。
-     ref 保证 React 严格模式或父组件重渲染时不会重复处理同一条首轮请求。 */
+     ref 保证 React 严格模式或父组件重渲染时不会重复处理同一条首轮请求。
+     带着文件进来的（首页传了方案、站内信带了附件）先读文件，文字只做补充。 */
   useEffect(() => {
-    if (!initialRequest || initialRequestHandledRef.current) return;
+    if ((!initialRequest && !initialAttachments?.length) || initialRequestHandledRef.current) return;
     initialRequestHandledRef.current = true;
-    handleInitialRequest(initialRequest, true);
-  }, [initialRequest]);
+    if (initialAttachments?.some((item) => item.kind === "file")) handleSources(initialAttachments, initialRequest ?? "", true);
+    else if (initialRequest) handleInitialRequest(initialRequest, true);
+  }, [initialRequest, initialAttachments]);
 
   useEffect(() => {
     onRunStatusChange(stage === "generated" ? "completed" : "active");
@@ -417,7 +497,15 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       sendDraft();
       return;
     }
-    if (!text || stage === "thinking" || stage === "generating") return;
+    if (stage === "thinking" || stage === "generating") return;
+    /* 挂了文件就先读文件。不打字也能发——传一份方案本身就是完整的一句话。
+       原来这里 !text 直接 return，附件挂着按发送等于没按。 */
+    if (attachments.some((item) => item.kind === "file")) {
+      setConversationEditing(false);
+      handleSources(consumeAttachments() ?? [], text);
+      return;
+    }
+    if (!text) return;
     const reportFeeMatch = text.match(/(?:这次|本次)?.*报告费.*?(\d[\d,]*)\s*元?/);
     // 放宽句式：以前必须原样说出「以后…PK…样品…少于…按…收费」，换个说法就掉进兜底文案
     const minimumSampleMatch = text.match(/(?:样品|样本).*?(?:少于|低于|不足|不到)\s*(\d+)\s*个?.*?(?:按|以)\s*(\d+)\s*个?.*?(?:收费|计费|计价)/i);
@@ -437,6 +525,37 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     }
     setConversationEditing(false);
     handleInitialRequest(text);
+  };
+
+  /**
+   * 会话摘要：从当前状态推出来的四段话，钉进消息流。
+   * ----------------------------------------------------------------------
+   * 不是问数字同事「你总结一下」——它没有比台账更多的信息。所以不等、不转圈，
+   * 点了就有。它的价值在两处：补了六七轮之后回头看「现在到哪儿了」；
+   * 以及交接时说明栏有现成的话，接手的人要的正是这几句。
+   */
+  const summarizeSession = () => {
+    const confirmed = fields.filter((field) => field.value).map((field) => `${field.label} ${field.value}`);
+    const pending = missingFields.map((field) => field.label);
+    const catalogGaps = sources.flatMap((source) => source.pending).filter((item) => item.kind === "catalog").length;
+    const latestVersion = quoteVersions[quoteVersions.length - 1]?.label ?? "v1";
+    const pricing = stage === "generated"
+      ? `报价单 ${latestVersion} 已生成，Word 与 Excel 金额校验一致`
+      : stage === "ready"
+        ? "参数已齐全，等待确认后生成报价单"
+        : `尚未计价：还缺 ${pending.length} 项参数${catalogGaps ? `，另有 ${catalogGaps} 项没有价目` : ""}`;
+    const next = handedOff
+      ? "已交接，等待对方复核"
+      : stage === "generated"
+        ? "交给下一个人审核"
+        : stage === "ready"
+          ? "预览参数后生成报价单"
+          : pending.length
+            ? `补齐 ${pending.slice(0, 3).join("、")}${pending.length > 3 ? " 等" : ""}`
+            : "确认参数";
+    const summary: DmpkSessionSummary = { confirmed, pending, pricing, next };
+    setMessages((items) => [...items, { id: `summary-${Date.now()}-${items.length}`, role: "summary", text: "会话摘要", summary }]);
+    setHandoffNote(`已确认 ${confirmed.length} 项参数；${pricing}。${catalogGaps ? `${catalogGaps} 项无价目未计入，请复核。` : ""}`.trim());
   };
 
   const startGeneration = () => {
@@ -511,6 +630,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     /* 退回批注。铺成中间画布的时候，面板里那个 tab 就该消失——
        同一份东西不该同时占着中间和右边。settled 之后同理。 */
     reworkNotes: reworkSettled || reworkCanvas ? [] : reworkNotes,
+    sources,
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
@@ -576,7 +696,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <section className={`dmpkWorkspace ${panelFocus ? "isPanelFocus" : ""} ${reworkCanvas ? "isReworkCanvas" : ""}`}>
         <header className="topbar">
           <div className="breadcrumb"><span>{projectName}</span><ChevronRight size={15} /><strong>{taskTitle}</strong></div>
-          <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
+          {/* 摘要入口在这儿，不在 composer 那一排：那一排是「你要发什么」，
+              摘要是「我想看看到哪儿了」。跟面板开关同一副长相、同一档尺寸。 */}
+          <div className="dmpkTopbarTools">
+            <button
+              type="button"
+              className="tumorInspectorToggle"
+              title="总结当前会话"
+              aria-label="总结当前会话"
+              disabled={stage === "thinking" || stage === "generating"}
+              onClick={summarizeSession}
+            >
+              <ScrollText size={16} />
+            </button>
+            <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
+          </div>
         </header>
         {!reworkCanvas ? <SessionMinimap scrollerRef={chatScrollerRef} /> : null}
         {reworkCanvas && rework ? (
@@ -601,7 +735,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             <AnnotatedQuote notes={reworkNotes} className="isPanel" />
           </section>
         ) : (
-          <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
+          <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} liveRun={liveParse} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         )}
         <DmpkComposer paramsOpen={paramsOpen} onParamsOpenChange={setParamsOpen} unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
@@ -622,10 +756,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             blocking={reworkNotes.filter((note) => note.severity === "blocking").length}
             onOpenCanvas={() => setReworkCanvas(true)}
           />
-        ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
+        ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} handoffNote={handoffNote} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
-        ] }); }} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim()) || (!draftTabs.length && !composerText.trim())} />
+        ] }); }} onConfirmCurrentPrice={() => { appendMessage("agent", `已将本次报价的报告费调整为 ¥${editProposal?.kind === "current-price" ? editProposal.nextPrice.toLocaleString() : "2,500"}，仅对当前项目生效，并已保留调整记录。`); setEditProposal(null); }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
         <WorkbenchPanelBody
           panels={railPanels}
           visibleIds={visiblePanelIds}

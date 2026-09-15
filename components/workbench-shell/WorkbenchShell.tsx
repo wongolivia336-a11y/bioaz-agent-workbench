@@ -49,6 +49,9 @@ export default function WorkbenchShell() {
      一起清；但凡是给 initialRequest 赋新值的地方都必须同时给它赋值，否则上一封邮件的
      附件会挂到下一条不相干的首轮请求上。 */
   const [initialAttachments, setInitialAttachments] = useState<ComposerAttachment[] | undefined>();
+  /* 首页那句话带的附件，等分派确认之后才交给会话。
+     追问一轮再发时首页 chips 已经清了，所以只累加、不覆盖；取消分派清掉。 */
+  const [pendingAttachments, setPendingAttachments] = useState<ComposerAttachment[]>([]);
   const [text, setText] = useState("");
   const [clarification, setClarification] = useState<{ request: string; question: string } | null>(null);
   const [pendingRequest, setPendingRequest] = useState<string | null>(null);
@@ -193,9 +196,10 @@ export default function WorkbenchShell() {
     setRoute(nextRoute);
   };
 
-  const submitIntent = () => {
+  const submitIntent = (sentAttachments: ComposerAttachment[] = []) => {
     const next = text.trim(); if (!next) return;
     if (!project) { setProjectNotice("请先选择任务所属项目，再开始任务。"); return; }
+    if (sentAttachments.length) setPendingAttachments((current) => [...current, ...sentAttachments]);
     const request = clarification ? `${clarification.request}；补充：${next}` : next;
     if (!activeTaskId) {
       const title = request.length > 20 ? `${request.slice(0, 20)}…` : request;
@@ -218,14 +222,15 @@ export default function WorkbenchShell() {
     setActiveModule(pendingModule);
     setActiveCoworkerId(pendingModule.suggestedCoworker.id);
     setInitialRequest(pendingRequest);
-    setInitialAttachments(undefined);
+    setInitialAttachments(pendingAttachments.length ? pendingAttachments : undefined);
+    setPendingAttachments([]);
     setHandoffNotice(`BioAZ Helper 已将任务分派给 ${pendingModule.suggestedCoworker.name}`);
     setModuleRunStatus("active");
     setPendingModule(null);
     setPendingRequest(null);
     setRoute("module");
   };
-  const cancelDispatch = () => { setText(pendingRequest ?? ""); setPendingRequest(null); setPendingModule(null); };
+  const cancelDispatch = () => { setText(pendingRequest ?? ""); setPendingRequest(null); setPendingModule(null); setPendingAttachments([]); };
 
   /* projectOverride：首屏点快捷入口时项目是当场选的，而 setProject 要下一次
      渲染才生效——同一个 tick 里读 state 拿到的还是 null，流程会被自己的前置

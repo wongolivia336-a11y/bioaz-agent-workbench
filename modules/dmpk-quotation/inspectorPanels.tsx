@@ -25,6 +25,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { ParameterLedger, type ParamField } from "../../components/params";
 import { useModalDismiss } from "../../components/ui/useModalDismiss";
+import { sourceKindLabels, sourceRoleLabels, type ParseResult } from "../../lib/workbench/sources";
 import { dmpkGroups } from "./fields";
 import {
   resolveInspectorPanels,
@@ -66,6 +67,9 @@ export type DmpkInspectorContext = {
   /* 被退回的那一版带回来的批注。空数组＝这一单没被退回过，
      「退回批注」那个 tab 也就不存在。 */
   reworkNotes: QuoteNote[];
+  /* 这条会话读过的来源。「输入材料」列它们和读出来的事实，
+     「报价规则」列其中没有价目的那几项。没传就是没传过文件。 */
+  sources?: ParseResult[];
   reworkBy?: string;
   reworkAt?: string;
   reworkReason?: string;
@@ -314,6 +318,14 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
 function RulesPanel({ context }: { context: DmpkInspectorContext }) {
   const [costOpen, setCostOpen] = useState(false);
   const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
+  /* 读文件读出来的「没有价目」。
+     它们不是人能在前台填的：后台没维护这一项的价目或公式，填一个临时价等于
+     绕过规则。所以不进参数卡，在这儿列出来，出口是后台的标准价格。 */
+  const catalogGaps = (context.sources ?? [])
+    .flatMap((source) => source.pending)
+    .filter((item) => item.kind === "catalog")
+    /* 同一项委托在两份来源里都没价目，是同一件事，列一次。 */
+    .filter((item, index, items) => items.findIndex((other) => other.label === item.label) === index);
 
   const goToBackOffice = (tab: "prices" | "rules" | "parameters" | "templates") => {
     const params = new URLSearchParams({ view: "quotation-management", business: "dmpk", tab });
@@ -351,6 +363,27 @@ function RulesPanel({ context }: { context: DmpkInspectorContext }) {
         </div>
         <p className="ruleScopeNote">改动以对话形式提交，确认后只作用于当前报价并保留记录。</p>
       </section>
+
+      {catalogGaps.length ? (
+        <section className="dmpkCatalogGaps" aria-label="没有价目的委托项">
+          <header>
+            <CircleAlert size={14} aria-hidden="true" />
+            <strong>{catalogGaps.length} 项没有价目</strong>
+            <small>本次未计价，不代表免费</small>
+          </header>
+          <ul>
+            {catalogGaps.map((item) => (
+              <li key={item.id}>
+                <strong>{item.label}</strong>
+                <small>{item.detail}</small>
+              </li>
+            ))}
+          </ul>
+          <button type="button" onClick={() => goToBackOffice("prices")}>
+            去标准价格补价目<ArrowUpRight size={13} aria-hidden="true" />
+          </button>
+        </section>
+      ) : null}
 
       <div className="ruleDisclosureDivider" />
 
@@ -413,14 +446,73 @@ function StrategyDrawer({ title, onClose, children }: { title: string; onClose: 
   return <div className="strategyDrawerBackdrop" role="presentation" {...dismiss}><section className="strategyDrawer" role="dialog" aria-modal="true" aria-label={title}><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
 }
 
+/**
+ * 输入材料：读过什么，读出了什么。
+ *
+ * 读到但没格子放的东西落在这里
+ * ----------------------------------------------------------------------
+ * 一份真实方案里有 7 个动物组、37 个采样事件、7 个分析方法——比十四项参数
+ * 大得多。它们不进字段（模型不动），但人核对时得看得见：「它说 7 组，
+ * 是哪 7 组」。所以每份来源下面挂它读出来的事实，只读，能展开。
+ * 数量写在标题上，展开才是明细；37 行采样事件平铺在 320px 的一栏里
+ * 是一堵墙，折成一行「37 项 · 479 份」才扫得动。
+ */
 function MaterialsPanel({ context }: { context: DmpkInspectorContext }) {
+  const sources = context.sources ?? [];
   return (
     <div className="dmpkInspectorList">
       <PanelIntro title="当前任务上下文" meta={context.projectName} />
-      <InspectorInfoRow icon={FileText} title="用户需求" meta={context.requestText || "等待用户补充任务要求"} />
+      {sources.map((source) => <SourceCard key={source.sourceId} source={source} />)}
+      {context.requestText ? <InspectorInfoRow icon={FileText} title="用户需求" meta={context.requestText} /> : null}
+      {!sources.length && !context.requestText ? <InspectorInfoRow icon={FileText} title="用户需求" meta="等待用户补充任务要求" /> : null}
       <InspectorInfoRow icon={FileSpreadsheet} title="项目资料" meta="当前项目文件 · 可调用" />
       <InspectorInfoRow icon={FileCheck2} title="报价规则" meta="组织规则 · 已发布版本" />
     </div>
+  );
+}
+
+function SourceCard({ source }: { source: ParseResult }) {
+  const [openFactId, setOpenFactId] = useState<string | null>(null);
+  const readable = source.role !== "unknown";
+  return (
+    <section className={`dmpkSourceCard${readable ? "" : " isUnread"}`}>
+      <header>
+        <FileInput size={16} aria-hidden="true" />
+        <div>
+          <strong>{source.sourceLabel}</strong>
+          <small>{sourceKindLabels[source.kind]} · {readable ? sourceRoleLabels[source.role] : "尚未接入解析"}</small>
+        </div>
+      </header>
+      {readable ? <p className="dmpkSourceTitle">{source.title}</p> : null}
+      {source.facts.length ? (
+        <ul className="dmpkFactList">
+          {source.facts.map((fact) => {
+            const expandable = Boolean(fact.items?.length);
+            const open = openFactId === fact.id;
+            return (
+              <li key={fact.id}>
+                <button
+                  type="button"
+                  disabled={!expandable}
+                  aria-expanded={expandable ? open : undefined}
+                  onClick={() => setOpenFactId(open ? null : fact.id)}
+                >
+                  <span className="dmpkFactHead">
+                    <strong>{fact.label}</strong>
+                    {fact.anchor ? <em>{fact.anchor}</em> : null}
+                  </span>
+                  <small>{fact.summary}</small>
+                  {expandable ? <ChevronDown size={13} className="dmpkFactChevron" aria-hidden="true" /> : null}
+                </button>
+                {open && fact.items ? (
+                  <ol>{fact.items.map((item) => <li key={item}>{item}</li>)}</ol>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 
