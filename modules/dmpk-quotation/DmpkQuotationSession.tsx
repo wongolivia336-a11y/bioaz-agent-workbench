@@ -12,6 +12,7 @@ import type { ComposerAttachment } from "../../lib/workbench/composerAttachments
 import { mergeParsePatches, parseSources, type ParseResult } from "../../lib/workbench/sources";
 import type { ParamSource } from "../../components/params";
 import { formatCny, MANUAL_PRICE_BY, pricingSentence, summarizeLines, type ManualPrice } from "../../lib/workbench/quoteLines";
+import { quotePaperFromLines } from "../../lib/workbench/quotePaperFromLines";
 import type { AgentModuleSessionProps } from "../types";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
 import { noteAnchorToField } from "./noteFieldMap";
@@ -170,6 +171,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   /* 报价行从字段 + 来源推，每次渲染重算——它是账，不是状态。 */
   const quoteLines = useMemo(() => buildDmpkQuoteLines(fields, sources), [fields, sources]);
   const quoteSummary = useMemo(() => summarizeLines(quoteLines, manualPrices), [quoteLines, manualPrices]);
+  /* 有账就把账折成纸；没账（退回会话）不传，纸面用固定件。 */
+  const paperTitle = sources.find((source) => source.role === "protocol")?.title ?? taskTitle;
+  const quotePaper = useMemo(
+    () => quoteLines.length ? quotePaperFromLines(quoteLines, manualPrices, fields, paperTitle) : undefined,
+    [quoteLines, manualPrices, fields, paperTitle],
+  );
+  /* 报价单是不是旧的。
+     ----------------------------------------------------------------------
+     生成那一刻记一份「字段值 + 手动单价」的快照；之后任一处变了，出过的那版
+     就跟眼前的账对不上。stage 记不住这件事：改参数会退回 collecting，改单价
+     连 stage 都不动。所以单独算，而不是往 stage 里再塞一个值。 */
+  const [generatedSnapshot, setGeneratedSnapshot] = useState<string | null>(null);
+  const snapshotOf = (nextFields: DmpkField[], nextManual: Record<string, ManualPrice>) =>
+    JSON.stringify({ values: nextFields.map((field) => [field.id, field.value]), manual: nextManual });
+  const quoteStale = generatedSnapshot !== null && generatedSnapshot !== snapshotOf(fields, manualPrices);
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
   const editingField = fields.find((field) => field.id === editingFieldId) ?? null;
   const composerFields = editingField ? [editingField].filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id)) : visibleCardFields;
@@ -323,8 +339,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     onReworkResolved?.();
     setStage("generating");
     suggestPanel("parameters");
+    const snapshot = snapshotOf(fields, manualPrices);
     window.setTimeout(() => {
       setStage("generated");
+      setGeneratedSnapshot(snapshot);
       pushQuoteVersion(`按 ${reworkNotes.length} 条批注重出`);
       appendRun("quote");
       appendMessage("agent", "已按修改后的参数重新生成报价单，Word 与 Excel 金额校验一致，可再次送审。");
@@ -565,6 +583,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       return;
     }
     if (!text) return;
+    /* 「我说过了 / 已经提供过 / 核对一下」——回去翻，不再问一遍。 */
+    if (/(?:提供|说|给|发|传)过|核对(?:一下)?(?:已有|信息)?|重新计算/.test(text)) {
+      appendMessage("user", text, consumeAttachments());
+      setComposerText("");
+      setConversationEditing(false);
+      recheckSources();
+      return;
+    }
     const reportFeeMatch = text.match(/(?:这次|本次)?.*报告费.*?(\d[\d,]*)\s*元?/);
     // 放宽句式：以前必须原样说出「以后…PK…样品…少于…按…收费」，换个说法就掉进兜底文案
     const minimumSampleMatch = text.match(/(?:样品|样本).*?(?:少于|低于|不足|不到)\s*(\d+)\s*个?.*?(?:按|以)\s*(\d+)\s*个?.*?(?:收费|计费|计价)/i);
@@ -641,6 +667,69 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   };
 
   /**
+   * 核对已有信息并重新计算。
+   * ----------------------------------------------------------------------
+   * 人说「我说过了」的时候，系统该做的是回去翻，而不是再问一遍。翻两处：
+   * 传过的材料（按来源，能找回的带原句）、说过的话（一句话识别再跑一遍）。
+   * 找得回的补上；找不回的**明说**「材料和对话里都没有」——承认识别器会漏，
+   * 但不假装找到了。整个过程是一条运行记录，翻了什么、找回几项都留痕。
+   */
+  const recheckSources = () => {
+    const userTexts = messages.filter((message) => message.role === "user" && message.text.trim()).map((message) => message.text);
+    const textPatch = userTexts.reduce<Record<string, string>>((acc, text) => ({ ...acc, ...parseDmpkRequest(text) }), {});
+    const missing = fields.filter((field) => field.required && !field.value);
+    const found = missing.flatMap((field) => {
+      const provider = [...sources].reverse().find((source) => source.patch[field.id] !== undefined);
+      if (provider) {
+        const quoteRef = provider.patchSources?.[field.id];
+        return [{
+          field,
+          value: provider.patch[field.id],
+          from: `${provider.sourceLabel}${quoteRef ? ` · ${quoteRef.anchor}` : ""}`,
+          documentSource: quoteRef ? { kind: "document" as const, sourceId: provider.sourceId, sourceLabel: provider.sourceLabel, anchor: quoteRef.anchor, quote: quoteRef.quote } : undefined,
+        }];
+      }
+      if (textPatch[field.id]) return [{ field, value: textPatch[field.id], from: "对话", documentSource: undefined }];
+      return [];
+    });
+    const stillMissing = missing.filter((field) => !found.some((hit) => hit.field.id === field.id));
+    const readable = sources.filter((source) => source.role !== "unknown");
+    const steps = [
+      { id: "sources", title: "重扫材料", result: sources.length ? `${sources.length} 份 · ${readable.length} 份可读` : "没有传过材料", anchor: readable.map((source) => source.sourceLabel).join("、") || undefined, tech: `sources=${sources.length}  readable=${readable.length}` },
+      { id: "chat", title: "回读对话", result: `${userTexts.length} 条`, tech: `messages=${userTexts.length}  parser=nlp-slot-filler/v3` },
+      { id: "compare", title: "逐项比对", result: missing.length ? `缺 ${missing.length} 项 · 找回 ${found.length} 项 · 仍缺 ${stillMissing.length} 项` : "14 项都有值，没有要补的", tech: `missing=${missing.length}  recovered=${found.length}` },
+    ];
+    setStage("thinking");
+    steps.forEach((_, index) => {
+      window.setTimeout(() => setLiveParse({ text: "正在核对已有信息", runSteps: steps.slice(0, index + 1) }), 320 * index);
+    });
+    window.setTimeout(() => {
+      setLiveParse(null);
+      if (found.length) {
+        setFields((items) => items.map((field) => {
+          const hit = found.find((entry) => entry.field.id === field.id);
+          return hit ? withValue(field, hit.value, hit.documentSource) : field;
+        }));
+        setFieldStatus((current) => ({
+          ...current,
+          ...Object.fromEntries(found.filter((hit) => hit.documentSource).map((hit) => [hit.field.id, "recognized" as const])),
+        }));
+      }
+      setMessages((items) => [...items, { id: `run-${Date.now()}-${items.length}`, role: "run", text: "已核对已有信息", runSteps: steps }]);
+      const scanned = `核对了 ${sources.length} 份材料和 ${userTexts.length} 条对话`;
+      if (!missing.length) {
+        appendMessage("agent", `${scanned}：参数都齐了，没有需要补的。`);
+        setStage("ready");
+        return;
+      }
+      const recovered = found.length ? `补上 ${found.map((hit) => `${hit.field.label} ${hit.value}（来自 ${hit.from}）`).join("、")}。` : "";
+      const remainder = stillMissing.length ? `${found.length ? "仍缺" : "这几项材料和对话里都没有"}：${stillMissing.map((field) => field.label).join("、")}，请直接补充。` : "参数已齐全。";
+      appendMessage("agent", `${scanned}。${recovered}${remainder}`);
+      setStage(stillMissing.length ? "collecting" : "ready");
+    }, 320 * steps.length + 200);
+  };
+
+  /**
    * 临时调价。只作用于这一单：写进会话自己的 manualPrices，价目表不动。
    * 每一次改动都进对话——报价复核是算术，改过哪一档单价必须能翻到。
    */
@@ -660,7 +749,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     if (line) appendMessage("agent", `「${line.service}」已恢复价目表单价${line.catalogPrice !== undefined ? ` ${formatCny(line.catalogPrice)}` : ""}。`);
   };
 
-  const startGeneration = () => {
+  /**
+   * 生成 / 重出。同一条路：第一次叫「首次生成」，改过参数或单价之后再来叫「重出」。
+   * 版本记录上写清楚是哪种——返工场景里「出过第二版」本身就是要给人看的信息，
+   * 改单价重出也一样。
+   */
+  const runGeneration = (origin: string, userText: string) => {
     setPreviewOpen(false);
     setParametersExpanded(false);
     setStage("generating");
@@ -674,17 +768,30 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         return next;
       });
     }
-    appendMessage("user", recognizedFields.length ? `确认参数（含 ${recognizedFields.length} 项文件识别结果），生成正式报价单。` : "确认参数，生成正式报价单。");
+    appendMessage("user", userText);
+    const snapshot = snapshotOf(fields, manualPrices);
     window.setTimeout(() => {
       setStage("generated");
+      setGeneratedSnapshot(snapshot);
       suggestPanel("artifacts");
       /* 带着退回进来时 v1 已经种下（就是被退回的那一版），
          所以这里追加的自然是 v2；从零开始的会话则是 v1。 */
-      pushQuoteVersion(rework ? `按 ${reworkNotes.length} 条批注重出` : "首次生成");
+      pushQuoteVersion(origin);
       appendRun("quote");
-      appendMessage("agent", "报价单已生成。Word 与 Excel 金额校验一致。");
+      appendMessage("agent", `报价单已${origin === "首次生成" ? "生成" : "重新生成"}。Word 与 Excel 金额校验一致${quoteSummary.packages.length ? `，${pricingSentence(quoteSummary)}` : ""}。`);
       appendMessage("artifacts", "");
     }, 1800);
+  };
+
+  const startGeneration = () => {
+    const origin = rework ? `按 ${reworkNotes.length} 条批注重出` : quoteVersions.length ? "改参数后重出" : "首次生成";
+    runGeneration(origin, recognizedFields.length ? `确认参数（含 ${recognizedFields.length} 项文件识别结果），生成正式报价单。` : quoteVersions.length ? "参数已更新，重新生成报价单。" : "确认参数，生成正式报价单。");
+  };
+
+  /** 改了单价但没改参数：stage 还停在 generated，参数卡不会再弹，出口就是这颗。 */
+  const regenerateQuote = () => {
+    if (stage === "generating" || stage === "thinking") return;
+    runGeneration("改动后重出", "按最新参数和单价重新生成报价单。");
   };
 
   /**
@@ -747,6 +854,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     manualPrices,
     onSetManualPrice: setManualPrice,
     onClearManualPrice: clearManualPrice,
+    quoteStale,
+    onRegenerate: regenerateQuote,
+    onRecheck: recheckSources,
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
@@ -770,7 +880,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <>
         <div className="paramPanelToolbar">
           <span>
-            <strong>{stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
+            <strong>{quoteStale ? "报价参数 · 已改动，报价待重出" : stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
             {identifiedAssayType ? <em>{completedCount}/{totalRequired}</em> : null}
             {/* 三个数分开说：填了几项、几项还是机器的提议、几项没填。
                 只报 11/14 的话，「11」里混着人没看过的东西。 */}
@@ -890,7 +1000,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           if (quoteLines.some((line) => line.id === "report")) setManualPrice("report", nextPrice);
           else appendMessage("agent", `已将本次报价的报告费调整为 ¥${nextPrice.toLocaleString()}，仅对当前项目生效，并已保留调整记录。`);
           setEditProposal(null);
-        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
+        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} hasQuote={quoteVersions.length > 0} quoteStale={quoteStale} onRegenerate={regenerateQuote} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
         <WorkbenchPanelBody
           panels={railPanels}
           visibleIds={visiblePanelIds}
@@ -959,6 +1069,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           /* 重出一版之后不再带旧批注：那些行已经改过了，还标着「必须修订」
              等于让人对着自己刚改完的数再确认一遍。 */
           notes={reworkSettled ? [] : reworkNotes}
+          /* 有账的会话看到的是自己的账折成的纸；退回会话没有账，纸面是批注锚着的固定件。 */
+          paper={quotePaper}
           onClose={() => setArtifactPreview(null)}
         />
       ) : null}

@@ -8800,6 +8800,39 @@ button {
 .dmpkSourcePatchList li > strong { min-width: 0; overflow: hidden; color: var(--ink); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .dmpkSourcePatchList li > em { flex: none; margin-left: auto; color: var(--muted); font-size: 10.5px; font-style: normal; }
 
+/* ═══ 待重出 ═══════════════════════════════════════════════════════════
+   出过的那版跟眼前的参数 / 单价对不上了。版本卡上一枚 chip，卡里一句话 + 出口；
+   交接卡上同一句话——不拦，但送出去的是旧的这件事得说在手指要按的地方。 */
+.dmpkQuoteVersion.isStale { border-style: dashed; }
+.dmpkQuoteVersionStale {
+  border-radius: var(--bioaz-radius-full); background: rgba(154, 122, 58, .14);
+  padding: 2px 8px; color: #7d6229; font-size: 10.5px; font-style: normal; white-space: nowrap;
+}
+.dmpkQuoteVersionStaleNote {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px;
+  margin: 0 0 4px; border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb); padding: 7px 10px;
+  color: var(--body); font-size: 11.5px; line-height: 1.5;
+}
+.dmpkQuoteVersionStaleNote button {
+  display: inline-flex; align-items: center; gap: 3px;
+  border: 0; background: transparent; padding: 0;
+  color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.dmpkHandoffStale {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  border: 1px dashed rgba(154, 122, 58, .5); border-radius: var(--bioaz-radius-control);
+  background: rgba(154, 122, 58, .08); padding: 9px 12px;
+  color: #7d6229; font-size: 12px; line-height: 1.55;
+}
+.dmpkHandoffStale > span { flex: 1 1 240px; color: var(--body); }
+.dmpkHandoffStale > button {
+  border: 1px solid rgba(154, 122, 58, .5); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
+  padding: 4px 10px; color: #7d6229; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+
+/* 纸面上单价旁的一行小字：走的哪一档、是不是手动价。 */
+.quoteNumNote { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; white-space: nowrap; }
+
 /* ═══ 报价明细 ═════════════════════════════════════════════════════════
    按工作包分段，一行一项服务：范围与公式在小字，金额靠右；算不出的行
    用状态 chip 顶替金额，原因写在算式那一行。 */

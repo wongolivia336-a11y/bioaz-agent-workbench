@@ -322,7 +322,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHandoff, viewerName, handoffDone, handoffNote, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, recognizedCount = 0, text, setText, activeGroup, fields, allFields, mode, paramsOpen, onParamsOpenChange, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { /** 落不到参数格上的批注，交接卡在送审时问一次 */ unresolvedNotes?: { anchorId: string; label: string }[]; /** 退回批注入口卡。它跟参数卡、交接卡同一个槽位：需要人当场做的事都在这儿 */ reworkNotice?: ReactNode; editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 交接说明的预填：会话摘要生成过就用它 */ handoffNote?: string; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; /** 还挂着「识别」、没被人点过头的参数有几项。报价前确认卡据此改口成「确认并生成」 */ recognizedCount?: number; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; /** 参数卡展开没有。会话持有它，卡片在 thinking 时会卸载重挂 */ paramsOpen?: boolean; onParamsOpenChange?: (open: boolean) => void; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
+export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHandoff, viewerName, handoffDone, handoffNote, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, recognizedCount = 0, hasQuote = false, quoteStale = false, onRegenerate, text, setText, activeGroup, fields, allFields, mode, paramsOpen, onParamsOpenChange, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { /** 落不到参数格上的批注，交接卡在送审时问一次 */ unresolvedNotes?: { anchorId: string; label: string }[]; /** 退回批注入口卡。它跟参数卡、交接卡同一个槽位：需要人当场做的事都在这儿 */ reworkNotice?: ReactNode; editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 交接说明的预填：会话摘要生成过就用它 */ handoffNote?: string; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; /** 还挂着「识别」、没被人点过头的参数有几项。报价前确认卡据此改口成「确认并生成」 */ recognizedCount?: number; /** 这一单出过版没有。出过的话再到 ready 是「重出」不是「生成」 */ hasQuote?: boolean; /** 出过的那版跟眼前的参数 / 单价对不上了 */ quoteStale?: boolean; onRegenerate?: () => void; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; /** 参数卡展开没有。会话持有它，卡片在 thinking 时会卸载重挂 */ paramsOpen?: boolean; onParamsOpenChange?: (open: boolean) => void; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -337,7 +337,7 @@ export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHa
       {reworkNotice}
       {editProposal ? <DmpkEditProposalCard proposal={editProposal} onConfirmCurrentPrice={onConfirmCurrentPrice} onOpenRuleManagement={onOpenRuleManagement} /> : null}
       {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} allFields={allFields} draftTabs={draftTabs} mode={mode} open={paramsOpen} onOpenChange={onParamsOpenChange} onSelect={onSelect} /> : null}
-      {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} recognizedCount={recognizedCount} /> : null}
+      {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} recognizedCount={recognizedCount} hasQuote={hasQuote} /> : null}
       {/* 报价出来了,下一步是把它交给谁。入口长在这儿而不是某个列表页顶栏:
           工单不是「新建」出来的,是干完活交出去那一下留下的凭据——所以它该
           出现在活刚干完的地方,而不是让人先想起去哪儿开一张单。 */}
@@ -361,7 +361,7 @@ export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHa
       {changeConfirm && onConfirmChanges && onCancelChanges ? (
         <ChangeConfirmCard changes={changeConfirm} onConfirm={onConfirmChanges} onCancel={onCancelChanges} />
       ) : null}
-      {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} unresolvedNotes={unresolvedNotes} defaultNote={handoffNote} /> : null}
+      {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} unresolvedNotes={unresolvedNotes} defaultNote={handoffNote} stale={quoteStale} onRegenerate={onRegenerate} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       {/* 「DMPK报价同事 ∨」那颗切换器撤掉。走到这个工作台的路只有一条——
           从站内信进来，或者在项目里新建一个 DMPK 报价任务——两条路都已经
@@ -486,7 +486,7 @@ export function DmpkParameterTaskCard({ activeGroup, fields, allFields, draftTab
 }
 
 /** 报价生成之后的交接卡。审核这一棒是人做的,所以这里只问「交给谁」。 */
-function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [], defaultNote = "" }: {
+function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [], defaultNote = "", stale = false, onRegenerate }: {
   onHandoff: (to: string, note: string) => void;
   viewerName?: string;
   /* 落不到任何一格参数上的批注。报价单的条目和会话收的字段本来就不是
@@ -495,6 +495,10 @@ function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [], defaultN
   unresolvedNotes?: { anchorId: string; label: string }[];
   /** 生成过会话摘要的话，说明栏预填它——接手的人要的正是这几句。 */
   defaultNote?: string;
+  /* 出过的那版跟眼前的参数 / 单价对不上了。不拦（P0-3 不单设门槛），
+     但要说在交接的地方：送出去的是旧的，接手的人不知道。 */
+  stale?: boolean;
+  onRegenerate?: () => void;
 }) {
   const [to, setTo] = useState("");
   const [note, setNote] = useState(defaultNote);
@@ -520,6 +524,13 @@ function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [], defaultN
           原话，撰写人在上面留标记读起来像改了他的记录；而且「改到哪儿了」
           参数面板已经在说了，再加一套就有两个真相来源。
           所以只在这里问一次——它是这一轮唯一一个「不说清楚就出不去」的关口。 */}
+      {stale ? (
+        <div className="dmpkHandoffStale">
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span>参数或单价已改动，报价单还是旧的。可以照样交接，但接手的人拿到的不是最新的数。</span>
+          {onRegenerate ? <button type="button" onClick={onRegenerate}>先重新生成</button> : null}
+        </div>
+      ) : null}
       {unresolvedNotes.length ? (
         <div className="dmpkHandoffUnresolved">
           <strong>以下 {unresolvedNotes.length} 条批注没有对应的参数格</strong>
@@ -566,8 +577,9 @@ function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [], defaultN
  * 「确认并生成」——点下去等于把那 N 项一起确认了。悄悄确认和拦住不让走，
  * 都不如把这件事写在手指要按的地方。
  */
-function DmpkFinalConfirmCard({ onPreview, onGenerate, onOpenInspector, recognizedCount = 0 }: { onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; recognizedCount?: number }) {
-  return <section className="warningDecision"><header className="warningDecisionHeader"><div><span>报价前确认</span><strong>参数已齐全，可以生成正式报价单</strong><p>请先预览完整参数和计价规则，也可以<PanelLink panelId="evidence" onOpen={onOpenInspector}>查看报价明细</PanelLink>。{recognizedCount ? <>其中 <b>{recognizedCount} 项来自文件识别</b>，尚未逐项确认，生成即视为确认。</> : null}确认后将生成 Word 报价单与 Excel 报价明细。</p></div><small>待确认</small></header><div className="warningActions"><button className="previewIconOnlyButton" type="button" onClick={onPreview} aria-label="预览全部参数"><Eye size={16} /></button><button className="primaryButton compact" type="button" onClick={onGenerate}>{recognizedCount ? "确认并生成报价单" : "生成报价单"}</button></div></section>;
+function DmpkFinalConfirmCard({ onPreview, onGenerate, onOpenInspector, recognizedCount = 0, hasQuote = false }: { onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; recognizedCount?: number; /** 出过版了：这一下是重出，标题和按钮都得说「重新」 */ hasQuote?: boolean }) {
+  const verb = hasQuote ? "重新生成" : "生成";
+  return <section className="warningDecision"><header className="warningDecisionHeader"><div><span>报价前确认</span><strong>{hasQuote ? "参数已更新，重新生成报价单" : "参数已齐全，可以生成正式报价单"}</strong><p>{hasQuote ? "已出的那版报价单按的是旧参数。" : ""}请先预览完整参数和计价规则，也可以<PanelLink panelId="evidence" onOpen={onOpenInspector}>查看报价明细</PanelLink>。{recognizedCount ? <>其中 <b>{recognizedCount} 项来自文件识别</b>，尚未逐项确认，生成即视为确认。</> : null}确认后将{verb} Word 报价单与 Excel 报价明细。</p></div><small>{hasQuote ? "待重出" : "待确认"}</small></header><div className="warningActions"><button className="previewIconOnlyButton" type="button" onClick={onPreview} aria-label="预览全部参数"><Eye size={16} /></button><button className="primaryButton compact" type="button" onClick={onGenerate}>{recognizedCount ? `确认并${verb}报价单` : `${verb}报价单`}</button></div></section>;
 }
 
 function DmpkArtifactCards({ onPreview, onOpenInspector }: { onPreview: (kind: "word" | "excel") => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {

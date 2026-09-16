@@ -6,6 +6,7 @@ import { cn } from "../../lib/cn";
 import { useModalDismiss } from "../ui/useModalDismiss";
 import { AnnotatedQuote } from "./AnnotatedQuote";
 import type { QuoteNote } from "../../lib/workbench/quoteData";
+import type { QuotePaperData } from "../../lib/workbench/quotePaperFromLines";
 
 /**
  * 带批注的报价预览弹窗。
@@ -14,7 +15,7 @@ import type { QuoteNote } from "../../lib/workbench/quoteData";
  * 两处必须是同一个东西，否则迟早分叉成「弹窗里能点、画布里不能点」。
  * 这里只负责弹窗这层壳：标题、关闭、叠层。
  */
-export function QuotePreviewModal({ notes = [], initialForm = "sheet", title, description, footer, stacked = false, onClose }: {
+export function QuotePreviewModal({ notes = [], initialForm = "sheet", title, description, footer, stacked = false, paper, onClose }: {
   notes?: QuoteNote[];
   initialForm?: "sheet" | "doc";
   title: string;
@@ -23,6 +24,8 @@ export function QuotePreviewModal({ notes = [], initialForm = "sheet", title, de
   footer?: React.ReactNode;
   /** 开在另一个弹窗之上时抬一层——否则它会被下面那层盖住。 */
   stacked?: boolean;
+  /** 有报价行的会话传自己的账；不传是固定件。 */
+  paper?: QuotePaperData;
   onClose: () => void;
 }) {
   const dismiss = useModalDismiss(onClose);
@@ -40,7 +43,7 @@ export function QuotePreviewModal({ notes = [], initialForm = "sheet", title, de
           <button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button>
         </header>
 
-        <AnnotatedQuote notes={notes} initialForm={initialForm} />
+        <AnnotatedQuote notes={notes} initialForm={initialForm} paper={paper} />
 
         <footer className="quotePreviewFoot">
           {footer ?? <span />}

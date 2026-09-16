@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { ScrollTopButton } from "../ui/ScrollTopButton";
 import { QuoteDocPaper, QuoteSheetPaper } from "./QuotePaper";
+import type { QuotePaperData } from "../../lib/workbench/quotePaperFromLines";
 import {
   quoteAnchorInDoc,
   quoteAnchorLabel,
@@ -32,12 +33,14 @@ import {
  * 两种形态都要有：DMPK 的产物本来就是一 Word 一 Excel，报价书给客户看，
  * 计算表推导单价。复核和返工都要在两者之间来回。
  */
-export function AnnotatedQuote({ notes = [], initialForm = "sheet", className, toolbarExtra }: {
+export function AnnotatedQuote({ notes = [], initialForm = "sheet", className, toolbarExtra, paper }: {
   notes?: QuoteNote[];
   initialForm?: "sheet" | "doc";
   className?: string;
   /** 工具条右端的附加内容，比如下载按钮。 */
   toolbarExtra?: React.ReactNode;
+  /** 这张纸的数据。有报价行的会话传自己的账；不传是固定件（退回批注锚在它上面）。 */
+  paper?: QuotePaperData;
 }) {
   const [form, setForm] = useState<"sheet" | "doc">(initialForm);
   const [activeAnchor, setActiveAnchor] = useState<string | null>(null);
@@ -102,8 +105,8 @@ export function AnnotatedQuote({ notes = [], initialForm = "sheet", className, t
         <div className="quotePreviewPaperWrap">
           <div className="quotePreviewPaper" ref={scrollRef} onClick={onPaperClick}>
             {form === "sheet"
-              ? <QuoteSheetPaper rowClass={rowClass} bubble={bubble} />
-              : <QuoteDocPaper rowClass={rowClass} bubble={bubble} />}
+              ? <QuoteSheetPaper rowClass={rowClass} bubble={bubble} data={paper} />
+              : <QuoteDocPaper rowClass={rowClass} bubble={bubble} data={paper} />}
           </div>
           <ScrollTopButton targetRef={scrollRef} />
         </div>

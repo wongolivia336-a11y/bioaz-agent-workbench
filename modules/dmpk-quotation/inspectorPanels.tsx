@@ -90,6 +90,12 @@ export type DmpkInspectorContext = {
   manualPrices?: Record<string, ManualPrice>;
   onSetManualPrice?: (lineId: string, price: number) => void;
   onClearManualPrice?: (lineId: string) => void;
+  /* 出过的那版跟眼前的参数 / 单价对不上了。改单价不经过参数卡，
+     「重新生成」的出口就在报价结果的版本卡上。 */
+  quoteStale?: boolean;
+  onRegenerate?: () => void;
+  /* 「核对已有信息并重新计算」：人说「我说过了」时回去翻材料和对话。 */
+  onRecheck?: () => void;
   reworkBy?: string;
   reworkAt?: string;
   reworkReason?: string;
@@ -584,6 +590,11 @@ function GapsPanel({ context }: { context: DmpkInspectorContext }) {
           <button type="button" aria-label={`补充${groupLabels[group]}`} onClick={() => context.onEditField(fields[0].id)}><Edit3 size={14} /></button>
         </div>
       ))}
+      {/* 「这些我已经给过了」——让系统回去翻材料和对话，而不是让人再说一遍。
+          找不回的它会明说，不假装找到。 */}
+      {context.onRecheck ? (
+        <button className="dmpkInspectorTextAction" type="button" onClick={context.onRecheck}>这些信息已经提供过？核对已有信息并重新计算</button>
+      ) : null}
     </div>
   );
 }
@@ -762,6 +773,8 @@ function ArtifactsPanel({ context, onPreview }: { context: DmpkInspectorContext;
           version={version}
           current={index === 0}
           total={versions.length}
+          stale={index === 0 && Boolean(context.quoteStale)}
+          onRegenerate={context.onRegenerate}
           onPreview={onPreview}
         />
       ))}
@@ -769,27 +782,37 @@ function ArtifactsPanel({ context, onPreview }: { context: DmpkInspectorContext;
   );
 }
 
-function QuoteVersionCard({ version, current, total, onPreview }: {
+function QuoteVersionCard({ version, current, total, stale, onRegenerate, onPreview }: {
   version: { id: string; label: string; at: string; origin: string };
   current: boolean;
   total: number;
+  /** 这一版按的参数 / 单价已经不是眼前这份了。 */
+  stale?: boolean;
+  onRegenerate?: () => void;
   onPreview: (kind: "word" | "excel") => void;
 }) {
   /* 最新那版默认展开——多数时候要拿的就是它。旧版收起来但留在原地。 */
   const [open, setOpen] = useState(current);
   return (
-    <section className={`dmpkQuoteVersion${current ? " isCurrent" : ""}`}>
+    <section className={`dmpkQuoteVersion${current ? " isCurrent" : ""}${stale ? " isStale" : ""}`}>
       <button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <span className="dmpkQuoteVersionTag">{version.label}</span>
         <span className="dmpkQuoteVersionMeta">
           <strong>{version.origin}</strong>
           <small>{version.at}</small>
         </span>
-        {current && total > 1 ? <i className="dmpkQuoteVersionNow">当前</i> : null}
+        {stale ? <i className="dmpkQuoteVersionStale">待重出</i> : current && total > 1 ? <i className="dmpkQuoteVersionNow">当前</i> : null}
         <ChevronDown size={14} className="dmpkQuoteVersionChevron" aria-hidden="true" />
       </button>
       {open ? (
         <div className="dmpkQuoteVersionFiles">
+          {/* 旧的两份文件照样能看——人要对比改前改后。但先说清楚它们是旧的。 */}
+          {stale ? (
+            <p className="dmpkQuoteVersionStaleNote">
+              <span>参数或单价已改动，这两份文件按的还是旧的。</span>
+              {onRegenerate ? <button type="button" onClick={onRegenerate}>重新生成 <ArrowRight size={12} aria-hidden="true" /></button> : null}
+            </p>
+          ) : null}
           <ArtifactRow icon={FileText} title="中文 Word 报价单" meta="30% 管理费" onPreview={() => onPreview("word")} />
           <ArtifactRow icon={FileSpreadsheet} title="Excel 报价明细" meta="15% 管理费" onPreview={() => onPreview("excel")} />
         </div>
