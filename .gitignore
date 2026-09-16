@@ -15,3 +15,10 @@ tsconfig.tsbuildinfo
 
 # Project documentation (managed separately)
 *.md
+
+# 但设计文档要进仓库。
+# 工作日志、汇报材料、工程债清单原来全被上面那条 *.md 挡住了——
+# 只存在一台机器上。这几份记的是**为什么这么设计**，
+# 而那正是代码里看不出来、换个人接手最先丢掉的东西。
+!docs/
+!docs/**/*.md

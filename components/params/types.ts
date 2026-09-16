@@ -20,6 +20,20 @@
 
 export type ParamFieldKind = "options" | "select" | "text" | "multi" | "repeat";
 
+/**
+ * 这一格的值是哪来的（甲方 P0-1「保留原文依据」）。
+ *
+ * document  从某份材料里读出来的：哪份、哪一节、原文哪句话。
+ * manual    人改过的。只在**盖掉了一个原文来源**时才出现——原来就是人填的格子
+ *           没有这一项，也就没有小标；而「方案说 2 周、人改成 4 周」正是审批人
+ *           要一眼看到的那种格子，所以原句留在 original 里，浮层写「原文为 X，已改为 Y」。
+ *
+ * 可选。肿瘤线没有文件识别，不传就跟原来一模一样。
+ */
+export type ParamSource =
+  | { kind: "document"; sourceId: string; sourceLabel: string; anchor: string; quote: string }
+  | { kind: "manual"; original?: { sourceLabel: string; anchor: string; quote: string; value: string } };
+
 export type ParamGroup = { id: string; title: string };
 
 /** 重复行里的一列。给了 options 就渲染下拉，否则是文本框。 */
@@ -71,6 +85,8 @@ export type ParamField = {
    * 人看到的仍然是一份自相矛盾的参数——金额对不代表说法对。
    */
   exclusiveOptions?: string[];
+  /** 这个值的原文依据。见 ParamSource。 */
+  source?: ParamSource;
 };
 
 export type ParamDraft = { fieldId: string; label: string; value: string };

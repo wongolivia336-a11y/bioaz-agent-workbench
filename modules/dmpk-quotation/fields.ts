@@ -135,5 +135,12 @@ export function parseDmpkRequest(text: string): Record<string, string> {
   else if (/英文报告|英文版|english/i.test(text)) patch.language = "英文";
   else if (/中文报告|中文版/.test(text)) patch.language = "中文";
 
+  /* 报价区域一直没有规则——语言、格式都认，偏偏它不认。后果是「报价区域国内」
+     这句掉进兜底文案，而「核对已有信息」那条路对它永远找不回。
+     认的是选项表里的原词；「按国内价」「国内报价」「欧美客户」这几种说法都要接住。 */
+  if (/欧美|美国|欧洲|海外/.test(text)) patch.region = "欧美";
+  else if (/亚太|日本|韩国|东南亚/.test(text)) patch.region = "亚太";
+  else if (/国内(?!外)|境内|人民币|不用美元/.test(text)) patch.region = "国内";
+
   return patch;
 }

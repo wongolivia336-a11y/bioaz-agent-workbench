@@ -12,6 +12,7 @@ import { CoworkerSelector } from "../../components/workbench-shell/CoworkerSelec
 import { ContextDivider, CoworkerSwitchCard } from "../../components/workbench-shell/BioAZHelper";
 import { MessageAttachments, WorkbenchComposer } from "../../components/workbench-shell/WorkbenchComposer";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
+import type { ParseStep } from "../../lib/workbench/sources";
 import type { CoworkerDefinition, SessionRework } from "../types";
 import { ReworkCard, type ReworkNoteState } from "../../components/workbench-shell/ReworkCard";
 import { ChangeConfirmCard, type QuoteChange } from "../../components/workbench-shell/ChangeConfirmCard";
@@ -48,16 +49,45 @@ export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gap
  */
 export type DmpkChatMessage = {
   id: string;
-  role: "user" | "agent" | "run" | "inbound" | "artifacts";
+  role: "user" | "agent" | "run" | "inbound" | "artifacts" | "summary";
   text: string;
   attachments?: ComposerAttachment[];
-  /** role === "run" 时这一次跑了哪几步。 */
-  runSteps?: string[];
+  /** role === "run" 时这一次跑了哪几步。
+      字符串是原来那三种运行；对象是读文件的解析轨迹——每步多带
+      「读出了什么」和「原文在哪」。两种混着放，旧的三种一个字不用改。 */
+  runSteps?: DmpkRunStep[];
+  /** role === "summary" 时的四段内容。 */
+  summary?: DmpkSessionSummary;
+};
+
+export type DmpkRunStep = string | ParseStep;
+
+/**
+ * 会话摘要：补了六七轮之后人会迷路，这一条把「现在到哪儿了」说清楚。
+ * 四段是固定的：已确认、待确认、计价到哪儿、下一步。
+ * 它是从当前状态推出来的，不是数字同事「想」出来的，所以生成不需要等。
+ */
+export type DmpkSessionSummary = {
+  confirmed: string[];
+  pending: string[];
+  pricing: string;
+  next: string;
 };
 
 /** 一次运行的标题与步骤。两处（进行中的尾巴、留档的那条）取自同一处，免得分叉。 */
-export function dmpkRunRecord(kind: "params" | "quote" | "rework", options: { running?: boolean; missingCount?: number } = {}) {
-  const { running = false, missingCount = 0 } = options;
+export function dmpkRunRecord(
+  kind: "params" | "quote" | "rework" | "parse",
+  options: { running?: boolean; missingCount?: number; parse?: { label: string; steps: ParseStep[] } } = {},
+): { text: string; runSteps: DmpkRunStep[] } {
+  const { running = false, missingCount = 0, parse } = options;
+  if (kind === "parse") {
+    /* 读文件那一次。标题带文件名——同一条会话里可能传过不止一份，
+       折叠之后光写「已读取文件」，人分不清折的是哪一份。 */
+    return {
+      text: running ? `正在读取「${parse?.label ?? "文件"}」` : `已读取「${parse?.label ?? "文件"}」`,
+      runSteps: parse?.steps ?? [],
+    };
+  }
   if (kind === "rework") {
     /* 退回刚进来那一次跑的不是「更新参数」——那时什么都还没改。
        它读的是退回工单，所以标题和步骤都得说这件事，否则这条记录
@@ -115,10 +145,10 @@ function RuleScopePreview() {
   );
 }
 
-export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
-  const liveRun = stage === "thinking" || stage === "generating"
+export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, liveRun: liveRunOverride, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; /** 正在读文件时由会话递进来：步骤是逐条揭开的，stage 本身推不出来。 */ liveRun?: { text: string; runSteps: DmpkRunStep[] } | null; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
+  const liveRun = liveRunOverride ?? (stage === "thinking" || stage === "generating"
     ? dmpkRunRecord(stage === "generating" ? "quote" : "params", { running: true, missingCount: currentMissing.length })
-    : null;
+    : null);
   return (
     <div className="dmpkConversation">
       {handoffNotice ? <ContextDivider>{handoffNotice}</ContextDivider> : null}
@@ -126,6 +156,7 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
         if (message.role === "run") return <DmpkActivityChain key={message.id} title={message.text} steps={message.runSteps ?? []} running={false} onOpenInspector={onOpenInspector} />;
         if (message.role === "inbound") return <DmpkInboundEvent key={message.id} text={message.text} attachments={message.attachments} />;
         if (message.role === "artifacts") return <DmpkArtifactCards key={message.id} onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} />;
+        if (message.role === "summary" && message.summary) return <DmpkSummaryCard key={message.id} summary={message.summary} />;
         if (message.role === "agent") return <AgentReply key={message.id}>{message.text}</AgentReply>;
         return <UserBubble key={message.id} text={message.text} attachments={message.attachments} />;
       })}
@@ -167,11 +198,26 @@ function DmpkInboundEvent({ text, attachments }: { text: string; attachments?: C
  * 运行中蓝色 motionLogo、结束后折叠置灰。此前这里是 details/summary，
  * 外层 details、summary、activityChainPanel 各自带一圈边框，看起来是三层嵌套。
  */
-function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: string; steps: string[]; running: boolean; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {
+/**
+ * 一步长什么样，两种来源统一成一副：
+ *   - 字符串（原来三种运行）：标题 + 按关键词配的说明 + 技术详情
+ *   - ParseStep（读文件）：标题 + **读出了什么** + **原文在哪** + 技术详情
+ *
+ * 读文件的那条链跟「整理实验事实 × 30」的差别全在后两样上：
+ * 每一步说自己产出了几样东西、从原文哪一节读的。人对着它能核——
+ * 「7 组」对不对，翻表 2 就知道。
+ */
+function normalizeStep(step: DmpkRunStep): ParseStep & { detail: string } {
+  if (typeof step === "string") return { id: step, title: step, detail: processStepDetail(step), tech: processStepTech(step) };
+  return { ...step, detail: step.result ?? "" };
+}
+
+function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: string; steps: DmpkRunStep[]; running: boolean; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {
   const [expandedTech, setExpandedTech] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const open = running || expanded;
   const activeStepIndex = steps.length - 1;
+  const items = steps.map(normalizeStep);
 
   return (
     <article className={`agentRun ${running ? "running" : "settled"} ${open ? "" : "collapsed"}`} data-minimap="activity" data-minimap-label={title}>
@@ -189,36 +235,79 @@ function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: 
       </button>
       {open ? (
         <div className="timeline">
-          {steps.map((step, index) => (
-            <div className={`timelineItem ${running && index === activeStepIndex ? "active" : "done"}`} key={step}>
+          {items.map((step, index) => (
+            <div className={`timelineItem ${running && index === activeStepIndex ? "active" : "done"}`} key={step.id}>
               <span className="timelineDot" />
               <div className="timelineContent">
                 <div className="timelineTitle">
-                  <strong>{step}</strong>
+                  <strong>{step.title}</strong>
                   {running && index === activeStepIndex ? <span>进行中</span> : null}
                 </div>
-                <p>{processStepDetail(step)}</p>
+                {/* 读文件的步骤：产出是一行结论，来源是一枚小标。
+                    产出没出来（还在跑）就不占位，免得一排空行。 */}
+                {step.detail ? (
+                  <p>
+                    {step.detail}
+                    {step.anchor ? <em className="timelineAnchor">{step.anchor}</em> : null}
+                  </p>
+                ) : null}
                 <button
                   className="textButton"
                   type="button"
-                  onClick={() => setExpandedTech(expandedTech === step ? null : step)}
+                  onClick={() => setExpandedTech(expandedTech === step.id ? null : step.id)}
                 >
                   技术详情
                 </button>
-                {expandedTech === step ? (
+                {expandedTech === step.id ? (
                   <pre className="techBlock">
-                    {processStepTech(step)}
+                    {step.tech ?? "step executed"}
                     {"\n"}job_id=job_dmpk_4c1f8a2e9b7d
                     {"\n"}trace_id=trc_quotation_58ad31
                   </pre>
                 ) : null}
               </div>
-              {index < steps.length - 1 ? <span className="timelineLine" /> : null}
+              {index < items.length - 1 ? <span className="timelineLine" /> : null}
             </div>
           ))}
         </div>
       ) : null}
     </article>
+  );
+}
+
+/**
+ * 会话摘要卡。钉在生成那一刻，跟运行记录同一个逻辑：它说的是「此刻到哪儿了」，
+ * 再往下聊它就是历史，不该跟着往下跑。
+ *
+ * 形态上不是数字同事的气泡——它不是一句回复，是一张台账的快照。
+ */
+function DmpkSummaryCard({ summary }: { summary: DmpkSessionSummary }) {
+  return (
+    <section className="dmpkSessionSummary" data-minimap="activity" data-minimap-label="会话摘要">
+      <header>
+        <span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span>
+        <strong>会话摘要</strong>
+        <small>截至刚才</small>
+      </header>
+      <dl>
+        <div>
+          <dt>已确认 {summary.confirmed.length} 项</dt>
+          <dd>{summary.confirmed.length ? summary.confirmed.join("、") : "还没有确认任何参数"}</dd>
+        </div>
+        <div>
+          <dt>待确认 {summary.pending.length} 项</dt>
+          <dd>{summary.pending.length ? summary.pending.join("、") : "没有待确认项"}</dd>
+        </div>
+        <div>
+          <dt>计价</dt>
+          <dd>{summary.pricing}</dd>
+        </div>
+        <div>
+          <dt>下一步</dt>
+          <dd>{summary.next}</dd>
+        </div>
+      </dl>
+    </section>
   );
 }
 
@@ -233,7 +322,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHandoff, viewerName, handoffDone, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, text, setText, activeGroup, fields, allFields, mode, paramsOpen, onParamsOpenChange, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { /** 落不到参数格上的批注，交接卡在送审时问一次 */ unresolvedNotes?: { anchorId: string; label: string }[]; /** 退回批注入口卡。它跟参数卡、交接卡同一个槽位：需要人当场做的事都在这儿 */ reworkNotice?: ReactNode; editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; /** 参数卡展开没有。会话持有它，卡片在 thinking 时会卸载重挂 */ paramsOpen?: boolean; onParamsOpenChange?: (open: boolean) => void; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
+export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHandoff, viewerName, handoffDone, handoffNote, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, recognizedCount = 0, hasQuote = false, quoteStale = false, onRegenerate, text, setText, activeGroup, fields, allFields, mode, paramsOpen, onParamsOpenChange, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange }: { /** 落不到参数格上的批注，交接卡在送审时问一次 */ unresolvedNotes?: { anchorId: string; label: string }[]; /** 退回批注入口卡。它跟参数卡、交接卡同一个槽位：需要人当场做的事都在这儿 */ reworkNotice?: ReactNode; editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 交接说明的预填：会话摘要生成过就用它 */ handoffNote?: string; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; /** 还挂着「识别」、没被人点过头的参数有几项。报价前确认卡据此改口成「确认并生成」 */ recognizedCount?: number; /** 这一单出过版没有。出过的话再到 ready 是「重出」不是「生成」 */ hasQuote?: boolean; /** 出过的那版跟眼前的参数 / 单价对不上了 */ quoteStale?: boolean; onRegenerate?: () => void; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; /** 参数卡展开没有。会话持有它，卡片在 thinking 时会卸载重挂 */ paramsOpen?: boolean; onParamsOpenChange?: (open: boolean) => void; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -248,7 +337,7 @@ export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHa
       {reworkNotice}
       {editProposal ? <DmpkEditProposalCard proposal={editProposal} onConfirmCurrentPrice={onConfirmCurrentPrice} onOpenRuleManagement={onOpenRuleManagement} /> : null}
       {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} allFields={allFields} draftTabs={draftTabs} mode={mode} open={paramsOpen} onOpenChange={onParamsOpenChange} onSelect={onSelect} /> : null}
-      {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} /> : null}
+      {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} recognizedCount={recognizedCount} hasQuote={hasQuote} /> : null}
       {/* 报价出来了,下一步是把它交给谁。入口长在这儿而不是某个列表页顶栏:
           工单不是「新建」出来的,是干完活交出去那一下留下的凭据——所以它该
           出现在活刚干完的地方,而不是让人先想起去哪儿开一张单。 */}
@@ -272,7 +361,7 @@ export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHa
       {changeConfirm && onConfirmChanges && onCancelChanges ? (
         <ChangeConfirmCard changes={changeConfirm} onConfirm={onConfirmChanges} onCancel={onCancelChanges} />
       ) : null}
-      {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} unresolvedNotes={unresolvedNotes} /> : null}
+      {stage === "generated" && onHandoff && !handoffDone ? <DmpkHandoffCard onHandoff={onHandoff} viewerName={viewerName} unresolvedNotes={unresolvedNotes} defaultNote={handoffNote} stale={quoteStale} onRegenerate={onRegenerate} /> : null}
       {pendingCoworker && currentCoworker ? <CoworkerSwitchCard from={currentCoworker.name} to={pendingCoworker.name} endingCurrentFlow={coworkerLocked} onConfirm={onConfirmCoworkerChange} onCancel={onCancelCoworkerChange} /> : null}
       {/* 「DMPK报价同事 ∨」那颗切换器撤掉。走到这个工作台的路只有一条——
           从站内信进来，或者在项目里新建一个 DMPK 报价任务——两条路都已经
@@ -397,16 +486,25 @@ export function DmpkParameterTaskCard({ activeGroup, fields, allFields, draftTab
 }
 
 /** 报价生成之后的交接卡。审核这一棒是人做的,所以这里只问「交给谁」。 */
-function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [] }: {
+function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [], defaultNote = "", stale = false, onRegenerate }: {
   onHandoff: (to: string, note: string) => void;
   viewerName?: string;
   /* 落不到任何一格参数上的批注。报价单的条目和会话收的字段本来就不是
      一一对应——Discount 这类只存在于报价单口径里，参数面板里没有它的格子，
      所以它永远不会显示成「已处理」。 */
   unresolvedNotes?: { anchorId: string; label: string }[];
+  /** 生成过会话摘要的话，说明栏预填它——接手的人要的正是这几句。 */
+  defaultNote?: string;
+  /* 出过的那版跟眼前的参数 / 单价对不上了。不拦（P0-3 不单设门槛），
+     但要说在交接的地方：送出去的是旧的，接手的人不知道。 */
+  stale?: boolean;
+  onRegenerate?: () => void;
 }) {
   const [to, setTo] = useState("");
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(defaultNote);
+  /* 摘要可能在这张卡挂出来之后才生成。只在说明栏还空着时填进去——
+     人已经打了字，就不该被一段自动文本盖掉。 */
+  useEffect(() => { setNote((current) => current || defaultNote); }, [defaultNote]);
   /* 有落不到参数上的批注时，说明栏从选填变必填——否则那几条就这么静悄悄地
      跟着报价单又送回审批人手里，而他上一轮正是为它们退的。 */
   const ready = Boolean(to.trim()) && (!unresolvedNotes.length || Boolean(note.trim()));
@@ -426,6 +524,13 @@ function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [] }: {
           原话，撰写人在上面留标记读起来像改了他的记录；而且「改到哪儿了」
           参数面板已经在说了，再加一套就有两个真相来源。
           所以只在这里问一次——它是这一轮唯一一个「不说清楚就出不去」的关口。 */}
+      {stale ? (
+        <div className="dmpkHandoffStale">
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span>参数或单价已改动，报价单还是旧的。可以照样交接，但接手的人拿到的不是最新的数。</span>
+          {onRegenerate ? <button type="button" onClick={onRegenerate}>先重新生成</button> : null}
+        </div>
+      ) : null}
       {unresolvedNotes.length ? (
         <div className="dmpkHandoffUnresolved">
           <strong>以下 {unresolvedNotes.length} 条批注没有对应的参数格</strong>
@@ -466,8 +571,15 @@ function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [] }: {
   );
 }
 
-function DmpkFinalConfirmCard({ onPreview, onGenerate, onOpenInspector }: { onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {
-  return <section className="warningDecision"><header className="warningDecisionHeader"><div><span>报价前确认</span><strong>参数已齐全，可以生成正式报价单</strong><p>请先预览完整参数和计价规则，也可以<PanelLink panelId="evidence" onOpen={onOpenInspector}>查看规则证据</PanelLink>。确认后将生成 Word 报价单与 Excel 报价明细。</p></div><small>待确认</small></header><div className="warningActions"><button className="previewIconOnlyButton" type="button" onClick={onPreview} aria-label="预览全部参数"><Eye size={16} /></button><button className="primaryButton compact" type="button" onClick={onGenerate}>生成报价单</button></div></section>;
+/**
+ * 报价前确认。
+ * 还有文件认出来、人没点过头的参数时，不拦（P0-3 不单设门槛），但话要说在按钮上：
+ * 「确认并生成」——点下去等于把那 N 项一起确认了。悄悄确认和拦住不让走，
+ * 都不如把这件事写在手指要按的地方。
+ */
+function DmpkFinalConfirmCard({ onPreview, onGenerate, onOpenInspector, recognizedCount = 0, hasQuote = false }: { onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; recognizedCount?: number; /** 出过版了：这一下是重出，标题和按钮都得说「重新」 */ hasQuote?: boolean }) {
+  const verb = hasQuote ? "重新生成" : "生成";
+  return <section className="warningDecision"><header className="warningDecisionHeader"><div><span>报价前确认</span><strong>{hasQuote ? "参数已更新，重新生成报价单" : "参数已齐全，可以生成正式报价单"}</strong><p>{hasQuote ? "已出的那版报价单按的是旧参数。" : ""}请先预览完整参数和计价规则，也可以<PanelLink panelId="evidence" onOpen={onOpenInspector}>查看报价明细</PanelLink>。{recognizedCount ? <>其中 <b>{recognizedCount} 项来自文件识别</b>，尚未逐项确认，生成即视为确认。</> : null}确认后将{verb} Word 报价单与 Excel 报价明细。</p></div><small>{hasQuote ? "待重出" : "待确认"}</small></header><div className="warningActions"><button className="previewIconOnlyButton" type="button" onClick={onPreview} aria-label="预览全部参数"><Eye size={16} /></button><button className="primaryButton compact" type="button" onClick={onGenerate}>{recognizedCount ? `确认并${verb}报价单` : `${verb}报价单`}</button></div></section>;
 }
 
 function DmpkArtifactCards({ onPreview, onOpenInspector }: { onPreview: (kind: "word" | "excel") => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {
