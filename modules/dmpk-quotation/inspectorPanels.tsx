@@ -593,7 +593,7 @@ function GapsPanel({ context }: { context: DmpkInspectorContext }) {
       {/* 「这些我已经给过了」——让系统回去翻材料和对话，而不是让人再说一遍。
           找不回的它会明说，不假装找到。 */}
       {context.onRecheck ? (
-        <button className="dmpkInspectorTextAction" type="button" onClick={context.onRecheck}>这些信息已经提供过？核对已有信息并重新计算</button>
+        <button className="dmpkInspectorTextAction" type="button" onClick={() => context.onRecheck?.()}>这些信息已经提供过？核对已有信息并重新计算</button>
       ) : null}
     </div>
   );

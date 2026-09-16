@@ -476,7 +476,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   useEffect(() => {
     if ((!initialRequest && !initialAttachments?.length) || initialRequestHandledRef.current) return;
     initialRequestHandledRef.current = true;
-    if (initialAttachments?.some((item) => item.kind === "file")) handleSources(initialAttachments, initialRequest ?? "", true);
+    /* 只读人**自己传上来**的文件（origin local）。工单带进来的（library）是在人之间
+       流转的产物——被退回的那份报价单挂在会话上是给人看的，不是给数字同事读的。
+       读了的后果实测过：退回会话一进来就把那份 xlsx 当方案解析，参数全被盖成
+       另一单的。退回场景一律不读，它的首轮上下文是批注。 */
+    const materials = rework ? [] : (initialAttachments ?? []).filter((item) => item.kind === "file" && item.origin === "local");
+    if (materials.length) handleSources(materials, initialRequest ?? "", true);
     else if (initialRequest) handleInitialRequest(initialRequest, true);
   }, [initialRequest, initialAttachments]);
 
@@ -588,7 +593,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       appendMessage("user", text, consumeAttachments());
       setComposerText("");
       setConversationEditing(false);
-      recheckSources();
+      recheckSources(text);
       return;
     }
     const reportFeeMatch = text.match(/(?:这次|本次)?.*报告费.*?(\d[\d,]*)\s*元?/);
@@ -674,8 +679,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
    * 找得回的补上；找不回的**明说**「材料和对话里都没有」——承认识别器会漏，
    * 但不假装找到了。整个过程是一条运行记录，翻了什么、找回几项都留痕。
    */
-  const recheckSources = () => {
-    const userTexts = messages.filter((message) => message.role === "user" && message.text.trim()).map((message) => message.text);
+  const recheckSources = (triggerText?: string) => {
+    /* 从对话触发时，触发它的那句还没进 messages（闭包里是旧的）——它本身也可能带信息
+       （「报价区域国内，其他的我说过了，核对一下」），一并读。 */
+    const userTexts = [...messages.filter((message) => message.role === "user" && message.text.trim()).map((message) => message.text), ...(triggerText ? [triggerText] : [])];
     const textPatch = userTexts.reduce<Record<string, string>>((acc, text) => ({ ...acc, ...parseDmpkRequest(text) }), {});
     const missing = fields.filter((field) => field.required && !field.value);
     const found = missing.flatMap((field) => {
