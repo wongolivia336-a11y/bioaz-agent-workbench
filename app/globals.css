@@ -8772,7 +8772,11 @@ button {
   color: var(--muted); font-size: 10.5px; font-weight: 600; line-height: 16px;
   text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
 }
-.paramFieldSource:hover, .paramFieldSource.isOpen { border-color: var(--bioaz-action-primary); background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); }
+.paramFieldSource:hover, .paramFieldSource.isOpen {
+  border-color: color-mix(in srgb, var(--brand) 18%, white);
+  background: color-mix(in srgb, var(--brand) 6%, white);
+  color: var(--brand);
+}
 .paramFieldSource.is-manual { border-style: dashed; }
 .paramFieldSourceCard {
   display: grid; gap: 5px;
