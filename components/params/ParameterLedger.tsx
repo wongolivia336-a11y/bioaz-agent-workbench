@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Edit3 } from "lucide-react";
+import { ChevronDown, Edit3, Quote } from "lucide-react";
 import { Fragment, useState } from "react";
 import { useDismissableLayer } from "../workbench-shell/useDismissableLayer";
 import { formatParamValue, type ParamField, type ParamGroup, type ParamSource } from "./types";
@@ -111,7 +111,6 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, st
 
 /** 小标：document 写锚点，manual 写「人填」。长在行按钮里，所以要把点击拦住。 */
 function SourceMark({ source, open, onToggle }: { source: ParamSource; open: boolean; onToggle: () => void }) {
-  const label = source.kind === "document" ? source.anchor : "人填";
   return (
     <span
       className={`paramFieldSource is-${source.kind}${open ? " isOpen" : ""}`}
@@ -130,7 +129,7 @@ function SourceMark({ source, open, onToggle }: { source: ParamSource; open: boo
         onToggle();
       }}
     >
-      {label}
+      {source.kind === "document" ? <Quote size={11} aria-hidden="true" /> : "人填"}
     </span>
   );
 }

@@ -1,31 +1,83 @@
 # Engineering Handoff
 
-## Session State — 2026-08-17
+## Session State — 2026-09-16
 
 Branch `codex/dmpk-composer-params`, everything committed and pushed to `origin`
-(GitHub). **Never push to the `gitlab` remote.** Working tree clean at `60eb7ed`.
+(GitHub `wongolivia336-a11y/bioaz-agent-workbench`). **Never push to the `gitlab`
+remote.** Working tree clean at `5f88239` except one deliberately untracked file
+(`docs/worklog/2026-09-15-提交版工作日志.md` — the human-voice log the intern submits;
+the owner asked that it stay out of the repo).
 
-Seven commits landed this session, newest first:
+### Where things live
+
+| What | Where |
+|---|---|
+| This prototype | `G:\实习\原型优化项目\prototype-bioaz-agent-workbench` |
+| Design-system repo (separate git, separate push) | `G:\实习\原型优化项目\bioaz-design-system` |
+| Working rules for this repo (**gitignored, local only** — copy it if you move machines) | `.claude/skills/bioaz-workbench/SKILL.md` |
+| Design rationale for everything below | `docs/DMPK_SOURCE_PARSING.md` (9 sections, one per round) |
+| Daily technical logs | `docs/worklog/2026-09-15-工作日志.md`, `2026-09-16-工作日志.md` |
+| Client's P0 list and how it maps | `docs/DMPK_SOURCE_PARSING.md` §5 |
+| Live reference the client is comparing against | `next-beta3.bioaz.cn` (login wall; a real Chrome session gets in, the in-app browser does not) |
+
+### What landed (2026-09-15 → 16), newest first
 
 | Commit | What |
 |---|---|
-| `60eb7ed` | Header second row min-height; sidebar plus reverted |
-| `967d209` | Track the QA handoff doc (`*.md` is gitignored — see below) |
-| `03e7c78` | QA data model: version-scoped findings + repair verdicts |
-| `d8f4ab3` | Removed the assistant pill's hover sheen; simplified expand |
-| `a62d52d` | Data-hub assistant pinned with sticky; full-width toggle |
-| `a3c9b46` | Thinking chain unified; data hub given one assistant shape |
-| `5a93800` | Session minimap; mailbox rebuilt around composing |
+| `5f88239` | Only `origin: "local"` uploads are read as materials; ticket files never are (fixed a real regression in the rework session) |
+| `87b9809` | Sentence recognition learns 报价区域 (the one sanctioned exception to the do-not-touch list) |
+| `95500c3` | Quote paper reads the line ledger; `quoteStale` + regenerate; 「核对已有信息并重新计算」 |
+| `fffb834` | P0-1: per-field source (`ParamField.source`) with the original sentence; three material fixtures (protocol / screenshot / chat) |
+| `d0f45d9` | P0-2: recognised-vs-confirmed status, `QuoteLine` ledger with subtotals, SD manual unit price |
+| `ccde657` | Design note mapped onto the client's P0 |
+| `5f18075` | File-first entry: source layer + parser registry, parse trace, materials panel, session summary |
 
-**In flight:** QA review动线 restructure. The data model is done; **no QA UI work has
-started.** Read `docs/QA_REVIEW_HANDOFF.md` before touching `modules/qa-review/` — it
-carries the confirmed information architecture and the six-step build order. Steps 2–6
-are untouched.
+New files: `lib/workbench/sources.ts`, `lib/workbench/quoteLines.ts`,
+`lib/workbench/quotePaperFromLines.ts`, `modules/dmpk-quotation/parseFixtures.ts`,
+`modules/dmpk-quotation/quoteLineFixtures.ts`. Everything else is additive edits.
+
+### Decisions the owner made — do not relitigate
+
+- **Additive only. The fourteen DMPK fields, `parseDmpkRequest`, the stage machine, the
+  parameter card and `priceCatalog` are not to be restructured.** (`parseDmpkRequest` got
+  three region rules with explicit permission; ask again before touching it.)
+- **Every format runs a mock parser.** Real docx/PDF/OCR/chat parsing is a *new
+  registration* in `dmpkSourceParsers`, not a rewrite; `unknown` formats take the
+  "尚未接入" trace and are never swallowed.
+- **A file and a sentence sent together: the file wins.** Later sentences and card edits
+  still override.
+- **Only files a person uploaded (`origin: "local"`) are materials.** Ticket attachments
+  (`origin: "library"`) are artifacts moving between people; a rework session reads none.
+- **Recognised values are proposals until confirmed.** No gate on generation, but the
+  button reads 「确认并生成」; no gate on handoff when the quote is stale, but the card warns.
+- **Manual unit prices live in the session (`manualPrices`, keyed by line id), never on
+  the line and never in the catalogue.** The chat path for the report fee writes the same table.
+- **The tab is called 报价明细, not 计算依据.** 「SD」stays literally `SD`
+  (`MANUAL_PRICE_BY`) until the client says who that is.
+- **A person overwriting a document-sourced value demotes it to 「人填」** with the
+  original sentence kept; hand-filled fields never get a mark.
+
+### What is left (all blocked outside the prototype)
+
+1. Real parsing — docx structure, PDF, OCR, chat segmentation (backend).
+2. Who "SD" is — signature and permission for manual prices (client).
+3. Catalogue entries for 免疫分型采血 / 细胞因子 / 流式 and the unit prices currently
+   back-derived from beta3 (back office).
+4. Minor: chips + file + empty text sends the file without parsing it (recorded, not fixed).
+
+### How to verify in five minutes
+
+`npm run typecheck` (`npm run build` always EISDIRs here — ignore it), `npm run audit:ui`
+(compare against `scripts/audit-ui.baseline.json`; `-- --update` only after you meant it),
+then `npm run dev`, home → pick a project → attach any `.docx` + type「按这份方案出 DMPK 报价」
+→ 确认分派. You should see an 8-step parse trace, 11/14 in the ledger with 「识别」chips and
+anchor marks, 报价明细 with subtotals, and a CNY paper in the Excel preview. Drive React
+with `await`s between clicks; switch right-rail tabs with the full pointer/mouse event set.
 
 ### Traps that will cost you hours
 
-1. **`.gitignore` line 17 is `*.md`.** Every doc in `docs/` was force-added. A new
-   markdown file will silently stay out of your commit — use `git add -f`.
+1. **`.gitignore` has `*.md` but `!docs/**/*.md`** — docs are tracked, anything else
+   markdown is not; `.claude/` is ignored entirely (the SKILL lives only on this machine).
 2. **Next dev's build cache serves stale CSS.** Edited a rule, hard-reloaded, and the
    computed value is still the old one? It is not a cascade problem. Verify by fetching
    the served stylesheet directly:
@@ -136,18 +188,27 @@ the account switcher. It is **not** the mailbox model — do not extend it for m
   whether something expands is decided by a click. Expansion animates opacity only,
   ~180ms; no blur (`filter` cannot be composited), no translate, no bounce.
 
-## DMPK Flow
+## DMPK Flow (as of 2026-09-16)
 
 ```text
-User enters quotation request
--> Agent identifies DMPK / PK / BA Only / Toxicology
--> User supplements parameters through grouped cards
--> User sends structured parameter tabs
--> Right parameter ledger updates after submission
--> User previews all parameters
--> Agent generates Word and Excel quotation outputs
--> Right panel switches to artifacts / versions
+User uploads materials (Word / PDF / PPT / screenshot / chat export) and/or types a request
+-> Source layer picks a parser per format; parse trace reveals step by step
+   (what was read · where in the document); unsupported formats say so
+-> Values land on the fourteen fields with per-field source (anchor + sentence);
+   facts with no slot (groups / sampling events / methods) go to 输入材料, read-only
+-> Pending items split: missing → card; confirm → card with the document's candidates
+   first; no-catalogue → 报价规则 with a back-office link
+-> Line ledger (报价明细) prices whatever it can, by work package, with reasons on
+   unpriced rows; SD may override any unit price for this quote only
+-> Recognised values carry 「识别」 until confirmed (per field, bulk, or 「确认并生成」)
+-> Generate: Word / Excel paper is folded from the same lines; a snapshot is taken
+-> Any later edit marks the quote 待重出 (version card, pre-quote card, handoff warning)
+-> Handoff; 会话摘要 from the topbar prefills the note
 ```
+
+*Everything below this line predates 2026-09 and was not re-verified this round. The QA
+restructure status in "Suggested Next Steps" is as of 2026-08-17 — check
+`docs/QA_REVIEW_HANDOFF.md` and `git log -- modules/qa-review` before relying on it.*
 
 ## Key UX Decisions
 

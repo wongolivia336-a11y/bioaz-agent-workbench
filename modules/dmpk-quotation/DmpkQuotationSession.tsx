@@ -45,6 +45,13 @@ import {
   type DmpkSessionSummary,
 } from "./views";
 
+function missingFieldHint(items: DmpkField[]) {
+  if (!items.length) return "计价关键字段已齐全。";
+  const labels = items.slice(0, 4).map((field) => field.label).join("、");
+  const suffix = items.length > 4 ? "等" : "";
+  return `还需补充 ${items.length} 项：${labels}${suffix}。可直接在输入框用一句话补充，也可以展开下方参数卡逐项填写。`;
+}
+
 export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, rework, onReworkResolved, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
   const openingMessage = "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。";
   /* 回到旧会话时把参数一起还原。不还原的话,右侧面板停在「未开始」,
@@ -189,8 +196,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
   const editingField = fields.find((field) => field.id === editingFieldId) ?? null;
   const composerFields = editingField ? [editingField].filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id)) : visibleCardFields;
-  const completedCount = fields.filter((field) => field.value).length;
-  const totalRequired = fields.filter((field) => field.required).length;
   const identifiedAssayType = fields.find((field) => field.id === "assayType")?.value ?? "";
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
   const activeCoworker = businessCoworkers.find((coworker) => coworker.id === activeCoworkerId) ?? businessCoworkers[0];
@@ -378,7 +383,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       setStage("collecting");
       appendRun("params", remaining.length);
       appendMessage("agent", recognized.length
-        ? `已识别：${recognized.map((field) => `${field.label}：${field.value}`).join("、")}。还需要补充 ${remaining.length} 项报价参数，请从下方当前参数页继续填写。`
+        ? `已识别：${recognized.map((field) => `${field.label}：${field.value}`).join("、")}。${missingFieldHint(remaining)}`
         : "我还没有识别到可用于报价的具体参数。请先描述检测类型、分子类型、动物种属与数量、试验周期和采血点，我会继续追问缺失项。");
     }, 900);
   };
@@ -410,7 +415,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     suggestPanel("process");
     /* 一步一步揭开，而不是一次亮全。看的人跟着它读：先是判类型，再是
        翻目录，再是一节一节读——这个节奏本身就在说「它是怎么读的」。 */
-    const STEP_MS = 360;
+    /* 8 步约 6 秒：演示时看得清每一步，又不让人误以为页面卡住。 */
+    const STEP_MS = 700;
     steps.forEach((_, index) => {
       window.setTimeout(() => {
         setLiveParse({ text: dmpkRunRecord("parse", { running: true, parse: { label, steps } }).text, runSteps: steps.slice(0, index + 1) });
@@ -465,7 +471,16 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const facts = readable[0].facts.map((fact) => fact.brief).filter(Boolean).join("、");
       /* 账当场就算：条件齐的行先计价，算不出的带原因。一句话只报数，明细在「报价明细」。 */
       const pricing = summarizeLines(buildDmpkQuoteLines(nextFields, nextSources), manualPrices);
-      appendMessage("agent", `已读取「${label}」：${readable[0].title}。${facts ? `读到 ${facts}。` : ""}已识别 ${recognized.length} 项报价参数${confirmCount ? `，其中 ${confirmCount} 项原文有歧义需你确认` : ""}${remaining.length - confirmCount > 0 ? `，${remaining.length - confirmCount} 项原文没写` : ""}${catalogCount ? `；另有 ${catalogCount} 项没有价目，见报价规则` : ""}。${pricing.packages.length ? `${pricingSentence(pricing)}。` : ""}${remaining.length ? "请从下方参数卡继续。" : "计价关键字段已齐全。"}`);
+      const reply = `已读取「${label}」：${readable[0].title}。${facts ? `读到 ${facts}。` : ""}已识别 ${recognized.length} 项报价参数${confirmCount ? `，其中 ${confirmCount} 项原文有歧义需你确认` : ""}${remaining.length - confirmCount > 0 ? `，${remaining.length - confirmCount} 项原文没写` : ""}${catalogCount ? `；另有 ${catalogCount} 项没有价目，见报价规则` : ""}。${pricing.packages.length ? `${pricingSentence(pricing)}。` : ""}${remaining.length ? "下面列出了还需要补充的参数。你可以直接在输入框用一句话补充，也可以展开参数卡逐项填写。" : "计价关键字段已齐全。"}`;
+      setMessages((current) => [...current, {
+        id: `agent-${Date.now()}-${current.length}`,
+        role: "agent",
+        text: reply,
+        missingFields: remaining.map((field) => ({
+          label: field.label,
+          group: dmpkGroups.find((group) => group.id === field.group)?.title ?? "报价参数",
+        })),
+      }]);
       if (!remaining.length) setStage("ready");
     }, STEP_MS * steps.length + 200);
   };
@@ -560,7 +575,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
         setStage("collecting");
         appendRun("params", remaining.length);
-        appendMessage("agent", `已更新报价参数。${pricingNote}还需补充 ${remaining.length} 项参数，请继续在下方补全卡中选择。`);
+        appendMessage("agent", `已更新报价参数。${pricingNote}${missingFieldHint(remaining)}`);
       } else {
         setStage("ready");
         appendRun("params");
@@ -668,7 +683,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       return next;
     });
     appendMessage("user", `确认文件识别的 ${count} 项参数：${recognizedFields.map((field) => `${field.label} ${field.value}`).join("、")}。`);
-    appendMessage("agent", `已确认 ${count} 项识别结果。${missingFields.length ? `还缺 ${missingFields.length} 项，请继续补全。` : "计价关键字段已齐全。"}`);
+    appendMessage("agent", `已确认 ${count} 项识别结果。${missingFieldHint(missingFields)}`);
   };
 
   /**
@@ -887,11 +902,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       <>
         <div className="paramPanelToolbar">
           <span>
-            <strong>{quoteStale ? "报价参数 · 已改动，报价待重出" : stage === "generating" || stage === "generated" ? "报价参数 · 已确认" : "参数收集"}</strong>
-            {identifiedAssayType ? <em>{completedCount}/{totalRequired}</em> : null}
-            {/* 三个数分开说：填了几项、几项还是机器的提议、几项没填。
-                只报 11/14 的话，「11」里混着人没看过的东西。 */}
-            {recognizedFields.length ? <em>· 识别待确认 {recognizedFields.length}</em> : null}
+            <strong>报价参数</strong>
+            <em>{quoteStale
+              ? "待重新生成"
+              : recognizedFields.length
+                ? `${recognizedFields.length} 项待确认`
+                : missingFields.length
+                  ? `${missingFields.length} 项待补充`
+                  : stage === "generating" ? "生成中" : "已齐全"}</em>
           </span>
           {recognizedFields.length && stage !== "generating" && stage !== "generated" ? (
             <button type="button" className="paramConfirmAllButton" onClick={confirmRecognized}>
