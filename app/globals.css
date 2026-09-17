@@ -8765,13 +8765,14 @@ button {
    值后面一枚小标写锚点；点开在这一行下面插一张小卡：材料名、位置、原句。
    人改过的换成「人填」，卡里写原文为 X、已改为 Y。 */
 .paramFieldSource {
-  flex: none; max-width: 96px; overflow: hidden;
+  display: inline-flex; flex: none; max-width: 96px; overflow: hidden;
+  align-items: center; justify-content: center;
   border: 1px solid var(--line); border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-surface); padding: 0 7px;
   color: var(--muted); font-size: 10.5px; font-weight: 600; line-height: 16px;
   text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
 }
-.paramFieldSource:hover, .paramFieldSource.isOpen { border-color: var(--bioaz-agent-accent-border, #dcddf2); background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent, #5c60b8); }
+.paramFieldSource:hover, .paramFieldSource.isOpen { border-color: var(--bioaz-action-primary); background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); }
 .paramFieldSource.is-manual { border-style: dashed; }
 .paramFieldSourceCard {
   display: grid; gap: 5px;
@@ -8784,7 +8785,7 @@ button {
 .paramFieldSourceCard > header em { color: var(--muted); font-size: 11px; font-style: normal; }
 .paramFieldSourceCard > small { color: var(--muted); font-size: 11px; }
 .paramFieldSourceCard blockquote {
-  margin: 0; border-left: 2px solid var(--bioaz-agent-accent-border, #dcddf2); padding: 2px 0 2px 9px;
+  margin: 0; padding: 2px 0;
   color: var(--body); font-size: 12px; line-height: 1.6;
 }
 

@@ -58,6 +58,8 @@ export type DmpkChatMessage = {
   runSteps?: DmpkRunStep[];
   /** role === "summary" 时的四段内容。 */
   summary?: DmpkSessionSummary;
+  /** 首轮文件识别后，直接在回复正文里列出的缺失参数。 */
+  missingFields?: { label: string; group: string }[];
 };
 
 export type DmpkRunStep = string | ParseStep;
@@ -157,6 +159,24 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
         if (message.role === "inbound") return <DmpkInboundEvent key={message.id} text={message.text} attachments={message.attachments} />;
         if (message.role === "artifacts") return <DmpkArtifactCards key={message.id} onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} />;
         if (message.role === "summary" && message.summary) return <DmpkSummaryCard key={message.id} summary={message.summary} />;
+        if (message.role === "agent" && message.missingFields?.length) {
+          return (
+            <div className="agentReply" data-minimap="agent" key={message.id}>
+              <span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span>
+              <div>
+                <p>{message.text}</p>
+                <table className="previewTable" style={{ marginTop: 10 }}>
+                  <thead><tr><th>待补充参数</th><th>所属环节</th><th>状态</th></tr></thead>
+                  <tbody>
+                    {message.missingFields.map((field) => (
+                      <tr key={field.label}><td>{field.label}</td><td>{field.group}</td><td>待填写</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
         if (message.role === "agent") return <AgentReply key={message.id}>{message.text}</AgentReply>;
         return <UserBubble key={message.id} text={message.text} attachments={message.attachments} />;
       })}
@@ -231,7 +251,7 @@ function DmpkActivityChain({ title, steps, running, onOpenInspector }: { title: 
           <span key={running ? activeStepIndex : "settled"} />
         </span>
         <strong>{open ? title : `${title} · 查看过程`}</strong>
-        <small>{running ? "处理中" : "4s"}</small>
+        <small>{running ? "处理中" : items.some((item) => item.tech?.includes("parser=")) ? "约 6s" : "已完成"}</small>
       </button>
       {open ? (
         <div className="timeline">
@@ -286,8 +306,8 @@ function DmpkSummaryCard({ summary }: { summary: DmpkSessionSummary }) {
     <section className="dmpkSessionSummary" data-minimap="activity" data-minimap-label="会话摘要">
       <header>
         <span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span>
-        <strong>会话摘要</strong>
-        <small>截至刚才</small>
+        <strong>对话已整理</strong>
+        <small>已保留当前参数与进度</small>
       </header>
       <dl>
         <div>
@@ -390,7 +410,15 @@ export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHa
                 onRemove(draftTabs[draftTabs.length - 1].fieldId);
               }
             }}
-            placeholder={draftTabs.length ? "" : conversationEditing ? "说出要修改的参数、价格或规则…" : stage === "idle" ? "例如：PK小分子，SD大鼠，每组2只，2组，试验周期1周，周期内3个非加班时间点" : ""}
+            placeholder={draftTabs.length
+              ? ""
+              : conversationEditing
+                ? "说出要修改的参数、价格或规则…"
+                : stage === "idle"
+                  ? "例如：PK小分子，SD大鼠，每组2只，2组，试验周期1周，周期内3个非加班时间点"
+                  : stage === "collecting" && fields.length
+                    ? `可直接补充：${fields.slice(0, 3).map((field) => field.label).join("、")}${fields.length > 3 ? "等" : ""}…`
+                    : "继续描述报价要求…"}
           />
         </div>
         <button className="sendIconButton" type="button" onClick={onSend} disabled={disabled} aria-label="发送"><Send size={18} /></button>
@@ -478,6 +506,8 @@ export function DmpkParameterTaskCard({ activeGroup, fields, allFields, draftTab
       activeGroup={activeGroup}
       draftTabs={draftTabs}
       mode={mode}
+      eyebrow="补充报价"
+      collectTitle="补齐缺失参数"
       open={open}
       onOpenChange={onOpenChange}
       onSelect={(field, value) => onSelect(field as DmpkField, value)}
