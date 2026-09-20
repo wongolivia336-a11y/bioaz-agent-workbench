@@ -31,6 +31,8 @@ type Props = {
      没进空间（全局首页）不传，页面跟原来一模一样。 */
   spaceStats?: SpaceStats | null;
   onOpenSpaceFiles?: () => void;
+  /** 点「产物」落到数据中枢里这个空间的「任务产物」那一道，不是文件总览。 */
+  onOpenSpaceArtifacts?: () => void;
   projectOptions: string[];
   projectNotice: string | null;
   onProjectChange: (project: string) => void;
@@ -121,7 +123,7 @@ export function NewTaskHome(props: Props) {
           <div className="spaceOverview" aria-label="本空间">
             <span className="spaceOverviewLabel">本空间</span>
             <button type="button" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}><Folder size={13} /><strong>{props.spaceStats.files}</strong><span>文件</span></button>
-            <button type="button" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}><FileText size={13} /><strong>{props.spaceStats.artifacts}</strong><span>产物</span></button>
+            <button type="button" onClick={props.onOpenSpaceArtifacts ?? props.onOpenSpaceFiles} disabled={!props.onOpenSpaceArtifacts && !props.onOpenSpaceFiles}><FileText size={13} /><strong>{props.spaceStats.artifacts}</strong><span>产物</span></button>
             <span className="spaceOverviewStat"><ListChecks size={13} /><strong>{props.spaceStats.tasks}</strong><span>任务</span></span>
           </div>
         ) : null}

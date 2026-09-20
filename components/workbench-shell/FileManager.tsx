@@ -27,10 +27,10 @@ import {
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { initialKnowledgeFiles } from "../../lib/workbench/mockWorkspace";
-import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
+import { isArtifactFile, type KnowledgeFile, type LibraryFolder, type LibraryView } from "../../lib/workbench/shellTypes";
 import type { ProjectType, WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { KnowledgeAsk } from "./KnowledgeAsk";
-import { Menu, MenuGroup, MenuItem } from "../ui";
+import { Menu, MenuGroup, MenuItem, SegmentedControl } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
@@ -91,8 +91,15 @@ export function FileManager({
   onSelectedFolderChange,
   onViewChange,
   onCreateProject,
+  onOpenTask,
+  initialRootTab = "files",
 }: Props) {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
+  /* 根级（全部空间）那张表分两档：全部文件 / 产物。
+     beta5 把「产物」做成数据中枢的一个 tab——各会话生成的东西汇总一张表，带来源会话。
+     我们单个空间里本来就有「任务产物」那一道，缺的只是跨空间汇总和那一列来源，
+     所以在根级表上加一个分段开关，不另开路由。 */
+  const [rootTab, setRootTab] = useState<"files" | "outputs">(initialRootTab);
   // 资料空间里"从问答存下来的那种"产物，靠 kind 认，别处不要再写这个字面量
   const [query, setQuery] = useState("");
   const [business, setBusiness] = useState("全部业务");
@@ -392,13 +399,31 @@ export function FileManager({
 
         <section className="rootRecentOutputs rootAllFiles">
           <div className="sectionBar">
-            <strong>全部文件</strong>
-            <span>{allRootFiles.length} 项</span>
+            {/* 全部文件 / 产物 两档。数量各报各的，切过去之前就知道那边有多少。 */}
+            <SegmentedControl
+              label="文件范围"
+              className="rootFileTabs"
+              value={rootTab}
+              onChange={setRootTab}
+              items={[
+                { id: "files", label: `全部文件 ${allRootFiles.length}` },
+                { id: "outputs", label: `产物 ${allRootFiles.filter(isArtifactFile).length}` },
+              ]}
+            />
+            {rootTab === "outputs" ? <span className="rootTabHint">各空间任务生成的报告、报价与图表，点来源任务可回到那条会话</span> : null}
             {/* 筛选 / 排序 / 切换业务 已上移到顶栏，和项目内那条对齐 */}
           </div>
           {/* 跨项目视角要回答「这份属于谁」，所以多一列所属；项目内不需要，
-              整张表都在同一个项目里。 */}
-          <FileTable files={allRootFiles} showOwnerScope onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+              整张表都在同一个项目里。产物那档再多一列「来源任务」。 */}
+          <FileTable
+            files={rootTab === "outputs" ? allRootFiles.filter(isArtifactFile) : allRootFiles}
+            showOwnerScope
+            showSourceTask={rootTab === "outputs"}
+            onOpenTask={onOpenTask}
+            onPreview={setPreviewFile}
+            onDetail={setDetailFile}
+            onDelete={softDelete}
+          />
         </section>
 
         {/* 问答放在流的最后，因为它是 position: sticky 吸底的。
@@ -600,6 +625,10 @@ type Props = {
   onSelectedFolderChange: (folderId: string | null) => void;
   onViewChange: (view: LibraryView) => void;
   onCreateProject: (name: string, type: ProjectType) => WorkbenchProject | null;
+  /** 产物视图里点「来源任务」→ 进那条任务的会话。不传就只显示文字。 */
+  onOpenTask?: (taskId: string) => void;
+  /** 一进数据中枢就停在「产物」——空间首页那行「产物」点过来时用。 */
+  initialRootTab?: "files" | "outputs";
 };
 
 /* 项目筛选器。层级翻转之后，项目不再是必须先走的那条路，而是这一个控件——
@@ -722,16 +751,17 @@ function OverviewLane({ title, icon, description, total, files, onOpenAll, onPre
   );
 }
 
-function FileTable({ files, selectable = false, showOwnerScope = false, selectedIds = [], onToggle, onToggleAll, onPreview, onDetail, onDelete }: { files: KnowledgeFile[]; selectable?: boolean; showOwnerScope?: boolean; selectedIds?: string[]; onToggle?: (id: string) => void; onToggleAll?: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
+function FileTable({ files, selectable = false, showOwnerScope = false, showSourceTask = false, selectedIds = [], onToggle, onToggleAll, onOpenTask, onPreview, onDetail, onDelete }: { files: KnowledgeFile[]; selectable?: boolean; showOwnerScope?: boolean; /** 产物那档多一列「来源任务」。列数变了，网格要跟着变——见 hub.css 的 hasSourceTask */ showSourceTask?: boolean; selectedIds?: string[]; onToggle?: (id: string) => void; onToggleAll?: () => void; onOpenTask?: (taskId: string) => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
   const allSelected = Boolean(files.length) && files.every((file) => selectedIds.includes(file.id));
   return (
-    <div className={`knowledgeTable ${selectable ? "isSelectable" : ""} ${showOwnerScope ? "hasOwnerScope" : ""}`} role="table">
+    <div className={`knowledgeTable ${selectable ? "isSelectable" : ""} ${showOwnerScope ? "hasOwnerScope" : ""} ${showSourceTask ? "hasSourceTask" : ""}`} role="table">
       <div className="knowledgeTableHeader" role="row">
         <span className="knowledgeHeadName">
           {selectable ? <SelectToggle checked={allSelected} label={allSelected ? "取消全选" : "全选"} onToggle={() => onToggleAll?.()} /> : null}
           文件名称
         </span>
         {showOwnerScope ? <span>所属</span> : null}
+        {showSourceTask ? <span>来源任务</span> : null}
         <span>文件类型</span>
         <span>来源</span>
         <span>更新</span>
@@ -743,6 +773,8 @@ function FileTable({ files, selectable = false, showOwnerScope = false, selected
           file={file}
           selectable={selectable}
           showOwnerScope={showOwnerScope}
+          showSourceTask={showSourceTask}
+          onOpenTask={onOpenTask}
           selected={selectedIds.includes(file.id)}
           onToggle={() => onToggle?.(file.id)}
           onPreview={() => onPreview(file)}
@@ -755,7 +787,7 @@ function FileTable({ files, selectable = false, showOwnerScope = false, selected
   );
 }
 
-function FileRow({ file, selectable, showOwnerScope = false, selected, onToggle, onPreview, onDetail, onDelete }: { file: KnowledgeFile; selectable: boolean; showOwnerScope?: boolean; selected: boolean; onToggle: () => void; onPreview: () => void; onDetail: () => void; onDelete: () => void }) {
+function FileRow({ file, selectable, showOwnerScope = false, showSourceTask = false, onOpenTask, selected, onToggle, onPreview, onDetail, onDelete }: { file: KnowledgeFile; selectable: boolean; showOwnerScope?: boolean; showSourceTask?: boolean; onOpenTask?: (taskId: string) => void; selected: boolean; onToggle: () => void; onPreview: () => void; onDetail: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLElement>(open, () => setOpen(false));
   return (
@@ -787,6 +819,14 @@ function FileRow({ file, selectable, showOwnerScope = false, selected, onToggle,
         ) : null}
       </div>
       {showOwnerScope ? <span className="knowledgeScopeCell">{file.project}</span> : null}
+      {/* 来源任务：能点就是一颗链接钮，回到生成它的那条会话；没有来源（人传的）画一道杠。 */}
+      {showSourceTask ? (
+        <span className="knowledgeSourceTaskCell">
+          {file.sourceTask && file.sourceTaskId && onOpenTask
+            ? <button type="button" onClick={() => onOpenTask(file.sourceTaskId!)}>{file.sourceTask}</button>
+            : file.sourceTask ?? "—"}
+        </span>
+      ) : null}
       <span>{file.kind}</span>
       <span>{sourceOf(file)}</span>
       <span>{file.updated}</span>

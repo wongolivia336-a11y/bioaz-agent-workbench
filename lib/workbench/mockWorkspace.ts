@@ -45,14 +45,15 @@ export const workspaceTasks: TaskCollection = {
 };
 
 export const initialKnowledgeFiles: KnowledgeFile[] = [
-  { id: "file-quote", title: "Balbc_nude_报价单.xlsx", project: workspaceProjects[1].name, space: "projects", kind: "交付产物", business: "DMPK报价", owner: "DMPK报价同事", updated: "3天前", status: "已交付", agentReady: true },
-  { id: "file-report", title: "样本9_双批次报告_v3.docx", project: workspaceProjects[0].name, space: "projects", kind: "交付产物", business: "药效报告", owner: "药效报告同事", updated: "36分钟前", status: "待确认", agentReady: true },
-  { id: "file-report-package", title: "样本9_双批次交付包.zip", project: workspaceProjects[0].name, space: "projects", kind: "交付产物", business: "药效报告", owner: "药效报告同事", updated: "34分钟前", status: "专家审核", agentReady: true },
-  { id: "file-qc", title: "样本9_QC一致性报告.md", project: workspaceProjects[0].name, space: "projects", kind: "审核记录", business: "药效报告", owner: "药效报告同事", updated: "32分钟前", status: "已通过", agentReady: true },
-  { id: "file-figure", title: "tumor_volume_day21_300dpi.png", project: workspaceProjects[0].name, space: "projects", kind: "报告图表", business: "药效报告", owner: "药效报告同事", updated: "31分钟前", status: "已生成", agentReady: true },
+  /* 任务产物带上来源任务：产物 tab 那一列「来源任务」能点回生成它的那条会话。 */
+  { id: "file-quote", title: "Balbc_nude_报价单.xlsx", project: workspaceProjects[1].name, space: "projects", kind: "交付产物", business: "DMPK报价", owner: "DMPK报价同事", updated: "3天前", status: "已交付", agentReady: true, sourceTaskId: "task-ba", sourceTask: "Balb/c nude BA 报价" },
+  { id: "file-report", title: "样本9_双批次报告_v3.docx", project: workspaceProjects[0].name, space: "projects", kind: "交付产物", business: "药效报告", owner: "药效报告同事", updated: "36分钟前", status: "待确认", agentReady: true, sourceTaskId: "task-sample9", sourceTask: "样本 9 双批次报告" },
+  { id: "file-report-package", title: "样本9_双批次交付包.zip", project: workspaceProjects[0].name, space: "projects", kind: "交付产物", business: "药效报告", owner: "药效报告同事", updated: "34分钟前", status: "专家审核", agentReady: true, sourceTaskId: "task-sample9", sourceTask: "样本 9 双批次报告" },
+  { id: "file-qc", title: "样本9_QC一致性报告.md", project: workspaceProjects[0].name, space: "projects", kind: "审核记录", business: "药效报告", owner: "药效报告同事", updated: "32分钟前", status: "已通过", agentReady: true, sourceTaskId: "task-sample9", sourceTask: "样本 9 双批次报告" },
+  { id: "file-figure", title: "tumor_volume_day21_300dpi.png", project: workspaceProjects[0].name, space: "projects", kind: "报告图表", business: "药效报告", owner: "药效报告同事", updated: "31分钟前", status: "已生成", agentReady: true, sourceTaskId: "task-sample9", sourceTask: "样本 9 双批次报告" },
   { id: "file-brief", title: "DMPK_报价需求说明.pdf", project: workspaceProjects[1].name, space: "projects", kind: "过程文件", business: "DMPK报价", owner: "Admin", updated: "昨天", status: "使用中", agentReady: true },
-  { id: "file-quote-word", title: "Balbc_nude_DMPK正式报价单.docx", project: workspaceProjects[1].name, space: "projects", kind: "交付产物", business: "DMPK报价", owner: "DMPK报价同事", updated: "3天前", status: "已交付", agentReady: true },
-  { id: "file-quote-evidence", title: "DMPK_计价规则匹配摘要.pdf", project: workspaceProjects[1].name, space: "projects", kind: "计算依据", business: "DMPK报价", owner: "DMPK报价同事", updated: "3天前", status: "已归档", agentReady: true },
+  { id: "file-quote-word", title: "Balbc_nude_DMPK正式报价单.docx", project: workspaceProjects[1].name, space: "projects", kind: "交付产物", business: "DMPK报价", owner: "DMPK报价同事", updated: "3天前", status: "已交付", agentReady: true, sourceTaskId: "task-ba", sourceTask: "Balb/c nude BA 报价" },
+  { id: "file-quote-evidence", title: "DMPK_计价规则匹配摘要.pdf", project: workspaceProjects[1].name, space: "projects", kind: "计算依据", business: "DMPK报价", owner: "DMPK报价同事", updated: "3天前", status: "已归档", agentReady: true, sourceTaskId: "task-ba", sourceTask: "Balb/c nude BA 报价" },
   { id: "file-raw", title: "batch9_raw.xlsx", project: workspaceProjects[0].name, space: "projects", kind: "原始数据", business: "药效报告", owner: "Admin", updated: "36分钟前", status: "已归档", agentReady: true },
   { id: "file-protocol", title: "NCI-H82_双批次实验方案.docx", project: workspaceProjects[0].name, space: "projects", kind: "输入材料", business: "药效报告", owner: "Admin", updated: "40分钟前", status: "使用中", agentReady: true },
   { id: "file-ct26-brief", title: "CT26_模型评价需求说明.pdf", project: workspaceProjects[2].name, space: "projects", kind: "输入材料", business: "药效报告", owner: "Admin", updated: "2天前", status: "待处理", agentReady: true },

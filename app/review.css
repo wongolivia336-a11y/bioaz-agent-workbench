@@ -3593,9 +3593,12 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-top: 2px;
 }
 
-/* Fix knowledge table column mismatch */
-.knowledgeTableHeader,
-.knowledgeFileRow {
+/* Fix knowledge table column mismatch
+   这条 !important 把所有表都钉成六列——它是给根级「所属」表写的，五列的空间内表
+   也被它盖着（第六轨空着，看不出来）。产物那档是七列，必须从它手里拿出来，
+   否则 hub.css 里写得再对也进不了级联。整条改掉是另一件事，记在工程债里。 */
+.knowledgeTable:not(.hasSourceTask) .knowledgeTableHeader,
+.knowledgeTable:not(.hasSourceTask) .knowledgeFileRow {
   grid-template-columns: minmax(200px, 2fr) 100px 100px minmax(140px, 1.2fr) 100px 44px !important;
 }
 

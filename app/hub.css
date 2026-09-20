@@ -342,6 +342,39 @@
   white-space: nowrap;
 }
 
+/* 产物那一档再多一列「来源任务」——七列。列数跟子元素个数必须对上，
+   多出来的那个会掉进隐式轨道（这个坑本仓库犯过三次）。 */
+.knowledgeTable.hasOwnerScope.hasSourceTask .knowledgeTableHeader,
+.knowledgeTable.hasOwnerScope.hasSourceTask .knowledgeFileRow {
+  grid-template-columns: minmax(200px, 1.3fr) minmax(110px, 0.7fr) minmax(130px, 0.9fr) minmax(100px, 0.7fr) 100px 84px 32px;
+}
+
+.knowledgeSourceTaskCell {
+  overflow: hidden;
+  color: var(--bioaz-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 能点的来源是一颗文字钮：回到生成它的那条会话。样子跟表里其它文字一档，只多一个下划线的 hover。 */
+.knowledgeSourceTaskCell > button {
+  max-width: 100%;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--bioaz-agent-accent, #5c60b8);
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.knowledgeSourceTaskCell > button:hover { text-decoration: underline; }
+
+/* 根级那张表的两档开关，和它右边那句说明。 */
+.rootFileTabs { flex: none; }
+.rootTabHint { color: var(--bioaz-text-tertiary); font-size: 12px; }
+
 @media (prefers-reduced-motion: reduce) {
   .fileParseChip.isParsing svg { animation: none; }
 }
