@@ -8838,6 +8838,44 @@ button {
 /* 纸面上单价旁的一行小字：走的哪一档、是不是手动价。 */
 .quoteNumNote { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; white-space: nowrap; }
 
+/* ═══ 空间首页 ═════════════════════════════════════════════════════════
+   全局首页 + 一条「本空间」计数。跟 beta5 空间首页那块「文件 139 · 记忆 3 · 产物 110」
+   同一个意思，但不另起一块面板：一行，贴在快捷卡下面，点文件 / 产物直接进数据中枢。 */
+.spaceOverview {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  width: min(1040px, 100%); margin-top: 12px;
+  color: var(--muted); font-size: 12px;
+}
+.spaceOverviewLabel { font-weight: 600; letter-spacing: .02em; }
+.spaceOverview > button, .spaceOverviewStat {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  border: 0; background: transparent; padding: 0;
+  color: var(--body); font: inherit; font-size: 12px;
+}
+.spaceOverview > button { cursor: pointer; }
+.spaceOverview > button:hover strong { color: var(--bioaz-agent-accent, #5c60b8); }
+.spaceOverview > button:disabled { cursor: default; }
+.spaceOverview svg { align-self: center; color: var(--muted); }
+.spaceOverview strong { color: var(--ink); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* 「设置空间专家」弹窗里的列表：一行一位，勾选框在左，说明在右。 */
+.spaceCoworkerList { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.spaceCoworkerList label {
+  display: grid; grid-template-columns: auto 28px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); padding: 8px 11px; cursor: pointer;
+}
+.spaceCoworkerList label:hover { background: var(--soft, #f7f8fb); }
+.spaceCoworkerList label:has(input:checked) { border-color: var(--bioaz-agent-accent-border, #dcddf2); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.spaceCoworkerList input { margin: 0; }
+.spaceCoworkerIcon {
+  display: grid; width: 28px; height: 28px; place-items: center;
+  border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb); color: var(--bioaz-agent-accent, #5c60b8);
+}
+.spaceCoworkerCopy { display: grid; gap: 1px; min-width: 0; }
+.spaceCoworkerCopy strong { color: var(--ink); font-size: 13px; font-weight: 600; }
+.spaceCoworkerCopy small { color: var(--muted); font-size: 11.5px; }
+.spaceCoworkerList label > svg { color: var(--bioaz-agent-accent, #5c60b8); }
+
 /* ═══ 报价明细 ═════════════════════════════════════════════════════════
    按工作包分段，一行一项服务：范围与公式在小字，金额靠右；算不出的行
    用状态 chip 顶替金额，原因写在算式那一行。 */

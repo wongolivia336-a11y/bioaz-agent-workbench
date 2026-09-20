@@ -45,6 +45,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .newChat:hover { border-color: #b9b4ed; box-shadow: none; transform: none; }
 .workspaceViewRow, .pinnedProjectRow, .sidebarTaskRow { border-radius: var(--bioaz-radius-tool); }
 .workspaceViewRow.active, .chatRow.active, .sidebarTaskRow.active { background: #eeeff2; color: var(--review-ink); }
+/* 停在空间首页时，空间那一行也算「当前位置」——跟任务行同一种亮法。 */
+.projectRow.active, .projectRowWrap:hover .projectRow.active { background: #eeeff2; }
+.projectRow.active strong { color: var(--review-ink); }
 .dmpkShell .sidebar .workspaceViewRow.active::before,
 .dmpkShell .sidebar .chatRow.active::before { background: #2a2d33; }
 .account { border-top-color: var(--review-line); }

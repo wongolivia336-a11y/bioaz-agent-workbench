@@ -110,7 +110,7 @@ export function DigitalTeamPage({ projects, tasks, onStartModule, onOpenLibrary 
               {useOpen ? (
                 <div className="digitalUseMenu">
                   <button type="button" onClick={useCoworker}><Zap size={14} />用于新任务</button>
-                  <button type="button"><Folder size={14} />接入已有项目<span>{projects[0]?.name ?? "选择项目"}</span></button>
+                  <button type="button"><Folder size={14} />接入已有空间<span>{projects[0]?.name ?? "选择空间"}</span></button>
                   <button type="button"><Bot size={14} />继续已有任务<span>{tasks[0]?.title ?? "暂无运行任务"}</span></button>
                 </div>
               ) : null}

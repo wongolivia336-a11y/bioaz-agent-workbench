@@ -79,7 +79,7 @@ export function ProjectActivityTab({ project, account }: { project: string; acco
     && (kind === "全部类型" || entry.kind === kind)
     && (!mineOnly || entry.mine)
     // 项目筛选器选中某个项目时，没有归属的老 mock 条目仍然显示——它们本来就是项目内动态
-    && (project === "全部项目" || !entry.project || entry.project === project)
+    && (project === "全部空间" || !entry.project || entry.project === project)
   ));
 
   return (

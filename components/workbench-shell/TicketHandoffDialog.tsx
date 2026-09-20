@@ -105,7 +105,7 @@ export function TicketHandoffDialog({
               />
             </label>
             <label className="ticketHandoffField">
-              <span>所属项目</span>
+              <span>所属空间</span>
               <CompactSelect value={project} options={projects} onChange={setProject} />
             </label>
             <label className="ticketHandoffField">

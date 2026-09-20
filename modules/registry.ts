@@ -24,6 +24,14 @@ export function getAgentModule(moduleId: string) {
   return moduleRegistry.find((module) => module.moduleId === moduleId) ?? null;
 }
 
+/** 能被绑进空间的数字同事：业务线上的那几位，不含 Helper（它是分诊，不是专家）。 */
+export const businessCoworkerRegistry = coworkerRegistry.filter((coworker) => coworker.id !== bioazHelperCoworker.id);
+
+/** 某个空间里的数字同事 id。没绑过就是全部——空间不该因为没人配置过而变成空的。 */
+export function projectCoworkerIds(project: { coworkerIds?: string[] } | null | undefined): string[] {
+  return project?.coworkerIds ?? businessCoworkerRegistry.map((coworker) => coworker.id);
+}
+
 export function getModuleForCoworker(coworkerId: string) {
   return moduleRegistry.find((module) => module.suggestedCoworker.id === coworkerId) ?? null;
 }

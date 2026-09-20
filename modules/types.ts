@@ -19,6 +19,12 @@ export type WorkbenchProject = {
   id: string;
   name: string;
   type: ProjectType;
+  /**
+   * 这个空间里有哪些数字同事（beta5 叫「可选专家」）。
+   * 可选，缺省 = 全部。空间首页的快捷入口和「设置空间专家」读它；
+   * 代码里容器仍叫 project，界面上叫空间——只改名字，不改结构。
+   */
+  coworkerIds?: string[];
 };
 
 export type WorkbenchTask = {

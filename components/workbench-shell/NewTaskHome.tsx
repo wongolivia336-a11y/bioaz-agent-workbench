@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Check, ChevronDown, CircleAlert, Folder, Send } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, CircleAlert, FileText, Folder, ListChecks, Send } from "lucide-react";
 import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition } from "../../modules/types";
@@ -11,7 +11,10 @@ import { CoworkerSelector } from "./CoworkerSelector";
 import { MessageAttachments, WorkbenchComposer } from "./WorkbenchComposer";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-export type QuickStartItem = { id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder"; moduleId?: string };
+export type QuickStartItem = { id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder"; moduleId?: string; coworkerId?: string; /** 这条流程是哪位数字同事的——空间首页上卡片就是「本空间的专家」，名字写在卡上 */ coworkerName?: string };
+
+/** 空间首页那条计数：这个空间里有多少文件、产物、任务。 */
+export type SpaceStats = { files: number; artifacts: number; tasks: number };
 
 type Props = {
   conversationStarted: boolean;
@@ -24,6 +27,10 @@ type Props = {
   coworkers: CoworkerDefinition[];
   activeCoworkerId: string;
   quickStarts: QuickStartItem[];
+  /* 进了某个空间时才有：空间首页 = 全局首页 + 这两样。
+     没进空间（全局首页）不传，页面跟原来一模一样。 */
+  spaceStats?: SpaceStats | null;
+  onOpenSpaceFiles?: () => void;
   projectOptions: string[];
   projectNotice: string | null;
   onProjectChange: (project: string) => void;
@@ -68,8 +75,19 @@ export function NewTaskHome(props: Props) {
       <div className="newTaskHeading">
         {/* 原来这里还有一行 BIOAZ AGENT WORKBENCH 的 eyebrow，
             和左上角侧边栏的字标重复，删掉后标题区从三层收到两层 */}
-        <h1>今天要推进哪项工作？</h1>
-        <p>描述目标或从常用流程开始。任务会保留在所属项目中，过程与产物均可追溯。</p>
+        {/* 进了空间，标题就说这个空间——这一页此时是空间首页（beta5 点空间进的那个入口），
+            不再是"先选项目"的全局首页。 */}
+        {props.project && props.spaceStats ? (
+          <>
+            <h1>在「{props.project}」里要推进哪项工作？</h1>
+            <p>从这个空间的专家开始，或直接描述任务。任务和产物都留在这个空间里。</p>
+          </>
+        ) : (
+          <>
+            <h1>今天要推进哪项工作？</h1>
+            <p>描述目标或从常用流程开始。任务会保留在所属空间中，过程与产物均可追溯。</p>
+          </>
+        )}
       </div>
       {/* 快捷入口不再因为「还没选项目」而变灰。
           ----------------------------------------------------------------
@@ -92,10 +110,21 @@ export function NewTaskHome(props: Props) {
             <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{!placeholder ? <ArrowUpRight size={14} /> : null}</span>
             <span className="taskExampleCopy">
               <strong>{item.label}</strong>
-              <small>{placeholder ? "即将接入" : "启动标准流程"}</small>
+              {/* 空间首页上卡片就是「本空间的专家」：小字写是谁，不另开一块专家列表——
+                  一件事一个门。全局首页照旧写「启动标准流程」。 */}
+              <small>{placeholder ? "即将接入" : props.project && props.spaceStats && item.coworkerName ? item.coworkerName : "启动标准流程"}</small>
             </span>
           </ActionCard>;
         })}</div>
+        {/* 空间首页多的那一条：这个空间里有什么。点文件 / 产物直接进数据中枢里这个空间。 */}
+        {props.project && props.spaceStats ? (
+          <div className="spaceOverview" aria-label="本空间">
+            <span className="spaceOverviewLabel">本空间</span>
+            <button type="button" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}><Folder size={13} /><strong>{props.spaceStats.files}</strong><span>文件</span></button>
+            <button type="button" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}><FileText size={13} /><strong>{props.spaceStats.artifacts}</strong><span>产物</span></button>
+            <span className="spaceOverviewStat"><ListChecks size={13} /><strong>{props.spaceStats.tasks}</strong><span>任务</span></span>
+          </div>
+        ) : null}
         {pending ? (
           <QuickStartProjectPrompt
             label={props.quickStarts.find((item) => item.id === pending.id)?.label ?? "这项流程"}
@@ -133,7 +162,7 @@ export function NewTaskHome(props: Props) {
         project={props.project}
         globalDrop
       >
-        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(); } }} placeholder={needsProject ? "先选择上方的项目，再描述任务" : "描述你要完成的任务..."} rows={1} />
+        <textarea value={props.text} onChange={(event) => props.onTextChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(); } }} placeholder={needsProject ? "先选择上方的空间，再描述任务" : "描述你要完成的任务..."} rows={1} />
         <button className="sendIconButton" type="button" onClick={submit} disabled={!props.text.trim()} aria-label="发送"><Send size={16} /></button>
       </WorkbenchComposer>
     </div>
@@ -207,9 +236,9 @@ function QuickStartProjectPrompt({ label, origin, options, onPick, onClose }: {
   }, [origin]);
 
   return (
-    <div ref={ref} className="quickStartProjectPrompt" role="dialog" aria-label={`为「${label}」选择项目`}>
+    <div ref={ref} className="quickStartProjectPrompt" role="dialog" aria-label={`为「${label}」选择空间`}>
       <div className="quickStartPromptInner" ref={innerRef}>
-        <p><strong>「{label}」放在哪个项目里？</strong><span>任务会保留在所属项目中，过程与产物均可追溯。</span></p>
+        <p><strong>「{label}」放在哪个空间里？</strong><span>任务会保留在所属空间中，过程与产物均可追溯。</span></p>
         <div className="quickStartProjectList">
           {options.map((option) => (
             <button type="button" key={option} onClick={() => onPick(option)}>
@@ -225,5 +254,5 @@ function QuickStartProjectPrompt({ label, origin, options, onPick, onClose }: {
 function ProjectSelector({ project, options, invalid, onChange }: { project: string | null; options: string[]; invalid: boolean; onChange: (project: string) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
-  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""} ${invalid ? "hasError" : ""}`}><button type="button" aria-expanded={open} aria-invalid={invalid} onClick={() => setOpen((value) => !value)}><Folder size={14} /><span>{project ?? "选择项目"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{options.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span><Folder size={14} />{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
+  return <div ref={ref} className={`projectSelector ${open ? "isOpen" : ""} ${invalid ? "hasError" : ""}`}><button type="button" aria-expanded={open} aria-invalid={invalid} onClick={() => setOpen((value) => !value)}><Folder size={14} /><span>{project ?? "选择空间"}</span><ChevronDown size={14} /></button>{open ? <div className="projectSelectorMenu">{options.map((option) => <button type="button" className={project === option ? "active" : ""} key={option} onClick={() => { onChange(option); setOpen(false); }}><span><Folder size={14} />{option}</span>{project === option ? <Check size={14} /> : null}</button>)}</div> : null}</div>;
 }
