@@ -33,6 +33,8 @@ type Props = {
   onOpenSpaceFiles?: () => void;
   /** 点「产物」落到数据中枢里这个空间的「任务产物」那一道，不是文件总览。 */
   onOpenSpaceArtifacts?: () => void;
+  /** 点「任务」：把侧栏里这个空间的树展开——任务本来就在那儿，不另开一页。 */
+  onOpenSpaceTasks?: () => void;
   projectOptions: string[];
   projectNotice: string | null;
   onProjectChange: (project: string) => void;
@@ -81,7 +83,8 @@ export function NewTaskHome(props: Props) {
             不再是"先选项目"的全局首页。 */}
         {props.project && props.spaceStats ? (
           <>
-            <h1>在「{props.project}」里要推进哪项工作？</h1>
+            {/* 空间名在顶栏面包屑里，这儿不再念一遍——念了 h1 会折成两行。 */}
+            <h1>要在这个空间里推进哪项工作？</h1>
             <p>从这个空间的专家开始，或直接描述任务。任务和产物都留在这个空间里。</p>
           </>
         ) : (
@@ -118,15 +121,6 @@ export function NewTaskHome(props: Props) {
             </span>
           </ActionCard>;
         })}</div>
-        {/* 空间首页多的那一条：这个空间里有什么。点文件 / 产物直接进数据中枢里这个空间。 */}
-        {props.project && props.spaceStats ? (
-          <div className="spaceOverview" aria-label="本空间">
-            <span className="spaceOverviewLabel">本空间</span>
-            <button type="button" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}><Folder size={13} /><strong>{props.spaceStats.files}</strong><span>文件</span></button>
-            <button type="button" onClick={props.onOpenSpaceArtifacts ?? props.onOpenSpaceFiles} disabled={!props.onOpenSpaceArtifacts && !props.onOpenSpaceFiles}><FileText size={13} /><strong>{props.spaceStats.artifacts}</strong><span>产物</span></button>
-            <span className="spaceOverviewStat"><ListChecks size={13} /><strong>{props.spaceStats.tasks}</strong><span>任务</span></span>
-          </div>
-        ) : null}
         {pending ? (
           <QuickStartProjectPrompt
             label={props.quickStarts.find((item) => item.id === pending.id)?.label ?? "这项流程"}
@@ -168,6 +162,35 @@ export function NewTaskHome(props: Props) {
         <button className="sendIconButton" type="button" onClick={submit} disabled={!props.text.trim()} aria-label="发送"><Send size={16} /></button>
       </WorkbenchComposer>
     </div>
+    {/* 空间概览：这个空间里有什么。放在输入框**下面**——先动作、再输入、最后才是
+        「里面有什么」，它是次要信息，不该夹在动作和输入之间。
+        三张小卡跟上面的快捷卡同一副边框、圆角、字号，不再是一行裸文字。
+        任务那张不跳转：侧栏那棵树就在旁边，点它只是把树展开。 */}
+    {!props.conversationStarted && props.project && props.spaceStats ? (
+      <section className="spaceOverview" aria-label="空间概览">
+        <header>
+          <strong>空间概览</strong>
+          <span>这个空间里的资料、产物和任务</span>
+        </header>
+        <div className="spaceOverviewGrid">
+          <ActionCard density="compact" className="spaceOverviewCard" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}>
+            <span className="spaceOverviewIcon"><Folder size={15} /></span>
+            <span className="spaceOverviewCopy"><strong>{props.spaceStats.files}</strong><small>文件</small></span>
+            {props.onOpenSpaceFiles ? <ArrowUpRight size={14} /> : null}
+          </ActionCard>
+          <ActionCard density="compact" className="spaceOverviewCard" onClick={props.onOpenSpaceArtifacts ?? props.onOpenSpaceFiles} disabled={!props.onOpenSpaceArtifacts && !props.onOpenSpaceFiles}>
+            <span className="spaceOverviewIcon"><FileText size={15} /></span>
+            <span className="spaceOverviewCopy"><strong>{props.spaceStats.artifacts}</strong><small>产物</small></span>
+            {props.onOpenSpaceArtifacts || props.onOpenSpaceFiles ? <ArrowUpRight size={14} /> : null}
+          </ActionCard>
+          <ActionCard density="compact" className="spaceOverviewCard" onClick={props.onOpenSpaceTasks} disabled={!props.onOpenSpaceTasks}>
+            <span className="spaceOverviewIcon"><ListChecks size={15} /></span>
+            <span className="spaceOverviewCopy"><strong>{props.spaceStats.tasks}</strong><small>任务</small></span>
+            {props.onOpenSpaceTasks ? <ArrowUpRight size={14} /> : null}
+          </ActionCard>
+        </div>
+      </section>
+    ) : null}
   </section>;
 }
 

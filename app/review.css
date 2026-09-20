@@ -131,6 +131,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .taskExampleGrid strong { color: #272b33; font-size: 13.5px; font-weight: 620; }
 .taskExampleGrid small { color: var(--review-muted); font-size: 11.5px; }
 .newTaskComposerDock { width: min(860px, 100%); gap: 7px; }
+/* 空间首页多一块「空间概览」在输入框下面。.newTaskHome 是两行网格（intro / dock），
+   第三个孩子会掉进隐式轨道——多一个孩子就多声明一行。 */
+.newTaskHome:has(> .spaceOverview) { grid-template-rows: minmax(0, 1fr) auto auto; }
 .newTaskWelcomePrompt { min-height: 18px; color: var(--review-muted); font-size: 12px; }
 .projectSelector > button { height: 44px; border-color: var(--review-line); border-radius: var(--bioaz-radius-tool); background: rgba(255,255,255,.82); box-shadow: none; }
 .projectSelector > button:hover { border-color: var(--review-line-strong); background: var(--bioaz-canvas); box-shadow: none; }

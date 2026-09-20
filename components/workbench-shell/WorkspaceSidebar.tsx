@@ -1,7 +1,7 @@
 "use client";
 
-import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { ArrowUpRight, BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { type InboxAccount } from "../../lib/workbench/mockInbox";
 import { DEMO_LENSES, getDemoLens, type DemoLens } from "../../lib/workbench/demoLens";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
@@ -43,8 +43,10 @@ type Props = {
   onOpenInbox: () => void;
   onRenameProject: (projectId: string, name: string) => void;
   onDeleteProject: (projectId: string) => void;
-  /** 点空间名进空间首页（beta5 的那个入口页）。展开 / 收起挪到文件夹图标上。 */
+  /** 进空间首页（beta5 的那个入口页）。入口是行 hover 的 ↗ 和菜单里的「进入空间」；点行本身仍是开合。 */
   onOpenProjectHome: (projectName: string) => void;
+  /** 空间首页那张「任务」卡点过来：把这个空间的树展开。nonce 变一次展开一次。 */
+  expandProjectSignal?: { name: string; nonce: number } | null;
   /** 能绑进空间的数字同事，和「设置空间专家」的落笔。 */
   coworkerOptions: CoworkerDefinition[];
   onSetProjectCoworkers: (projectId: string, coworkerIds: string[]) => void;
@@ -73,6 +75,14 @@ export function WorkspaceSidebar(props: Props) {
   const librarySpaces = visibleProjects.filter((project) => project.type === "library");
   /* 默认折叠。正在看某个资料空间时自动展开——否则当前位置在侧栏上没有着落点。 */
   const [librarySpaceOpen, setLibrarySpaceOpen] = useState(Boolean(props.activeLibrarySpace));
+  /* 空间首页「任务」卡要求展开某个空间：按名字找 id，翻开。 */
+  const expandSignal = props.expandProjectSignal;
+  useEffect(() => {
+    if (!expandSignal) return;
+    const target = props.projects.find((project) => project.name === expandSignal.name);
+    if (target) setOpenProjects((current) => ({ ...current, [target.id]: true }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandSignal?.nonce]);
   const originalProjectNameById = new Map(workspaceProjects.map((project) => [project.id, project.name]));
   const currentProjectNameByOriginal = new Map(visibleProjects.map((project) => [originalProjectNameById.get(project.id) ?? project.name, project.name]));
   const projectNameById = new Map(visibleProjects.map((project) => [project.id, project.name]));
@@ -420,19 +430,23 @@ function SidebarProject({ title, highlighted = false, active = false, open, onTo
                 path，插值不了，所以用交叉淡入模拟「翻开」；为一个图标引一个
                 SVG morph 库不划算。
 
-                点名字进空间首页、点文件夹图标只开合（跟 beta5 一样：点空间是进去）。
-                图标是行按钮里的一个 span，拦住冒泡就行，不用套第二颗按钮。 */}
-            <button className={`projectRow ${active ? "active" : ""}`} type="button" onClick={onOpenHome} aria-expanded={open} aria-current={active ? "page" : undefined}>
-              <span className="projectFolderIcon" data-open={open} role="button" tabIndex={-1} aria-label={open ? "收起" : "展开"} onClick={(event) => { event.stopPropagation(); onToggle(); }}>
+                点这一行 = 开合，跟原来一样。进空间首页另给一个门：hover 出来的那颗 ↗，
+                和菜单里的「进入空间」。曾试过点名字就进首页——那把「看看树里有什么」
+                这个最频繁的动作变成了导航，用户当场否了。 */}
+            <button className={`projectRow ${active ? "active" : ""}`} type="button" onClick={onToggle} aria-expanded={open} aria-current={active ? "page" : undefined}>
+              <span className="projectFolderIcon" data-open={open}>
                 <Folder size={14} />
                 <FolderOpen size={14} />
               </span>
               <strong>{title}</strong>
             </button>
+            {/* isActionOnly 管的是菜单的 display 和右侧贴边，不是「只有一颗按钮」——两颗照用。 */}
             <div className="projectHoverActions isActionOnly">
+              <button type="button" aria-label={`进入空间「${title}」`} title="进入空间" onClick={(event) => { event.stopPropagation(); onOpenHome(); }}><ArrowUpRight size={14} /></button>
               <button type="button" aria-label={`${title}更多操作`} onClick={(event) => { event.stopPropagation(); setMenuOpen((value) => !value); }}><MoreHorizontal size={14} /></button>
               {menuOpen ? (
                 <div className="sidebarMenu projectMenu">
+                  <button type="button" onClick={() => { onOpenHome(); setMenuOpen(false); }}><ArrowUpRight size={14} />进入空间</button>
                   <button type="button" onClick={() => { setDraft(title); setEditing(true); setMenuOpen(false); }}><FileText size={14} />重命名空间</button>
                   <button type="button" onClick={() => { onOpenFiles(); setMenuOpen(false); }}><Folder size={14} />查看空间文件</button>
                   <button type="button" onClick={() => { onStartTask(); setMenuOpen(false); }}><Plus size={14} />新建任务</button>
