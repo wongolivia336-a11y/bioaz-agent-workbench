@@ -6,7 +6,6 @@ import {
   Calculator,
   ChevronDown,
   CircleAlert,
-  Clock3,
   Edit3,
   Eye,
   FileCheck2,
@@ -20,13 +19,9 @@ import {
   Lock,
   SlidersHorizontal,
   ShieldCheck,
-  Sparkles,
-  Plus,
-  X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { ParameterLedger, type ParamField } from "../../components/params";
-import { useModalDismiss } from "../../components/ui/useModalDismiss";
 import { sourceKindLabels, sourceRoleLabels, type ParseResult } from "../../lib/workbench/sources";
 import {
   effectiveStatus,
@@ -37,6 +32,7 @@ import {
   summarizeLines,
   type ManualPrice,
   type QuoteLine,
+  type QuotePackageSummary,
 } from "../../lib/workbench/quoteLines";
 import { dmpkGroups, initialDmpkFields } from "./fields";
 import {
@@ -368,20 +364,27 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
 
 /**
  * 报价规则：把后台的计价配置在前台做轻量披露。
- * 边界与既有的 DmpkEditProposalCard 一致——本次报价级可改，全局规则只读并深链到后台。
+ *
+ * 只讲规则，不讲单价
+ * ----------------------------------------------------------------------
+ * 第一版这里列了四条「本次命中的规则」，其中两条其实是单价（动物费、报告费），
+ * 下面还有一个费用明细弹窗和一颗「对话编辑」——跟报价板块说的是同一件事，还多了一条改价的路。
+ * 2026-09-21 会议定了：改价是临时调价的唯一路径，在板块里。所以这儿只留真正的规则
+ * （区域、模板 / 管理费），单价一律指回板块；没有价目的项也只报个数，逐项在板块里补价。
+ *
+ * 边界与既有的 DmpkEditProposalCard 一致——本次报价级可改（经对话确认），全局规则只读并深链到后台。
  */
 function RulesPanel({ context }: { context: DmpkInspectorContext }) {
-  const [costOpen, setCostOpen] = useState(false);
   const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
-  /* 读文件读出来的「没有价目」。
-     它们不是人能在前台填的：后台没维护这一项的价目或公式，填一个临时价等于
-     绕过规则。所以不进参数卡，在这儿列出来，出口是后台的标准价格。 */
+  /* 读文件读出来的「没有价目」，同一项在两份来源里都没价目只算一次。 */
   const catalogGaps = (context.sources ?? [])
     .flatMap((source) => source.pending)
     .filter((item) => item.kind === "catalog")
-    /* 同一项委托在两份来源里都没价目，是同一件事，列一次。 */
     .filter((item, index, items) => items.findIndex((other) => other.label === item.label) === index);
-  const costSummary = context.quoteLines?.length ? summarizeLines(context.quoteLines, context.manualPrices) : null;
+  /* 一行名字只报「哪几类」：四个组的免疫分型采血是同一件事，去掉组别前缀再去重。 */
+  const gapKinds = catalogGaps
+    .map((item) => item.label.replace(/^(对照|\d+\s*组)(核心|卫星)?(组)?/, ""))
+    .filter((label, index, labels) => labels.indexOf(label) === index);
 
   const goToBackOffice = (tab: "prices" | "rules" | "parameters" | "templates") => {
     const params = new URLSearchParams({ view: "quotation-management", business: "dmpk", tab });
@@ -390,14 +393,9 @@ function RulesPanel({ context }: { context: DmpkInspectorContext }) {
 
   return (
     <div className="dmpkInspectorList ruleDisclosure">
-      <PanelIntro title="本次报价" meta={hasQuoteDraft ? "以下规则只作用于这一份报价" : "参数补齐后开始匹配"} />
+      <PanelIntro title="本次命中的规则" meta={hasQuoteDraft ? "改动经对话确认，只作用于这一份报价" : "参数补齐后开始匹配"} />
 
-      {/* 可改的一段有实体：卡片、边框、按钮 */}
       <section className="ruleScopeCard">
-        <header>
-          <strong>本次命中的规则</strong>
-          <small>仅影响这份报价</small>
-        </header>
         {matchedRules.map((rule) => (
           <div className="ruleScopeRow" key={rule.id}>
             <div>
@@ -409,32 +407,17 @@ function RulesPanel({ context }: { context: DmpkInspectorContext }) {
             </button>
           </div>
         ))}
-        <div className="ruleScopeActions">
-          <button type="button" disabled={!hasQuoteDraft} onClick={() => setCostOpen(true)}>
-            <Calculator size={14} />查看费用明细
-          </button>
-          <button className="primary" type="button" disabled={!hasQuoteDraft} onClick={() => context.onDraftMessage("我想调整本次报价：")}>
-            <Sparkles size={14} />对话编辑
-          </button>
-        </div>
-        <p className="ruleScopeNote">改动以对话形式提交，确认后只作用于当前报价并保留记录。</p>
       </section>
+      <p className="ruleScopeNote">单价不在这儿改：去「报价板块」点单价旁的铅笔，那是临时调价的唯一入口，只作用于本单。</p>
 
       {catalogGaps.length ? (
-        <section className="dmpkCatalogGaps" aria-label="没有价目的委托项">
+        <section className="dmpkCatalogGaps isCompact" aria-label="没有价目的委托项">
           <header>
             <CircleAlert size={14} aria-hidden="true" />
             <strong>{catalogGaps.length} 项没有价目</strong>
-            <small>本次未计价，不代表免费</small>
+            <small>{gapKinds.join(" · ")}</small>
           </header>
-          <ul>
-            {catalogGaps.map((item) => (
-              <li key={item.id}>
-                <strong>{item.label}</strong>
-                <small>{item.detail}</small>
-              </li>
-            ))}
-          </ul>
+          <p>本单可以在报价板块里逐项补价；长期要在后台补价目。</p>
           <button type="button" onClick={() => goToBackOffice("prices")}>
             去标准价格补价目<ArrowUpRight size={13} aria-hidden="true" />
           </button>
@@ -443,56 +426,23 @@ function RulesPanel({ context }: { context: DmpkInspectorContext }) {
 
       <div className="ruleDisclosureDivider" />
 
-      {/* 只读的一段没实体：素文本行，只提供去后台的路径 */}
-      <PanelIntro title="全局规则" meta="只读 · 影响后续所有 PK 报价" />
-      <div className="ruleGlobalList">
+      {/* 只读的一段没实体：一行链接，只提供去后台的路径 */}
+      <PanelIntro title="全局规则" meta="只读 · 在报价管理里试算并发布，影响后续所有报价" />
+      <div className="ruleGlobalLinks">
         {globalRuleSources.map((source) => (
-          <button type="button" className="ruleGlobalRow" key={source.tab} onClick={() => goToBackOffice(source.tab)}>
-            <span>
-              <strong>{source.label}</strong>
-              <small>{source.meta}</small>
-            </span>
-            <ArrowUpRight size={14} />
+          <button type="button" key={source.tab} title={source.meta} onClick={() => goToBackOffice(source.tab)}>
+            {source.label}<ArrowUpRight size={11} aria-hidden="true" />
           </button>
         ))}
       </div>
-      <p className="ruleGlobalNote">全局规则需要在报价管理后台试算并发布，前台不提供直接修改。</p>
-
-      {costOpen ? (
-        <StrategyDialog title="费用明细" onClose={() => setCostOpen(false)}>
-          {/* 有账就读账——跟「报价明细」是同一份行，按工作包给小计；
-              没账（没传过方案）才是原来那四行示意。两处不能各有一套数。 */}
-          {costSummary ? (
-            <div className="strategyCostList">
-              {costSummary.packages.map((pkg) => (
-                <div key={pkg.id}><span>{pkg.label}<small>{pkg.lines.length} 行{pkg.unpriced ? ` · ${pkg.unpriced} 行未计价` : ""}</small></span><strong>{formatCny(pkg.subtotal)}</strong></div>
-              ))}
-              <div><span>已计价合计<small>{costSummary.unpricedCount ? "不含未计价行" : "全部行"}</small></span><strong>{formatCny(costSummary.total)}</strong></div>
-            </div>
-          ) : (
-            <div className="strategyCostList">
-              <div><span>动物使用费<small>36 × ¥120</small></span><strong>¥4,320</strong></div>
-              <div><span>方法开发费<small>1 × ¥6,000</small></span><strong>¥6,000</strong></div>
-              <div><span>样品检测费<small>216 × ¥180</small></span><strong>¥38,880</strong></div>
-              <div><span>报告费<small>1 × ¥3,000</small></span><strong>¥3,000</strong></div>
-            </div>
-          )}
-          <section className="strategyMatchedRules">
-            <strong>本次计算使用</strong>
-            {matchedRules.map((rule) => <span key={rule.id}>{rule.label}</span>)}
-          </section>
-        </StrategyDialog>
-      ) : null}
     </div>
   );
 }
 
-/** 本次命中的规则。draft 是点「改这条」时填进 composer 的现成句子。 */
+/** 本次命中的规则——只有规则，没有单价。draft 是点「改这条」时填进 composer 的现成句子。 */
 const matchedRules = [
-  { id: "animal-price", label: "SD 大鼠标准价格", meta: "动物使用费 ¥120 / 只", draft: "把本次报价的动物使用费改为 " },
   { id: "region", label: "国内报价区域", meta: "不含跨境与加急附加", draft: "本次报价改用欧美区域计价" },
   { id: "template", label: "PK 报价模板 v8", meta: "Word 30% · Excel 15% 管理费", draft: "把本次报价的管理费比例改为 " },
-  { id: "report-fee", label: "报告费", meta: "¥3,000 / 份", draft: "把本次报价的报告费改为 " },
 ];
 
 /** 与后台四个配置页一一对应，点哪一行就跳到哪一页 */
@@ -503,15 +453,6 @@ const globalRuleSources = [
   { tab: "templates" as const, label: "报价模板", meta: "PK 报价模板 v8" },
 ];
 
-function StrategyDialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  const dismiss = useModalDismiss(onClose);
-  return <div className="strategyDialogBackdrop" role="presentation" {...dismiss}><section className="strategyDialog" role="dialog" aria-modal="true" aria-label={title}><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
-}
-
-function StrategyDrawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  const dismiss = useModalDismiss(onClose);
-  return <div className="strategyDrawerBackdrop" role="presentation" {...dismiss}><section className="strategyDrawer" role="dialog" aria-modal="true" aria-label={title}><header><h2>{title}</h2><button type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header>{children}</section></div>;
-}
 
 /**
  * 输入材料：读过什么，读出了什么。
@@ -627,16 +568,20 @@ function GapsPanel({ context }: { context: DmpkInspectorContext }) {
  *
  * 右栏只做两件事：已收集参数的状态展示，和对应的单价
  * ----------------------------------------------------------------------
- * 按板块（PK / TOX / BA / ADA，配套的动物与报告排最后）分段，一段里一行一项服务，
- * 每行只放会上点名的四要素：**待测物 / 检测方法 / 数量 / 单价**。剂量组、核心 / 卫星
- * 这类描述性细节全部折进「数量」那一格的小字；来源、公式、规则一概不进这儿——
- * 要看去「报价明细」和「报价规则」，那两个 tab 都还在。
+ * 按板块（PK / TOX / BA / ADA，配套的动物与报告排最后）分段，**板块可折叠**：
+ * 段头一行写名字、几项、几项待定、小计——折着也读得出这个板块的状态。
+ * 默认只展开一个：第一个有待定项的板块（要人动手的），都没有就展开第一个。
+ *
+ * 一段里一行一项服务，两行字：上一行是名字和「数量 × 单价」，下一行是待测物 · 检测方法。
+ * 这就是会上点名的四要素。第一版是每行一张 2×2 的表——四个标签四个值，27 行下来
+ * 整栏都是字，用户说太杂；标签去掉，靠位置说话。剂量组、核心 / 卫星这类描述性细节
+ * 折进「报价明细」，不进这儿；来源、公式、规则同理。
  *
  * 改价是临时调价的唯一路径
  * ----------------------------------------------------------------------
- * 单价旁一颗「改价」，就地展开：先把原价和价目版本写出来，再让人填新价，**点确认才落**
- * （不像报价明细那边失焦就落——会上要的是「告知原价 → 输入新价 → 确认」这个闭环）。
- * 落下之后单价换成临时价，旁边挂「临时价 · 原 ¥X」，一键恢复。只作用于这一单。
+ * 单价旁一支小铅笔，点开在行下面展开：先把原价和价目版本写出来，再让人填新价，
+ * **点确认才落**（会上要的是「告知原价 → 输入新价 → 确认」这个闭环，失焦不落）。
+ * 落下之后单价换成临时价，行下一行「临时价 · 原 ¥X · 恢复」。只作用于这一单。
  *
  * 完整价目表不进对话
  * ----------------------------------------------------------------------
@@ -649,8 +594,15 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
   const summary = summarizeLines(lines, manualPrices);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [draftPrice, setDraftPrice] = useState("");
+  /* 人点过的板块记在这儿；没点过的按默认规则开合。这样新长出来的板块
+     （比如补了方法之后多出一行待定）也能按「有待定就开」自己冒出来。 */
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const canEdit = Boolean(context.onSetManualPrice);
   const canOpenCatalog = Boolean(context.viewerRole && context.viewerRole !== "author");
+  /* 默认只开一个：第一个有待定项的板块（要人动手的那个），都没有就开第一个。
+     其余折着——段头上的「N 待定」已经把该看哪儿说了，全开等于没折。 */
+  const defaultOpenId = (summary.packages.find((pkg) => pkg.unpriced > 0) ?? summary.packages[0])?.id;
+  const isOpen = (pkg: QuotePackageSummary) => toggled[pkg.id] ?? pkg.id === defaultOpenId;
 
   const beginEdit = (line: QuoteLine) => {
     setEditingLineId(line.id);
@@ -666,88 +618,95 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
   return (
     <div className="dmpkInspectorList dmpkQuoteSections">
       <PanelIntro
-        title={`${summary.packages.length} 个板块 · 已计价 ${summary.pricedCount} 项`}
-        meta={summary.unpricedCount ? `${summary.unpricedCount} 项还算不出来；数量已按组别折算` : "数量已按组别折算；只列本单涉及的板块"}
+        title={`已计价 ${summary.pricedCount} 项 · ${formatCny(summary.total)}`}
+        meta={summary.unpricedCount ? `${summary.unpricedCount} 项待定 · ${summary.packages.length} 个板块` : `${summary.packages.length} 个板块 · 只列本单涉及的`}
       />
-      {summary.packages.map((pkg) => (
-        <section className="dmpkSection" key={pkg.id}>
-          <header>
-            <strong>{pkg.label}</strong>
-            <span>{pkg.lines.length} 项{pkg.unpriced ? <em> · {pkg.unpriced} 项待定</em> : null} · {formatCny(pkg.subtotal)}</span>
-          </header>
-          <ul>
-            {pkg.lines.map((line) => {
-              const manual = manualPrices[line.id];
-              const status = effectiveStatus(line, manual);
-              const unit = lineUnitPrice(line, manual);
-              const editing = editingLineId === line.id;
-              const hasQty = line.qty > 0;
-              return (
-                <li key={line.id} className={`dmpkSectionRow is-${status}${manual ? " isManual" : ""}${editing ? " isEditing" : ""}`}>
-                  <strong className="dmpkSectionRowName">{line.service}</strong>
-                  <dl className="dmpkSectionFacts">
-                    <div><dt>待测物</dt><dd>{line.analyte ?? <i>—</i>}</dd></div>
-                    <div><dt>检测方法</dt><dd>{line.method ?? <i>—</i>}</dd></div>
-                    <div>
-                      <dt>数量</dt>
-                      <dd>{hasQty ? <><b>{line.qty.toLocaleString("zh-CN")}</b> {line.unit}{line.scope && line.scope !== "本单" ? <small>{line.scope}</small> : null}</> : <i>—</i>}</dd>
-                    </div>
-                    <div className="dmpkSectionPrice">
-                      <dt>单价</dt>
-                      <dd>
-                        {editing ? (
-                          /* 告知原价 → 输入新价 → 确认。回车也算确认，Esc 取消；失焦不落。 */
-                          <span className="dmpkPriceEditor">
-                            <small>{line.catalogPrice !== undefined ? `原价 ${formatCny(line.catalogPrice)} / ${line.unit} · 价目 ${CATALOG_VERSION}` : "系统无价目 · 本单补价"}</small>
-                            <span>
-                              <input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                value={draftPrice}
-                                autoFocus
-                                placeholder={`新价 ¥ / ${line.unit}`}
-                                aria-label={`${line.service} 新单价`}
-                                onChange={(event) => setDraftPrice(event.target.value)}
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter") confirmEdit(line);
-                                  if (event.key === "Escape") setEditingLineId(null);
-                                }}
-                              />
-                              <button type="button" className="isConfirm" disabled={!draftPrice.trim()} onClick={() => confirmEdit(line)}>确认</button>
-                              <button type="button" onClick={() => setEditingLineId(null)}>取消</button>
-                            </span>
-                          </span>
-                        ) : status === "priced" ? (
-                          <>
-                            <b>{formatCny(unit ?? 0)}</b> <span>/ {line.unit}</span>
-                            {manual ? <em className="dmpkTempPrice">临时价{line.catalogPrice !== undefined ? ` · 原 ${formatCny(line.catalogPrice)}` : " · 本单补价"}</em> : null}
-                            {canEdit ? (
-                              <span className="dmpkPriceActions">
-                                <button type="button" onClick={() => beginEdit(line)}><Edit3 size={11} aria-hidden="true" />改价</button>
-                                {manual && context.onClearManualPrice ? <button type="button" onClick={() => context.onClearManualPrice?.(line.id)}>恢复</button> : null}
-                              </span>
+      {summary.packages.map((pkg) => {
+        const open = isOpen(pkg);
+        return (
+          <section className={`dmpkSection${open ? " isOpen" : ""}`} key={pkg.id}>
+            <button type="button" className="dmpkSectionHead" aria-expanded={open} onClick={() => setToggled((current) => ({ ...current, [pkg.id]: !open }))}>
+              <ChevronDown size={14} aria-hidden="true" />
+              <strong>{pkg.label}</strong>
+              <span>
+                <small>{pkg.lines.length} 项</small>
+                {pkg.unpriced ? <i className="dmpkQuoteLineStatus is-pending-confirm">{pkg.unpriced} 待定</i> : null}
+                <b>{formatCny(pkg.subtotal)}</b>
+              </span>
+            </button>
+            {open ? (
+              <ul>
+                {pkg.lines.map((line) => {
+                  const manual = manualPrices[line.id];
+                  const status = effectiveStatus(line, manual);
+                  const unit = lineUnitPrice(line, manual);
+                  const editing = editingLineId === line.id;
+                  const hasQty = line.qty > 0;
+                  const facts = [line.analyte, line.method].filter(Boolean).join(" · ");
+                  return (
+                    <li key={line.id} className={`dmpkSectionRow is-${status}${manual ? " isManual" : ""}${editing ? " isEditing" : ""}`}>
+                      <div className="dmpkSectionRowMain">
+                        <span className="dmpkSectionRowName">{line.service}</span>
+                        {status === "priced" ? (
+                          <span className="dmpkSectionRowPrice">
+                            <span>{line.qty.toLocaleString("zh-CN")} {line.unit}</span>
+                            <span className="dmpkSectionRowX">×</span>
+                            <b>{formatCny(unit ?? 0)}</b>
+                            {canEdit && !editing ? (
+                              <button type="button" className="dmpkPriceEdit" aria-label={`改「${line.service}」的单价`} title="改价（仅本次报价）" onClick={() => beginEdit(line)}><Edit3 size={12} aria-hidden="true" /></button>
                             ) : null}
-                          </>
+                          </span>
                         ) : (
-                          <>
+                          <span className="dmpkSectionRowPrice">
+                            {hasQty ? <span>{line.qty.toLocaleString("zh-CN")} {line.unit}</span> : null}
                             <i className={`dmpkQuoteLineStatus is-${status}`}>{status === "no-catalog" ? "待补价" : quoteLineStatusLabels[status]}</i>
                             {line.dependsOn ? (
-                              <button type="button" className="dmpkQuoteLineGo" onClick={() => context.onEditField(line.dependsOn!)}>去填这一项<ArrowRight size={11} aria-hidden="true" /></button>
-                            ) : status === "no-catalog" && canEdit ? (
+                              <button type="button" className="dmpkQuoteLineGo" onClick={() => context.onEditField(line.dependsOn!)}>去填<ArrowRight size={11} aria-hidden="true" /></button>
+                            ) : status === "no-catalog" && canEdit && !editing ? (
                               <button type="button" className="dmpkQuoteLineGo" onClick={() => beginEdit(line)}>补价</button>
                             ) : null}
-                          </>
+                          </span>
                         )}
-                      </dd>
-                    </div>
-                  </dl>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
+                      </div>
+                      {facts ? <small className="dmpkSectionRowFacts">{facts}</small> : null}
+                      {manual && !editing ? (
+                        <small className="dmpkSectionRowManual">
+                          临时价{line.catalogPrice !== undefined ? ` · 原 ${formatCny(line.catalogPrice)}` : " · 本单补价"}
+                          {context.onClearManualPrice ? <button type="button" onClick={() => context.onClearManualPrice?.(line.id)}>恢复</button> : null}
+                        </small>
+                      ) : null}
+                      {editing ? (
+                        /* 告知原价 → 输入新价 → 确认。回车也算确认，Esc 取消；失焦不落。 */
+                        <div className="dmpkPriceEditor">
+                          <small>{line.catalogPrice !== undefined ? `原价 ${formatCny(line.catalogPrice)} / ${line.unit} · 价目 ${CATALOG_VERSION}` : "系统无价目 · 本单补价"}</small>
+                          <span>
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={draftPrice}
+                              autoFocus
+                              placeholder={`新价 ¥ / ${line.unit}`}
+                              aria-label={`${line.service} 新单价`}
+                              onChange={(event) => setDraftPrice(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") confirmEdit(line);
+                                if (event.key === "Escape") setEditingLineId(null);
+                              }}
+                            />
+                            <button type="button" className="isConfirm" disabled={!draftPrice.trim()} onClick={() => confirmEdit(line)}>确认</button>
+                            <button type="button" onClick={() => setEditingLineId(null)}>取消</button>
+                          </span>
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </section>
+        );
+      })}
       <footer className="dmpkQuoteTotal">
         <span>已计价合计{summary.manualCount ? <em>含 {summary.manualCount} 项临时价 · 仅本次报价</em> : null}</span>
         <strong>{formatCny(summary.total)}</strong>

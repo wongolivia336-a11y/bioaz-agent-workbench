@@ -7,8 +7,6 @@ import "./quotation-management.css";
 import "./quotation-rules-flow.css";
 import "./account-menu.css";
 import "./admin-sidebar-alignment.css";
-import "./dmpk-strategy.css";
-import "./dmpk-adjustment-drawer.css";
 import "./quotation-dialogs.css";
 import "./dmpk-rule-assistant.css";
 import "./digital-team.css";

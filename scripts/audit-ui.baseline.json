@@ -1,9 +1,9 @@
 {
-  "stylesheets": 23,
-  "selectors": 4301,
-  "duplicateSelectors": 602,
+  "stylesheets": 21,
+  "selectors": 4293,
+  "duplicateSelectors": 600,
   "crossFileDuplicates": 193,
-  "suspectDeadClasses": 378,
+  "suspectDeadClasses": 366,
   "handRolledModals": 6,
   "rawButtonClasses": 55,
   "adHocEmptyStates": 13,
