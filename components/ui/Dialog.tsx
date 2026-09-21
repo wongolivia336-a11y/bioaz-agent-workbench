@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "../../lib/cn";
 import { useModalDismiss } from "./useModalDismiss";
 
@@ -20,6 +21,10 @@ import { useModalDismiss } from "./useModalDismiss";
  * className 用于给单个调用点挂皮肤（宽度、正文底色）。给了这个口子，
  * 业务侧才不会因为"差一点点"而整份复制 markup——手写 backdrop 一多，
  * Esc、遮罩点击、层栈就会各写各的，这个组件的价值也就没了。
+ *
+ * 跟 PreviewModal 一样 portal 到 body。原来是就地渲染：遮罩 position: fixed、z-index 80，
+ * 但只要调用点在一个 isolation: isolate 的容器里（空间首页 .newTaskHome 就是），
+ * 这个 z-index 就只在容器内部算数——顶栏压在遮罩上面，磨砂糊住了整页唯独顶栏是清的。
  */
 export function Dialog({
   title,
@@ -39,8 +44,9 @@ export function Dialog({
   children?: ReactNode;
 }) {
   const dismiss = useModalDismiss(onClose);
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className="modalBackdrop" role="presentation" {...dismiss}>
       <section
         className={cn("bioazUiDialog", `bioazUiDialog--${size}`, className)}
@@ -60,6 +66,7 @@ export function Dialog({
         {children ? <div className="bioazUiDialogBody">{children}</div> : null}
         {footer ? <footer className="bioazUiDialogFooter">{footer}</footer> : null}
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -174,7 +174,13 @@ export function NewTaskHome(props: Props) {
                   <RoleMotif kind={item.moduleId ?? item.id} />
                   <span className="expertIntroTitle"><strong>{item.coworkerName ?? item.label}</strong><small>{item.intro.description}</small></span>
                 </span>
-                <span className="expertIntroRow"><em>流程</em><span className="expertIntroChain">{item.intro.stages.map((stage, index) => <span key={stage} style={{ "--i": index } as CSSProperties}>{stage}</span>)}</span></span>
+                {/* 流程画成一条小步骤条：点等距排在一条线上、名字在点下面——跟会话顶栏那条阶段条是同一个意象。
+                    第一版是一串带箭头的 chip，4 步就折两行、6 步折三行，标签列被挤得东一块西一块。 */}
+                <span className="expertIntroRow"><em>流程</em>
+                  <span className="expertIntroSteps" style={{ "--n": item.intro.stages.length } as CSSProperties}>
+                    {item.intro.stages.map((stage, index) => <span key={stage} style={{ "--i": index } as CSSProperties}><span className="expertIntroDot" /><span>{stage}</span></span>)}
+                  </span>
+                </span>
                 {item.intro.artifacts.length ? <span className="expertIntroRow"><em>产出</em><span className="expertIntroList">{item.intro.artifacts.join(" · ")}</span></span> : null}
               </span>
             ) : null}
