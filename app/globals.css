@@ -8838,34 +8838,64 @@ button {
 /* 纸面上单价旁的一行小字：走的哪一档、是不是手动价。 */
 .quoteNumNote { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; white-space: nowrap; }
 
-/* ═══ 空间首页 · 空间概览 ═══════════════════════════════════════════════
-   跟 beta5 空间首页那块「文件 139 · 记忆 3 · 产物 110」同一个意思，放在同一个位置
-   （输入框下面），但用我们自己的形制：一个小标题行 + 三张跟快捷卡同款的小卡。
-   第一版是一行裸文字「本空间 · 2 文件 · 4 产物」，跟上面的卡片不是一套东西，撤了。 */
+/* ═══ 空间首页 ═════════════════════════════════════════════════════════
+   层级从上到下：空间（插画 + 一枚标签）→ 问句 → 本空间的专家（四张动作卡，最重）
+   → 输入框 → 空间概览（一条横条，最轻）。
+   概览第一版是一行裸文字，第二版是三张跟专家卡同款的小卡——七张卡一样重，
+   看不出谁是动作、谁是说明。现在是一条浅底横条，数字之间细线隔开，没有各自的边框。 */
+
+/* 顶上的插画：线稿，一处品牌紫。尺寸跟原来 logo 那格差不多，标题区不用重排。 */
+/* .newTaskIntro 的 justify-items 在某处被改成了 start（logo 和标题各自写了 justify-self: center 才居中），
+   所以插画和标签也得各自声明，不能指望父级。 */
+.spaceMark { display: grid; width: 132px; height: 104px; place-items: center; justify-self: center; }
+.spaceMark svg { width: 100%; height: 100%; overflow: visible; }
+.spaceMarkLinks { stroke: #c4c9d4; }
+.spaceMarkFolder { fill: var(--bioaz-surface); stroke: #98a2b3; }
+.spaceMarkFolder .spaceMarkTab { fill: #f4f3ff; stroke: var(--review-brand, #2f22d3); }
+.spaceMarkNode { fill: var(--bioaz-surface); stroke: #98a2b3; }
+.spaceMarkNode.isAccent { stroke: var(--review-brand, #2f22d3); }
+.spaceMarkNode.isAccent circle:last-of-type { fill: #f4f3ff; }
+
+/* 插画下面那枚标签：这是个什么空间、几个任务。 */
+.spaceKindChip {
+  display: inline-flex; align-items: baseline; gap: 4px; justify-self: center;
+  margin-top: 10px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface); padding: 2px 10px;
+  color: var(--muted); font-size: 11.5px; font-weight: 600; letter-spacing: .02em;
+}
+.spaceKindChip em { color: var(--muted); font-style: normal; font-weight: 400; }
+/* 有插画和标签时，标题区的上边距收一点——插画本身没有 logo 那圈留白。 */
+.newTaskIntro.isSpaceHome .newTaskHeading { margin-top: 10px; }
+
+/* 四张专家卡上方的组名。 */
+.quickStartEyebrow {
+  display: block; width: min(1040px, 100%); margin: 0 0 8px; padding: 0 2px;
+  color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .02em;
+}
+
+/* 概览横条 */
 .spaceOverview {
-  display: grid; gap: 10px;
-  width: min(860px, 100%); margin-top: 18px;
+  display: grid; gap: 6px;
+  width: min(860px, 100%); margin-top: 16px;
   justify-self: center; /* 跟输入框那一栏对齐——同宽、同轴 */
 }
-.spaceOverview > header { display: flex; align-items: baseline; gap: 10px; padding: 0 2px; }
-.spaceOverview > header strong { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .02em; }
-.spaceOverview > header span { color: var(--muted); font-size: 12px; }
-.spaceOverviewGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-/* 比 .bioazUiActionCard 多一层，好把它的 display: block 换成 grid，不靠 !important。 */
-.spaceOverviewGrid > .spaceOverviewCard {
-  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 12px;
-  min-height: 64px; border-radius: var(--bioaz-radius-control);
+.spaceOverviewEyebrow { padding: 0 2px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .02em; }
+.spaceOverviewStrip {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-control);
+  background: var(--soft, #f7f8fb); overflow: hidden;
 }
-.spaceOverviewGrid > .spaceOverviewCard:disabled { opacity: .7; cursor: default; }
-.spaceOverviewGrid > .spaceOverviewCard > svg { color: var(--muted); }
-.spaceOverviewIcon {
-  display: grid; width: 32px; height: 32px; place-items: center;
-  border: 1px solid rgba(47, 34, 211, .08); border-radius: var(--bioaz-radius-tool);
-  background: #f4f3ff; color: var(--bioaz-agent-accent, #5c60b8);
+.spaceOverviewStrip > button {
+  display: flex; align-items: baseline; gap: 6px;
+  border: 0; border-left: 1px solid var(--line); background: transparent;
+  padding: 10px 14px; color: var(--muted); font: inherit; font-size: 12px; text-align: left; cursor: pointer;
 }
-.spaceOverviewCopy { display: grid; gap: 1px; min-width: 0; }
-.spaceOverviewCopy strong { color: var(--ink); font-size: 18px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.spaceOverviewCopy small { color: var(--muted); font-size: 11.5px; }
+.spaceOverviewStrip > button:first-child { border-left: 0; }
+.spaceOverviewStrip > button > svg { align-self: center; flex: none; }
+.spaceOverviewStrip > button strong { color: var(--ink); font-size: 15px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
+.spaceOverviewStrip > button:hover:not(:disabled) { background: var(--bioaz-surface); color: var(--body); }
+.spaceOverviewStrip > button:hover:not(:disabled) strong { color: var(--bioaz-agent-accent, #5c60b8); }
+.spaceOverviewStrip > button:disabled { cursor: default; opacity: .7; }
 
 /* 「设置空间专家」弹窗里的列表：一行一位，勾选框在左，说明在右。 */
 .spaceCoworkerList { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }

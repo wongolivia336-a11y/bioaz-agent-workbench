@@ -5,6 +5,7 @@ import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState }
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition } from "../../modules/types";
 import { LogoAwakening } from "../hero/LogoAwakening";
+import { SpaceMark } from "../hero/SpaceMark";
 import { ActionCard } from "../ui";
 import { DispatchConfirmCard } from "./BioAZHelper";
 import { CoworkerSelector } from "./CoworkerSelector";
@@ -30,6 +31,8 @@ type Props = {
   /* 进了某个空间时才有：空间首页 = 全局首页 + 这两样。
      没进空间（全局首页）不传，页面跟原来一模一样。 */
   spaceStats?: SpaceStats | null;
+  /** 空间是客户委托还是资料空间——顶上那枚标签写的。 */
+  spaceKind?: "client" | "library";
   onOpenSpaceFiles?: () => void;
   /** 点「产物」落到数据中枢里这个空间的「任务产物」那一道，不是文件总览。 */
   onOpenSpaceArtifacts?: () => void;
@@ -62,6 +65,9 @@ export function NewTaskHome(props: Props) {
   /* 分时高亮：项目是发送的前置条件，没选之前它是全屏最亮的元素，
      选完就退成安静的灰，焦点交给输入框。任何一刻只有一个东西最亮。 */
   const needsProject = !props.conversationStarted && !props.project;
+  /* 这一页此刻是空间首页（从侧栏进了某个空间），不是"先选空间"的全局首页。
+     两者共用一份骨架，差别只在：主角是空间不是 logo、没有空间选择器、多一条概览。 */
+  const isSpaceHome = !props.conversationStarted && Boolean(props.project && props.spaceStats);
 
   const submit = () => {
     if (!props.text.trim()) return;
@@ -74,14 +80,23 @@ export function NewTaskHome(props: Props) {
   };
 
   return <section className={`newTaskHome introSequenceStarted ${props.conversationStarted ? "introSequenceSettled isConversation" : ""}`}>
-    {!props.conversationStarted ? <div className="newTaskIntro">
-      <LogoAwakening />
+    {!props.conversationStarted ? <div className={`newTaskIntro ${isSpaceHome ? "isSpaceHome" : ""}`}>
+      {/* 主角：全局首页是 BioAZ（logo），空间首页是这个空间（插画 + 一枚标签）。 */}
+      {isSpaceHome ? (
+        <>
+          <SpaceMark />
+          <span className="spaceKindChip">
+            {props.spaceKind === "library" ? "资料空间" : "客户空间"}
+            {props.spaceStats?.tasks ? <em>· {props.spaceStats.tasks} 个任务</em> : null}
+          </span>
+        </>
+      ) : <LogoAwakening />}
       <div className="newTaskHeading">
         {/* 原来这里还有一行 BIOAZ AGENT WORKBENCH 的 eyebrow，
             和左上角侧边栏的字标重复，删掉后标题区从三层收到两层 */}
         {/* 进了空间，标题就说这个空间——这一页此时是空间首页（beta5 点空间进的那个入口），
             不再是"先选项目"的全局首页。 */}
-        {props.project && props.spaceStats ? (
+        {isSpaceHome ? (
           <>
             {/* 空间名在顶栏面包屑里，这儿不再念一遍——念了 h1 会折成两行。 */}
             <h1>要在这个空间里推进哪项工作？</h1>
@@ -104,6 +119,9 @@ export function NewTaskHome(props: Props) {
           现在换个方向：不解释门槛，取消门槛。没选项目时点卡片，就地把项目
           问出来，选完直接开跑。卡片永远是活的，灰态只留给真正做不了的事。 */}
       <div className="quickStartZone">
+        {/* 空间首页上这一组卡片就是「本空间的专家」，给它一个名字——四张卡和下面的概览
+            才分得出谁是动作、谁是说明。全局首页照旧不写：那里的卡是流程，不是谁的。 */}
+        {isSpaceHome ? <span className="quickStartEyebrow">本空间的专家</span> : null}
         <div className="taskExampleGrid" style={{ "--quick-start-count": Math.min(props.quickStarts.length, 4) } as CSSProperties}>{props.quickStarts.slice(0, 4).map((item) => {
           const placeholder = item.availability === "placeholder";
           return <ActionCard density="default" data-ability={item.id} data-dimmed={pending?.id === item.id ? "true" : undefined} disabled={placeholder} key={item.id} onClick={(event) => {
@@ -117,7 +135,7 @@ export function NewTaskHome(props: Props) {
               <strong>{item.label}</strong>
               {/* 空间首页上卡片就是「本空间的专家」：小字写是谁，不另开一块专家列表——
                   一件事一个门。全局首页照旧写「启动标准流程」。 */}
-              <small>{placeholder ? "即将接入" : props.project && props.spaceStats && item.coworkerName ? item.coworkerName : "启动标准流程"}</small>
+              <small>{placeholder ? "即将接入" : isSpaceHome && item.coworkerName ? item.coworkerName : "启动标准流程"}</small>
             </span>
           </ActionCard>;
         })}</div>
@@ -145,10 +163,12 @@ export function NewTaskHome(props: Props) {
       {/* 未选项目时这一格留空：提示语原本写着「或先选择所属项目」，
           和下面那颗写着「选择项目」的按钮说的是同一件事。空槽保留，
           避免选完项目后多出一行把下面的东西顶下去。 */}
-      {!props.conversationStarted ? <div className="newTaskWelcomePrompt">{props.project ? <span>{`你想在“${props.project}”中完成什么任务？`}</span> : null}</div> : null}
+      {/* 空间首页上没有这两样：面包屑已经写着在哪个空间，选择器和那句「你想在 X 中完成什么」
+          是把同一件事说三遍。要换空间去侧栏。 */}
+      {!props.conversationStarted && !isSpaceHome ? <div className="newTaskWelcomePrompt">{props.project ? <span>{`你想在“${props.project}”中完成什么任务？`}</span> : null}</div> : null}
       {!props.conversationStarted && props.projectNotice ? <div className="newTaskProjectNotice" role="status"><CircleAlert size={14} /><span>{props.projectNotice}</span></div> : null}
       {props.pendingRequest && props.suggestedCoworker ? <DispatchConfirmCard taskType={props.pendingTaskType ?? "待确认任务"} coworker={props.suggestedCoworker} coworkers={props.coworkers.filter((item) => item.id !== "bioaz-helper")} onCoworkerChange={props.onCoworkerChange} onConfirm={props.onConfirm} onCancel={props.onCancel} /> : null}
-      {!props.conversationStarted ? <ProjectSelector project={props.project} options={props.projectOptions} invalid={Boolean(props.projectNotice)} onChange={props.onProjectChange} /> : null}
+      {!props.conversationStarted && !isSpaceHome ? <ProjectSelector project={props.project} options={props.projectOptions} invalid={Boolean(props.projectNotice)} onChange={props.onProjectChange} /> : null}
       {props.conversationStarted ? <CoworkerSelector coworkers={props.coworkers} activeCoworkerId={props.activeCoworkerId} onChange={props.onCoworkerChange} /> : null}
       <WorkbenchComposer
         className="newTaskComposer"
@@ -166,28 +186,21 @@ export function NewTaskHome(props: Props) {
         「里面有什么」，它是次要信息，不该夹在动作和输入之间。
         三张小卡跟上面的快捷卡同一副边框、圆角、字号，不再是一行裸文字。
         任务那张不跳转：侧栏那棵树就在旁边，点它只是把树展开。 */}
-    {!props.conversationStarted && props.project && props.spaceStats ? (
+    {/* 概览比专家卡低一级：一条浅底横条，三组数字用细线隔开，没有各自的边框和箭头。
+        第二版做成三张跟专家卡同款的小卡——七张卡一样重，看不出谁是动作、谁是说明。 */}
+    {isSpaceHome && props.spaceStats ? (
       <section className="spaceOverview" aria-label="空间概览">
-        <header>
-          <strong>空间概览</strong>
-          <span>这个空间里的资料、产物和任务</span>
-        </header>
-        <div className="spaceOverviewGrid">
-          <ActionCard density="compact" className="spaceOverviewCard" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}>
-            <span className="spaceOverviewIcon"><Folder size={15} /></span>
-            <span className="spaceOverviewCopy"><strong>{props.spaceStats.files}</strong><small>文件</small></span>
-            {props.onOpenSpaceFiles ? <ArrowUpRight size={14} /> : null}
-          </ActionCard>
-          <ActionCard density="compact" className="spaceOverviewCard" onClick={props.onOpenSpaceArtifacts ?? props.onOpenSpaceFiles} disabled={!props.onOpenSpaceArtifacts && !props.onOpenSpaceFiles}>
-            <span className="spaceOverviewIcon"><FileText size={15} /></span>
-            <span className="spaceOverviewCopy"><strong>{props.spaceStats.artifacts}</strong><small>产物</small></span>
-            {props.onOpenSpaceArtifacts || props.onOpenSpaceFiles ? <ArrowUpRight size={14} /> : null}
-          </ActionCard>
-          <ActionCard density="compact" className="spaceOverviewCard" onClick={props.onOpenSpaceTasks} disabled={!props.onOpenSpaceTasks}>
-            <span className="spaceOverviewIcon"><ListChecks size={15} /></span>
-            <span className="spaceOverviewCopy"><strong>{props.spaceStats.tasks}</strong><small>任务</small></span>
-            {props.onOpenSpaceTasks ? <ArrowUpRight size={14} /> : null}
-          </ActionCard>
+        <span className="spaceOverviewEyebrow">空间概览</span>
+        <div className="spaceOverviewStrip">
+          <button type="button" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}>
+            <Folder size={14} /><strong>{props.spaceStats.files}</strong><span>文件</span>
+          </button>
+          <button type="button" onClick={props.onOpenSpaceArtifacts ?? props.onOpenSpaceFiles} disabled={!props.onOpenSpaceArtifacts && !props.onOpenSpaceFiles}>
+            <FileText size={14} /><strong>{props.spaceStats.artifacts}</strong><span>产物</span>
+          </button>
+          <button type="button" onClick={props.onOpenSpaceTasks} disabled={!props.onOpenSpaceTasks}>
+            <ListChecks size={14} /><strong>{props.spaceStats.tasks}</strong><span>任务</span>
+          </button>
         </div>
       </section>
     ) : null}
