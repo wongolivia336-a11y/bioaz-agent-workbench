@@ -1,6 +1,6 @@
 {
   "stylesheets": 23,
-  "selectors": 4221,
+  "selectors": 4259,
   "duplicateSelectors": 601,
   "crossFileDuplicates": 193,
   "suspectDeadClasses": 378,
@@ -11,6 +11,6 @@
   "fontSizeValues": 36,
   "durationValues": 11,
   "hexColors": 220,
-  "keyframeNames": 45,
+  "keyframeNames": 46,
   "enterDistances": 11
 }

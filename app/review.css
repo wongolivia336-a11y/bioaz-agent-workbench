@@ -101,13 +101,20 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .taskExampleGrid button::before { display: none; }
 .taskExampleGrid button > * { position: relative; z-index: 1; }
+/* 右下角的角色底纹：绝对定位、压在所有内容下面、几乎看不见的灰。
+   hover 深一档但仍是灰——这一屏的紫只留给图标 hover 那一下。 */
+.taskExampleGrid button > .roleMotif { position: absolute; z-index: 0; right: 10px; bottom: 6px; width: 70px; height: 56px; color: var(--review-line); pointer-events: none; transition: color var(--bioaz-motion-spatial) var(--review-ease); }
+.taskExampleGrid button:not(:disabled):hover > .roleMotif { color: var(--review-line-strong); }
+.taskExampleGrid button:disabled > .roleMotif { color: var(--review-line); }
+/* 扫过卡边的那道光：原来峰值 .82 的品牌紫，一 hover 像通了电。压到 .26，
+   它就退成一缕反光，而不是一道霓虹。 */
 .taskExampleGrid button:not(:disabled)::after {
   position: absolute;
   z-index: 0;
   inset: -1px;
   border: 1px solid transparent;
   border-radius: inherit;
-  background: linear-gradient(112deg, transparent 12%, rgba(47,34,211,.12) 36%, rgba(47,34,211,.82) 50%, rgba(47,34,211,.14) 64%, transparent 88%) border-box;
+  background: linear-gradient(112deg, transparent 14%, rgba(47,34,211,.05) 36%, rgba(47,34,211,.26) 50%, rgba(47,34,211,.06) 64%, transparent 86%) border-box;
   opacity: 0;
   pointer-events: none;
   content: "";
@@ -117,14 +124,19 @@ button { -webkit-tap-highlight-color: transparent; }
   transform: translateX(-72%);
 }
 .taskExampleGrid button:not(:disabled):hover::after { animation: reviewCardEdgePass 720ms var(--review-ease) both; }
-.taskExampleGrid button:hover, .taskExampleGrid button:focus-visible { border-color: #c6c2ed; box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
+/* hover 边框不再偏紫（#c6c2ed），用中性的深一档线色；抬起和投影照旧。 */
+.taskExampleGrid button:hover, .taskExampleGrid button:focus-visible { border-color: var(--review-line-strong); box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
 .taskExampleGrid button:disabled { background: rgba(247, 248, 250, .8); opacity: .64; }
 .taskExampleTop { display: flex; align-items: center; justify-content: space-between; color: var(--review-muted); }
-.taskExampleIcon { position: relative; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border: 1px solid rgba(47,34,211,.08); border-radius: var(--bioaz-radius-tool); background: #f4f3ff; color: var(--review-brand); }
-.taskExampleIcon::after { position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border: 1px solid rgba(47,34,211,.35); border-radius: 2px; content: ""; }
+/* 图标方块：静态是灰字，hover 才上品牌紫——四个紫图标一字排开，是这一屏发油的主因。
+   底色和边框色由后加载的 new-task-home.css（5% / 10% 品牌色）定，这里不重复写。 */
+.taskExampleIcon { position: relative; display: grid; width: 32px; height: 32px; place-items: center; overflow: hidden; border: 1px solid var(--review-line); border-radius: var(--bioaz-radius-tool); color: var(--review-body); transition: border-color var(--bioaz-motion-spatial) var(--review-ease), background-color var(--bioaz-motion-spatial) var(--review-ease), color var(--bioaz-motion-spatial) var(--review-ease); }
+.taskExampleIcon::after { position: absolute; right: 4px; bottom: 4px; width: 6px; height: 6px; border: 1px solid rgba(80,88,102,.4); border-radius: 2px; content: ""; transition: border-color var(--bioaz-motion-spatial) var(--review-ease); }
 .taskExampleGrid button[data-ability="tumor-report"] .taskExampleIcon::after { width: 9px; height: 3px; border-width: 1px 0; border-radius: 0; }
 .taskExampleGrid button[data-ability="tumor-quotation"] .taskExampleIcon::after { width: 7px; height: 7px; border-radius: 50%; }
 .taskExampleGrid button[data-ability="qa-review"] .taskExampleIcon::after { width: 7px; height: 4px; border-width: 0 0 1px 1px; border-radius: 0; transform: rotate(-45deg); }
+.taskExampleGrid button:not(:disabled):hover .taskExampleIcon, .taskExampleGrid button:focus-visible .taskExampleIcon { border-color: rgba(47,34,211,.14); background: #f4f3ff; color: var(--review-brand); }
+.taskExampleGrid button:not(:disabled):hover .taskExampleIcon::after, .taskExampleGrid button:focus-visible .taskExampleIcon::after { border-color: rgba(47,34,211,.35); }
 .taskExampleGrid button:disabled .taskExampleIcon { border-color: #e5e8ed; background: #f0f2f5; color: #8f98a5; }
 .taskExampleGrid button:disabled .taskExampleIcon::after { border-color: #b9c0ca; }
 .taskExampleCopy { gap: 4px; }

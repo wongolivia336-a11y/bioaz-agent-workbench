@@ -8867,35 +8867,110 @@ button {
 /* 有插画和标签时，标题区的上边距收一点——插画本身没有 logo 那圈留白。 */
 .newTaskIntro.isSpaceHome .newTaskHeading { margin-top: 10px; }
 
-/* 四张专家卡上方的组名。 */
+/* 四张专家卡上方的组名。空间首页上它和「配置专家」同一行：组名靠左，配置靠右。 */
 .quickStartEyebrow {
   display: block; width: min(1040px, 100%); margin: 0 0 8px; padding: 0 2px;
   color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .02em;
 }
+/* 宽度跟下面的卡片网格同一个公式（几张卡就几个 215px），左边缘才对得齐。 */
+.quickStartEyebrowRow { display: flex; align-items: center; justify-content: space-between; width: min(calc(var(--quick-start-count, 4) * 215px), 100%); margin: 0 0 8px; }
+.quickStartEyebrowRow > .quickStartEyebrow { width: auto; margin: 0; }
+.quickStartConfigure {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid transparent; border-radius: var(--bioaz-radius-full); background: transparent;
+  padding: 2px 8px; color: var(--muted); font: inherit; font-size: 11.5px; font-weight: 500; cursor: pointer;
+  transition: color var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease, background-color var(--bioaz-motion-standard) ease;
+}
+.quickStartConfigure:hover { border-color: var(--line); background: var(--bioaz-surface); color: var(--ink); }
 
-/* 概览横条 */
+/* 专家卡 hover 时从卡顶长出来的介绍卡
+   ----------------------------------------------------------------
+   放在 button 里（所以 button 在空间首页得 overflow: visible），绝对定位到卡的上方，
+   pointer-events: none——它是说明，不是能点的东西。
+   进场是一个带一点回弹的小弹跳，里面的流程 chip 依次亮起：这就是"灵动"的全部，
+   不做更多——它每次 hover 都要播，多一点就烦。 */
+.newTaskIntro.isSpaceHome .taskExampleGrid button { overflow: visible; }
+.newTaskIntro.isSpaceHome .taskExampleGrid button:hover, .newTaskIntro.isSpaceHome .taskExampleGrid button:focus-visible { z-index: 6; }
+/* 输入框那一栏是 z-index 20（它的菜单要压过这一区），介绍卡开在它上面就得临时高过它。
+   只在 hover 着某张卡时抬——常态下还是让输入框的菜单压过来。 */
+.newTaskIntro.isSpaceHome:has(.taskExampleGrid button:hover), .newTaskIntro.isSpaceHome:has(.taskExampleGrid button:focus-visible) { z-index: 21; }
+.taskExampleGrid button > .expertIntro {
+  position: absolute; z-index: 8; left: 0; top: calc(100% + 10px);
+  display: grid; gap: 8px; width: 272px;
+  border: 1px solid var(--line-strong, #d7dce3); border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface); padding: 12px 13px 11px;
+  box-shadow: 0 14px 34px rgba(18, 24, 38, .12), 0 2px 6px rgba(18, 24, 38, .05);
+  text-align: left; white-space: normal; cursor: default;
+  opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.97); transform-origin: 24px 0;
+  pointer-events: none;
+  transition: opacity var(--bioaz-motion-fast) ease, visibility 0s linear var(--bioaz-motion-fast), transform var(--bioaz-motion-fast) ease;
+}
+.taskExampleGrid button:last-child > .expertIntro { left: auto; right: 0; transform-origin: calc(100% - 24px) 0; }
+/* 小三角，指回那张卡。介绍卡开在卡的下方、盖在输入框上——开在上方会盖住大标题，
+   黑字被截一半比盖住一个空输入框难看得多。 */
+.taskExampleGrid button > .expertIntro::after {
+  position: absolute; left: 22px; top: -6px; width: 10px; height: 10px;
+  border: 1px solid var(--line-strong, #d7dce3); border-width: 1px 0 0 1px;
+  background: var(--bioaz-surface); transform: rotate(45deg); content: "";
+}
+.taskExampleGrid button:last-child > .expertIntro::after { left: auto; right: 22px; }
+.taskExampleGrid button:not(:disabled):hover > .expertIntro,
+.taskExampleGrid button:not(:disabled):focus-visible > .expertIntro {
+  opacity: 1; visibility: visible; transform: translateY(0) scale(1);
+  transition: opacity var(--bioaz-motion-standard) ease 80ms, visibility 0s linear 80ms, transform var(--bioaz-motion-entrance) cubic-bezier(.2, .9, .3, 1.15) 80ms;
+}
+.expertIntroHead { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 10px; }
+/* 介绍卡里的那张底纹是主图了——比卡上的那张深一档，用数字同事那个偏灰的紫，但还是线稿。 */
+.expertIntroHead > .roleMotif { width: 44px; height: 36px; color: var(--bioaz-agent-accent, #5c60b8); }
+.expertIntroTitle { display: grid; gap: 2px; min-width: 0; }
+.expertIntroTitle strong { color: var(--ink); font-size: 13px; font-weight: 620; line-height: 1.25; }
+.expertIntroTitle small { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+.expertIntroRow { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 6px; }
+.expertIntroRow > em { padding-top: 2px; color: var(--muted); font-size: 11px; font-style: normal; font-weight: 600; letter-spacing: .02em; }
+.expertIntroChain { display: flex; flex-wrap: wrap; gap: 4px; }
+.expertIntroChain > span {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--soft, #f7f8fb);
+  padding: 1px 7px; color: var(--body); font-size: 11px; line-height: 1.5; white-space: nowrap;
+  opacity: 0; transform: translateY(3px);
+}
+.expertIntroChain > span:not(:last-child)::after { margin-left: 5px; color: var(--muted); content: "→"; }
+.taskExampleGrid button:not(:disabled):hover .expertIntroChain > span,
+.taskExampleGrid button:not(:disabled):focus-visible .expertIntroChain > span {
+  animation: expertIntroChipIn var(--bioaz-motion-spatial) ease calc(160ms + var(--i, 0) * 45ms) both;
+}
+@keyframes expertIntroChipIn { to { opacity: 1; transform: translateY(0); } }
+.expertIntroList { color: var(--body); font-size: 11.5px; line-height: 1.5; }
+
+/* 概览：三张矮卡 */
 .spaceOverview {
   display: grid; gap: 6px;
   width: min(860px, 100%); margin-top: 16px;
   justify-self: center; /* 跟输入框那一栏对齐——同宽、同轴 */
 }
 .spaceOverviewEyebrow { padding: 0 2px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .02em; }
-.spaceOverviewStrip {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+.spaceOverviewCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.spaceOverviewCard {
+  position: relative; display: grid; gap: 3px; align-content: start; overflow: hidden;
+  min-height: 78px;
   border: 1px solid var(--line); border-radius: var(--bioaz-radius-control);
-  background: var(--soft, #f7f8fb); overflow: hidden;
+  background: var(--soft, #f7f8fb); padding: 12px 14px 11px;
+  color: var(--muted); font: inherit; text-align: left; cursor: pointer;
+  transition: border-color var(--bioaz-motion-spatial) ease, background-color var(--bioaz-motion-spatial) ease, box-shadow var(--bioaz-motion-spatial) ease, transform var(--bioaz-motion-spatial) ease;
 }
-.spaceOverviewStrip > button {
-  display: flex; align-items: baseline; gap: 6px;
-  border: 0; border-left: 1px solid var(--line); background: transparent;
-  padding: 10px 14px; color: var(--muted); font: inherit; font-size: 12px; text-align: left; cursor: pointer;
-}
-.spaceOverviewStrip > button:first-child { border-left: 0; }
-.spaceOverviewStrip > button > svg { align-self: center; flex: none; }
-.spaceOverviewStrip > button strong { color: var(--ink); font-size: 15px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
-.spaceOverviewStrip > button:hover:not(:disabled) { background: var(--bioaz-surface); color: var(--body); }
-.spaceOverviewStrip > button:hover:not(:disabled) strong { color: var(--bioaz-agent-accent, #5c60b8); }
-.spaceOverviewStrip > button:disabled { cursor: default; opacity: .7; }
+.spaceOverviewCard > * { position: relative; z-index: 1; }
+/* 右侧线稿：比专家卡的底纹稍微"在"一点——这张卡上没有图标，它是唯一的图像。 */
+.spaceOverviewCard > .overviewMotif { position: absolute; z-index: 0; right: 10px; top: 50%; width: 58px; height: 54px; color: var(--line-strong, #d7dce3); transform: translateY(-50%); transition: color var(--bioaz-motion-spatial) ease, transform var(--bioaz-motion-spatial) ease; }
+.spaceOverviewNum { display: flex; align-items: baseline; gap: 5px; }
+.spaceOverviewNum strong { color: var(--ink); font-size: 20px; font-weight: 650; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.spaceOverviewNum span { color: var(--body); font-size: 12.5px; font-weight: 600; }
+.spaceOverviewCard small { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+/* 箭头：hover 才出来，出来时从左边滑进右上角 */
+.spaceOverviewCard > svg:last-child { position: absolute; z-index: 2; right: 10px; top: 10px; color: var(--muted); opacity: 0; transform: translate(-4px, 4px); transition: opacity var(--bioaz-motion-standard) ease, transform var(--bioaz-motion-standard) ease; }
+.spaceOverviewCard:hover:not(:disabled) { border-color: var(--line-strong, #d7dce3); background: var(--bioaz-surface); box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
+.spaceOverviewCard:hover:not(:disabled) > .overviewMotif { color: #b9c0ca; transform: translateY(-50%) translateX(-2px); }
+.spaceOverviewCard:hover:not(:disabled) > svg:last-child { opacity: 1; transform: translate(0, 0); }
+.spaceOverviewCard:disabled { cursor: default; opacity: .7; }
 
 /* 「设置空间专家」弹窗里的列表：一行一位，勾选框在左，说明在右。 */
 .spaceCoworkerList { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }

@@ -1,18 +1,27 @@
 "use client";
 
-import { ArrowUpRight, Check, ChevronDown, CircleAlert, FileText, Folder, ListChecks, Send } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, CircleAlert, Folder, Send, Settings2 } from "lucide-react";
 import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
 import type { CoworkerDefinition } from "../../modules/types";
 import { LogoAwakening } from "../hero/LogoAwakening";
+import { OverviewMotif } from "../hero/OverviewMotif";
+import { RoleMotif } from "../hero/RoleMotif";
 import { SpaceMark } from "../hero/SpaceMark";
 import { ActionCard } from "../ui";
 import { DispatchConfirmCard } from "./BioAZHelper";
 import { CoworkerSelector } from "./CoworkerSelector";
+import { SpaceCoworkerDialog } from "./SpaceCoworkerDialog";
 import { MessageAttachments, WorkbenchComposer } from "./WorkbenchComposer";
 import { useDismissableLayer } from "./useDismissableLayer";
 
-export type QuickStartItem = { id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder"; moduleId?: string; coworkerId?: string; /** 这条流程是哪位数字同事的——空间首页上卡片就是「本空间的专家」，名字写在卡上 */ coworkerName?: string };
+export type QuickStartItem = {
+  id: string; label: string; prompt: string; icon: ReactNode; availability?: "available" | "placeholder"; moduleId?: string; coworkerId?: string;
+  /** 这条流程是哪位数字同事的——空间首页上卡片就是「本空间的专家」，名字写在卡上 */
+  coworkerName?: string;
+  /** 空间首页 hover 时那张介绍卡念的：做什么、分几步、交出什么。全局首页不用。 */
+  intro?: { description: string; stages: string[]; artifacts: string[] };
+};
 
 /** 空间首页那条计数：这个空间里有多少文件、产物、任务。 */
 export type SpaceStats = { files: number; artifacts: number; tasks: number };
@@ -38,6 +47,11 @@ type Props = {
   onOpenSpaceArtifacts?: () => void;
   /** 点「任务」：把侧栏里这个空间的树展开——任务本来就在那儿，不另开一页。 */
   onOpenSpaceTasks?: () => void;
+  /* 空间首页眉题旁那颗「配置专家」：跟侧栏 … 菜单里的「设置空间专家」是同一张弹窗。
+     三样都传了才显示——全局首页没有"本空间"，也就没有这颗。 */
+  spaceCoworkerOptions?: CoworkerDefinition[];
+  spaceCoworkerIds?: string[];
+  onSetSpaceCoworkers?: (ids: string[]) => void;
   projectOptions: string[];
   projectNotice: string | null;
   onProjectChange: (project: string) => void;
@@ -56,6 +70,7 @@ export function NewTaskHome(props: Props) {
   const [sentAttachments, setSentAttachments] = useState<ComposerAttachment[]>([]);
   /* 点了哪张卡、但还没定项目；origin 是那张卡当时的屏幕矩形，面板从它长开。 */
   const [pending, setPending] = useState<{ id: string; origin: DOMRect } | null>(null);
+  const [coworkersOpen, setCoworkersOpen] = useState(false);
   const request = props.clarification?.request ?? props.pendingRequest;
   const helperMessage = props.clarification?.question
     ?? (props.pendingRequest && props.suggestedCoworker
@@ -68,6 +83,7 @@ export function NewTaskHome(props: Props) {
   /* 这一页此刻是空间首页（从侧栏进了某个空间），不是"先选空间"的全局首页。
      两者共用一份骨架，差别只在：主角是空间不是 logo、没有空间选择器、多一条概览。 */
   const isSpaceHome = !props.conversationStarted && Boolean(props.project && props.spaceStats);
+  const canConfigureCoworkers = isSpaceHome && Boolean(props.spaceCoworkerOptions && props.spaceCoworkerIds && props.onSetSpaceCoworkers);
 
   const submit = () => {
     if (!props.text.trim()) return;
@@ -121,7 +137,17 @@ export function NewTaskHome(props: Props) {
       <div className="quickStartZone">
         {/* 空间首页上这一组卡片就是「本空间的专家」，给它一个名字——四张卡和下面的概览
             才分得出谁是动作、谁是说明。全局首页照旧不写：那里的卡是流程，不是谁的。 */}
-        {isSpaceHome ? <span className="quickStartEyebrow">本空间的专家</span> : null}
+        {isSpaceHome ? (
+          <div className="quickStartEyebrowRow" style={{ "--quick-start-count": Math.min(props.quickStarts.length, 4) } as CSSProperties}>
+            <span className="quickStartEyebrow">本空间的专家</span>
+            {/* 专家是这个空间可以配的——配置的门就开在专家旁边，不用回侧栏找那个 … 菜单。 */}
+            {canConfigureCoworkers ? (
+              <button type="button" className="quickStartConfigure" onClick={() => setCoworkersOpen(true)}>
+                <Settings2 size={12} aria-hidden="true" />配置专家
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <div className="taskExampleGrid" style={{ "--quick-start-count": Math.min(props.quickStarts.length, 4) } as CSSProperties}>{props.quickStarts.slice(0, 4).map((item) => {
           const placeholder = item.availability === "placeholder";
           return <ActionCard density="default" data-ability={item.id} data-dimmed={pending?.id === item.id ? "true" : undefined} disabled={placeholder} key={item.id} onClick={(event) => {
@@ -130,6 +156,8 @@ export function NewTaskHome(props: Props) {
             const origin = (event.currentTarget as HTMLElement).getBoundingClientRect();
             setPending((current) => current?.id === item.id ? null : { id: item.id, origin });
           }}>
+            {/* 右下角一张极淡的角色底纹——这张卡在讲什么活。图标在左上角管"是谁"，底纹管"做什么"。 */}
+            <RoleMotif kind={item.moduleId ?? item.id} />
             <span className="taskExampleTop"><span className="taskExampleIcon">{item.icon}</span>{!placeholder ? <ArrowUpRight size={14} /> : null}</span>
             <span className="taskExampleCopy">
               <strong>{item.label}</strong>
@@ -137,6 +165,19 @@ export function NewTaskHome(props: Props) {
                   一件事一个门。全局首页照旧写「启动标准流程」。 */}
               <small>{placeholder ? "即将接入" : isSpaceHome && item.coworkerName ? item.coworkerName : "启动标准流程"}</small>
             </span>
+            {/* 空间首页 hover 时从卡顶长出来的介绍卡：这位专家做什么、分几步、交出什么。
+                pointer-events: none——它只是说明，鼠标挪上去不该算 hover 到别的东西。
+                在 button 里用 span 而不是 div：button 里只能放短语内容。 */}
+            {isSpaceHome && !placeholder && item.intro ? (
+              <span className="expertIntro" aria-hidden="true">
+                <span className="expertIntroHead">
+                  <RoleMotif kind={item.moduleId ?? item.id} />
+                  <span className="expertIntroTitle"><strong>{item.coworkerName ?? item.label}</strong><small>{item.intro.description}</small></span>
+                </span>
+                <span className="expertIntroRow"><em>流程</em><span className="expertIntroChain">{item.intro.stages.map((stage, index) => <span key={stage} style={{ "--i": index } as CSSProperties}>{stage}</span>)}</span></span>
+                {item.intro.artifacts.length ? <span className="expertIntroRow"><em>产出</em><span className="expertIntroList">{item.intro.artifacts.join(" · ")}</span></span> : null}
+              </span>
+            ) : null}
           </ActionCard>;
         })}</div>
         {pending ? (
@@ -186,23 +227,42 @@ export function NewTaskHome(props: Props) {
         「里面有什么」，它是次要信息，不该夹在动作和输入之间。
         三张小卡跟上面的快捷卡同一副边框、圆角、字号，不再是一行裸文字。
         任务那张不跳转：侧栏那棵树就在旁边，点它只是把树展开。 */}
-    {/* 概览比专家卡低一级：一条浅底横条，三组数字用细线隔开，没有各自的边框和箭头。
-        第二版做成三张跟专家卡同款的小卡——七张卡一样重，看不出谁是动作、谁是说明。 */}
+    {/* 概览比专家卡低一级，但不再是一条裸横条：三张矮卡，浅底、无图标方块、无边框重线，
+        右侧各一张线稿说明这一格是什么。数字是主角，说明文字是配角，箭头 hover 才出来。
+        第二版做成三张跟专家卡同款的小卡——七张卡一样重；第三版压成横条——又太没存在感。 */}
     {isSpaceHome && props.spaceStats ? (
       <section className="spaceOverview" aria-label="空间概览">
         <span className="spaceOverviewEyebrow">空间概览</span>
-        <div className="spaceOverviewStrip">
-          <button type="button" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}>
-            <Folder size={14} /><strong>{props.spaceStats.files}</strong><span>文件</span>
+        <div className="spaceOverviewCards">
+          <button type="button" className="spaceOverviewCard" data-kind="files" onClick={props.onOpenSpaceFiles} disabled={!props.onOpenSpaceFiles}>
+            <OverviewMotif kind="files" />
+            <span className="spaceOverviewNum"><strong>{props.spaceStats.files}</strong><span>文件</span></span>
+            <small>方案、清单与往来材料</small>
+            <ArrowUpRight size={13} aria-hidden="true" />
           </button>
-          <button type="button" onClick={props.onOpenSpaceArtifacts ?? props.onOpenSpaceFiles} disabled={!props.onOpenSpaceArtifacts && !props.onOpenSpaceFiles}>
-            <FileText size={14} /><strong>{props.spaceStats.artifacts}</strong><span>产物</span>
+          <button type="button" className="spaceOverviewCard" data-kind="artifacts" onClick={props.onOpenSpaceArtifacts ?? props.onOpenSpaceFiles} disabled={!props.onOpenSpaceArtifacts && !props.onOpenSpaceFiles}>
+            <OverviewMotif kind="artifacts" />
+            <span className="spaceOverviewNum"><strong>{props.spaceStats.artifacts}</strong><span>产物</span></span>
+            <small>任务交出的报价和报告</small>
+            <ArrowUpRight size={13} aria-hidden="true" />
           </button>
-          <button type="button" onClick={props.onOpenSpaceTasks} disabled={!props.onOpenSpaceTasks}>
-            <ListChecks size={14} /><strong>{props.spaceStats.tasks}</strong><span>任务</span>
+          <button type="button" className="spaceOverviewCard" data-kind="tasks" onClick={props.onOpenSpaceTasks} disabled={!props.onOpenSpaceTasks}>
+            <OverviewMotif kind="tasks" />
+            <span className="spaceOverviewNum"><strong>{props.spaceStats.tasks}</strong><span>任务</span></span>
+            <small>在侧栏里展开这个空间</small>
+            <ArrowUpRight size={13} aria-hidden="true" />
           </button>
         </div>
       </section>
+    ) : null}
+    {coworkersOpen && canConfigureCoworkers && props.project ? (
+      <SpaceCoworkerDialog
+        title={props.project}
+        options={props.spaceCoworkerOptions!}
+        value={props.spaceCoworkerIds!}
+        onSave={(ids) => { props.onSetSpaceCoworkers!(ids); setCoworkersOpen(false); }}
+        onClose={() => setCoworkersOpen(false)}
+      />
     ) : null}
   </section>;
 }
