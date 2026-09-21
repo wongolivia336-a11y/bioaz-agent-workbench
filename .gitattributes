@@ -1,0 +1,9 @@
+# 二进制资产不做行尾转换——PDF 里的 xref 偏移量按字节算，被 autocrlf 改一行就错位。
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
