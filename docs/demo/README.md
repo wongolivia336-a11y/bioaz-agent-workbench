@@ -85,7 +85,7 @@
 
 ## 对比讲稿（演示完再开）
 
-http://localhost:3000/demo/compare/ （文件在 `public/demo/compare/index.html`，dev server 起着就能开；离线也能直接双击打开）。
+http://localhost:3000/demo/compare/index.html （文件在 `public/demo/compare/index.html`，dev server 起着就能开；离线也能直接双击打开）。
 12 页横向翻（← → / Home / End，点截图放大）：封面 → 三句话结论 → 空间 / 右栏 / 材料识别 / 费用与改价 / 价目表 / 人与工单 /
 数据中枢 / 权限与「+」逐页左右对照（左 beta5、右原型）→ 总表 → 三个要一起定的问题。
 
@@ -100,6 +100,6 @@ http://localhost:3000/demo/compare/ （文件在 `public/demo/compare/index.html
 - `npm run dev` 起来、http://localhost:3000 打得开，账号是王林彬（默认）。
 - 浏览器宽度 ≥ 1440，右栏才放得下三个 tab 不滚。
 - 全屏那颗按钮在右栏右上角，讲板块时可以全屏。
-- 讲稿另开一个标签页 http://localhost:3000/demo/compare/ 提前打开，演示完 Alt+Tab 过去。
+- 讲稿另开一个标签页 http://localhost:3000/demo/compare/index.html 提前打开，演示完 Alt+Tab 过去。
 - 别在后台改价目——那是全局的；演示改价只在板块里点铅笔。
 - 切账号会回到首页、会话重置，把"切账号"放在一段的末尾。
