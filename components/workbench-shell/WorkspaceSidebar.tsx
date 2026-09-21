@@ -290,12 +290,12 @@ export function WorkspaceSidebar(props: Props) {
       <div ref={accountRef} className={`account accountMenuTrigger ${accountMenuOpen ? "menuOpen" : ""}`}>
         <button type="button" onClick={() => setAccountMenuOpen((value) => !value)} aria-expanded={accountMenuOpen}>
           <span className="avatar">{props.account.name.slice(0, 1)}</span>
-          <span><strong>{props.account.name}</strong><small>{props.account.roleLabel} · {props.account.email}</small></span>
+          <span><strong>{props.account.name}</strong><small>{props.account.roleLabel}{props.account.grade ? ` · ${props.account.grade}` : ""} · {props.account.email}</small></span>
           <ChevronUp size={14} />
         </button>
         {accountMenuOpen ? (
           <div className="accountMenu">
-            <div><span className="avatar">{props.account.name.slice(0, 1)}</span><span><strong>{props.account.name}</strong><small>{props.account.roleLabel} · {props.account.email}</small></span></div>
+            <div><span className="avatar">{props.account.name.slice(0, 1)}</span><span><strong>{props.account.name}</strong><small>{props.account.roleLabel}{props.account.grade ? ` · ${props.account.grade}` : ""} · {props.account.email}</small></span></div>
             {/* 演示镜头跟账号切换放在一起:两者都是演示装置,不是产品功能。
                 镜头决定「看哪条业务线」,账号决定「站在谁的位置上看」——
                 合起来才凑得出「同一件事在撰写人和审批人眼里各是什么样」。 */}
@@ -322,7 +322,7 @@ export function WorkspaceSidebar(props: Props) {
             {props.switchableAccounts.map((item) => (
               <button className={`accountSwitchRow ${item.id === props.account.id ? "isCurrent" : ""}`} type="button" key={item.id} onClick={() => { props.onAccountChange(item.id); setAccountMenuOpen(false); }}>
                 <span className="avatar">{item.name.slice(0, 1)}</span>
-                <span><strong>{item.name}</strong><small>{item.roleLabel}</small></span>
+                <span><strong>{item.name}</strong><small>{item.roleLabel}{item.grade ? ` · ${item.grade}` : ""}</small></span>
                 {item.id === props.account.id ? <Check size={14} /> : null}
               </button>
             ))}

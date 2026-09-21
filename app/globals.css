@@ -8732,39 +8732,6 @@ button {
 .dmpkFactList ol { display: grid; gap: 3px; margin: 0; padding: 2px 10px 9px 26px; }
 .dmpkFactList ol li { color: var(--body); font-size: 12px; line-height: 1.5; }
 
-/* 报价规则里「没有价目」那一段。它是后台的事，所以放在本次规则和全局规则之间，
-   出口只有一个：去标准价格。不给输入框——填临时价等于绕过规则。 */
-.dmpkCatalogGaps {
-  display: grid; gap: 8px;
-  border: 1px solid var(--line); border-radius: var(--bioaz-radius-control);
-  background: var(--soft, #f7f8fb); padding: 11px 12px;
-}
-.dmpkCatalogGaps > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; color: #7d6229; }
-.dmpkCatalogGaps > header svg { align-self: center; }
-.dmpkCatalogGaps > header strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
-.dmpkCatalogGaps > header small { color: var(--muted); font-size: 11.5px; }
-.dmpkCatalogGaps ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
-.dmpkCatalogGaps li { display: grid; gap: 1px; }
-.dmpkCatalogGaps li strong { color: var(--body); font-size: 12px; font-weight: 600; }
-.dmpkCatalogGaps li small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
-.dmpkCatalogGaps > button {
-  display: inline-flex; align-items: center; gap: 4px; justify-self: start;
-  border: 0; background: transparent; padding: 0; color: var(--bioaz-agent-accent, #5c60b8);
-  font-size: 12px; font-weight: 600; cursor: pointer;
-}
-/* 报价规则面板里的紧凑版：不逐项列（板块里一行一个待补价），只报个数和名字，加一句去处。 */
-.dmpkCatalogGaps.isCompact { gap: 5px; }
-.dmpkCatalogGaps.isCompact > header small { flex-basis: 100%; line-height: 1.5; }
-.dmpkCatalogGaps.isCompact > p { margin: 0; color: var(--body); font-size: 11.5px; line-height: 1.5; }
-/* 全局规则：四个去处收成一行小胶囊，不再四行叠着 */
-.ruleGlobalLinks { display: flex; flex-wrap: wrap; gap: 6px; }
-.ruleGlobalLinks button {
-  display: inline-flex; align-items: center; gap: 3px;
-  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface);
-  padding: 3px 10px; color: var(--body); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
-  transition: border-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
-}
-.ruleGlobalLinks button:hover { border-color: var(--line-strong, #d7dce3); color: var(--ink); }
 
 /* ═══ 确认状态 ═════════════════════════════════════════════════════════
    台账上只标「识别」——机器认出来、人还没点头的那几行。已确认的不标：
@@ -9136,3 +9103,21 @@ button {
   display: flex; align-items: center; gap: 5px; margin: 0; padding: 2px 2px 0;
   color: var(--muted); font-size: 11.5px; line-height: 1.5;
 }
+/* 板块底部：本单命中的规则一行（原「报价规则」tab 剩下的那两条），再一行两扇门 */
+.dmpkSectionRules { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 2px 0; }
+.dmpkSectionRulesLabel { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.dmpkSectionRule {
+  display: inline-flex; align-items: center; gap: 3px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface);
+  padding: 2px 8px; color: var(--body); font-size: 11.5px; font-weight: 600;
+}
+.dmpkSectionRule button { display: inline-flex; border: 0; background: transparent; padding: 0 0 0 2px; color: var(--muted); cursor: pointer; }
+.dmpkSectionRule button:hover { color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkSectionDoors { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.dmpkSectionDoors > .dmpkInspectorTextAction { margin: 0; }
+
+/* 对话里那张「本单命中的价目」表 */
+.dmpkCatalogHits td small { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; }
+.dmpkCatalogHits td b { color: var(--ink); font-weight: 600; }
+.dmpkCatalogHits tr[data-status="manual"] td:nth-child(3) { color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkCatalogHits tr[data-status="no-catalog"] td { color: var(--muted); }

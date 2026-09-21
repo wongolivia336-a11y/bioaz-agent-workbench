@@ -120,6 +120,9 @@
 .quotationToolbar .toolIconButton{width:34px;height:34px}
 
 .quotationTable>button{font-size:var(--bioaz-type-body-size);padding:13px 16px}
+/* 只读：行还是那一行，只是不响应——不灰掉，看整表本来就是这个身份能做的事 */
+.quotationTable[data-readonly]>button:disabled{cursor:default;opacity:1;color:inherit}
+.quotationTable[data-readonly]>button:disabled:hover{background:transparent}
 .quotationTable>button strong{font-size:var(--bioaz-type-body-size);font-weight:600}
 .quotationTable>button b{font-size:var(--bioaz-type-body-size);font-weight:600;font-variant-numeric:tabular-nums}
 .quotationTable>button span{color:var(--bioaz-text-secondary);font-size:var(--bioaz-type-small-size)}

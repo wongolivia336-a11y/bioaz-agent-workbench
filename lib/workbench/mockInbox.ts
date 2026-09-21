@@ -9,6 +9,8 @@ import { workspaceProjects } from "./mockWorkspace";
    收件人是岗位（audienceRole）而不是人。同岗位的多个账号会收到同一条，
    claimedBy 只是一行软提示——原型阶段不做抢占锁，做了只会挡住演示。 */
 
+import type { AccountGrade } from "./permissions";
+
 export type InboxRole = "author" | "approver" | "owner";
 
 export type InboxAccount = {
@@ -18,6 +20,8 @@ export type InboxAccount = {
   role: InboxRole;
   /** 显示用，比 role 具体：同为 author，「一线实验员」和「DMPK 报价同事」不是一回事 */
   roleLabel: string;
+  /** 报价线上的级别（SD / SD 助理），决定能不能看完整价目表、改底表——见 permissions.ts。QA、商务这些线上没有。 */
+  grade?: AccountGrade;
   /** 交接选择器里的分组：DMPK / QA / 药效 / 审批与管理 / 商务 */
   team: string;
   /** 侧栏账号切换器是否列出它。演示装置，不是权限。 */
@@ -72,16 +76,16 @@ export type InboxItem = {
 
    team 用于选择器里分组:一个你不熟的名字,光有姓名不够,得知道他是哪条线上的。 */
 export const directory: InboxAccount[] = [
-  { id: "acct-zhao", name: "赵敏", email: "zhaom@bioaz.com", role: "author", roleLabel: "DMPK 报价同事", team: "DMPK", switchable: true },
-  { id: "acct-sun", name: "孙桦", email: "sunh@bioaz.com", role: "author", roleLabel: "DMPK 实验负责人", team: "DMPK" },
+  { id: "acct-zhao", name: "赵敏", email: "zhaom@bioaz.com", role: "author", roleLabel: "DMPK 报价同事", grade: "SD 助理", team: "DMPK", switchable: true },
+  { id: "acct-sun", name: "孙桦", email: "sunh@bioaz.com", role: "author", roleLabel: "DMPK 实验负责人", grade: "SD", team: "DMPK" },
   { id: "acct-lin", name: "林一一", email: "lin@bioaz.com", role: "author", roleLabel: "一线实验员", team: "QA", switchable: true },
   { id: "acct-zhou", name: "周颖", email: "zhouy@bioaz.com", role: "author", roleLabel: "QA 审核员", team: "QA" },
   /* 肿瘤报价这条线的撰写人，跟 DMPK 的赵敏是对称的一位：同样是 author、
      同样可切换、同样对着审批人王林彬。他原来叫「药效实验员」且不可切换，
      那个身份在别处一次都没被引用过——改成报价线的岗位，比再造一个人干净。 */
-  { id: "acct-chen", name: "陈默", email: "chenm@bioaz.com", role: "author", roleLabel: "肿瘤报价同事", team: "肿瘤", switchable: true },
-  { id: "acct-wang", name: "王林彬", email: "wanglb@bioaz.com", role: "approver", roleLabel: "审批人", team: "审批与管理", switchable: true },
-  { id: "acct-li", name: "李林", email: "lil@bioaz.com", role: "owner", roleLabel: "项目负责人", team: "审批与管理", switchable: true },
+  { id: "acct-chen", name: "陈默", email: "chenm@bioaz.com", role: "author", roleLabel: "肿瘤报价同事", grade: "SD 助理", team: "肿瘤", switchable: true },
+  { id: "acct-wang", name: "王林彬", email: "wanglb@bioaz.com", role: "approver", roleLabel: "审批人", grade: "SD", team: "审批与管理", switchable: true },
+  { id: "acct-li", name: "李林", email: "lil@bioaz.com", role: "owner", roleLabel: "项目负责人", grade: "SD", team: "审批与管理", switchable: true },
   { id: "acct-he", name: "何雯", email: "hew@bioaz.com", role: "owner", roleLabel: "商务经理", team: "商务" },
 ];
 

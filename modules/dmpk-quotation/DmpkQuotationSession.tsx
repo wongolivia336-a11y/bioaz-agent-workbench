@@ -13,8 +13,10 @@ import { mergeParsePatches, parseSources, type ParseResult } from "../../lib/wor
 import type { ParamSource } from "../../components/params";
 import { formatCny, MANUAL_PRICE_BY, pricingSentence, summarizeLines, type ManualPrice } from "../../lib/workbench/quoteLines";
 import { quotePaperFromLines } from "../../lib/workbench/quotePaperFromLines";
+import { fullQuotePermissions } from "../../lib/workbench/permissions";
 import type { AgentModuleSessionProps } from "../types";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
+import { catalogHitsFor } from "./catalogHits";
 import { noteAnchorToField } from "./noteFieldMap";
 import { applyPendingToFields, dmpkSourceParsers } from "./parseFixtures";
 import { buildDmpkQuoteLines } from "./quoteLineFixtures";
@@ -52,7 +54,9 @@ function missingFieldHint(items: DmpkField[]) {
   return `还需补充 ${items.length} 项：${labels}${suffix}。可直接在输入框用一句话补充，也可以展开下方参数卡逐项填写。`;
 }
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, viewerRole, rework, onReworkResolved, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, viewerPermissions, rework, onReworkResolved, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
+  /* 壳层按账号级别推的权限；单独渲染没有壳层时按全开。 */
+  const permissions = viewerPermissions ?? fullQuotePermissions;
   const openingMessage = "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。";
   /* 回到旧会话时把参数一起还原。不还原的话,右侧面板停在「未开始」,
      而对话里写着「参数已齐全、报价单已生成」——一屏之内自相矛盾。 */
@@ -129,8 +133,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
   /* tab 栏只放主面板；处理过程、输入材料、缺失项、报价明细、审核记录
      一律收在加号菜单里，系统永远不会自己把它们加回来。
-     「报价板块」是 2026-09-21 会议定的右栏正主（参数状态 + 单价），常驻。 */
-  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "sections", "artifacts", "rules"]);
+     「报价板块」是 2026-09-21 会议定的右栏正主（参数状态 + 单价），常驻。
+     「报价规则」tab 撤了（用户 09-21 晚定的）：它剩下的两条规则折进板块底部，全局去处就是价目表那扇门。 */
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "sections", "artifacts"]);
   // DMPK 的参数收集是主工作面，右侧默认就展开；肿瘤报告那边是事件驱动的
   const [panelOpen, setPanelOpen] = useState(true);
   /** 面板铺满工作区：只吃对话列，topbar 与左侧任务栏保留 */
@@ -608,6 +613,15 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       return;
     }
     if (!text) return;
+    /* 「列一下这单用的价目 / 命中了哪些价 / 用了哪几档单价」——回一张表。
+       只认「本单 / 这单 / 命中 / 用到」+「价目 / 单价 / 价格」这种组合，
+       免得「报告费改成 3500」这种改价的话也被截走。 */
+    if (/(?:本单|这单|当前|命中|用到|用了|列)[^。]*(?:价目|单价|价格)|(?:价目|单价|价格)[^。]*(?:命中|用到|用了|列)/.test(text) && !/改|调|换成|变成/.test(text)) {
+      setComposerText("");
+      setConversationEditing(false);
+      listCatalogHits(text);
+      return;
+    }
     /* 「我说过了 / 已经提供过 / 核对一下」——回去翻，不再问一遍。 */
     if (/(?:提供|说|给|发|传)过|核对(?:一下)?(?:已有|信息)?|重新计算/.test(text)) {
       appendMessage("user", text, consumeAttachments());
@@ -672,6 +686,26 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     /* 有账时「无价目」的数已经在 pricing 那句里（按行数）；再按待处理项数说一遍，
        同一件事会出现两个不同的数——4 组免疫分型采血是 4 个待处理项、1 行账。 */
     setHandoffNote(`已确认 ${confirmed.length} 项参数；${pricing}。${!ledgerLine && catalogGaps ? `${catalogGaps} 项无价目未计入，请复核。` : quoteSummary.unpricedCount ? "未计价行请复核。" : ""}`.trim());
+  };
+
+  /**
+   * 「这单用了哪些价」——在对话里回一张表。
+   * ----------------------------------------------------------------------
+   * 会议共识 2 是**完整**价目表不进对话；这里回的是本单命中的那一小截，跟去后台翻整表是两件事，
+   * 所以 SD 助理也能问。板块底部有一颗按钮，对话里说「列一下本单用的价目」也走这儿。
+   * 跟会话摘要一样是从账上推的，不等、不转圈。
+   */
+  const listCatalogHits = (userText?: string) => {
+    appendMessage("user", userText ?? "列出本单命中的价目");
+    const hits = catalogHitsFor(quoteLines, manualPrices);
+    if (!hits.length) {
+      appendMessage("agent", "这单还没有账——先说一下检测类型和动物、周期，或者传一份方案，我再把用到的价目列出来。");
+      return;
+    }
+    const manual = hits.filter((hit) => hit.status === "manual").length;
+    const missing = hits.filter((hit) => hit.status === "no-catalog").length;
+    const text = `本单命中 ${hits.length - missing} 档价目（价目表 v1.0.13）${manual ? `，其中 ${manual} 档用了临时价、仅作用于本单` : ""}${missing ? `；另有 ${missing} 项系统没有价目，待补价` : ""}。完整价目表在报价管理里${permissions.canViewCatalog ? "，右栏板块底部可以直接进" : "（SD 入口）"}。`;
+    setMessages((items) => [...items, { id: `agent-${Date.now()}-${items.length}`, role: "agent", text, catalogHits: hits }]);
   };
 
   /**
@@ -898,11 +932,12 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     quoteStale,
     onRegenerate: regenerateQuote,
     onRecheck: recheckSources,
-    /* 完整价目表的门（会议共识 2）。演示级的「审批人 / 负责人才看得见」靠账号切换器：
-       author 看到的是一行灰字说明，不是按钮。 */
-    viewerRole,
+    /* 权限（演示级，壳层按账号级别推）：板块里能不能改价，完整价目表那扇门给不给。
+       SD 助理看到的是一行灰字说明，不是按钮。 */
+    permissions,
     onOpenCatalog: onOpenQuotationManagement ? () => onOpenQuotationManagement({ business: "dmpk", tab: "prices" }) : undefined,
     onOpenBackOffice: onOpenQuotationManagement ? (tab) => onOpenQuotationManagement({ business: "dmpk", tab }) : undefined,
+    onListCatalogHits: () => listCatalogHits(),
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,

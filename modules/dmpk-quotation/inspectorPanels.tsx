@@ -18,10 +18,10 @@ import {
   ListChecks,
   Lock,
   SlidersHorizontal,
-  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { ParameterLedger, type ParamField } from "../../components/params";
+import { fullQuotePermissions, type QuotePermissions } from "../../lib/workbench/permissions";
 import { sourceKindLabels, sourceRoleLabels, type ParseResult } from "../../lib/workbench/sources";
 import {
   effectiveStatus,
@@ -93,12 +93,15 @@ export type DmpkInspectorContext = {
   onRegenerate?: () => void;
   /* 「核对已有信息并重新计算」：人说「我说过了」时回去翻材料和对话。 */
   onRecheck?: () => void;
-  /* 完整价目表那扇门（2026-09-21 会议共识 2：价目表不进对话，独立入口）。
-     viewerRole 决定门是按钮还是一行说明——权限分级后置，这只是账号切换器上的演示。 */
-  viewerRole?: "author" | "approver" | "owner";
+  /* 权限（演示级，壳层按账号级别推）：板块里的改价 / 补价给不给，完整价目表那扇门
+     是按钮还是一行说明。会话单独渲染时是全开。 */
+  permissions?: QuotePermissions;
+  /* 完整价目表那扇门（2026-09-21 会议共识 2：价目表不进对话，独立入口）。 */
   onOpenCatalog?: () => void;
   /* 去后台某一页。走壳层的状态、不走 window.location——整页导航会把会话全丢掉。 */
   onOpenBackOffice?: (tab: "prices" | "rules" | "parameters" | "templates") => void;
+  /* 「这单用了哪些价」：在对话里回一张本单命中的价目表。谁都能问——那不是完整价目表。 */
+  onListCatalogHits?: () => void;
   reworkBy?: string;
   reworkAt?: string;
   reworkReason?: string;
@@ -215,17 +218,8 @@ const dmpkInspectorPanelRegistry: InspectorPanelRegistry<DmpkInspectorContext> =
     errorMessage: "报价结果暂时不可用",
     render: (context) => <ArtifactsPanel context={context} onPreview={context.onPreviewArtifact} />,
   },
-  {
-    id: "rules",
-    label: "报价规则",
-    icon: ShieldCheck,
-    primary: true,
-    expandable: true,
-    available: (context) => context.stage !== "idle",
-    state: (context) => withError(context),
-    errorMessage: "报价规则暂时不可用",
-    render: (context) => <RulesPanel context={context} />,
-  },
+  /* 「报价规则」tab 撤了（2026-09-21 晚）：它剩下的两条规则折进「报价板块」底部，
+     没有价目的项板块里一行一个「待补价」，全局去处就是价目表那扇门。 */
   {
     /* 退回批注。它不是「过程」也不是「结果」，是一份**要照着改的参照**。
        给它自己的 tab，并且在退回场景里默认和参数收集并排成两列——
@@ -364,98 +358,11 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
   );
 }
 
-/**
- * 报价规则：把后台的计价配置在前台做轻量披露。
- *
- * 只讲规则，不讲单价
- * ----------------------------------------------------------------------
- * 第一版这里列了四条「本次命中的规则」，其中两条其实是单价（动物费、报告费），
- * 下面还有一个费用明细弹窗和一颗「对话编辑」——跟报价板块说的是同一件事，还多了一条改价的路。
- * 2026-09-21 会议定了：改价是临时调价的唯一路径，在板块里。所以这儿只留真正的规则
- * （区域、模板 / 管理费），单价一律指回板块；没有价目的项也只报个数，逐项在板块里补价。
- *
- * 边界与既有的 DmpkEditProposalCard 一致——本次报价级可改（经对话确认），全局规则只读并深链到后台。
- */
-function RulesPanel({ context }: { context: DmpkInspectorContext }) {
-  const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
-  /* 读文件读出来的「没有价目」，同一项在两份来源里都没价目只算一次。 */
-  const catalogGaps = (context.sources ?? [])
-    .flatMap((source) => source.pending)
-    .filter((item) => item.kind === "catalog")
-    .filter((item, index, items) => items.findIndex((other) => other.label === item.label) === index);
-  /* 一行名字只报「哪几类」：四个组的免疫分型采血是同一件事，去掉组别前缀再去重。 */
-  const gapKinds = catalogGaps
-    .map((item) => item.label.replace(/^(对照|\d+\s*组)(核心|卫星)?(组)?/, ""))
-    .filter((label, index, labels) => labels.indexOf(label) === index);
-
-  /* 原来是 window.location.href = "/?view=quotation-management…"——整页导航，回来会话就没了。
-     现在走壳层：后台盖在工作台上面，工作台不卸载。没接回调的环境（不该有）才退回整页跳转。 */
-  const goToBackOffice = (tab: "prices" | "rules" | "parameters" | "templates") => {
-    if (context.onOpenBackOffice) { context.onOpenBackOffice(tab); return; }
-    const params = new URLSearchParams({ view: "quotation-management", business: "dmpk", tab });
-    window.location.href = `/?${params.toString()}`;
-  };
-
-  return (
-    <div className="dmpkInspectorList ruleDisclosure">
-      <PanelIntro title="本次命中的规则" meta={hasQuoteDraft ? "改动经对话确认，只作用于这一份报价" : "参数补齐后开始匹配"} />
-
-      <section className="ruleScopeCard">
-        {matchedRules.map((rule) => (
-          <div className="ruleScopeRow" key={rule.id}>
-            <div>
-              <strong>{rule.label}</strong>
-              <small>{rule.meta}</small>
-            </div>
-            <button type="button" disabled={!hasQuoteDraft} onClick={() => context.onDraftMessage(rule.draft)}>
-              <Edit3 size={13} />改这条
-            </button>
-          </div>
-        ))}
-      </section>
-      <p className="ruleScopeNote">单价不在这儿改：去「报价板块」点单价旁的铅笔，那是临时调价的唯一入口，只作用于本单。</p>
-
-      {catalogGaps.length ? (
-        <section className="dmpkCatalogGaps isCompact" aria-label="没有价目的委托项">
-          <header>
-            <CircleAlert size={14} aria-hidden="true" />
-            <strong>{catalogGaps.length} 项没有价目</strong>
-            <small>{gapKinds.join(" · ")}</small>
-          </header>
-          <p>本单可以在报价板块里逐项补价；长期要在后台补价目。</p>
-          <button type="button" onClick={() => goToBackOffice("prices")}>
-            去标准价格补价目<ArrowUpRight size={13} aria-hidden="true" />
-          </button>
-        </section>
-      ) : null}
-
-      <div className="ruleDisclosureDivider" />
-
-      {/* 只读的一段没实体：一行链接，只提供去后台的路径 */}
-      <PanelIntro title="全局规则" meta="只读 · 在报价管理里试算并发布，影响后续所有报价" />
-      <div className="ruleGlobalLinks">
-        {globalRuleSources.map((source) => (
-          <button type="button" key={source.tab} title={source.meta} onClick={() => goToBackOffice(source.tab)}>
-            {source.label}<ArrowUpRight size={11} aria-hidden="true" />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** 本次命中的规则——只有规则，没有单价。draft 是点「改这条」时填进 composer 的现成句子。 */
+/** 本次命中的规则——只有规则，没有单价（单价在板块里改）。
+    「报价规则」tab 撤了之后它们住在板块面板底部；draft 是点「改」时填进 composer 的现成句子。 */
 const matchedRules = [
   { id: "region", label: "国内报价区域", meta: "不含跨境与加急附加", draft: "本次报价改用欧美区域计价" },
   { id: "template", label: "PK 报价模板 v8", meta: "Word 30% · Excel 15% 管理费", draft: "把本次报价的管理费比例改为 " },
-];
-
-/** 与后台四个配置页一一对应，点哪一行就跳到哪一页 */
-const globalRuleSources = [
-  { tab: "prices" as const, label: "标准价格", meta: `当前发布版本 ${CATALOG_VERSION}` },
-  { tab: "rules" as const, label: "计价规则", meta: "已发布 · 6月28日" },
-  { tab: "parameters" as const, label: "报价字段", meta: "参数字典 · 7月8日" },
-  { tab: "templates" as const, label: "报价模板", meta: "PK 报价模板 v8" },
 ];
 
 
@@ -602,8 +509,11 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
   /* 人点过的板块记在这儿；没点过的按默认规则开合。这样新长出来的板块
      （比如补了方法之后多出一行待定）也能按「有待定就开」自己冒出来。 */
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
-  const canEdit = Boolean(context.onSetManualPrice);
-  const canOpenCatalog = Boolean(context.viewerRole && context.viewerRole !== "author");
+  const permissions = context.permissions ?? fullQuotePermissions;
+  /* 没权限改价：铅笔不出、编辑器不开，行上其余都不变——能看，只是不能动。 */
+  const canEdit = Boolean(context.onSetManualPrice) && permissions.canAdjustTempPrice;
+  const canOpenCatalog = permissions.canViewCatalog;
+  const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
   /* 默认只开一个：第一个有待定项的板块（要人动手的那个），都没有就开第一个。
      其余折着——段头上的「N 待定」已经把该看哪儿说了，全开等于没折。 */
   const defaultOpenId = (summary.packages.find((pkg) => pkg.unpriced > 0) ?? summary.packages[0])?.id;
@@ -716,12 +626,28 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
         <span>已计价合计{summary.manualCount ? <em>含 {summary.manualCount} 项临时价 · 仅本次报价</em> : null}</span>
         <strong>{formatCny(summary.total)}</strong>
       </footer>
-      {context.onOpenCatalog ? (
-        canOpenCatalog ? (
+      {/* 本单命中的规则：区域、模板 / 管理费。原来在「报价规则」tab 里，那个 tab 撤了，
+          这两条是它唯一不跟板块重复的东西。改仍然经对话确认。 */}
+      <div className="dmpkSectionRules">
+        <span className="dmpkSectionRulesLabel">本单规则</span>
+        {matchedRules.map((rule) => (
+          <span className="dmpkSectionRule" key={rule.id} title={rule.meta}>
+            {rule.label}
+            {hasQuoteDraft ? <button type="button" aria-label={`改「${rule.label}」`} onClick={() => context.onDraftMessage(rule.draft)}><Edit3 size={11} aria-hidden="true" /></button> : null}
+          </span>
+        ))}
+      </div>
+      {/* 两扇门：完整价目表（后台，SD 才有）；本单命中的价目（对话里回一张表，谁都能问）。 */}
+      <div className="dmpkSectionDoors">
+        {context.onListCatalogHits ? (
+          <button className="dmpkInspectorTextAction" type="button" onClick={context.onListCatalogHits}>在对话里列出本单价目</button>
+        ) : null}
+        {context.onOpenCatalog && canOpenCatalog ? (
           <button className="dmpkInspectorTextAction" type="button" onClick={context.onOpenCatalog}>查看完整价目表<ArrowUpRight size={12} aria-hidden="true" /></button>
-        ) : (
-          <p className="dmpkCatalogGate"><Lock size={11} aria-hidden="true" />完整价目表只对审批人 / 负责人开放；这里只标本单涉及的单价。</p>
-        )
+        ) : null}
+      </div>
+      {context.onOpenCatalog && !canOpenCatalog ? (
+        <p className="dmpkCatalogGate"><Lock size={11} aria-hidden="true" />完整价目表只对 SD 开放；这里只标本单涉及的单价。</p>
       ) : null}
     </div>
   );
