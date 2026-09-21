@@ -5312,7 +5312,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkWorkspace .primaryButton:not(:disabled),
 .paramFloatCard .primaryButton:not(:disabled),
 .modalBackdrop .primaryButton:not(:disabled),
-.dmpkShell .strategyDialogActions .primary,
 .dmpkShell .parameterPager button.primary,
 .dmpkShell .decisionPrimary:not(:disabled) {
   border-color: #17191e;
@@ -5324,7 +5323,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkWorkspace .primaryButton:hover:not(:disabled),
 .paramFloatCard .primaryButton:hover:not(:disabled),
 .modalBackdrop .primaryButton:hover:not(:disabled),
-.dmpkShell .strategyDialogActions .primary:hover,
 .dmpkShell .decisionPrimary:hover:not(:disabled) {
   border-color: #050608;
   background: var(--bioaz-action-primary-hover);

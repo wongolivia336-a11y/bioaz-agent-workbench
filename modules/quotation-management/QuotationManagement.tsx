@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronRight, ChevronUp, LogOut, Settings, Settings2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, ChevronUp, Info, Lock, LogOut, Settings, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavTabs, SegmentedControl } from "../../components/ui";
 import BusinessPicker from "./components/BusinessPicker";
@@ -39,11 +39,16 @@ export function QuotationManagement({
   initialBusiness,
   initialTab,
   initialDraft,
+  readOnly = false,
+  viewerGrade,
 }: {
   onBack: () => void;
   initialBusiness?: "root" | "dmpk";
   initialTab?: DmpkTab;
   initialDraft?: string | null;
+  /** 只读：能看，不能动底表。SD 助理进来是这样（演示级，级别由壳层按账号推）。 */
+  readOnly?: boolean;
+  viewerGrade?: string;
 }) {
   const [business, setBusiness] = useState<"root" | "dmpk">(initialBusiness ?? "root");
   const [tab, setTab] = useState<DmpkTab>(initialTab ?? "prices");
@@ -104,7 +109,7 @@ export function QuotationManagement({
               </>
             )}
           </div>
-          <span className="quotationTopbarStatus">{business === "root" ? "管理员模式" : "草稿 2"}</span>
+          <span className="quotationTopbarStatus">{readOnly ? `只读${viewerGrade ? ` · ${viewerGrade}` : ""}` : business === "root" ? "管理员模式" : "草稿 2"}</span>
         </header>
 
         {business === "root" ? (
@@ -117,7 +122,7 @@ export function QuotationManagement({
                 <h1>{currentTab?.label}</h1>
                 <p>{tab === "prices" ? `当前发布版本 v1.0.13 · ${tabDescriptions.prices}` : tabDescriptions[tab]}</p>
               </div>
-              {tab === "prices" ? (
+              {readOnly ? null : tab === "prices" ? (
                 <div>
                   <button type="button" onClick={() => setDialog("import")}>导入 Excel</button>
                   <button className="primary" type="button" onClick={() => setDialog("new-price")}>新增价格</button>
@@ -143,8 +148,22 @@ export function QuotationManagement({
               />
             </NavTabs>
 
+            {/* 从会话的「查看完整价目表」进来的，先把边界说一遍：这里是全局，本单在会话里改。
+                2026-09-21 会议共识 2 / 3——价目表独立入口，改价（临时）和改底表（全局）是两条路。 */}
+            {tab === "prices" && readOnly ? (
+              <p className="quotationScopeNotice">
+                <Lock size={14} aria-hidden="true" />
+                只读：{viewerGrade ?? "当前账号"}不能改底表。改<b>这一单</b>的单价回到会话，在「报价板块」里点单价旁的铅笔；底表要 SD 来改。
+              </p>
+            ) : tab === "prices" && initialTab ? (
+              <p className="quotationScopeNotice">
+                <Info size={14} aria-hidden="true" />
+                这是全局价目表：在这里改的价会进入下一个发布版本，影响以后所有报价。只想改<b>这一单</b>的单价，回到会话在「报价板块」里点「改价」。
+              </p>
+            ) : null}
+
             {tab === "prices" ? (
-              <PriceConfig filter={scenarioFilter} />
+              <PriceConfig filter={scenarioFilter} readOnly={readOnly} />
             ) : tab === "rules" ? (
               <RuleConfig scenario={activeScenario} draftRequest={ruleDraft} />
             ) : tab === "parameters" ? (

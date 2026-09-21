@@ -18,7 +18,8 @@ type ScenarioFilter = DetectionScenario | "all";
 /** 打开抽屉时要说清楚改的是主值还是某一类的例外——这两件事后果完全不同 */
 type EditTarget = { item: PriceItem; scenario: DetectionScenario | null };
 
-export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
+/** readOnly：行不再是能点开抽屉的按钮——SD 助理能看整表，不能改底表。 */
+export default function PriceConfig({ filter, readOnly = false }: { filter: ScenarioFilter; readOnly?: boolean }) {
   const [items, setItems] = useState<PriceItem[]>(priceCatalog);
   const [category, setCategory] = useState("all");
   const [keyword, setKeyword] = useState("");
@@ -90,7 +91,7 @@ export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
           {exceptionCount ? <em className="quotationScopeCount"> · {exceptionCount} 条例外</em> : null}
         </span>
       </div>
-      <div className="quotationTable">
+      <div className="quotationTable" data-readonly={readOnly || undefined}>
         <div className="quotationTableHead">
           <span>费用项目</span>
           <span>适用于</span>
@@ -103,6 +104,7 @@ export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
             key={item.id}
             item={item}
             filter={filter}
+            readOnly={readOnly}
             onEditMain={() => setEditing({ item, scenario: null })}
             onEditException={(scenario) => setEditing({ item, scenario })}
           />
@@ -127,11 +129,13 @@ export default function PriceConfig({ filter }: { filter: ScenarioFilter }) {
 function ItemRows({
   item,
   filter,
+  readOnly = false,
   onEditMain,
   onEditException,
 }: {
   item: PriceItem;
   filter: ScenarioFilter;
+  readOnly?: boolean;
   onEditMain: () => void;
   onEditException: (scenario: DetectionScenario) => void;
 }) {
@@ -140,7 +144,7 @@ function ItemRows({
 
   return (
     <>
-      <button type="button" onClick={onEditMain}>
+      <button type="button" disabled={readOnly} aria-disabled={readOnly || undefined} onClick={onEditMain}>
         <strong>{item.name}</strong>
         <ScopeTags item={item} filter={filter} />
         <b>{item.price}</b>
@@ -150,7 +154,7 @@ function ItemRows({
         </StatusChip>
       </button>
       {exceptions.map((exception) => (
-        <button className="isException" type="button" key={exception.scenario} onClick={() => onEditException(exception.scenario)}>
+        <button className="isException" type="button" key={exception.scenario} disabled={readOnly} onClick={() => onEditException(exception.scenario)}>
           <strong>
             <CornerDownRight size={14} />
             {scenarioShortLabels[exception.scenario]} 例外

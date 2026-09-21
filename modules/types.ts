@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { ComposerAttachment } from "../lib/workbench/composerAttachments";
+import type { QuotePermissions } from "../lib/workbench/permissions";
 
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
@@ -133,6 +134,8 @@ export type AgentModuleSessionProps = {
   /* 当前登录账号的岗位。QA 审核用它决定谁能落笔——撰写人端与审批人端是
      同一个 Session 的两种渲染，不是两个页面。其余 module 忽略即可。 */
   viewerRole?: "author" | "approver" | "owner";
+  /** 报价线上的权限（演示级，按账号级别推）：改临时价 / 看完整价目表 / 改底表。不传按全开。 */
+  viewerPermissions?: QuotePermissions;
   /* 当前登录账号的姓名。交接选择器要用它把自己从候选里去掉——
      交接的定义就是球换一只手，交给自己不是交接。 */
   viewerName?: string;

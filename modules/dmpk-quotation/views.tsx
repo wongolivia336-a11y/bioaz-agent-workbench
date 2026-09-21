@@ -18,6 +18,8 @@ import { ReworkCard, type ReworkNoteState } from "../../components/workbench-she
 import { ChangeConfirmCard, type QuoteChange } from "../../components/workbench-shell/ChangeConfirmCard";
 import type { QuoteNote } from "../../lib/workbench/quoteData";
 import { priceCatalog, scenarioShortLabels } from "../quotation-management/dmpk/catalog";
+import { formatCny } from "../../lib/workbench/quoteLines";
+import type { CatalogHit } from "./catalogHits";
 import {
   dmpkGroups,
   getDmpkGroupTitle,
@@ -28,7 +30,7 @@ import {
   type DmpkStage,
 } from "./fields";
 
-export type DmpkInspectorPanelId = "parameters" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "rules" | "rework" | "review";
+export type DmpkInspectorPanelId = "parameters" | "sections" | "process" | "materials" | "gaps" | "evidence" | "artifacts" | "rework" | "review";
 /**
  * 会话里的一条记录。
  *
@@ -60,6 +62,8 @@ export type DmpkChatMessage = {
   summary?: DmpkSessionSummary;
   /** 首轮文件识别后，直接在回复正文里列出的缺失参数。 */
   missingFields?: { label: string; group: string }[];
+  /** 人问「这单用了哪些价」时回的那张表：本单命中的价目，问的那一刻的快照。 */
+  catalogHits?: CatalogHit[];
 };
 
 export type DmpkRunStep = string | ParseStep;
@@ -170,6 +174,37 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
                   <tbody>
                     {message.missingFields.map((field) => (
                       <tr key={field.label}><td>{field.label}</td><td>{field.group}</td><td>待填写</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
+        if (message.role === "agent" && message.catalogHits?.length) {
+          /* 「这单用了哪些价」——回一张表，不回一段话。跟上面缺失参数那张表同一副骨架。 */
+          return (
+            <div className="agentReply" data-minimap="agent" key={message.id}>
+              <span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span>
+              <div>
+                <p>{message.text}</p>
+                <table className="previewTable dmpkCatalogHits" style={{ marginTop: 10 }}>
+                  <thead><tr><th>费用项目</th><th>板块</th><th>单价</th><th>本单用量</th><th>状态</th></tr></thead>
+                  <tbody>
+                    {message.catalogHits.map((hit) => (
+                      <tr key={hit.key} data-status={hit.status}>
+                        <td>{hit.name}</td>
+                        <td>{hit.packages.join(" · ")}</td>
+                        <td className="quoteNum">
+                          {hit.status === "no-catalog" ? "—"
+                            : hit.status === "pending" ? "待确认"
+                            : hit.manualPrice !== undefined
+                              ? <><b>{formatCny(hit.manualPrice)}</b> / {hit.unit}{hit.catalogPrice !== undefined ? <small>原 {formatCny(hit.catalogPrice)}</small> : null}</>
+                              : <>{formatCny(hit.catalogPrice ?? 0)} / {hit.unit}</>}
+                        </td>
+                        <td className="quoteNum">{hit.qty ? `${hit.qty.toLocaleString("zh-CN")} ${hit.unit}` : "—"}{hit.lineCount > 1 ? <small>{hit.lineCount} 行</small> : null}</td>
+                        <td>{hit.status === "manual" ? "临时价 · 仅本单" : hit.status === "priced" ? "价目表" : hit.status === "pending" ? "待确认" : "无价目 · 待补价"}</td>
+                      </tr>
                     ))}
                   </tbody>
                 </table>

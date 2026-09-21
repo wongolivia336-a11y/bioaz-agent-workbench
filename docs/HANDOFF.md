@@ -1,5 +1,21 @@
 # Engineering Handoff
 
+## Session State — 2026-09-21 (addendum)
+
+Same branch and remotes as below. Three untracked 提交版 logs stay out of the repo
+(`docs/worklog/2026-09-15/16/20-提交版工作日志.md`).
+
+**What landed 2026-09-20 → 21**, newest first: right rail 「报价板块」 (sections by
+work package, four facts per line, temp-price loop, catalog door) per the 2026-09-21
+client meeting — design and boundaries in `docs/QUOTE_SECTIONS.md`; beta5 alignment
+(项目→空间, space home, expert binding, artifacts view, role motifs, expert intro
+cards) — `docs/BETA5_ALIGNMENT.md` §5; `Dialog` now portals to `body`; the calc
+sheet's item table keeps to its column.
+
+**Open next**: per-section fields from 吴迪's 「八维」 table (meeting deliverable ④);
+composer-side stacked cards per section (base card + TOX/BA/ADA cards, sharing the
+section definition with the rail); permissions stay a demo-level gate by account lens.
+
 ## Session State — 2026-09-16
 
 Branch `codex/dmpk-composer-params`, everything committed and pushed to `origin`

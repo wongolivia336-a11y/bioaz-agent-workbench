@@ -23,17 +23,20 @@
  * 只列算得出的那些，总额看着像整单，其实少了一截，而人不知道少的是什么。
  */
 
-export type QuotePackage = "animal" | "pk-tk" | "tox" | "ada" | "report";
+/* 工作包就是 2026-09-21 会上说的「板块」：右栏按它分组，一场实验涉及哪几个就挂哪几个。
+   PK / TOX / BA / ADA 是会上点名的四个；动物使用和报告与交付是配套服务，排在最后。 */
+export type QuotePackage = "pk-tk" | "tox" | "ba" | "ada" | "animal" | "report";
 
 export const quotePackageLabels: Record<QuotePackage, string> = {
+  "pk-tk": "PK / TK 样品采集",
+  tox: "TOX",
+  ba: "BA",
+  ada: "ADA",
   animal: "动物使用",
-  "pk-tk": "PK / TK 工作包",
-  tox: "TOX 工作包",
-  ada: "ADA 工作包",
   report: "报告与交付",
 };
 
-export const quotePackageOrder: QuotePackage[] = ["animal", "pk-tk", "tox", "ada", "report"];
+export const quotePackageOrder: QuotePackage[] = ["pk-tk", "tox", "ba", "ada", "animal", "report"];
 
 export type QuoteLineStatus = "priced" | "missing-param" | "pending-confirm" | "no-catalog";
 
@@ -50,6 +53,10 @@ export type QuoteLine = {
   /** 这一行算的是哪个范围：「1–4 组核心」「2–4 组卫星」「全部 11 只」。 */
   scope: string;
   service: string;
+  /* 会上定的右栏四要素里的前两个：待测物 / 检测方法。行本来只有 service，
+     采血、动物使用这类没有待测物的行留空，面板画「—」。 */
+  analyte?: string;
+  method?: string;
   qty: number;
   unit: string;
   /** 数量是怎么来的：「2 只 × 16 点 × 4 组」。给人核的，不参与计算。 */
@@ -65,7 +72,8 @@ export type QuoteLine = {
   dependsOn?: string;
 };
 
-/** 谁改的单价。甲方写的是「SD」，指谁没说清，收成一个常量，确认后改一处。 */
+/** 谁改的单价。甲方写的是「SD」，指谁没说清，收成一个常量，确认后改一处。
+    2026-09-21 会议：权限分级后置，本轮谁改就记谁——会话有账号名时用账号名，这个只是兜底。 */
 export const MANUAL_PRICE_BY = "SD";
 
 export type ManualPrice = { price: number; by: string; at: string };
