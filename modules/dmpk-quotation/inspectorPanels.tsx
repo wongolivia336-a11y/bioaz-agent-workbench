@@ -17,6 +17,7 @@ import {
   LayoutList,
   ListChecks,
   Lock,
+  MessageSquareText,
   SlidersHorizontal,
 } from "lucide-react";
 import { useState } from "react";
@@ -622,33 +623,37 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
           </section>
         );
       })}
-      <footer className="dmpkQuoteTotal">
-        <span>已计价合计{summary.manualCount ? <em>含 {summary.manualCount} 项临时价 · 仅本次报价</em> : null}</span>
-        <strong>{formatCny(summary.total)}</strong>
+      {/* 底部一块：合计 → 本单规则 → 两扇门。第一版是三行散着的文字，用户说形式上要收——
+          收成一张浅底的尾卡，三段用细线隔开，两扇门做成等宽的按钮而不是两个裸链接。 */}
+      <footer className="dmpkSectionFooter">
+        <div className="dmpkQuoteTotal">
+          <span>已计价合计{summary.manualCount ? <em>含 {summary.manualCount} 项临时价 · 仅本次报价</em> : null}</span>
+          <strong>{formatCny(summary.total)}</strong>
+        </div>
+        {/* 本单命中的规则：区域、模板 / 管理费。原来在「报价规则」tab 里，那个 tab 撤了，
+            这两条是它唯一不跟板块重复的东西。改仍然经对话确认。 */}
+        <div className="dmpkSectionRules">
+          <span className="dmpkSectionRulesLabel">本单规则</span>
+          {matchedRules.map((rule) => (
+            <span className="dmpkSectionRule" key={rule.id} title={rule.meta}>
+              {rule.label}
+              {hasQuoteDraft ? <button type="button" aria-label={`改「${rule.label}」`} onClick={() => context.onDraftMessage(rule.draft)}><Edit3 size={11} aria-hidden="true" /></button> : null}
+            </span>
+          ))}
+        </div>
+        {/* 两扇门：本单命中的价目（对话里回一张表，谁都能问）；完整价目表（后台，SD 才有，
+            没权限的那扇门换成一行说明，位置不变）。 */}
+        <div className="dmpkSectionDoors">
+          {context.onListCatalogHits ? (
+            <button type="button" className="dmpkSectionDoor" onClick={context.onListCatalogHits}><MessageSquareText size={13} aria-hidden="true" />在对话里列出本单价目</button>
+          ) : null}
+          {context.onOpenCatalog ? (
+            canOpenCatalog
+              ? <button type="button" className="dmpkSectionDoor" onClick={context.onOpenCatalog}><ArrowUpRight size={13} aria-hidden="true" />查看完整价目表</button>
+              : <span className="dmpkSectionDoor isLocked" title="完整价目表只对 SD 开放；这里只标本单涉及的单价。"><Lock size={12} aria-hidden="true" />完整价目表 · 仅 SD</span>
+          ) : null}
+        </div>
       </footer>
-      {/* 本单命中的规则：区域、模板 / 管理费。原来在「报价规则」tab 里，那个 tab 撤了，
-          这两条是它唯一不跟板块重复的东西。改仍然经对话确认。 */}
-      <div className="dmpkSectionRules">
-        <span className="dmpkSectionRulesLabel">本单规则</span>
-        {matchedRules.map((rule) => (
-          <span className="dmpkSectionRule" key={rule.id} title={rule.meta}>
-            {rule.label}
-            {hasQuoteDraft ? <button type="button" aria-label={`改「${rule.label}」`} onClick={() => context.onDraftMessage(rule.draft)}><Edit3 size={11} aria-hidden="true" /></button> : null}
-          </span>
-        ))}
-      </div>
-      {/* 两扇门：完整价目表（后台，SD 才有）；本单命中的价目（对话里回一张表，谁都能问）。 */}
-      <div className="dmpkSectionDoors">
-        {context.onListCatalogHits ? (
-          <button className="dmpkInspectorTextAction" type="button" onClick={context.onListCatalogHits}>在对话里列出本单价目</button>
-        ) : null}
-        {context.onOpenCatalog && canOpenCatalog ? (
-          <button className="dmpkInspectorTextAction" type="button" onClick={context.onOpenCatalog}>查看完整价目表<ArrowUpRight size={12} aria-hidden="true" /></button>
-        ) : null}
-      </div>
-      {context.onOpenCatalog && !canOpenCatalog ? (
-        <p className="dmpkCatalogGate"><Lock size={11} aria-hidden="true" />完整价目表只对 SD 开放；这里只标本单涉及的单价。</p>
-      ) : null}
     </div>
   );
 }

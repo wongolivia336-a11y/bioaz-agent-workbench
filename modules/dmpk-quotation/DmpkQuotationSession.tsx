@@ -8,7 +8,7 @@ import { AnnotatedQuote } from "../../components/workbench-shell/AnnotatedQuote"
 import { PriorSessionHistory } from "../../components/workbench-shell/BioAZHelper";
 import { SessionMinimap } from "../../components/workbench-shell/SessionMinimap";
 import { useStickToBottom } from "../../components/workbench-shell/useStickToBottom";
-import type { ComposerAttachment } from "../../lib/workbench/composerAttachments";
+import type { ComposerAttachment, ComposerSessionAction } from "../../lib/workbench/composerAttachments";
 import { mergeParsePatches, parseSources, type ParseResult } from "../../lib/workbench/sources";
 import type { ParamSource } from "../../components/params";
 import { formatCny, MANUAL_PRICE_BY, pricingSentence, summarizeLines, type ManualPrice } from "../../lib/workbench/quoteLines";
@@ -859,6 +859,23 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   };
 
   /**
+   * 「+ › 技能」里那一列：让数字同事现在就做的事。
+   * 每一条都是对话里一句话能触发的（「总结一下」「列出本单价目」「我说过了」），
+   * 这一列只是把它们摆出来给人看——不知道能说什么的人，从这儿挑。
+   * 做不了的不藏，灰掉并写原因：没账就列不出价目，没到 ready 就生成不了。
+   */
+  const busy = stage === "thinking" || stage === "generating";
+  const sessionActions: ComposerSessionAction[] = [
+    { id: "summarize", label: "总结当前会话", meta: "已确认 · 待补 · 计价到哪儿 · 下一步", run: summarizeSession, disabled: busy },
+    { id: "catalog-hits", label: "列出本单命中的价目", meta: "回一张表：费用项目 · 单价 · 用量", run: () => listCatalogHits(), disabled: busy || !quoteLines.length, disabledReason: "这单还没有账" },
+    { id: "recheck", label: "核对已有信息并重新计算", meta: "回去翻材料和对话，不再问一遍", run: () => recheckSources(), disabled: busy || stage === "idle", disabledReason: "还没开始收参数" },
+    { id: "preview", label: "预览完整参数与计价规则", run: () => setPreviewOpen(true), disabled: stage === "idle", disabledReason: "还没开始收参数" },
+    quoteVersions.length
+      ? { id: "regenerate", label: "重新生成报价单", meta: quoteStale ? "参数或单价改过，出的那版已经旧了" : "眼前的账和出的那版一致", run: regenerateQuote, disabled: busy || !quoteStale, disabledReason: "没有改动，不用重出" }
+      : { id: "generate", label: "生成报价单", meta: "Word 报价单 + Excel 报价明细", run: startGeneration, disabled: stage !== "ready", disabledReason: "参数还没齐" },
+  ];
+
+  /**
    * 阶段推进时的建议切换。只在已经显示的 tab 之间起作用——
    * 不在 tab 栏里的面板一律跳过，否则「三个主 tab」会被系统自己撑长。
    * 用户自己点过 tab 之后，连切换也降级成打点提示。
@@ -1084,7 +1101,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           if (quoteLines.some((line) => line.id === "report")) setManualPrice("report", nextPrice);
           else appendMessage("agent", `已将本次报价的报告费调整为 ¥${nextPrice.toLocaleString()}，仅对当前项目生效，并已保留调整记录。`);
           setEditProposal(null);
-        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} hasQuote={quoteVersions.length > 0} quoteStale={quoteStale} onRegenerate={regenerateQuote} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
+        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} hasQuote={quoteVersions.length > 0} quoteStale={quoteStale} onRegenerate={regenerateQuote} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} sessionActions={sessionActions} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
         <WorkbenchPanelBody
           panels={railPanels}
           visibleIds={visiblePanelIds}

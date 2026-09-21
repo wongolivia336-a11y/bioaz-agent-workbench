@@ -23,6 +23,20 @@ export type ComposerOption = {
   disabledReason?: string;
 };
 
+/**
+ * 会话里「+ › 技能」列的东西：让数字同事**现在就做**的一件事，点了就跑，不挂成 chip。
+ * 总结会话、列本单价目、核对已有信息、生成报价单——它们本来都是对话里一句话能触发的，
+ * 这一列是给不知道能说什么的人看的目录。由各会话自己提供，首页没有。
+ */
+export type ComposerSessionAction = {
+  id: string;
+  label: string;
+  meta?: string;
+  disabled?: boolean;
+  disabledReason?: string;
+  run: () => void;
+};
+
 /** label 为 null 表示不分组平铺（首页阶段还没确定数字同事时用这种形态） */
 export type ComposerOptionGroup = {
   id: string;

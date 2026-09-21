@@ -9099,12 +9099,18 @@ button {
 }
 .dmpkPriceEditor button.isConfirm { border-color: var(--bioaz-action-primary); background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); }
 .dmpkPriceEditor button:disabled { cursor: default; opacity: .5; }
-.dmpkCatalogGate {
-  display: flex; align-items: center; gap: 5px; margin: 0; padding: 2px 2px 0;
-  color: var(--muted); font-size: 11.5px; line-height: 1.5;
+/* 板块的尾卡：合计 / 本单规则 / 两扇门，三段用细线隔开，一块浅底。
+   第一版是三行散着的文字（合计一行、胶囊一行、两个裸链接一行），看着像没排完。 */
+.dmpkSectionFooter {
+  display: grid; margin-top: 6px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--soft, #f7f8fb);
+  overflow: hidden;
 }
-/* 板块底部：本单命中的规则一行（原「报价规则」tab 剩下的那两条），再一行两扇门 */
-.dmpkSectionRules { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 2px 0; }
+.dmpkSectionFooter > * { padding: 9px 12px; }
+.dmpkSectionFooter > * + * { border-top: 1px solid var(--line); }
+/* 合计那一行沿用 .dmpkQuoteTotal 的字号，但它在卡里，不再自带上边线和外距 */
+.dmpkSectionFooter > .dmpkQuoteTotal { margin: 0; border-top: 0; padding: 10px 12px; }
+.dmpkSectionRules { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .dmpkSectionRulesLabel { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .02em; }
 .dmpkSectionRule {
   display: inline-flex; align-items: center; gap: 3px;
@@ -9113,8 +9119,19 @@ button {
 }
 .dmpkSectionRule button { display: inline-flex; border: 0; background: transparent; padding: 0 0 0 2px; color: var(--muted); cursor: pointer; }
 .dmpkSectionRule button:hover { color: var(--bioaz-agent-accent, #5c60b8); }
-.dmpkSectionDoors { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-.dmpkSectionDoors > .dmpkInspectorTextAction { margin: 0; }
+/* 两扇门：等宽的两颗按钮；没权限的那扇是同样大小的一块灰字，位置不变 */
+.dmpkSectionDoors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 8px; }
+.dmpkSectionDoor {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 30px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
+  padding: 4px 8px; color: var(--body); font: inherit; font-size: 11.5px; font-weight: 600; line-height: 1.3; text-align: center;
+  cursor: pointer; transition: border-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
+}
+.dmpkSectionDoor:hover { border-color: var(--line-strong, #d7dce3); color: var(--ink); }
+.dmpkSectionDoor > svg { color: var(--muted); }
+/* 没权限的那扇：同样大小的一块灰字，虚线框，位置不变 */
+.dmpkSectionDoor.isLocked { border-style: dashed; background: transparent; color: var(--muted); font-weight: 500; cursor: help; }
+.dmpkSectionDoor.isLocked:hover { border-color: var(--line); color: var(--muted); }
 
 /* 对话里那张「本单命中的价目」表 */
 .dmpkCatalogHits td small { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; }
