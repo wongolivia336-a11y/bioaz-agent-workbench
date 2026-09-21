@@ -140,7 +140,7 @@
     <div class="verdict">
       <div class="card"><span class="n">01 · 同源</span><h3>会话层是同一套设计</h3><p>三栏、对话流、参数卡、右栏、产物卡——beta5 已经采用了我们的会话设计。演示里看到的会话骨架，两边一样。</p></div>
       <div class="card"><span class="n">02 · 跟着改</span><h3>壳层只改了名字和一页</h3><p>「项目」→「空间」；进空间先到一个入口页；数据中枢多一档「产物」。侧栏结构、知识库、数字团队没动，会话层一个像素没动。</p></div>
-      <div class="card"><span class="n">03 · 多出来</span><h3>八件事 beta5 里没有</h3><ul><li>右栏「报价板块」：参数状态 + 单价</li><li>临时改价闭环、无价目补价</li><li>价目表独立入口 + 对话里问本单价目</li><li>多模态材料识别 + 原文依据 + 确认两态</li><li>人 / 站内信 / 工单 / 交接 / 退回 / 复核画布</li><li>演示级权限（SD / SD 助理）</li><li>「+」菜单：技能 = 让它做，连接器 = 它在读什么</li><li>空间首页的专家绑定与介绍</li></ul></div>
+      <div class="card"><span class="n">03 · 多出来</span><h3>十件事 beta5 里没有</h3><ul><li>右栏「报价板块」：参数状态 + 单价</li><li>临时改价、补价、折扣——一条路，仅本单</li><li>价目表独立入口 + 对话里问本单价目</li><li>多模态材料识别 + 原文依据 + 确认两态 + 按八维归位</li><li>积木卡：基础卡底下按板块搭</li><li>人 / 站内信 / 工单 / 交接 / 退回 / 复核画布 + 审核人看依据与变更</li><li>演示级权限（SD / SD 助理）</li><li>「+」菜单：技能 = 让它做，连接器 = 它在读什么</li><li>P0 规则：少于 30 按 30、不适用、影响提示、按组明细</li><li>空间首页的专家绑定与介绍</li></ul></div>
     </div>
     <footer><span>硬冲突只有一处：beta5 没有「人」。以我们为准。</span><span class="num">2</span></footer>
   </section>
@@ -190,8 +190,19 @@
       </ol></div><p class="caption">方案第三、四、五层的几条规则也补进了原型：<b>每化合物少于 30 份按 30 计</b>；<b>猴类价 / 折扣 / 其他费用是人工输入项</b>，不假装有价目；BA Only 不问动物参数，台账写「不适用」。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-materials-dims.png" alt="原型 输入材料按八维分组"></div><p class="caption">「输入材料」面板：<b>按八维提取 · 读到 8 / 8 维</b>，每一维带原文位置（§1 / 表 2 / 表 3），能展开看明细。没归到八维的（聊天记录里的交付要求）排在最后。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>影响提示</b>每次参数或单价一变，对话里一句「影响 PK / TK 样品采集 2 行；合计 A → B」——转换确认模块首期要的那一项。</div><div><b>没做的</b>检测项目多选 + 按组参数（积木卡）、按组明细视图、审核人看原文依据与变更记录。</div><div><b>要讨论</b>八维之外的东西（交付要求、报价区域）在方案里没有位置，原型先放在「其他」。</div></div>
-    <footer><span>docs/QUOTE_SECTIONS.md §7 · 对照《DMPK 复杂报价 P0 工程方案（五层链路版）》</span><span class="num">6</span></footer>
+    <div class="diff"><div class="hi"><b>影响提示</b>每次参数或单价一变，对话里一句「影响 PK / TK 样品采集 2 行；合计 A → B」——转换确认模块首期要的那一项。</div><div><b>按组明细</b>「报价明细」能翻成按组看：每组分到的行、份额、小计，各组 + 整单项 = 合计——方案的输出口径。</div><div><b>要讨论</b>八维之外的东西（交付要求、报价区域）在方案里没有位置，原型先放在「其他」；按组参数（每组各自的时点）还没有格子。</div></div>
+    <footer><span>docs/QUOTE_SECTIONS.md §6b · 对照《DMPK 复杂报价 P0 工程方案（五层链路版）》</span><span class="num">6</span></footer>
+  </section>
+
+  <!-- 7 积木 -->
+  <section class="slide">
+    <header><span class="kicker">会议 · 积木</span><h2>基础卡底下，一块一块搭<small>会上说的「TOX 的卡片在下面再长出一个卡片，像搭积木」。八维正好切成两层：基础卡是 ①②③，每个板块一张 ④–⑧。</small></h2></header>
+    <div class="compare wide">
+      <div class="panel"><span class="tag ours"><i></i>原型 09-22</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 积木卡：基础卡底下按板块长出的板块卡"></div><p class="caption">参数卡底边长出一叠：<b>基础</b>一行（动物 · 组别 · 数目 · 周期），下面每个板块一张，折起来是「TOX · 4 行 · 3 待定 · ¥14,400」，展开是这个板块的 ④ 操作 ⑤ 次数 ⑥ 项目 ⑦ 方法 ⑧ 数量，以及它还缺什么、点「去填」。<b>「再搭一块」</b>点 TOX，右栏同时长出 TOX 段。</p></div>
+      <div class="panel"><span class="tag beta"><i></i>怎么做到的</span><div class="shot none"><span><b>板块卡不另存一份定义</b>它读的就是右栏那份账：一个板块一张卡，卡上摆这个板块的账里有什么、还缺什么。右栏改了它跟着改，反之亦然。<br><br><b>十四项不动</b>「检测类型」仍是单选、定主板块；再要哪个板块点一下加，账里当场长出那一段（行大多缺参数、指回参数卡那一格），格子填一个亮一行；拆掉就收回。</span></div><p class="caption">加、拆都进对话（「已搭上 TOX：多了 4 行，其中 2 行缺参数（采血点数）」+ 影响提示），也进快照——出过版之后再搭，版本卡标「待重出」。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>回答了</b>⑥ 检测项目多选：检测类型 + 搭上去的板块 = 这一单做什么。</div><div><b>没回答</b>每个板块各自的组 / 时点（按组参数）：现在全单共用一套采血点数，方案里 TK 16 点 / PK 11 点 / 临床病理 6 点是三套。</div><div><b>要定</b>板块卡上要哪些格子——等吴迪的表；有了表，卡上就能填，不只是看。</div></div>
+    <footer><span>modules/dmpk-quotation/packageBlocks.tsx · 板块定义与右栏共用一份</span><span class="num">7</span></footer>
   </section>
 
   <!-- 6 费用 / 改价 -->
@@ -202,7 +213,7 @@
       <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-temp-price-done.png" alt="原型 临时改价后的板块"></div><p class="caption">同一条路走了三种价：<b>改价</b>——TK 毒代采血 ¥130 → ¥120，行上挂「临时价 · 原价 · 恢复」；<b>补价</b>——猴类价系统没有，标「待补价」，人给 ¥30,000 只作用于本单；<b>本单折扣 0.9</b>——人工调整项，作用在合计上，写进纸面的黄格子。每一步对话里都留一句「仅本次报价，价目表不动」。</p></div>
     </div>
     <div class="diff"><div class="hi"><b>唯一路径</b>改价只在板块里，不经对话、不进后台。</div><div><b>不按零元</b>无价目的项留在账上标「待补价」，人补一个只作用于本单；折扣、其他费用同理，是人工项不是价目。</div><div><b>重出</b>出过版之后改价，版本卡标「待重出」，一键重新生成。</div></div>
-    <footer><span>纸面（Excel 计算表 / Word 报价书）读的就是这份账：Standard 按价目、Discounted 按调整后。</span><span class="num">7</span></footer>
+    <footer><span>纸面（Excel 计算表 / Word 报价书）读的就是这份账：Standard 按价目、Discounted 按调整后。</span><span class="num">8</span></footer>
   </section>
 
   <!-- 7 价目表 -->
@@ -213,18 +224,18 @@
       <div class="panel"><span class="tag ours"><i></i>原型 · 后台</span><div class="shot"><img src="img/ours-catalog-backoffice.png" alt="原型 报价管理 标准价格"></div><p class="caption">「查看完整价目表 →」进报价管理，页首一行：<b>这里是全局，改本单回会话</b>。SD 助理进来是只读。</p></div>
     </div>
     <div class="diff"><div><b>beta5</b>没有价目表的入口，也没有"这单用了哪些价"。</div><div class="hi"><b>边界</b>全局（底表）和本单（临时价）是两条路，文案在两头都写了。</div><div><b>状态保留</b>进后台再返回，会话原样还在（今天修的）。</div></div>
-    <footer><span>价目表版本 v1.0.13</span><span class="num">8</span></footer>
+    <footer><span>价目表版本 v1.0.13</span><span class="num">9</span></footer>
   </section>
 
   <!-- 8 人与工单 -->
   <section class="slide">
     <header><span class="kicker">硬冲突 · 以我们为准</span><h2>人、站内信、工单、复核<small>beta5 里没有「人」的概念；报价审批和退回在我们这里是一条完整的链。</small></h2></header>
     <div class="compare">
-      <div class="panel"><span class="tag ours"><i></i>原型 · 站内信</span><div class="shot"><img src="img/ours-inbox.png" alt="原型 站内信"></div><p class="caption">待办与动态分开；工单带附件、时间线、处理人；交接从会话里一键发出。</p></div>
-      <div class="panel"><span class="tag ours"><i></i>原型 · 复核画布</span><div class="shot"><img src="img/ours-review-canvas.png" alt="原型 报价复核画布"></div><p class="caption">审批人对着计算表 / 报价书逐行批注 → 退回修订 → 撰写人那边批注回到会话、改参数、重出 v2。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 站内信</span><div class="shot"><img src="img/ours-inbox.png" alt="原型 站内信"></div><p class="caption">待办与动态分开；工单带附件、时间线、处理人；交接从会话里一键发出——刚交过来的「请复核：DMPK 报价任务」就在最上面。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 复核画布</span><div class="shot"><img src="img/ours-review-evidence.png" alt="原型 报价复核画布 · 依据与变更"></div><p class="caption">审核人看的是<b>同一份草稿</b>：计算表 / 报价书之外多一页「依据与变更」——每项参数读自材料哪一节、原句是什么，人改过的写「原文为 X，已改为 Y」；右边是这一版改过什么（改价、补价、折扣、出过几版）。批完 → 退回修订 → 撰写人那边批注回到会话、改参数、重出 v2。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>beta5</b>没有账号角色、没有工单、没有交接——这是唯一的硬冲突。</div><div><b>要问的</b>空间会不会有成员和岗位？没有的话审批和退回在 beta5 里怎么落？</div><div><b>我们的立场</b>会话层同源，人与流转以我们为准。</div></div>
-    <footer><span>切账号演示：赵敏（撰写）→ 王林彬（审批）</span><span class="num">9</span></footer>
+    <div class="diff"><div class="hi"><b>beta5</b>没有账号角色、没有工单、没有交接——这是唯一的硬冲突。</div><div><b>P0 第五层</b>审核人要看原文依据 + 参数变更 + 计算明细：交接那一下打成一包挂在工单上，画布读包；老工单没有包，照旧。</div><div><b>要问的</b>空间会不会有成员和岗位？没有的话审批和退回在 beta5 里怎么落？</div></div>
+    <footer><span>切账号演示：王林彬（撰写）→ 李林（审核）；演示范围切「总览」才看得到李林</span><span class="num">10</span></footer>
   </section>
 
   <!-- 9 数据中枢 -->
@@ -235,7 +246,7 @@
       <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-hub-artifacts.png" alt="原型 数据中枢 产物档"></div><p class="caption">根级「全部文件 | 产物」分段，产物档多一列<b>来源任务</b>，点进那条会话。</p></div>
     </div>
     <div class="diff"><div class="hi"><b>一致</b>产物 + 来源会话。</div><div><b>没做</b>「记忆」——先问工程师它是会话级摘要还是跨会话的用户记忆，决定会话快照往哪儿接。</div><div><b>没改名</b>知识库照旧。</div></div>
-    <footer><span></span><span class="num">10</span></footer>
+    <footer><span></span><span class="num">11</span></footer>
   </section>
 
   <!-- 10 权限 + 「+」 -->
@@ -257,7 +268,7 @@
       </div>
     </div>
     <div class="diff"><div><b>beta5</b>「+」只有上传；专家是全局页的一个入口。</div><div class="hi"><b>说服力</b>技能不是挂在消息上的标签，是可以让它做的事；连接器回答"它读得到什么"。</div><div><b>待定</b>两级够不够？会上原话是"SD 助理改临时价、SD 改底表"。</div></div>
-    <footer><span></span><span class="num">11</span></footer>
+    <footer><span></span><span class="num">12</span></footer>
   </section>
 
   <!-- 11 总表 -->
@@ -274,7 +285,9 @@
           <tr><td>改价</td><td class="beta no">无路径</td><td class="ours">临时价闭环（原价 → 新价 → 确认），仅本单；无价目可补价</td></tr>
           <tr><td>价目表</td><td class="beta no">无</td><td class="ours">独立入口；对话里能问本单命中的那一截</td></tr>
           <tr><td>材料识别</td><td class="beta no">无（参数靠打字）</td><td class="ours">多模态入口 + 解析轨迹 + 原文依据 + 识别 / 确认两态；读出来的按 P0 八维归位</td></tr>
-          <tr><td>P0 规则</td><td class="beta no">无</td><td class="ours">少于 30 按 30、猴类价 / 折扣 / 其他费用人工项、不适用、影响提示</td></tr>
+          <tr><td>P0 规则</td><td class="beta no">无</td><td class="ours">少于 30 按 30、猴类价 / 折扣 / 其他费用人工项、不适用、影响提示、按组明细</td></tr>
+          <tr><td>积木卡</td><td class="beta no">无</td><td class="ours">基础卡 ①②③ + 每板块一张 ④–⑧；「再搭一块」加 PK/TK · TOX · BA · ADA</td></tr>
+          <tr><td>审核人看什么</td><td class="beta no">无</td><td class="ours">同一份草稿：计算表 / 报价书 + 依据与变更（原文依据、改价补价折扣、版本）</td></tr>
           <tr><td>人与工单</td><td class="beta no">没有「人」</td><td class="ours">站内信、工单、交接、退回、复核画布——硬冲突，以我们为准</td></tr>
           <tr><td>权限</td><td class="beta no">无</td><td class="ours">演示级 SD / SD 助理</td></tr>
           <tr><td>数据中枢</td><td class="beta">文件 / 记忆 / 知识 / 产物</td><td class="ours">文件 / 产物（来源任务）；记忆待定义</td></tr>
@@ -282,7 +295,7 @@
         </tbody>
       </table>
     </div>
-    <footer><span>docs/BETA5_ALIGNMENT.md · docs/QUOTE_SECTIONS.md</span><span class="num">12</span></footer>
+    <footer><span>docs/BETA5_ALIGNMENT.md · docs/QUOTE_SECTIONS.md</span><span class="num">13</span></footer>
   </section>
 
   <!-- 12 要确认的 -->
@@ -293,7 +306,7 @@
       <div class="card"><span class="n">Q2 · 人</span><h3>空间会不会有成员和岗位？</h3><p>没有的话，报价审批、退回、交接在 beta5 里怎么落？我们这条链要接到哪个对象上。</p></div>
       <div class="card"><span class="n">Q3 · 记忆</span><h3>数据中枢的「记忆」是什么？</h3><p>会话级摘要，还是跨会话的用户记忆？决定我们的会话快照和摘要往哪儿接。另：「八维」表拿到后逐板块定字段。</p></div>
     </div>
-    <footer><span>原型分支 codex/dmpk-composer-params · GitHub wongolivia336-a11y/bioaz-agent-workbench</span><span class="num">13</span></footer>
+    <footer><span>原型分支 codex/dmpk-composer-params · GitHub wongolivia336-a11y/bioaz-agent-workbench</span><span class="num">14</span></footer>
   </section>
 
 </main>

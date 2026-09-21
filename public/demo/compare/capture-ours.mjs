@@ -79,6 +79,15 @@ async function main() {
   await sleep(1500);
   await shot("ours-session-sentence");
 
+  // 3b. 积木：基础卡底下再搭一块 TOX，右栏同时长出 TOX 段；拍完拆掉，后面的流程不受影响
+  await evaluate(`[...document.querySelectorAll('.dmpkBlockAdd button')].find(b => b.textContent.trim() === 'TOX').click(); return true;`);
+  await sleep(900);
+  await evaluate(`document.querySelector('.dmpkBlocks')?.scrollIntoView({ block: 'end' }); return true;`);
+  await sleep(300);
+  await shot("ours-blocks");
+  await evaluate(`document.querySelector('.dmpkBlockRemove')?.click(); return true;`);
+  await sleep(600);
+
   // 4. 传方案 → 解析轨迹 + 参数收集（识别态）
   await uploadProtocol();
   await sleep(6000);
@@ -154,15 +163,37 @@ async function main() {
   await shot("ours-plus-skills");
   await evaluate(`document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); return true;`);
 
-  // 10. 站内信 + 复核画布（王林彬）
+  // 10. 补齐参数 → 生成 → 交接给李林
+  await typeAndSend("每组 2 只，LC-MS/MS，国内报价");
+  await sleep(3500);
+  await clickText("button", "确认并生成报价单");
+  await sleep(6500);
+  await evaluate(`const card = document.querySelector('.dmpkHandoffCard'); [...card.querySelectorAll('button')].find(b => b.textContent.trim() === '选择接手的同事').click(); await new Promise(r => setTimeout(r, 400)); [...document.querySelectorAll('[role=menu] button, [role=menuitem], [role=option], [role=listbox] button')].find(b => /李林/.test(b.textContent)).click(); await new Promise(r => setTimeout(r, 300)); const note = card.querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(note, '请复核 BB-001：猴价按本单补的 3 万，整单 9 折'); note.dispatchEvent(new Event('input', { bubbles: true })); await new Promise(r => setTimeout(r, 150)); [...card.querySelectorAll('button')].find(b => b.textContent.trim() === '交接').click(); return true;`);
+  await sleep(900);
+
+  // 10b. 切到李林（先把演示范围切到「总览」，DMPK 镜头里只有赵敏 / 王林彬两个账号）
+  const openAccountMenu = () => evaluate(`if (!document.querySelector('.accountMenu')) [...document.querySelectorAll('aside button')].find(b => /王林彬|李林/.test(b.textContent) && /SD/.test(b.textContent)).click(); return true;`);
+  await openAccountMenu();
+  await sleep(400);
+  await evaluate(`[...document.querySelectorAll('.accountLensRow button')].find(b => b.textContent.trim() === '总览').click(); return true;`);
+  await sleep(500);
+  await openAccountMenu();
+  await sleep(400);
+  await evaluate(`[...document.querySelectorAll('.accountSwitchRow')].find(b => /李林/.test(b.textContent)).click(); return true;`);
+  await sleep(1000);
+
+  // 10c. 站内信：刚交过来的那张单在最上面 → 开始审核 → 依据与变更 / 计算表
   await evaluate(`document.querySelector('button[aria-label^="收件箱"]').click(); return true;`);
   await sleep(800);
   await shot("ours-inbox");
-  await evaluate(`[...document.querySelectorAll('button, a')].find(b => /Balb\\/c nude 报价交付包/.test(b.textContent)).click(); return true;`);
+  await evaluate(`[...document.querySelectorAll('button, a')].find(b => /请复核：DMPK 报价任务/.test(b.textContent)).click(); return true;`);
   await sleep(700);
   await clickText("button", "开始审核");
-  await sleep(800);
-  await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === '计算表')?.click(); return true;`);
+  await sleep(900);
+  await evaluate(`[...document.querySelectorAll('.quoteFormSwitch button')].find(b => b.textContent.trim() === '依据与变更')?.click(); return true;`);
+  await sleep(600);
+  await shot("ours-review-evidence");
+  await evaluate(`[...document.querySelectorAll('.quoteFormSwitch button')].find(b => b.textContent.trim() === '计算表')?.click(); return true;`);
   await sleep(600);
   await shot("ours-review-canvas");
 
