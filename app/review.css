@@ -5305,10 +5305,13 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ===== DMPK 向肿瘤报告对齐 ===== */
 
-/* 1) 主按钮改黑：iteration.css 用 --primary(#2900ff) 盖掉了 globals 的 --ink，这里在模块内收回 */
+/* 1) 主按钮改黑：iteration.css 用 --primary(#2900ff) 盖掉了 globals 的 --ink，这里在模块内收回。
+   .modalBackdrop 也在名单里：Dialog / PreviewModal 都 portal 到 body，不在 .dmpkShell 底下，
+   没有这一条，弹窗里的「保存」就退回 iteration.css 那个紫。 */
 .dmpkShell .primaryButton:not(:disabled),
 .dmpkWorkspace .primaryButton:not(:disabled),
 .paramFloatCard .primaryButton:not(:disabled),
+.modalBackdrop .primaryButton:not(:disabled),
 .dmpkShell .strategyDialogActions .primary,
 .dmpkShell .parameterPager button.primary,
 .dmpkShell .decisionPrimary:not(:disabled) {
@@ -5320,6 +5323,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .dmpkShell .primaryButton:hover:not(:disabled),
 .dmpkWorkspace .primaryButton:hover:not(:disabled),
 .paramFloatCard .primaryButton:hover:not(:disabled),
+.modalBackdrop .primaryButton:hover:not(:disabled),
 .dmpkShell .strategyDialogActions .primary:hover,
 .dmpkShell .decisionPrimary:hover:not(:disabled) {
   border-color: #050608;

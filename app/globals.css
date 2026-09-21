@@ -7745,6 +7745,13 @@ button {
 .quoteCellButton strong { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteCellButton small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
 .quoteCategoryCell { color: var(--body); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+/* 计算表的明细栏只有整张纸的一半多一点（复核画布里纸才 640 宽），表格的最小宽度必须压得住：
+   条目名和说明各占一行（原来两个 inline 元素挨着，"Species and strainC57" 连成一个词，
+   最小宽度就是这个词），分类名允许折行（"Clinical Pathology" 不折就是 130px）。
+   auto 布局下表格宽 = 各列最小宽度之和，超过栏宽就压到右边的参数表底下去。 */
+.quoteSheetItems td > strong, .quoteSheetItems td > small { display: block; }
+.quoteSheetItems td > small { color: var(--muted); font-size: 11.5px; line-height: 1.45; }
+.quoteSheetItems .quoteCategoryCell { white-space: normal; }
 .quoteNum { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 /* 原表里那批「可编辑」的黄格子。它们是人能改的,也就是最该被核的。 */
 .quoteEditable { background: rgba(154, 122, 58, .1); font-weight: 600; }
@@ -8835,8 +8842,11 @@ button {
   padding: 4px 10px; color: #7d6229; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 
-/* 纸面上单价旁的一行小字：走的哪一档、是不是手动价。 */
-.quoteNumNote { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; white-space: nowrap; }
+/* 纸面上单价旁的一行小字：走的哪一档、是不是手动价。
+   必须允许折行：.quoteNum 是 nowrap，这行小字若也 nowrap，「In life -TOX- (per animal/week)」
+   会把单价列撑到 200px，整张明细表比它那一栏宽出去，压到右边的参数表底下。
+   上限 128px、靠右——它是单价下面的一行注，不是一列。 */
+.quoteNumNote { display: block; max-width: 128px; margin-left: auto; color: var(--muted); font-size: 10.5px; font-weight: 400; line-height: 1.3; white-space: normal; }
 
 /* ═══ 空间首页 ═════════════════════════════════════════════════════════
    层级从上到下：空间（插画 + 一枚标签）→ 问句 → 本空间的专家（四张动作卡，最重）
