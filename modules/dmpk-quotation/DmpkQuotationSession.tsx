@@ -11,7 +11,7 @@ import { useStickToBottom } from "../../components/workbench-shell/useStickToBot
 import type { ComposerAttachment, ComposerSessionAction } from "../../lib/workbench/composerAttachments";
 import { mergeParsePatches, parseSources, type ParseResult } from "../../lib/workbench/sources";
 import type { ParamSource } from "../../components/params";
-import { formatCny, impactSentence, MANUAL_PRICE_BY, pricingSentence, summarizeLines, type ManualPrice, type QuoteAdjustments } from "../../lib/workbench/quoteLines";
+import { formatCny, impactSentence, MANUAL_PRICE_BY, pricingSentence, quotePackageLabels, summarizeLines, type ManualPrice, type QuoteAdjustments } from "../../lib/workbench/quoteLines";
 import { quotePaperFromLines } from "../../lib/workbench/quotePaperFromLines";
 import { fullQuotePermissions } from "../../lib/workbench/permissions";
 import type { AgentModuleSessionProps } from "../types";
@@ -19,7 +19,8 @@ import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/w
 import { catalogHitsFor } from "./catalogHits";
 import { noteAnchorToField } from "./noteFieldMap";
 import { applyPendingToFields, dmpkSourceParsers } from "./parseFixtures";
-import { buildDmpkQuoteLines } from "./quoteLineFixtures";
+import { buildDmpkQuoteLines, type ExtraPackage } from "./quoteLineFixtures";
+import { DmpkPackageBlocks } from "./packageBlocks";
 import {
   applyDmpkApplicability,
   dmpkGroups,
@@ -182,6 +183,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [manualPrices, setManualPrices] = useState<Record<string, ManualPrice>>({});
   /* 人工调整项（P0 第五层）：折扣、其他费用。作用在合计上，不属于任何一行，跟 manualPrices 一样只在本单。 */
   const [adjustments, setAdjustments] = useState<QuoteAdjustments>({});
+  /* 积木：人在基础卡下面自己加的板块（八维 ⑥ 检测项目多选）。「检测类型」那一格仍是单选、定主板块；
+     这里记的是再搭上去的。账里会长出对应的一段（quoteLineFixtures.buildExtraPackageLines）。 */
+  const [extraPackages, setExtraPackages] = useState<ExtraPackage[]>([]);
   const initialRequestHandledRef = useRef(false);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
 
@@ -189,7 +193,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const recognizedFields = useMemo(() => fields.filter((field) => field.value && fieldStatus[field.id] === "recognized"), [fields, fieldStatus]);
   /* 报价行从字段 + 来源推，每次渲染重算——它是账，不是状态。 */
   /* 退回会话不要账：它的纸面是批注锚着的固定件（见 quoteLineFixtures 末尾）。 */
-  const lineOptions = useMemo(() => ({ fieldsOnly: !rework }), [rework]);
+  const lineOptions = useMemo(() => ({ fieldsOnly: !rework, extraPackages }), [rework, extraPackages]);
   const quoteLines = useMemo(() => buildDmpkQuoteLines(fields, sources, lineOptions), [fields, sources, lineOptions]);
   const quoteSummary = useMemo(() => summarizeLines(quoteLines, manualPrices), [quoteLines, manualPrices]);
   /* 有账就把账折成纸；没账（退回会话）不传，纸面用固定件。 */
@@ -204,9 +208,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
      就跟眼前的账对不上。stage 记不住这件事：改参数会退回 collecting，改单价
      连 stage 都不动。所以单独算，而不是往 stage 里再塞一个值。 */
   const [generatedSnapshot, setGeneratedSnapshot] = useState<string | null>(null);
-  const snapshotOf = (nextFields: DmpkField[], nextManual: Record<string, ManualPrice>, nextAdjustments: QuoteAdjustments = adjustments) =>
-    JSON.stringify({ values: nextFields.map((field) => [field.id, field.value]), manual: nextManual, adjustments: nextAdjustments });
-  const quoteStale = generatedSnapshot !== null && generatedSnapshot !== snapshotOf(fields, manualPrices, adjustments);
+  const snapshotOf = (nextFields: DmpkField[], nextManual: Record<string, ManualPrice>, nextAdjustments: QuoteAdjustments = adjustments, nextExtra: ExtraPackage[] = extraPackages) =>
+    JSON.stringify({ values: nextFields.map((field) => [field.id, field.value]), manual: nextManual, adjustments: nextAdjustments, extra: nextExtra });
+  const quoteStale = generatedSnapshot !== null && generatedSnapshot !== snapshotOf(fields, manualPrices, adjustments, extraPackages);
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
   const editingField = fields.find((field) => field.id === editingFieldId) ?? null;
   const composerFields = editingField ? [editingField].filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id)) : visibleCardFields;
@@ -851,6 +855,28 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         : `已记本单其他费用 ${formatCny(value)}（人工调整项，仅本次报价）。`);
   };
 
+  /* 积木：搭一块 / 拆一块。账当场长出（或收回）那一段，回复里说清多了几行、几行还缺什么。 */
+  const addPackage = (pkg: ExtraPackage) => {
+    if (extraPackages.includes(pkg)) return;
+    const nextExtra = [...extraPackages, pkg];
+    setExtraPackages(nextExtra);
+    const before = summarizeLines(quoteLines, manualPrices);
+    const after = summarizeLines(buildDmpkQuoteLines(fields, sources, { ...lineOptions, extraPackages: nextExtra }), manualPrices);
+    const added = after.packages.find((item) => item.id === pkg);
+    const missing = added?.lines.filter((line) => line.status === "missing-param") ?? [];
+    const missingLabels = Array.from(new Set(missing.map((line) => fields.find((field) => field.id === line.dependsOn)?.label).filter(Boolean)));
+    appendMessage("agent", `已搭上「${quotePackageLabels[pkg]}」板块：多了 ${added?.lines.length ?? 0} 行${missing.length ? `，其中 ${missing.length} 行缺参数（${missingLabels.join("、")}）——去参数卡填，或一句话说` : ""}。${impactSentence(before, after, manualPrices)}`);
+    suggestPanel("sections");
+  };
+  const removePackage = (pkg: ExtraPackage) => {
+    if (!extraPackages.includes(pkg)) return;
+    const nextExtra = extraPackages.filter((item) => item !== pkg);
+    setExtraPackages(nextExtra);
+    const before = summarizeLines(quoteLines, manualPrices);
+    const after = summarizeLines(buildDmpkQuoteLines(fields, sources, { ...lineOptions, extraPackages: nextExtra }), manualPrices);
+    appendMessage("agent", `已拆掉「${quotePackageLabels[pkg]}」板块。${impactSentence(before, after, manualPrices)}`);
+  };
+
   /**
    * 生成 / 重出。同一条路：第一次叫「首次生成」，改过参数或单价之后再来叫「重出」。
    * 版本记录上写清楚是哪种——返工场景里「出过第二版」本身就是要给人看的信息，
@@ -1111,7 +1137,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : (
           <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} liveRun={liveParse} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         )}
-        <DmpkComposer paramsOpen={paramsOpen} onParamsOpenChange={setParamsOpen} unresolvedNotes={reworkNotes
+        <DmpkComposer paramsOpen={paramsOpen} onParamsOpenChange={setParamsOpen} blocks={quoteLines.length && !rework ? (
+          <DmpkPackageBlocks summary={quoteSummary} fields={fields} manualPrices={manualPrices} extraPackages={extraPackages} onAddPackage={addPackage} onRemovePackage={removePackage} onEditField={requestFieldEdit} />
+        ) : null} unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
           .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} /* 这张卡在「这一轮改完」之前一直在。
              以前条件里还有 !reworkCanvasSeen：画布看过一次它就永久退场，

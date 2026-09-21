@@ -1,5 +1,5 @@
 import type { ParseResult } from "../../lib/workbench/sources";
-import type { QuoteLine } from "../../lib/workbench/quoteLines";
+import type { QuoteLine, QuotePackage } from "../../lib/workbench/quoteLines";
 import type { DmpkField } from "./fields";
 
 /**
@@ -201,12 +201,98 @@ function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
   return lines;
 }
 
+/* ── 积木：人在基础卡下面自己加的板块 ────────────────────────────────────
+   P0 八维的 ⑥ 检测项目是多选（PK、TK、TOX、ADA…），而十四项里的「检测类型」是单选。
+   十四项不动：检测类型定的是**主板块**，再要哪个板块，人在 composer 的积木卡上点一下加。
+   加上去的板块也是账——立刻在右栏长出一段，行大多「缺参数」，指回参数卡那一格；
+   参数一填，行就亮。每个板块要哪几行是照 BB-001 那份细账缩的。 */
+
+export type ExtraPackage = Extract<QuotePackage, "pk-tk" | "tox" | "ba" | "ada">;
+
+export const extraPackageOptions: Array<{ id: ExtraPackage; label: string; hint: string }> = [
+  { id: "pk-tk", label: "PK / TK", hint: "采血、方法开发、样品检测" },
+  { id: "tox", label: "TOX", hint: "TK 采血、临床病理、解剖、毒性终点" },
+  { id: "ba", label: "BA", hint: "客户送样的样品检测" },
+  { id: "ada", label: "ADA", hint: "留样、ELISA 筛选" },
+];
+
+function buildExtraPackageLines(pkg: ExtraPackage, fields: DmpkField[]): QuoteLine[] {
+  const value = (id: string) => fields.find((field) => field.id === id)?.value ?? "";
+  const perGroup = toInt(value("animalsPerGroup"));
+  const groups = toInt(value("groupCount"));
+  const animals = perGroup && groups ? perGroup * groups : undefined;
+  const points = toInt(value("bloodPoints"));
+  const analytes = toInt(value("analyteCount"));
+  const method = value("method");
+  const sample = value("sampleType") || "血浆";
+  const groupScope = groups && animals ? `${groups} 组 · ${animals} 只` : "本单";
+  const animalsDep = perGroup ? "groupCount" : "animalsPerGroup";
+  const missing = (id: string, service: string, unit: string, dependsOn: string, label: string, extra: Partial<QuoteLine> = {}): QuoteLine =>
+    ({ id, package: pkg, scope: "本单", service, qty: 0, unit, status: "missing-param", reason: `${label}未填`, dependsOn, ...extra });
+  const methodPrice = methodCatalog[method];
+  const methodDev = (id: string, service: string): QuoteLine => !method
+    ? missing(id, service, "项", "method", "分析方法")
+    : methodPrice
+      ? { id, package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `${service} · ${method}`, method, qty: analytes ?? 1, unit: "项", catalogPrice: methodPrice.price, catalogId: methodPrice.catalogId, status: "priced" }
+      : { id, package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `${service} · ${method}`, method, qty: analytes ?? 1, unit: "项", status: "no-catalog", reason: `当前价目表没有 ${method} 方法开发这一档` };
+  const perAnalyte = pkg === "ba" ? points : animals && points ? animals * points : undefined;
+  const detection = (id: string, service: string): QuoteLine => !method
+    ? missing(id, service, "份", "method", "分析方法")
+    : perAnalyte && analytes
+      ? { id, package: pkg, scope: `${analytes} 个待测物`, service: `${service} · ${method}`, analyte: `${sample} · ${analytes} 个待测物`, method, qty: Math.max(perAnalyte, MIN_BILLED_SAMPLES) * analytes, unit: "份", formula: `每化合物 ${perAnalyte} 份${perAnalyte < MIN_BILLED_SAMPLES ? `，少于 ${MIN_BILLED_SAMPLES} 按 ${MIN_BILLED_SAMPLES} 计` : ""} × ${analytes} 个待测物`, catalogPrice: 180, catalogId: "bio-plasma", status: "priced" }
+      : missing(id, `${service} · ${method}`, "份", !analytes ? "analyteCount" : !points ? "bloodPoints" : animalsDep, !analytes ? "待测物数量" : !points ? "采血点数" : "动物数与组数", { method });
+
+  switch (pkg) {
+    case "pk-tk":
+      return [
+        animals && points
+          ? { id: "x-pk-sampling", package: pkg, scope: groupScope, service: `PK 采血（${sample}）`, analyte: sample, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, status: "priced" }
+          : missing("x-pk-sampling", "PK 采血", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采血点数"),
+        methodDev("x-pk-md", "方法开发"),
+        detection("x-pk-detection", "PK 样品检测"),
+      ];
+    case "tox":
+      return [
+        animals && points
+          ? { id: "x-tox-tk-sampling", package: pkg, scope: groupScope, service: `TK 毒代采血（${sample}）`, analyte: sample, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, status: "priced" }
+          : missing("x-tox-tk-sampling", "TK 毒代采血", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采血点数"),
+        animals && points
+          ? { id: "x-tox-clinpath", package: pkg, scope: groupScope, service: "临床病理（血清生化 / 血液学 / 凝血 / 尿液）", analyte: "血清 · 全血 · 尿液", qty: animals * points, unit: "份·套", formula: `${animals} 只 × ${points} 点 · 四项打包`, catalogPrice: 1265, status: "priced" }
+          : missing("x-tox-clinpath", "临床病理（血清生化 / 血液学 / 凝血 / 尿液）", "份·套", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采样时点"),
+        animals
+          ? { id: "x-tox-necropsy", package: pkg, scope: groupScope, service: "终末解剖、脏器称重、标准组织固定", qty: animals, unit: "只", catalogPrice: 800, status: "priced" }
+          : missing("x-tox-necropsy", "终末解剖、脏器称重、标准组织固定", "只", animalsDep, "动物数与组数"),
+        { id: "x-tox-endpoint", package: pkg, scope: "本单", service: "毒性终点分析", qty: 1, unit: "项", status: "no-catalog", reason: "「毒性终点分析」价目还是草稿，未发布" },
+      ];
+    case "ba":
+      return [
+        methodDev("x-ba-md", "方法开发"),
+        detection("x-ba-detection", "BA 样品检测"),
+      ];
+    case "ada":
+      return [
+        animals && points
+          ? { id: "x-ada-sampling", package: pkg, scope: groupScope, service: "ADA 采血留样（血清）", analyte: "血清 · ADA", qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, status: "priced" }
+          : missing("x-ada-sampling", "ADA 采血留样", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "留样时点"),
+        { id: "x-ada-md", package: pkg, scope: "ADA", service: "方法开发 · ELISA 筛选", analyte: "ADA", method: "ELISA（筛选）", qty: 1, unit: "项", catalogPrice: 8000, catalogId: "bio-ligand", status: "priced" },
+        animals && points
+          ? { id: "x-ada-assay", package: pkg, scope: "ADA", service: "ADA 筛选检测（确证与滴度不做）", analyte: "ADA", method: "ELISA（筛选）", qty: animals * points, unit: "份", formula: "复用 ADA 留样", catalogPrice: 150, status: "priced" }
+          : missing("x-ada-assay", "ADA 筛选检测", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "留样时点", { analyte: "ADA", method: "ELISA（筛选）" }),
+      ];
+  }
+}
+
 /**
  * 这条会话的账。读过方案 → BB-001 那份按关系推的细账；没读过 → 十四项推出来的粗账。
  * 退回会话两样都不要（`fieldsOnly: false`）：它的纸面是批注锚着的固定件，换了账批注就没处落。
+ * 人在积木卡上加的板块（`extraPackages`）接在后面；账里本来就有的板块不重复加。
  */
-export function buildDmpkQuoteLines(fields: DmpkField[], sources: ParseResult[], options: { fieldsOnly?: boolean } = {}): QuoteLine[] {
-  if (sources.some((source) => source.role === "protocol")) return buildProtocolLines(fields);
-  if (options.fieldsOnly === false) return [];
-  return buildFieldLines(fields);
+export function buildDmpkQuoteLines(fields: DmpkField[], sources: ParseResult[], options: { fieldsOnly?: boolean; extraPackages?: ExtraPackage[] } = {}): QuoteLine[] {
+  const base = sources.some((source) => source.role === "protocol")
+    ? buildProtocolLines(fields)
+    : options.fieldsOnly === false ? [] : buildFieldLines(fields);
+  if (!base.length || !options.extraPackages?.length) return base;
+  const present = new Set(base.map((line) => line.package));
+  const extra = options.extraPackages.filter((pkg) => !present.has(pkg)).flatMap((pkg) => buildExtraPackageLines(pkg, fields));
+  return [...base, ...extra];
 }

@@ -8890,7 +8890,7 @@ button {
 .taskExampleGrid button > .expertIntro {
   position: absolute; z-index: 8; left: 0; top: calc(100% + 10px);
   display: grid; gap: 9px; width: 400px;
-  border: 1px solid var(--line-strong, #d7dce3); border-radius: var(--bioaz-radius-control);
+  border: 1px solid var(--line-strong); border-radius: var(--bioaz-radius-control);
   background: var(--bioaz-surface); padding: 12px 13px 11px;
   box-shadow: 0 14px 34px rgba(18, 24, 38, .12), 0 2px 6px rgba(18, 24, 38, .05);
   text-align: left; white-space: normal; cursor: default;
@@ -8903,7 +8903,7 @@ button {
    黑字被截一半比盖住一个空输入框难看得多。 */
 .taskExampleGrid button > .expertIntro::after {
   position: absolute; left: 22px; top: -6px; width: 10px; height: 10px;
-  border: 1px solid var(--line-strong, #d7dce3); border-width: 1px 0 0 1px;
+  border: 1px solid var(--line-strong); border-width: 1px 0 0 1px;
   background: var(--bioaz-surface); transform: rotate(45deg); content: "";
 }
 .taskExampleGrid button:last-child > .expertIntro::after { left: auto; right: 22px; }
@@ -8923,7 +8923,7 @@ button {
 /* 步骤条：N 步等分整行，点排在一条线上，名字在点下面。最多 6 步、名字最长 5 个字，
    等分之后每格 ≥ 56px，5 个字 11px 也放得下，永远不折行。 */
 .expertIntroSteps { position: relative; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); padding-top: 2px; }
-.expertIntroSteps::before { position: absolute; top: 5px; left: calc(50% / var(--n, 4)); right: calc(50% / var(--n, 4)); height: 1px; background: var(--line-strong, #d7dce3); content: ""; }
+.expertIntroSteps::before { position: absolute; top: 5px; left: calc(50% / var(--n, 4)); right: calc(50% / var(--n, 4)); height: 1px; background: var(--line-strong); content: ""; }
 .expertIntroSteps > span { display: grid; justify-items: center; gap: 5px; min-width: 0; opacity: 0; transform: translateY(3px); }
 .expertIntroDot { position: relative; z-index: 1; width: 7px; height: 7px; border: 1px solid var(--bioaz-agent-accent, #5c60b8); border-radius: 50%; background: var(--bioaz-surface); }
 /* 最后一步是终点，实心。 */
@@ -8954,14 +8954,14 @@ button {
 }
 .spaceOverviewCard > * { position: relative; z-index: 1; }
 /* 右侧线稿：比专家卡的底纹稍微"在"一点——这张卡上没有图标，它是唯一的图像。 */
-.spaceOverviewCard > .overviewMotif { position: absolute; z-index: 0; right: 10px; top: 50%; width: 58px; height: 54px; color: var(--line-strong, #d7dce3); transform: translateY(-50%); transition: color var(--bioaz-motion-spatial) ease, transform var(--bioaz-motion-spatial) ease; }
+.spaceOverviewCard > .overviewMotif { position: absolute; z-index: 0; right: 10px; top: 50%; width: 58px; height: 54px; color: var(--line-strong); transform: translateY(-50%); transition: color var(--bioaz-motion-spatial) ease, transform var(--bioaz-motion-spatial) ease; }
 .spaceOverviewNum { display: flex; align-items: baseline; gap: 5px; }
 .spaceOverviewNum strong { color: var(--ink); font-size: 20px; font-weight: 650; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .spaceOverviewNum span { color: var(--body); font-size: 12.5px; font-weight: 600; }
 .spaceOverviewCard small { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
 /* 箭头：hover 才出来，出来时从左边滑进右上角 */
 .spaceOverviewCard > svg:last-child { position: absolute; z-index: 2; right: 10px; top: 10px; color: var(--muted); opacity: 0; transform: translate(-4px, 4px); transition: opacity var(--bioaz-motion-standard) ease, transform var(--bioaz-motion-standard) ease; }
-.spaceOverviewCard:hover:not(:disabled) { border-color: var(--line-strong, #d7dce3); background: var(--bioaz-surface); box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
+.spaceOverviewCard:hover:not(:disabled) { border-color: var(--line-strong); background: var(--bioaz-surface); box-shadow: 0 8px 20px rgba(20, 24, 36, .055); transform: translateY(-1px); }
 .spaceOverviewCard:hover:not(:disabled) > .overviewMotif { color: #b9c0ca; transform: translateY(-50%) translateX(-2px); }
 .spaceOverviewCard:hover:not(:disabled) > svg:last-child { opacity: 1; transform: translate(0, 0); }
 .spaceOverviewCard:disabled { cursor: default; opacity: .7; }
@@ -9144,7 +9144,7 @@ button {
   padding: 4px 8px; color: var(--body); font: inherit; font-size: 11.5px; font-weight: 600; line-height: 1.3; text-align: center;
   cursor: pointer; transition: border-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
 }
-.dmpkSectionDoor:hover { border-color: var(--line-strong, #d7dce3); color: var(--ink); }
+.dmpkSectionDoor:hover { border-color: var(--line-strong); color: var(--ink); }
 .dmpkSectionDoor > svg { color: var(--muted); }
 /* 没权限的那扇：同样大小的一块灰字，虚线框，位置不变 */
 .dmpkSectionDoor.isLocked { border-style: dashed; background: transparent; color: var(--muted); font-weight: 500; cursor: help; }
@@ -9155,3 +9155,41 @@ button {
 .dmpkCatalogHits td b { color: var(--ink); font-weight: 600; }
 .dmpkCatalogHits tr[data-status="manual"] td:nth-child(3) { color: var(--bioaz-agent-accent, #5c60b8); }
 .dmpkCatalogHits tr[data-status="no-catalog"] td { color: var(--muted); }
+
+/* ── 积木卡：基础卡底下按板块长出来的那一叠（modules/dmpk-quotation/packageBlocks.tsx）──
+   跟参数卡、确认卡同一个槽位，所以圆角、边线、底色全按 .warningDecision 走；
+   板块卡之间只留细线，叠在一起才像一摞积木而不是三张卡。 */
+.dmpkBlocks { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 24px; background: var(--bioaz-surface); overflow: hidden; }
+.dmpkBlockBase { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--soft, #f7f8fb); font-size: 12.5px; color: var(--ink); }
+.dmpkBlockBaseLabel { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+.dmpkBlockBase > span { display: inline-flex; align-items: baseline; gap: 6px; }
+.dmpkBlockBase > span > em { color: var(--muted); font-size: 11.5px; font-style: normal; }
+.dmpkBlockBase > span.isEmpty { color: var(--muted); }
+.dmpkBlockBase > span > button { border: 0; background: transparent; padding: 0; color: var(--bioaz-agent-accent, #5c60b8); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.dmpkBlockStack { display: grid; }
+.dmpkBlock + .dmpkBlock { border-top: 1px solid var(--line); }
+.dmpkBlockHead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; column-gap: 10px; width: 100%; border: 0; background: transparent; padding: 11px 18px; text-align: left; color: inherit; cursor: pointer; }
+.dmpkBlockHead:hover { background: var(--bioaz-surface-hover, rgba(0, 0, 0, .025)); }
+.dmpkBlockHead > strong { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.dmpkBlockHead > small { color: var(--muted); font-size: 11.5px; }
+.dmpkBlockHead > b { font-size: 13px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dmpkBlockChevron { color: var(--muted); transition: transform var(--bioaz-motion-standard) ease; }
+.dmpkBlockHead[aria-expanded="true"] .dmpkBlockChevron { transform: rotate(180deg); }
+.dmpkBlock.isExtra > .dmpkBlockHead > strong::after { content: "搭上的"; margin-left: 8px; color: var(--bioaz-agent-accent, #5c60b8); font-size: 10.5px; font-weight: 600; }
+.dmpkBlockBody { display: grid; gap: 10px; padding: 0 18px 12px; }
+.dmpkBlockDims { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 14px; margin: 0; }
+.dmpkBlockDims > div { display: grid; gap: 2px; min-width: 0; }
+.dmpkBlockDims dt { color: var(--muted); font-size: 11px; }
+.dmpkBlockDims dd { margin: 0; color: var(--ink); font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.dmpkBlockPending { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.dmpkBlockPending li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; font-size: 12px; color: var(--ink-soft); }
+.dmpkBlockPending li > i { flex: none; border-radius: var(--bioaz-radius-full); padding: 1px 7px; font-size: 10.5px; font-style: normal; font-weight: 600; background: var(--soft); color: var(--muted); }
+.dmpkBlockPending li[data-status="missing-param"] > i { background: var(--amber-soft); color: var(--amber); }
+.dmpkBlockPending li > button { border: 0; background: transparent; padding: 0; color: var(--bioaz-agent-accent, #5c60b8); font-size: 12px; font-weight: 600; cursor: pointer; }
+.dmpkBlockRemove { justify-self: start; display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent; padding: 0; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.dmpkBlockRemove:hover { color: var(--ink); }
+.dmpkBlockAdd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 9px 18px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
+.dmpkBlockAdd > span { display: inline-flex; align-items: center; gap: 4px; }
+.dmpkBlockAdd > button { border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); background: transparent; padding: 3px 11px; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; }
+.dmpkBlockAdd > button:hover { border-style: solid; background: var(--soft, #f7f8fb); }
+.dmpkBlockDims dd small { display: block; color: var(--muted); font-size: 11.5px; }
