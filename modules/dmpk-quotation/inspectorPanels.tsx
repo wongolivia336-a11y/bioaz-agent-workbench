@@ -101,8 +101,6 @@ export type DmpkInspectorContext = {
   onOpenCatalog?: () => void;
   /* 去后台某一页。走壳层的状态、不走 window.location——整页导航会把会话全丢掉。 */
   onOpenBackOffice?: (tab: "prices" | "rules" | "parameters" | "templates") => void;
-  /* 「这单用了哪些价」：在对话里回一张本单命中的价目表。谁都能问——那不是完整价目表。 */
-  onListCatalogHits?: () => void;
   reworkBy?: string;
   reworkAt?: string;
   reworkReason?: string;
@@ -644,9 +642,8 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
         {/* 两扇门：本单命中的价目（对话里回一张表，谁都能问）；完整价目表（后台，SD 才有，
             没权限的那扇门换成一行说明，位置不变）。 */}
         <div className="dmpkSectionDoors">
-          {context.onListCatalogHits ? (
-            <button type="button" className="dmpkSectionDoor" onClick={context.onListCatalogHits}><MessageSquareText size={13} aria-hidden="true" />在对话里列出本单价目</button>
-          ) : null}
+          {/* 落到输入框里，发不发人自己定——不替他发。真正回表的是对话那条路（一句话触发）。 */}
+          <button type="button" className="dmpkSectionDoor" onClick={() => context.onDraftMessage("列出本单命中的价目")}><MessageSquareText size={13} aria-hidden="true" />在对话里列出本单价目</button>
           {context.onOpenCatalog ? (
             canOpenCatalog
               ? <button type="button" className="dmpkSectionDoor" onClick={context.onOpenCatalog}><ArrowUpRight size={13} aria-hidden="true" />查看完整价目表</button>

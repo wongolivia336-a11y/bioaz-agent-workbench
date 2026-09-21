@@ -64,12 +64,26 @@ export function ParameterTaskCard({
 }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [selfOpen, setSelfOpen] = useState(false);
-  /* 单项修改不折叠：那一张卡是**人点了右栏铅笔之后**出现的，他已经说了要改
-     哪一项。再让他点一下才看得见，等于问他「你真的要改吗」。
-     折叠只对「系统主动弹出来的那张」成立。 */
-  const toggleable = mode === "collect";
-  const expanded = toggleable ? (open ?? selfOpen) : true;
+  /* 两种卡都能折。单项修改那张原来锁死展开（「他刚点了铅笔，不用再点一下」），
+     结果是它折不起来、点别处也不走——用户 09-21 晚要求：卡头能折，点别处自动收。
+     「一出来就是展开的」这件事由会话在进入修改时把 open 置 true 来保证。 */
+  const expanded = open ?? selfOpen;
   const setExpanded = onOpenChange ?? setSelfOpen;
+  const cardRef = useRef<HTMLElement>(null);
+  /* 点到卡外面就收起来。全屏弹窗 portal 在 body 上，DOM 上不在卡里，但它是从这张卡
+     开出去的——点它不算「别处」。 */
+  useEffect(() => {
+    if (!expanded || fullscreen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (cardRef.current?.contains(target)) return;
+      if (target.closest(".modalBackdrop")) return;
+      setExpanded(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [expanded, fullscreen, setExpanded]);
   const [page, setPage] = useState(() => Math.max(0, groups.findIndex((group) => group.id === activeGroup)));
   const safePage = Math.min(page, Math.max(0, groups.length - 1));
   const pageGroup = groups[safePage];
@@ -136,7 +150,7 @@ export function ParameterTaskCard({
 
   return (
     <>
-      <section className={`warningDecision parameterTaskCard ${expanded ? "isExpanded" : "isCollapsed"}`}>
+      <section ref={cardRef} className={`warningDecision parameterTaskCard ${expanded ? "isExpanded" : "isCollapsed"}`}>
         {/* 卡头就是开关。
             ----------------------------------------------------------------
             整张卡的空白处原来点一下直接开全屏，跳过了「展开」这一级——
@@ -151,20 +165,20 @@ export function ParameterTaskCard({
             折叠态就已经把话说完了。 */}
         <header
           className="warningDecisionHeader"
-          role={toggleable ? "button" : undefined}
-          tabIndex={toggleable ? 0 : undefined}
-          aria-expanded={toggleable ? expanded : undefined}
-          onClick={toggleable ? (event) => {
+          role="button"
+          tabIndex={0}
+          aria-expanded={expanded}
+          onClick={(event) => {
             // 计数右边那颗全屏键自己有事做，别顺手把卡折起来
             if ((event.target as HTMLElement).closest("button")) return;
             setExpanded(!expanded);
-          } : undefined}
-          onKeyDown={toggleable ? (event) => {
+          }}
+          onKeyDown={(event) => {
             if (event.target !== event.currentTarget) return;
             if (event.key !== "Enter" && event.key !== " ") return;
             event.preventDefault();
             setExpanded(!expanded);
-          } : undefined}
+          }}
         >
           <div>
             <span>{eyebrow}</span>
@@ -178,12 +192,11 @@ export function ParameterTaskCard({
             {/* 全屏只在展开之后才给。折叠态放一颗「一屏看全」，是让人从
                 一个什么都没看见的状态直接跳到最重的那一级——中间那级
                 （就地填当前这一组）反而被跳过了，而它才是常用的。 */}
-            {toggleable && expanded ? (
+            {/* 全屏只给收集卡：单项修改就一项，没有「一屏看全」这回事 */}
+            {mode === "collect" && expanded ? (
               <button className="parameterExpandButton" type="button" onClick={() => setFullscreen(true)} aria-label="全屏填写全部参数" title="全屏填写全部参数"><Maximize2 size={15} /></button>
             ) : null}
-            {toggleable ? (
-              <ChevronDown className="parameterCardChevron" size={15} aria-hidden="true" />
-            ) : null}
+            <ChevronDown className="parameterCardChevron" size={15} aria-hidden="true" />
           </div>
         </header>
         {expanded ? (

@@ -538,6 +538,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setParametersExpanded(true);
     setConversationEditing(false);
     setEditingFieldId(field.id);
+    /* 单项修改那张卡一出来就是展开的——他刚点了「去填」，不用再点一下才看得见。
+       但它跟收集卡一样能折：点卡头、点别处都收（见 ParameterTaskCard）。 */
+    setParamsOpen(true);
     setDraftTabs((items) => items.filter((item) => item.fieldId !== field.id));
     setActiveGroup(field.group);
     setOpenGroups({ assay: field.group === "assay", animal: field.group === "animal", analysis: field.group === "analysis", delivery: field.group === "delivery" });
@@ -954,7 +957,6 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     permissions,
     onOpenCatalog: onOpenQuotationManagement ? () => onOpenQuotationManagement({ business: "dmpk", tab: "prices" }) : undefined,
     onOpenBackOffice: onOpenQuotationManagement ? (tab) => onOpenQuotationManagement({ business: "dmpk", tab }) : undefined,
-    onListCatalogHits: () => listCatalogHits(),
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
