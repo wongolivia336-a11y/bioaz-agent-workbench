@@ -644,8 +644,11 @@ body:has(.bioazDesignSystemPage) {
   justify-content: flex-end;
   gap: var(--bioaz-space-2);
 }
-/* 一致性靠这一条保证：两个按钮共享同一组尺寸 */
-.bioazUiDialogFooter > button {
+/* 一致性靠这一条保证：两个按钮共享同一组尺寸。
+   带上 .bioazUiDialog 是为了压过 globals 里 .primaryButton.compact / .secondaryButton.compact
+   那些两类名的尺寸（44 / 34 各写各的）——弹窗 portal 到 body 之后，壳层里那条把两者都拉到 36 的
+   规则够不着了，这一条就得自己赢。 */
+.bioazUiDialog .bioazUiDialogFooter > button {
   display: inline-flex;
   box-sizing: border-box;
   height: 36px;
