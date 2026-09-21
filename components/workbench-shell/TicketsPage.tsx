@@ -125,7 +125,7 @@ export function TicketsPage({
   const [keyword, setKeyword] = useState("");
 
   const [kind, setKind] = useState("全部类型");
-  const [project, setProject] = useState("全部项目");
+  const [project, setProject] = useState("全部空间");
   const [page, setPage] = useState(1);
 
   /* 读过哪几条。站内信是通知,通知只有「看没看过」这一个状态——
@@ -153,7 +153,7 @@ export function TicketsPage({
         if (lensKind && ticketKindLabel[ticket.kind] !== lensKind) return false;
         if (status !== "全部状态" && !(STATUS_MATCH[status] ?? []).includes(ticket.status)) return false;
         if (kind !== "全部类型" && ticketKindLabel[ticket.kind] !== kind) return false;
-        if (project !== "全部项目" && ticket.project !== project) return false;
+        if (project !== "全部空间" && ticket.project !== project) return false;
         if (text && !`${ticket.id}${ticket.title}${ticket.from}`.toLowerCase().includes(text)) return false;
         return true;
       })
@@ -168,7 +168,7 @@ export function TicketsPage({
           const wanted = NOTICE_KIND[kind];
           if (!wanted || notice.source !== wanted) return false;
         }
-        if (project !== "全部项目" && notice.project !== project) return false;
+        if (project !== "全部空间" && notice.project !== project) return false;
         if (text && !`${notice.title}${notice.from}`.toLowerCase().includes(text)) return false;
         return true;
       })
@@ -231,7 +231,7 @@ export function TicketsPage({
         {/* 类型、状态、项目并排:它们是同一种东西,缩小这一屏的三把尺子。 */}
         <CompactSelect value={kind} options={lensKind ? KIND_OPTIONS.filter((item) => item === "全部类型" || item === lensKind || NOTICE_KIND[item]) : [...KIND_OPTIONS]} onChange={reset(setKind)} />
         <CompactSelect value={status} options={[...STATUS_OPTIONS]} onChange={reset(setStatus)} />
-        <CompactSelect value={project} options={["全部项目", ...projects]} onChange={reset(setProject)} />
+        <CompactSelect value={project} options={["全部空间", ...projects]} onChange={reset(setProject)} />
       </div>
 
       {/* 列名、列表、分页收进同一张卡。之前是三条互不相干的横条浮在白底上,
@@ -251,7 +251,7 @@ export function TicketsPage({
           <div className="messageListHead" aria-hidden="true">
             <span />
             <span>发件人</span>
-            <span>主题 · 所属项目</span>
+            <span>主题 · 所属空间</span>
             <span>状态 · 当前处理人</span>
             <span>更新时间</span>
           </div>

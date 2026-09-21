@@ -1,12 +1,14 @@
 "use client";
 
-import { BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { ArrowUpRight, BadgeDollarSign, Check, ChevronRight, ChevronUp, Eye, FileText, Folder, FolderOpen, Inbox, Library, LogOut, MoreHorizontal, Orbit, PanelRight, Pin, PinOff, Plus, Search, Settings, Trash2, Users, X } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { type InboxAccount } from "../../lib/workbench/mockInbox";
 import { DEMO_LENSES, getDemoLens, type DemoLens } from "../../lib/workbench/demoLens";
 import { workspacePinCatalog, workspaceProjects } from "../../lib/workbench/mockWorkspace";
 import type { LibraryFolder, PinItem } from "../../lib/workbench/shellTypes";
-import type { ProjectType, WorkbenchProject, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
+import type { CoworkerDefinition, ProjectType, WorkbenchProject, WorkbenchRoute, WorkbenchTask } from "../../modules/types";
+import { projectCoworkerIds } from "../../modules/registry";
+import { SpaceCoworkerDialog } from "./SpaceCoworkerDialog";
 import { useDismissableLayer } from "./useDismissableLayer";
 
 type Props = {
@@ -41,6 +43,13 @@ type Props = {
   onOpenInbox: () => void;
   onRenameProject: (projectId: string, name: string) => void;
   onDeleteProject: (projectId: string) => void;
+  /** 进空间首页（beta5 的那个入口页）。入口是行 hover 的 ↗ 和菜单里的「进入空间」；点行本身仍是开合。 */
+  onOpenProjectHome: (projectName: string) => void;
+  /** 空间首页那张「任务」卡点过来：把这个空间的树展开。nonce 变一次展开一次。 */
+  expandProjectSignal?: { name: string; nonce: number } | null;
+  /** 能绑进空间的数字同事，和「设置空间专家」的落笔。 */
+  coworkerOptions: CoworkerDefinition[];
+  onSetProjectCoworkers: (projectId: string, coworkerIds: string[]) => void;
   onRenameTask: (taskId: string, title: string) => void;
   onDeleteTask: (taskId: string) => void;
   onTogglePinnedItem: (id: string) => void;
@@ -66,6 +75,14 @@ export function WorkspaceSidebar(props: Props) {
   const librarySpaces = visibleProjects.filter((project) => project.type === "library");
   /* 默认折叠。正在看某个资料空间时自动展开——否则当前位置在侧栏上没有着落点。 */
   const [librarySpaceOpen, setLibrarySpaceOpen] = useState(Boolean(props.activeLibrarySpace));
+  /* 空间首页「任务」卡要求展开某个空间：按名字找 id，翻开。 */
+  const expandSignal = props.expandProjectSignal;
+  useEffect(() => {
+    if (!expandSignal) return;
+    const target = props.projects.find((project) => project.name === expandSignal.name);
+    if (target) setOpenProjects((current) => ({ ...current, [target.id]: true }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandSignal?.nonce]);
   const originalProjectNameById = new Map(workspaceProjects.map((project) => [project.id, project.name]));
   const currentProjectNameByOriginal = new Map(visibleProjects.map((project) => [originalProjectNameById.get(project.id) ?? project.name, project.name]));
   const projectNameById = new Map(visibleProjects.map((project) => [project.id, project.name]));
@@ -177,12 +194,13 @@ export function WorkspaceSidebar(props: Props) {
         </section>
       ) : null}
 
-      <nav className="navBlock projectTree" aria-label="项目">
+      {/* 界面上叫「空间」（跟 beta5 对齐），代码里容器仍叫 project——只改名字，不改结构。 */}
+      <nav className="navBlock projectTree" aria-label="空间">
         <div className="navSectionHeader">
-          <span>项目</span>
-          <button type="button" aria-label="新建项目" title="新建项目" onClick={() => openCreate("client")}><Plus size={14} /></button>
+          <span>空间</span>
+          <button type="button" aria-label="新建空间" title="新建空间" onClick={() => openCreate("client")}><Plus size={14} /></button>
         </div>
-        {/* 位置已经说明了类型：在「项目」这一行点 +，要建的就是项目。
+        {/* 位置已经说明了类型：在「空间」这一行点 +，要建的就是空间。
             原来这里还弹一个「项目 / 资料空间」二选一，是让人回答一个他刚刚
             用点击位置已经回答过的问题。 */}
         {createType === "client" ? <ContainerCreateRow type="client" value={projectDraft} onChange={setProjectDraft} onCommit={commitProject} onCancel={closeProjectCreate} /> : null}
@@ -191,12 +209,18 @@ export function WorkspaceSidebar(props: Props) {
             key={project.id}
             title={project.name}
             highlighted={props.highlightedProjectId === project.id}
+            active={props.activeRoute === "newTask" && !props.activeTaskId && props.currentProject === project.name}
             open={Boolean(openProjects[project.id])}
             onToggle={() => setOpenProjects((current) => ({ ...current, [project.id]: !current[project.id] }))}
+            /* 点名字 = 进这个空间的首页，顺手展开——beta5 里点空间就是进去，不是折叠。 */
+            onOpenHome={() => { setOpenProjects((current) => ({ ...current, [project.id]: true })); props.onOpenProjectHome(project.name); }}
             onRename={(name) => props.onRenameProject(project.id, name)}
             onOpenFiles={() => props.onOpenLibraryFolder(project.name, null)}
             onStartTask={() => startTask(projectNameById.get(project.id) ?? project.name)}
             onDelete={() => props.onDeleteProject(project.id)}
+            coworkerOptions={props.coworkerOptions}
+            coworkerIds={projectCoworkerIds(project)}
+            onSetCoworkers={(ids) => props.onSetProjectCoworkers(project.id, ids)}
           >
             {props.libraryFolders.filter((folder) => folder.project === project.name && folder.pinned).map((folder) => (
               <button className={`sidebarFolderShortcut ${props.activeLibraryFolderId === folder.id ? "active" : ""}`} type="button" key={folder.id} onClick={() => props.onOpenLibraryFolder(project.name, folder.id)}>
@@ -322,8 +346,8 @@ function ContainerCreateRow({ type, value, onChange, onCommit, onCancel }: { typ
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => { if (event.key === "Enter") onCommit(); if (event.key === "Escape") onCancel(); }}
-        placeholder={type === "client" ? "项目名称" : "资料空间名称"}
-        aria-label={type === "client" ? "项目名称" : "资料空间名称"}
+        placeholder={type === "client" ? "空间名称" : "资料空间名称"}
+        aria-label={type === "client" ? "空间名称" : "资料空间名称"}
       />
       <button type="button" disabled={!value.trim()} onClick={onCommit} aria-label="确认新建"><Check size={14} /></button>
       <button type="button" onClick={onCancel} aria-label="取消"><X size={12} /></button>
@@ -380,9 +404,10 @@ function toTask(item: PinItem): WorkbenchTask {
   };
 }
 
-function SidebarProject({ title, highlighted = false, open, onToggle, onRename, onOpenFiles, onStartTask, onDelete, children }: { title: string; highlighted?: boolean; open: boolean; onToggle: () => void; onRename: (name: string) => void; onOpenFiles: () => void; onStartTask: () => void; onDelete: () => void; children: ReactNode }) {
+function SidebarProject({ title, highlighted = false, active = false, open, onToggle, onOpenHome, onRename, onOpenFiles, onStartTask, onDelete, coworkerOptions, coworkerIds, onSetCoworkers, children }: { title: string; highlighted?: boolean; /** 正停在这个空间的首页上 */ active?: boolean; open: boolean; onToggle: () => void; onOpenHome: () => void; onRename: (name: string) => void; onOpenFiles: () => void; onStartTask: () => void; onDelete: () => void; coworkerOptions: CoworkerDefinition[]; coworkerIds: string[]; onSetCoworkers: (ids: string[]) => void; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [coworkersOpen, setCoworkersOpen] = useState(false);
   const [draft, setDraft] = useState(title);
   const ref = useDismissableLayer<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
   const commit = () => {
@@ -396,29 +421,37 @@ function SidebarProject({ title, highlighted = false, open, onToggle, onRename, 
         {editing ? (
           <div className="projectCreateRow sidebarInlineEditor">
             <Folder size={14} />
-            <input autoFocus value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={(event) => { if (event.key === "Enter") commit(); if (event.key === "Escape") { setDraft(title); setEditing(false); } }} aria-label="项目名称" />
+            <input autoFocus value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={(event) => { if (event.key === "Enter") commit(); if (event.key === "Escape") { setDraft(title); setEditing(false); } }} aria-label="空间名称" />
           </div>
         ) : (
           <>
             {/* 开合由文件夹自己表达，右边那个 chevron 已经撤掉——两个图标说同
                 一件事是浪费。lucide 的 Folder 和 FolderOpen 是两条结构不同的
                 path，插值不了，所以用交叉淡入模拟「翻开」；为一个图标引一个
-                SVG morph 库不划算。 */}
-            <button className="projectRow" type="button" onClick={onToggle} aria-expanded={open}>
+                SVG morph 库不划算。
+
+                点这一行 = 开合，跟原来一样。进空间首页另给一个门：hover 出来的那颗 ↗，
+                和菜单里的「进入空间」。曾试过点名字就进首页——那把「看看树里有什么」
+                这个最频繁的动作变成了导航，用户当场否了。 */}
+            <button className={`projectRow ${active ? "active" : ""}`} type="button" onClick={onToggle} aria-expanded={open} aria-current={active ? "page" : undefined}>
               <span className="projectFolderIcon" data-open={open}>
                 <Folder size={14} />
                 <FolderOpen size={14} />
               </span>
               <strong>{title}</strong>
             </button>
+            {/* isActionOnly 管的是菜单的 display 和右侧贴边，不是「只有一颗按钮」——两颗照用。 */}
             <div className="projectHoverActions isActionOnly">
+              <button type="button" aria-label={`进入空间「${title}」`} title="进入空间" onClick={(event) => { event.stopPropagation(); onOpenHome(); }}><ArrowUpRight size={14} /></button>
               <button type="button" aria-label={`${title}更多操作`} onClick={(event) => { event.stopPropagation(); setMenuOpen((value) => !value); }}><MoreHorizontal size={14} /></button>
               {menuOpen ? (
                 <div className="sidebarMenu projectMenu">
-                  <button type="button" onClick={() => { setDraft(title); setEditing(true); setMenuOpen(false); }}><FileText size={14} />重命名项目</button>
-                  <button type="button" onClick={() => { onOpenFiles(); setMenuOpen(false); }}><Folder size={14} />查看项目文件</button>
+                  <button type="button" onClick={() => { onOpenHome(); setMenuOpen(false); }}><ArrowUpRight size={14} />进入空间</button>
+                  <button type="button" onClick={() => { setDraft(title); setEditing(true); setMenuOpen(false); }}><FileText size={14} />重命名空间</button>
+                  <button type="button" onClick={() => { onOpenFiles(); setMenuOpen(false); }}><Folder size={14} />查看空间文件</button>
                   <button type="button" onClick={() => { onStartTask(); setMenuOpen(false); }}><Plus size={14} />新建任务</button>
-                  <button type="button" onClick={() => { if (window.confirm(`删除项目“${title}”？项目下任务会从当前列表隐藏。`)) onDelete(); setMenuOpen(false); }}><Trash2 size={14} />删除项目</button>
+                  <button type="button" onClick={() => { setCoworkersOpen(true); setMenuOpen(false); }}><Users size={14} />设置空间专家</button>
+                  <button type="button" onClick={() => { if (window.confirm(`删除空间“${title}”？空间下任务会从当前列表隐藏。`)) onDelete(); setMenuOpen(false); }}><Trash2 size={14} />删除空间</button>
                 </div>
               ) : null}
             </div>
@@ -426,6 +459,9 @@ function SidebarProject({ title, highlighted = false, open, onToggle, onRename, 
         )}
       </div>
       {open ? <div className="chatTree">{children}</div> : null}
+      {coworkersOpen ? (
+        <SpaceCoworkerDialog title={title} options={coworkerOptions} value={coworkerIds} onSave={(ids) => { onSetCoworkers(ids); setCoworkersOpen(false); }} onClose={() => setCoworkersOpen(false)} />
+      ) : null}
     </div>
   );
 }

@@ -49,11 +49,11 @@ const knowledgeReferences = [
 
 const assistantCopy = {
   library: {
-    name: "项目助手",
-    welcome: "需要处理什么项目资料？",
+    name: "空间助手",
+    welcome: "需要处理什么空间资料？",
     intro: "我可以基于当前范围内的文件与任务进行查找、总结和思路拓展。",
-    placeholder: "问问这个项目的资料、结论或下一步…",
-    suggestions: ["查找项目相关文件", "总结当前项目关键结论", "基于项目资料生成客户汇报"],
+    placeholder: "问问这个空间的资料、结论或下一步…",
+    suggestions: ["查找空间相关文件", "总结当前空间关键结论", "基于空间资料生成客户汇报"],
   },
   knowledgeBase: {
     name: "知识库助手",
@@ -70,7 +70,7 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext, scope
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [question, setQuestion] = useState<string | null>(null);
   const [thinking, setThinking] = useState(false);
-  const [assistantProject, setAssistantProject] = useState(libraryContext?.project ?? "全部项目");
+  const [assistantProject, setAssistantProject] = useState(libraryContext?.project ?? "全部空间");
   const [assistantBusiness, setAssistantBusiness] = useState(libraryContext?.business ?? "全部业务");
   const [kbScope, setKbScope] = useState("全部知识库");
   const [ambientLocked, setAmbientLocked] = useState(false);
@@ -80,11 +80,11 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext, scope
   const knowledgeBase = context === "knowledgeBase";
   const ambient = library || knowledgeBase;
   const copy = library ? assistantCopy.library : assistantCopy.knowledgeBase;
-  const suggestions = context === "tasks" ? ["列出我待处理的任务", "按项目整理当前任务", "发起一份 DMPK 报价"] : copy.suggestions;
+  const suggestions = context === "tasks" ? ["列出我待处理的任务", "按空间整理当前任务", "发起一份 DMPK 报价"] : copy.suggestions;
   // 知识库进到具体文件夹后，胶囊上的范围跟着收窄到该文件夹
   const scopeLabel = knowledgeBase
     ? scopeOverride ?? kbScope
-    : libraryContext?.project === "全部项目" ? "全部项目" : "当前项目";
+    : libraryContext?.project === "全部空间" ? "全部空间" : "当前空间";
   const submit = (value: string) => { const next = value.trim(); if (!next) return; if (thinkingTimerRef.current) window.clearTimeout(thinkingTimerRef.current); setQuestion(next); setThinking(true); setText(""); thinkingTimerRef.current = window.setTimeout(() => { setThinking(false); thinkingTimerRef.current = null; }, 760); if (/DMPK.*报价|报价.*DMPK/i.test(next)) onStartTask?.(); };
   const ambientExpanded = ambientLocked;
 
@@ -104,7 +104,7 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext, scope
   }, [open]);
 
   useEffect(() => {
-    setAssistantProject(libraryContext?.project ?? "全部项目");
+    setAssistantProject(libraryContext?.project ?? "全部空间");
     setAssistantBusiness(libraryContext?.business ?? "全部业务");
   }, [libraryContext?.business, libraryContext?.project]);
 
@@ -132,10 +132,10 @@ export function WorkspaceAssistant({ context, onStartTask, libraryContext, scope
             </div>
             <button type="button" aria-label="关闭" onClick={() => setOpen(false)}><X size={16} /></button>
           </header>
-          {library ? <div className="assistantContextBar"><CompactSelect value={assistantProject} options={["全部项目", "XX药业-PD1临床前评价", "YY药业-Balb/c nude评价", "ZZ药业-CT26模型评价"]} onChange={setAssistantProject} /><CompactSelect value={assistantBusiness} options={["全部业务", "DMPK报价", "肿瘤报告"]} onChange={setAssistantBusiness} /></div> : null}
+          {library ? <div className="assistantContextBar"><CompactSelect value={assistantProject} options={["全部空间", "XX药业-PD1临床前评价", "YY药业-Balb/c nude评价", "ZZ药业-CT26模型评价"]} onChange={setAssistantProject} /><CompactSelect value={assistantBusiness} options={["全部业务", "DMPK报价", "肿瘤报告"]} onChange={setAssistantBusiness} /></div> : null}
           {knowledgeBase ? <div className="assistantContextBar"><CompactSelect value={kbScope} options={["全部知识库", "仅已指派给数字同事的文件"]} onChange={setKbScope} /></div> : null}
           <div className="workspaceAssistantBody">
-            {question ? <><div className="assistantExchange"><p>{question}</p>{thinking ? <div className="assistantThinking" role="status" aria-live="polite"><span className="assistantThinkingLogo"><img src="/logo/bioaz-logo.svg" alt="" /></span><span>正在理解并整理当前范围</span></div> : <div><Sparkles size={14} /><span>{library ? `我已结合${assistantProject === "全部项目" ? "全部项目" : assistantProject}范围内的文件与任务整理相关内容。` : knowledgeBase ? `我已在${kbScope}范围内检索并整理相关内容，下面是引用来源。` : "已按最近更新时间检查任务，顶部三项需要你处理。"}</span></div>}</div>{ambient && !thinking ? <div className="assistantReferences">{(library ? libraryReferences : knowledgeReferences).map((item) => <button type="button" key={item.title}>{item.kind === "list" ? <ListChecks size={16} /> : <FileSearch size={16} />}<span><strong>{item.title}</strong><small>{item.meta}</small></span></button>)}</div> : null}</> : <div className="assistantWelcome"><span className="assistantHeroMark"><img src="/logo/bioaz-logo.svg" alt="" /></span><strong>{ambient ? copy.welcome : "你好，我是 BioAZ Helper"}</strong><p>{ambient ? copy.intro : "找任务、查进度或发起新工作。"}</p></div>}
+            {question ? <><div className="assistantExchange"><p>{question}</p>{thinking ? <div className="assistantThinking" role="status" aria-live="polite"><span className="assistantThinkingLogo"><img src="/logo/bioaz-logo.svg" alt="" /></span><span>正在理解并整理当前范围</span></div> : <div><Sparkles size={14} /><span>{library ? `我已结合${assistantProject === "全部空间" ? "全部空间" : assistantProject}范围内的文件与任务整理相关内容。` : knowledgeBase ? `我已在${kbScope}范围内检索并整理相关内容，下面是引用来源。` : "已按最近更新时间检查任务，顶部三项需要你处理。"}</span></div>}</div>{ambient && !thinking ? <div className="assistantReferences">{(library ? libraryReferences : knowledgeReferences).map((item) => <button type="button" key={item.title}>{item.kind === "list" ? <ListChecks size={16} /> : <FileSearch size={16} />}<span><strong>{item.title}</strong><small>{item.meta}</small></span></button>)}</div> : null}</> : <div className="assistantWelcome"><span className="assistantHeroMark"><img src="/logo/bioaz-logo.svg" alt="" /></span><strong>{ambient ? copy.welcome : "你好，我是 BioAZ Helper"}</strong><p>{ambient ? copy.intro : "找任务、查进度或发起新工作。"}</p></div>}
             {!question ? <div className="assistantSuggestions">{suggestions.map((item, index) => <button type="button" key={item} onClick={() => submit(item)}>{ambient ? [<FileSearch key="search" size={16} />, <ListChecks key="summary" size={16} />, <Lightbulb key="ideas" size={16} />][index] : null}<span>{item}</span></button>)}</div> : null}
           </div>
           {/* 抽屉太窄，二级悬浮子菜单会顶到屏幕边，这里只保留上传 */}

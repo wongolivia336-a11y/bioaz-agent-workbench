@@ -27,10 +27,10 @@ import {
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { initialKnowledgeFiles } from "../../lib/workbench/mockWorkspace";
-import type { KnowledgeFile, LibraryFolder, LibraryView } from "../../lib/workbench/shellTypes";
+import { isArtifactFile, type KnowledgeFile, type LibraryFolder, type LibraryView } from "../../lib/workbench/shellTypes";
 import type { ProjectType, WorkbenchProject, WorkbenchTask } from "../../modules/types";
 import { KnowledgeAsk } from "./KnowledgeAsk";
-import { Menu, MenuGroup, MenuItem } from "../ui";
+import { Menu, MenuGroup, MenuItem, SegmentedControl } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
 
@@ -91,8 +91,15 @@ export function FileManager({
   onSelectedFolderChange,
   onViewChange,
   onCreateProject,
+  onOpenTask,
+  initialRootTab = "files",
 }: Props) {
   const [files, setFiles] = useState<KnowledgeFile[]>(initialKnowledgeFiles);
+  /* 根级（全部空间）那张表分两档：全部文件 / 产物。
+     beta5 把「产物」做成数据中枢的一个 tab——各会话生成的东西汇总一张表，带来源会话。
+     我们单个空间里本来就有「任务产物」那一道，缺的只是跨空间汇总和那一列来源，
+     所以在根级表上加一个分段开关，不另开路由。 */
+  const [rootTab, setRootTab] = useState<"files" | "outputs">(initialRootTab);
   // 资料空间里"从问答存下来的那种"产物，靠 kind 认，别处不要再写这个字面量
   const [query, setQuery] = useState("");
   const [business, setBusiness] = useState("全部业务");
@@ -117,7 +124,7 @@ export function FileManager({
      范围选择器换的是路径，跟面包屑同行。 */
   const [topbarScopeHost, setTopbarScopeHost] = useState<HTMLElement | null>(null);
   const [topbarPrimaryHost, setTopbarPrimaryHost] = useState<HTMLElement | null>(null);
-  const project = selectedProject ?? "全部项目";
+  const project = selectedProject ?? "全部空间";
   const selectedType: ProjectType | null = selectedProject
     ? projects.find((item) => item.name === selectedProject)?.type ?? "client"
     : null;
@@ -304,7 +311,7 @@ export function FileManager({
       />
       <ContainerCreateMenu
         onCreate={(type) => {
-          // 新建表单住在「资料 · 全部项目」那一屏，所以这个动作要把人带过去，
+          // 新建表单住在「资料 · 全部空间」那一屏，所以这个动作要把人带过去，
           // 否则在待我处理页点了新建什么都不会发生
           onSelectedProjectChange(null);
           onSelectedFolderChange(null);
@@ -337,8 +344,8 @@ export function FileManager({
           <div className="libraryToolLayer">
             <LibrarySearch value={query} onChange={setQuery} placeholder="搜索全部资料..." />
             <Menu icon={<Filter size={16} />} label="筛选" active={rootFilterActive}>
-              <MenuGroup label="所属项目">
-                <MenuItem active={!rootProject} onSelect={() => setRootProject(null)}>全部项目</MenuItem>
+              <MenuGroup label="所属空间">
+                <MenuItem active={!rootProject} onSelect={() => setRootProject(null)}>全部空间</MenuItem>
                 {rootProjectOptions.map((name) => <MenuItem key={name} active={rootProject === name} onSelect={() => setRootProject(rootProject === name ? null : name)}>{name}</MenuItem>)}
               </MenuGroup>
               <MenuGroup label="文件类型">
@@ -373,7 +380,7 @@ export function FileManager({
                 value={projectDraft}
                 onChange={(event) => setProjectDraft(event.target.value)}
                 onKeyDown={(event) => { if (event.key === "Enter") commitProject(); if (event.key === "Escape") cancelProjectCreate(); }}
-                placeholder={projectDraftType === "client" ? "项目名称，按 Enter 创建" : "资料空间名称，按 Enter 创建"}
+                placeholder={projectDraftType === "client" ? "空间名称，按 Enter 创建" : "资料空间名称，按 Enter 创建"}
                 aria-label="名称"
               />
               <button type="button" disabled={!projectDraft.trim()} onClick={commitProject} aria-label="确认新建"><Check size={14} /></button>
@@ -386,19 +393,37 @@ export function FileManager({
           <EmptyState
             title="暂无项目"
             description="创建项目来开始组织你的工作"
-            action={<button className="primaryButton compact" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={14} />新建项目</button>}
+            action={<button className="primaryButton compact" type="button" onClick={() => setProjectCreateOpen(true)}><Plus size={14} />新建空间</button>}
           />
         ) : null}
 
         <section className="rootRecentOutputs rootAllFiles">
           <div className="sectionBar">
-            <strong>全部文件</strong>
-            <span>{allRootFiles.length} 项</span>
+            {/* 全部文件 / 产物 两档。数量各报各的，切过去之前就知道那边有多少。 */}
+            <SegmentedControl
+              label="文件范围"
+              className="rootFileTabs"
+              value={rootTab}
+              onChange={setRootTab}
+              items={[
+                { id: "files", label: `全部文件 ${allRootFiles.length}` },
+                { id: "outputs", label: `产物 ${allRootFiles.filter(isArtifactFile).length}` },
+              ]}
+            />
+            {rootTab === "outputs" ? <span className="rootTabHint">各空间任务生成的报告、报价与图表，点来源任务可回到那条会话</span> : null}
             {/* 筛选 / 排序 / 切换业务 已上移到顶栏，和项目内那条对齐 */}
           </div>
           {/* 跨项目视角要回答「这份属于谁」，所以多一列所属；项目内不需要，
-              整张表都在同一个项目里。 */}
-          <FileTable files={allRootFiles} showOwnerScope onPreview={setPreviewFile} onDetail={setDetailFile} onDelete={softDelete} />
+              整张表都在同一个项目里。产物那档再多一列「来源任务」。 */}
+          <FileTable
+            files={rootTab === "outputs" ? allRootFiles.filter(isArtifactFile) : allRootFiles}
+            showOwnerScope
+            showSourceTask={rootTab === "outputs"}
+            onOpenTask={onOpenTask}
+            onPreview={setPreviewFile}
+            onDetail={setDetailFile}
+            onDelete={softDelete}
+          />
         </section>
 
         {/* 问答放在流的最后，因为它是 position: sticky 吸底的。
@@ -414,7 +439,7 @@ export function FileManager({
     );
   }
 
-  const listTitle = view === "inputs" ? "项目资料" : view === "outputs" ? "任务产物" : view === "trash" ? "回收站" : activeFolder?.name ?? "项目文件";
+  const listTitle = view === "inputs" ? "项目资料" : view === "outputs" ? "任务产物" : view === "trash" ? "回收站" : activeFolder?.name ?? "空间文件";
   const inTrash = view === "trash";
   const selectionScope = inTrash ? visibleTrashFiles : filteredFiles;
   const activeSelection = selectedIds.filter((id) => selectionScope.some((file) => file.id === id));
@@ -426,7 +451,7 @@ export function FileManager({
       {inTrash ? null : uploadPortal("project-file-upload")}
       {topbarActionHost ? createPortal(
         <div className="libraryToolLayer">
-          <LibrarySearch value={query} onChange={setQuery} placeholder={inTrash ? "搜索回收站文件..." : "搜索当前项目文件..."} />
+          <LibrarySearch value={query} onChange={setQuery} placeholder={inTrash ? "搜索回收站文件..." : "搜索当前空间文件..."} />
           {inTrash ? null : (
             <>
               <Menu icon={<Filter size={16} />} label="筛选" active={Boolean(kindFilter || sourceFilter || timeFilter !== "all")}>
@@ -529,7 +554,7 @@ export function FileManager({
                 <EmptyState
                   title="回收站为空"
                   description="删除的文件会暂存在这里"
-                  action={<button className="secondaryButton compact" type="button" onClick={() => onViewChange("overview")}>返回项目文件</button>}
+                  action={<button className="secondaryButton compact" type="button" onClick={() => onViewChange("overview")}>返回空间文件</button>}
                 />
               )}
             </section>
@@ -600,10 +625,14 @@ type Props = {
   onSelectedFolderChange: (folderId: string | null) => void;
   onViewChange: (view: LibraryView) => void;
   onCreateProject: (name: string, type: ProjectType) => WorkbenchProject | null;
+  /** 产物视图里点「来源任务」→ 进那条任务的会话。不传就只显示文字。 */
+  onOpenTask?: (taskId: string) => void;
+  /** 一进数据中枢就停在「产物」——空间首页那行「产物」点过来时用。 */
+  initialRootTab?: "files" | "outputs";
 };
 
 /* 项目筛选器。层级翻转之后，项目不再是必须先走的那条路，而是这一个控件——
-   默认「全部项目」，收窄到某个项目时下面的视图退回你熟悉的两列形式。 */
+   默认「全部空间」，收窄到某个项目时下面的视图退回你熟悉的两列形式。 */
 function ProjectScopePicker({ projects, value, onChange }: { projects: WorkbenchProject[]; value: string | null; onChange: (project: string | null) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
@@ -613,13 +642,13 @@ function ProjectScopePicker({ projects, value, onChange }: { projects: Workbench
     <div ref={ref} className="hubScopePicker">
       <button type="button" className={value ? "isNarrowed" : ""} aria-expanded={open} aria-label="切换项目范围" onClick={() => setOpen((current) => !current)}>
         <Folder size={13} />
-        <span>{value ?? "全部项目"}</span>
+        <span>{value ?? "全部空间"}</span>
         <ChevronRight size={12} />
       </button>
       {open ? (
         <div className="toolMenu hubScopeMenu" role="menu">
           <button className={`toolMenuItem ${value ? "" : "active"}`} type="button" onClick={() => { onChange(null); setOpen(false); }}>
-            <span>全部项目</span>{value ? null : <Check size={12} />}
+            <span>全部空间</span>{value ? null : <Check size={12} />}
           </button>
           {clients.length ? <p className="hubScopeGroup">项目</p> : null}
           {clients.map((item) => (
@@ -647,13 +676,13 @@ function ContainerCreateMenu({ onCreate }: { onCreate: (type: ProjectType) => vo
   const ref = useDismissableLayer<HTMLDivElement>(open, () => setOpen(false));
   return (
     <div ref={ref} className="hubCreateMenu">
-      <button type="button" aria-label="新建项目或资料空间" title="新建项目或资料空间" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+      <button type="button" aria-label="新建空间或资料空间" title="新建空间或资料空间" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <Plus size={14} />
       </button>
       {open ? (
         <div className="toolMenu" role="menu">
           <button className="toolMenuItem" type="button" onClick={() => { onCreate("client"); setOpen(false); }}>
-            <Folder size={13} /><span>新建项目</span>
+            <Folder size={13} /><span>新建空间</span>
           </button>
           <button className="toolMenuItem" type="button" onClick={() => { onCreate("library"); setOpen(false); }}>
             <Library size={13} /><span>新建资料空间</span>
@@ -722,16 +751,17 @@ function OverviewLane({ title, icon, description, total, files, onOpenAll, onPre
   );
 }
 
-function FileTable({ files, selectable = false, showOwnerScope = false, selectedIds = [], onToggle, onToggleAll, onPreview, onDetail, onDelete }: { files: KnowledgeFile[]; selectable?: boolean; showOwnerScope?: boolean; selectedIds?: string[]; onToggle?: (id: string) => void; onToggleAll?: () => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
+function FileTable({ files, selectable = false, showOwnerScope = false, showSourceTask = false, selectedIds = [], onToggle, onToggleAll, onOpenTask, onPreview, onDetail, onDelete }: { files: KnowledgeFile[]; selectable?: boolean; showOwnerScope?: boolean; /** 产物那档多一列「来源任务」。列数变了，网格要跟着变——见 hub.css 的 hasSourceTask */ showSourceTask?: boolean; selectedIds?: string[]; onToggle?: (id: string) => void; onToggleAll?: () => void; onOpenTask?: (taskId: string) => void; onPreview: (file: KnowledgeFile) => void; onDetail: (file: KnowledgeFile) => void; onDelete: (file: KnowledgeFile) => void }) {
   const allSelected = Boolean(files.length) && files.every((file) => selectedIds.includes(file.id));
   return (
-    <div className={`knowledgeTable ${selectable ? "isSelectable" : ""} ${showOwnerScope ? "hasOwnerScope" : ""}`} role="table">
+    <div className={`knowledgeTable ${selectable ? "isSelectable" : ""} ${showOwnerScope ? "hasOwnerScope" : ""} ${showSourceTask ? "hasSourceTask" : ""}`} role="table">
       <div className="knowledgeTableHeader" role="row">
         <span className="knowledgeHeadName">
           {selectable ? <SelectToggle checked={allSelected} label={allSelected ? "取消全选" : "全选"} onToggle={() => onToggleAll?.()} /> : null}
           文件名称
         </span>
         {showOwnerScope ? <span>所属</span> : null}
+        {showSourceTask ? <span>来源任务</span> : null}
         <span>文件类型</span>
         <span>来源</span>
         <span>更新</span>
@@ -743,6 +773,8 @@ function FileTable({ files, selectable = false, showOwnerScope = false, selected
           file={file}
           selectable={selectable}
           showOwnerScope={showOwnerScope}
+          showSourceTask={showSourceTask}
+          onOpenTask={onOpenTask}
           selected={selectedIds.includes(file.id)}
           onToggle={() => onToggle?.(file.id)}
           onPreview={() => onPreview(file)}
@@ -755,7 +787,7 @@ function FileTable({ files, selectable = false, showOwnerScope = false, selected
   );
 }
 
-function FileRow({ file, selectable, showOwnerScope = false, selected, onToggle, onPreview, onDetail, onDelete }: { file: KnowledgeFile; selectable: boolean; showOwnerScope?: boolean; selected: boolean; onToggle: () => void; onPreview: () => void; onDetail: () => void; onDelete: () => void }) {
+function FileRow({ file, selectable, showOwnerScope = false, showSourceTask = false, onOpenTask, selected, onToggle, onPreview, onDetail, onDelete }: { file: KnowledgeFile; selectable: boolean; showOwnerScope?: boolean; showSourceTask?: boolean; onOpenTask?: (taskId: string) => void; selected: boolean; onToggle: () => void; onPreview: () => void; onDetail: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useDismissableLayer<HTMLElement>(open, () => setOpen(false));
   return (
@@ -787,6 +819,14 @@ function FileRow({ file, selectable, showOwnerScope = false, selected, onToggle,
         ) : null}
       </div>
       {showOwnerScope ? <span className="knowledgeScopeCell">{file.project}</span> : null}
+      {/* 来源任务：能点就是一颗链接钮，回到生成它的那条会话；没有来源（人传的）画一道杠。 */}
+      {showSourceTask ? (
+        <span className="knowledgeSourceTaskCell">
+          {file.sourceTask && file.sourceTaskId && onOpenTask
+            ? <button type="button" onClick={() => onOpenTask(file.sourceTaskId!)}>{file.sourceTask}</button>
+            : file.sourceTask ?? "—"}
+        </span>
+      ) : null}
       <span>{file.kind}</span>
       <span>{sourceOf(file)}</span>
       <span>{file.updated}</span>
