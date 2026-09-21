@@ -52,7 +52,7 @@ function missingFieldHint(items: DmpkField[]) {
   return `还需补充 ${items.length} 项：${labels}${suffix}。可直接在输入框用一句话补充，也可以展开下方参数卡逐项填写。`;
 }
 
-export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, rework, onReworkResolved, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
+export default function DmpkQuotationSession({ projectName, taskTitle, initialRequest, initialAttachments, coworkers, activeCoworkerId, onCoworkerChange, onRunStatusChange, onHandoff, viewerName, viewerRole, rework, onReworkResolved, initialHistory, initialFields, handoffNotice, priorSessionSnapshots, onSessionSnapshotChange, onOpenQuotationManagement }: AgentModuleSessionProps) {
   const openingMessage = "你好，我是 DMPK 报价数字同事。请直接描述检测类型、分子类型、动物种属与数量、试验周期和采血点；我会先识别已知参数，再逐项补齐报价所需信息。";
   /* 回到旧会话时把参数一起还原。不还原的话,右侧面板停在「未开始」,
      而对话里写着「参数已齐全、报价单已生成」——一屏之内自相矛盾。 */
@@ -127,9 +127,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [stage, setStage] = useState<DmpkStage>("idle");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [artifactPreview, setArtifactPreview] = useState<"word" | "excel" | null>(null);
-  /* tab 栏只放三个主面板；处理过程、输入材料、缺失项、计算依据、审核记录
-     一律收在加号菜单里，系统永远不会自己把它们加回来。 */
-  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "artifacts", "rules"]);
+  /* tab 栏只放主面板；处理过程、输入材料、缺失项、报价明细、审核记录
+     一律收在加号菜单里，系统永远不会自己把它们加回来。
+     「报价板块」是 2026-09-21 会议定的右栏正主（参数状态 + 单价），常驻。 */
+  const [visiblePanelIds, setVisiblePanelIds] = useState<string[]>(["parameters", "sections", "artifacts", "rules"]);
   // DMPK 的参数收集是主工作面，右侧默认就展开；肿瘤报告那边是事件驱动的
   const [panelOpen, setPanelOpen] = useState(true);
   /** 面板铺满工作区：只吃对话列，topbar 与左侧任务栏保留 */
@@ -176,7 +177,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const missingFields = useMemo(() => fields.filter((field) => field.required && !field.value), [fields]);
   const recognizedFields = useMemo(() => fields.filter((field) => field.value && fieldStatus[field.id] === "recognized"), [fields, fieldStatus]);
   /* 报价行从字段 + 来源推，每次渲染重算——它是账，不是状态。 */
-  const quoteLines = useMemo(() => buildDmpkQuoteLines(fields, sources), [fields, sources]);
+  /* 退回会话不要账：它的纸面是批注锚着的固定件（见 quoteLineFixtures 末尾）。 */
+  const lineOptions = useMemo(() => ({ fieldsOnly: !rework }), [rework]);
+  const quoteLines = useMemo(() => buildDmpkQuoteLines(fields, sources, lineOptions), [fields, sources, lineOptions]);
   const quoteSummary = useMemo(() => summarizeLines(quoteLines, manualPrices), [quoteLines, manualPrices]);
   /* 有账就把账折成纸；没账（退回会话）不传，纸面用固定件。 */
   const paperTitle = sources.find((source) => source.role === "protocol")?.title ?? taskTitle;
@@ -376,7 +379,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
       setFields(nextFields);
-      suggestPanel("parameters");
+      /* 一句话认出了检测类型，账就有行了，右栏切到「报价板块」（会议定的正主）；
+         什么都没认出来才停在参数收集。传文件那条路不走这儿——文件认出来的要人逐项确认，留在参数收集。 */
+      suggestPanel(buildDmpkQuoteLines(nextFields, sources, lineOptions).length ? "sections" : "parameters");
       setParametersExpanded(Boolean(patch.assayType));
       setActiveGroup(nextGroup);
       setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
@@ -470,7 +475,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
          细节各归各处——事实在「输入材料」，缺项在参数卡，无价目在「报价规则」。 */
       const facts = readable[0].facts.map((fact) => fact.brief).filter(Boolean).join("、");
       /* 账当场就算：条件齐的行先计价，算不出的带原因。一句话只报数，明细在「报价明细」。 */
-      const pricing = summarizeLines(buildDmpkQuoteLines(nextFields, nextSources), manualPrices);
+      const pricing = summarizeLines(buildDmpkQuoteLines(nextFields, nextSources, lineOptions), manualPrices);
       const reply = `已读取「${label}」：${readable[0].title}。${facts ? `读到 ${facts}。` : ""}已识别 ${recognized.length} 项报价参数${confirmCount ? `，其中 ${confirmCount} 项原文有歧义需你确认` : ""}${remaining.length - confirmCount > 0 ? `，${remaining.length - confirmCount} 项原文没写` : ""}${catalogCount ? `；另有 ${catalogCount} 项没有价目，见报价规则` : ""}。${pricing.packages.length ? `${pricingSentence(pricing)}。` : ""}${remaining.length ? "下面列出了还需要补充的参数。你可以直接在输入框用一句话补充，也可以展开参数卡逐项填写。" : "计价关键字段已齐全。"}`;
       setMessages((current) => [...current, {
         id: `agent-${Date.now()}-${current.length}`,
@@ -566,7 +571,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       setFieldStatus((current) => ({ ...current, ...Object.fromEntries(sentTabs.map((tab) => [tab.fieldId, "confirmed" as const])) }));
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id;
-      const pricing = summarizeLines(buildDmpkQuoteLines(nextFields, sources), manualPrices);
+      const pricing = summarizeLines(buildDmpkQuoteLines(nextFields, sources, lineOptions), manualPrices);
       const pricingNote = pricing.packages.length ? `${pricingSentence(pricing)}。` : "";
       setDraftTabs([]);
       setEditingFieldId(null);
@@ -645,7 +650,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const catalogGaps = sources.flatMap((source) => source.pending).filter((item) => item.kind === "catalog").length;
     const latestVersion = quoteVersions[quoteVersions.length - 1]?.label ?? "v1";
     /* 有账就报账：已计价多少、多少没算出来。没账（没传过方案）才退回阶段描述。 */
-    const ledgerLine = quoteSummary.packages.length ? pricingSentence(quoteSummary) + (quoteSummary.manualCount ? `；${quoteSummary.manualCount} 项 ${MANUAL_PRICE_BY} 手动单价` : "") : "";
+    const ledgerLine = quoteSummary.packages.length ? pricingSentence(quoteSummary) + (quoteSummary.manualCount ? `；${quoteSummary.manualCount} 项临时价` : "") : "";
     const pricing = stage === "generated"
       ? `报价单 ${latestVersion} 已生成，Word 与 Excel 金额校验一致${ledgerLine ? `；${ledgerLine}` : ""}`
       : ledgerLine
@@ -758,8 +763,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const setManualPrice = (lineId: string, price: number) => {
     const line = quoteLines.find((item) => item.id === lineId);
     if (!line || !Number.isFinite(price) || price < 0) return;
-    setManualPrices((current) => ({ ...current, [lineId]: { price, by: MANUAL_PRICE_BY, at: "刚刚" } }));
-    appendMessage("agent", `已将「${line.service}」单价改为 ${formatCny(price)} / ${line.unit}（${MANUAL_PRICE_BY} 手动，仅本单${line.catalogPrice !== undefined ? `；价目表 ${formatCny(line.catalogPrice)} 不变` : ""}）。`);
+    /* 2026-09-21 会议：改价是临时调价的唯一路径，权限分级后置——谁改就记谁。 */
+    setManualPrices((current) => ({ ...current, [lineId]: { price, by: viewerName ?? MANUAL_PRICE_BY, at: "刚刚" } }));
+    appendMessage("agent", line.catalogPrice !== undefined
+      ? `已按临时价 ${formatCny(price)} / ${line.unit} 记「${line.service}」（原价 ${formatCny(line.catalogPrice)}），仅本次报价，价目表不动。`
+      : `已按你补的 ${formatCny(price)} / ${line.unit} 记「${line.service}」（系统无价目），仅本次报价。`);
   };
   const clearManualPrice = (lineId: string) => {
     const line = quoteLines.find((item) => item.id === lineId);
@@ -831,6 +839,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setInspectorPanelId(panelId);
   };
 
+  /* 账一有行，右栏就切到「报价板块」——会议定的右栏正主是它。只切第一次，
+     之后人点了别的 tab 就不再抢（suggestPanel 自己会看 tabPinnedByUser）。 */
+  const hadLinesRef = useRef(false);
+  useEffect(() => {
+    const hasLines = quoteLines.length > 0;
+    if (hasLines && !hadLinesRef.current) suggestPanel("sections");
+    hadLinesRef.current = hasLines;
+    // suggestPanel 每次渲染都是新函数，但它只读 ref 和一个 state，不需要进依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteLines.length]);
+
   /** 用户显式要求看某个面板（点对话里的卡片、点 tab），一定切过去 */
   const openInspector = (panelId: DmpkInspectorPanelId) => {
     setPanelOpen(true);
@@ -879,6 +898,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     quoteStale,
     onRegenerate: regenerateQuote,
     onRecheck: recheckSources,
+    /* 完整价目表的门（会议共识 2）。演示级的「审批人 / 负责人才看得见」靠账号切换器：
+       author 看到的是一行灰字说明，不是按钮。 */
+    viewerRole,
+    onOpenCatalog: onOpenQuotationManagement ? () => onOpenQuotationManagement({ business: "dmpk", tab: "prices" }) : undefined,
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,

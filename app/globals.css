@@ -9063,3 +9063,66 @@ button {
 .dmpkQuoteTotal > span { display: grid; gap: 1px; color: var(--body); font-size: 12.5px; font-weight: 600; }
 .dmpkQuoteTotal em { color: var(--muted); font-size: 11px; font-style: normal; font-weight: 400; }
 .dmpkQuoteTotal strong { color: var(--ink); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ═══ 报价板块（2026-09-21 会议定的右栏正主） ═══════════════════════════════
+   按板块分段；一段里一行一项服务，行内一张 2×2 的四要素表：待测物 / 检测方法 / 数量 / 单价。
+   标签在上、值在下——右栏三百多像素宽，四列并排放不下，2×2 每格都够写。
+   单价那格是唯一能动的地方：改价就地展开成「原价 → 新价 → 确认」三样。 */
+.dmpkQuoteSections { gap: 10px; }
+.dmpkSection { display: grid; gap: 4px; }
+.dmpkSection > header {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding: 6px 2px 2px;
+}
+.dmpkSection > header strong { color: var(--ink); font-size: 12.5px; font-weight: 650; }
+.dmpkSection > header span { color: var(--body); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dmpkSection > header em { color: var(--muted); font-style: normal; }
+.dmpkSection ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.dmpkSectionRow {
+  display: grid; gap: 6px;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
+  padding: 8px 10px;
+}
+.dmpkSectionRow:not(.is-priced) { border-style: dashed; background: var(--soft, #f7f8fb); }
+.dmpkSectionRow.isManual { border-color: var(--bioaz-agent-accent-border, #dcddf2); }
+.dmpkSectionRow.isEditing { border-color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkSectionRowName { color: var(--ink); font-size: 12.5px; font-weight: 600; line-height: 1.35; }
+.dmpkSectionFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 0; }
+.dmpkSectionFacts > div { display: grid; gap: 1px; min-width: 0; }
+.dmpkSectionFacts dt { color: var(--muted); font-size: 10.5px; font-weight: 600; letter-spacing: .02em; }
+.dmpkSectionFacts dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 5px; margin: 0; color: var(--body); font-size: 12px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.dmpkSectionFacts dd > i { color: var(--muted); font-style: normal; }
+.dmpkSectionFacts dd > b { color: var(--ink); font-weight: 600; }
+.dmpkSectionFacts dd > small { flex-basis: 100%; color: var(--muted); font-size: 11px; }
+/* 单价那格横跨两列——改价展开时它要放得下一行原价、一个输入框和两颗按钮 */
+.dmpkSectionFacts > .dmpkSectionPrice { grid-column: 1 / -1; }
+.dmpkSectionPrice dd > span:not(.dmpkPriceActions):not(.dmpkPriceEditor) { color: var(--muted); }
+.dmpkTempPrice {
+  border-radius: var(--bioaz-radius-full); background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 0 6px;
+  color: var(--bioaz-agent-accent, #5c60b8); font-size: 10.5px; font-style: normal; font-weight: 600; white-space: nowrap;
+}
+.dmpkPriceActions { display: inline-flex; gap: 8px; margin-left: auto; }
+.dmpkPriceActions button {
+  display: inline-flex; align-items: center; gap: 3px;
+  border: 0; background: transparent; padding: 0;
+  color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.dmpkSectionPrice .dmpkQuoteLineGo { margin-left: auto; }
+/* 改价编辑器：原价一行、新价一行 */
+.dmpkPriceEditor { display: grid; gap: 5px; width: 100%; }
+.dmpkPriceEditor > small { color: var(--muted); font-size: 11px; }
+.dmpkPriceEditor > span { display: flex; align-items: center; gap: 6px; }
+.dmpkPriceEditor input {
+  flex: 1 1 96px; min-width: 0; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface); padding: 4px 8px; color: var(--ink); font: inherit; font-size: 12px;
+}
+.dmpkPriceEditor button {
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
+  padding: 3px 9px; color: var(--body); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.dmpkPriceEditor button.isConfirm { border-color: var(--bioaz-action-primary); background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); }
+.dmpkPriceEditor button:disabled { cursor: default; opacity: .5; }
+.dmpkCatalogGate {
+  display: flex; align-items: center; gap: 5px; margin: 0; padding: 2px 2px 0;
+  color: var(--muted); font-size: 11.5px; line-height: 1.5;
+}

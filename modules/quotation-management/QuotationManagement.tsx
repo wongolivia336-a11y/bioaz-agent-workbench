@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronRight, ChevronUp, LogOut, Settings, Settings2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, ChevronUp, Info, LogOut, Settings, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavTabs, SegmentedControl } from "../../components/ui";
 import BusinessPicker from "./components/BusinessPicker";
@@ -142,6 +142,15 @@ export function QuotationManagement({
                 label="按检测类型筛选"
               />
             </NavTabs>
+
+            {/* 从会话的「查看完整价目表」进来的，先把边界说一遍：这里是全局，本单在会话里改。
+                2026-09-21 会议共识 2 / 3——价目表独立入口，改价（临时）和改底表（全局）是两条路。 */}
+            {tab === "prices" && initialTab ? (
+              <p className="quotationScopeNotice">
+                <Info size={14} aria-hidden="true" />
+                这是全局价目表：在这里改的价会进入下一个发布版本，影响以后所有报价。只想改<b>这一单</b>的单价，回到会话在「报价板块」里点「改价」。
+              </p>
+            ) : null}
 
             {tab === "prices" ? (
               <PriceConfig filter={scenarioFilter} />
