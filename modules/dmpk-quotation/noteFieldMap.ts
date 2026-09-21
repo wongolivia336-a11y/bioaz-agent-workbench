@@ -10,12 +10,17 @@
 
    不硬凑：给对不上的强行找一个字段塞进去，参数面板会出现一个撰写人从没填过、
    也看不懂的值，而那比不更新更糟。 */
+import { initialDmpkFields } from "./fields";
+
 export const noteAnchorToField: Record<string, string> = {
   "p-tk-points": "bloodPoints",
   "p-compounds": "analyteCount",
   "p-tox-animals": "animalsPerGroup",
   "p-tox-groups": "groupCount",
   "p-duration": "cycle",
+  /* 账折成的纸（quotePaperFromLines）上，可编辑参数的锚点就是「f-字段 id」——
+     审核人批在那份纸上的，一条不落全对得上。 */
+  ...Object.fromEntries(initialDmpkFields.map((field) => [`f-${field.id}`, field.id])),
 };
 
 /** 这条批注改的是会话参数，还是报价单本身。 */

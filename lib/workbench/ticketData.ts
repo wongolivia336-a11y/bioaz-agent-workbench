@@ -1,4 +1,5 @@
 import type { MailResourceRef, MailModuleId } from "./mailboxData";
+import type { ReviewBundle } from "./reviewBundle";
 
 /* 工单的数据契约。
    -------------------------------------------------------------------
@@ -55,6 +56,8 @@ export type Ticket = {
   taskId?: string;
   moduleId?: MailModuleId;
   steps: TicketStep[];
+  /** 会话交出来时打的那一包：纸面 + 原文依据 + 变更记录。手动开的单和固定件的单没有。 */
+  review?: ReviewBundle;
 };
 
 export const ticketStatusLabel: Record<TicketStatus, string> = {

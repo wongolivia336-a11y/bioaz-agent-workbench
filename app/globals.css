@@ -9206,3 +9206,26 @@ button {
 .dmpkQuoteGroupHead:hover { background: var(--bioaz-surface-hover, rgba(0, 0, 0, .03)); }
 .dmpkQuoteGroupChevron { color: var(--muted); transition: transform var(--bioaz-motion-standard) ease; }
 .dmpkQuoteGroupHead[aria-expanded="true"] .dmpkQuoteGroupChevron { transform: rotate(180deg); }
+
+/* 审核画布第三张纸：依据与变更（components/workbench-shell/QuoteReviewCanvas.tsx ReviewEvidencePaper） */
+.reviewEvidenceGrid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; }
+.reviewEvidenceGrid h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.reviewEvidenceGrid h3 em { color: var(--muted); font-size: 11.5px; font-style: normal; font-weight: 500; }
+.reviewEvidenceList, .reviewChangeList { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.reviewEvidenceList > li { border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); padding: 8px 10px; background: var(--bioaz-surface); }
+.reviewEvidenceList > li[data-kind="manual"] { border-color: var(--amber); }
+.reviewEvidenceHead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; gap: 8px; }
+.reviewEvidenceHead strong { font-size: 12.5px; color: var(--ink); }
+.reviewEvidenceHead b { font-size: 12.5px; color: var(--ink); font-weight: 600; }
+.reviewEvidenceHead i { color: var(--muted); font-size: 10.5px; font-style: normal; white-space: nowrap; }
+.reviewEvidenceList > li[data-kind="document"] .reviewEvidenceHead i { color: var(--bioaz-agent-accent, #5c60b8); }
+.reviewEvidenceList > li[data-kind="manual"] .reviewEvidenceHead i { color: var(--amber); }
+.reviewEvidenceList > li > p { margin: 5px 0 0; color: var(--body); font-size: 11.5px; line-height: 1.5; }
+.reviewEvidenceList > li > p > span { display: block; color: var(--muted); font-size: 10.5px; }
+.reviewChangeList > li { display: grid; gap: 2px; border-left: 3px solid var(--line); padding: 2px 0 2px 10px; }
+.reviewChangeList > li[data-kind="price"], .reviewChangeList > li[data-kind="adjustment"] { border-left-color: var(--amber); }
+.reviewChangeList > li[data-kind="package"] { border-left-color: var(--bioaz-agent-accent, #5c60b8); }
+.reviewChangeList > li strong { font-size: 12.5px; color: var(--ink); }
+.reviewChangeList > li small { color: var(--body); font-size: 11.5px; }
+.reviewChangeList > li span { color: var(--muted); font-size: 10.5px; }
+@media (max-width: 1100px) { .reviewEvidenceGrid { grid-template-columns: 1fr; } }

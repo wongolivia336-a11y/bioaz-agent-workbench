@@ -14,6 +14,7 @@ import type { ParamSource } from "../../components/params";
 import { formatCny, impactSentence, MANUAL_PRICE_BY, pricingSentence, quotePackageLabels, summarizeLines, type ManualPrice, type QuoteAdjustments } from "../../lib/workbench/quoteLines";
 import { quotePaperFromLines } from "../../lib/workbench/quotePaperFromLines";
 import { fullQuotePermissions } from "../../lib/workbench/permissions";
+import type { ReviewBundle, ReviewChange, ReviewEvidence } from "../../lib/workbench/reviewBundle";
 import type { AgentModuleSessionProps } from "../types";
 import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/workbench/quoteData";
 import { catalogHitsFor } from "./catalogHits";
@@ -878,6 +879,48 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   };
 
   /**
+   * 交出去时打的那一包（P0 第五层：审核人看同一份草稿的原文依据 + 参数变更 + 计算明细）。
+   * 全从眼前的状态推，不另存：字段上的 source 就是原文依据，manualPrices / adjustments /
+   * extraPackages / quoteVersions 就是这一版的变更。
+   */
+  const buildReviewBundle = (): ReviewBundle => {
+    const by = viewerName ?? MANUAL_PRICE_BY;
+    const evidence: ReviewEvidence[] = fields
+      .filter((field) => field.value || field.notApplicable)
+      .map((field) => {
+        const source = field.source;
+        if (field.notApplicable) return { id: field.id, label: field.label, value: "不适用", kind: "derived" as const };
+        if (source?.kind === "document") return { id: field.id, label: field.label, value: field.value, kind: "document" as const, sourceLabel: source.sourceLabel, anchor: source.anchor, quote: source.quote, unconfirmed: fieldStatus[field.id] === "recognized" };
+        if (source?.kind === "manual" && source.original) return { id: field.id, label: field.label, value: field.value, kind: "manual" as const, original: source.original };
+        return { id: field.id, label: field.label, value: field.value, kind: "sentence" as const };
+      });
+    const changes: ReviewChange[] = [
+      ...Object.entries(manualPrices).map(([lineId, manual]) => {
+        const line = quoteLines.find((item) => item.id === lineId);
+        return {
+          id: `price-${lineId}`, at: manual.at, by: manual.by, kind: "price" as const,
+          what: line?.status === "no-catalog" ? `补价「${line.service}」` : `改价「${line?.service ?? lineId}」`,
+          detail: line?.catalogPrice !== undefined ? `价目 ${formatCny(line.catalogPrice)} → 本单 ${formatCny(manual.price)} / ${line.unit}` : `系统无价目，本单按 ${formatCny(manual.price)} / ${line?.unit ?? "项"}`,
+        };
+      }),
+      ...(adjustments.discount !== undefined ? [{ id: "adj-discount", at: "刚刚", by, kind: "adjustment" as const, what: "本单折扣", detail: `${adjustments.discount} 折，作用于合计` }] : []),
+      ...(adjustments.otherFees !== undefined ? [{ id: "adj-other", at: "刚刚", by, kind: "adjustment" as const, what: "其他费用", detail: formatCny(adjustments.otherFees) }] : []),
+      ...extraPackages.map((pkg) => ({ id: `pkg-${pkg}`, at: "刚刚", by, kind: "package" as const, what: `搭上「${quotePackageLabels[pkg]}」板块`, detail: "检测类型之外再加的工作包" })),
+      ...fields.filter((field) => field.source?.kind === "manual" && field.source.original).map((field) => ({
+        id: `field-${field.id}`, at: "刚刚", by, kind: "field" as const,
+        what: `改「${field.label}」`, detail: `原文为 ${field.source!.kind === "manual" ? field.source!.original!.value : ""}，已改为 ${field.value}`,
+      })),
+      ...quoteVersions.map((version) => ({ id: `ver-${version.id}`, at: version.at, by, kind: "version" as const, what: `${version.label} · ${version.origin}` })),
+    ];
+    return {
+      paper: quotePaper,
+      sources: sources.filter((source) => source.role !== "unknown").map((source) => ({ label: source.sourceLabel, title: source.title })),
+      evidence,
+      changes,
+    };
+  };
+
+  /**
    * 生成 / 重出。同一条路：第一次叫「首次生成」，改过参数或单价之后再来叫「重出」。
    * 版本记录上写清楚是哪种——返工场景里「出过第二版」本身就是要给人看的信息，
    * 改单价重出也一样。
@@ -1162,7 +1205,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} handoffNote={handoffNote} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
-        ] }); }} onConfirmCurrentPrice={() => {
+        ], review: buildReviewBundle() }); }} onConfirmCurrentPrice={() => {
           /* 对话里改报告费，和明细里改单价是**同一件事**，写进同一张 manualPrices——
              有账的时候走那条路，账上的报告行跟着变；没账（没传过方案）才只说一句话。 */
           const nextPrice = editProposal?.kind === "current-price" ? editProposal.nextPrice : 2500;

@@ -440,6 +440,7 @@ export default function WorkbenchShell() {
       taskId: activeTaskId ?? undefined,
       moduleId: handoff.kind,
       steps: [{ id: `s-${Date.now()}`, at: now, actor: account.name, actorRole: account.roleLabel, action: `交接给${handoff.to}`, note: handoff.note || undefined }],
+      review: handoff.review,
     }, ...items]);
   };
 

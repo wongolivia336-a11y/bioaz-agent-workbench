@@ -6,6 +6,7 @@ import { money, quoteCategories } from "./QuotePaper";
 import { quoteItems, quoteMeta, quoteParams, quoteSubtotals, type QuoteNote } from "../../lib/workbench/quoteData";
 import type { MailResourceRef } from "../../lib/workbench/mailboxData";
 import type { Ticket } from "../../lib/workbench/ticketData";
+import type { QuotePaperData } from "../../lib/workbench/quotePaperFromLines";
 
 /* 随行产物的预览与下载。
    -------------------------------------------------------------------
@@ -70,10 +71,12 @@ export function downloadTicketFile(file: MailResourceRef, view: TicketFileView) 
   URL.revokeObjectURL(url);
 }
 
-export function TicketFilePreview({ file, view, notes = [], onClose }: {
+export function TicketFilePreview({ file, view, notes = [], paper, onClose }: {
   file: MailResourceRef;
   view: TicketFileView;
   notes?: QuoteNote[];
+  /** 工单带的那份纸（会话交出来的账）。没有就是固定件——预览和画布看的必须是同一张。 */
+  paper?: QuotePaperData;
   onClose: () => void;
 }) {
   return (
@@ -82,6 +85,7 @@ export function TicketFilePreview({ file, view, notes = [], onClose }: {
       description={file.meta}
       initialForm={view === "quote-sheet" ? "sheet" : "doc"}
       notes={notes}
+      paper={paper}
       onClose={onClose}
       footer={
         <button className="reworkAction" type="button" onClick={() => downloadTicketFile(file, view)}>
