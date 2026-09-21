@@ -70,6 +70,12 @@ export type QuoteLine = {
   reason?: string;
   /** 这一行等哪个字段。缺参数 / 待确认的行用来把人带到那一格。 */
   dependsOn?: string;
+  /**
+   * 数量落在哪几组、各多少（组 id → 数量）。P0 的输出口径是「按组费用明细」——
+   * 右栏按板块看，明细面板能翻成按组看，同一份账两种切法。
+   * 没有它的行是整单项（方法开发、报告），或者不该拆到组的（少于 30 按 30 是按化合物计的）。
+   */
+  groupShare?: Record<string, number>;
 };
 
 /** 谁改的单价。甲方写的是「SD」，指谁没说清，收成一个常量，确认后改一处。
@@ -188,6 +194,47 @@ export function impactSentence(before: QuoteSummary, after: QuoteSummary, manual
   if (!parts.length && before.total === after.total) return "";
   const totals = before.total !== after.total ? `合计 ${formatCny(before.total)} → ${formatCny(after.total)}` : "合计不变";
   return `影响 ${parts.join("、") || "计价状态"}；${totals}。`;
+}
+
+/**
+ * 同一份账按组切（P0 输出口径：按组费用明细）。
+ * 每组列它分到的行：数量是这一组的份额，金额 = 份额 × 单价（临时价照样压过价目价）。
+ * 没标组的行归「整单项」。各组小计 + 整单项 = 按板块看的合计，两种切法对得上。
+ */
+export type QuoteGroupShare = { line: QuoteLine; qty: number; amount?: number };
+export type QuoteGroupBreakdown = {
+  groups: Array<{ id: string; label: string; shares: QuoteGroupShare[]; subtotal: number; unpriced: number }>;
+  whole: { shares: QuoteGroupShare[]; subtotal: number; unpriced: number };
+};
+
+export function groupBreakdown(lines: QuoteLine[], manualPrices: Record<string, ManualPrice> = {}, labels: Record<string, string> = {}): QuoteGroupBreakdown {
+  const shareOf = (line: QuoteLine, qty: number): QuoteGroupShare => {
+    const manual = manualPrices[line.id];
+    const unit = lineUnitPrice(line, manual);
+    const priced = effectiveStatus(line, manual) === "priced" && unit !== undefined;
+    return { line, qty, amount: priced ? round2(qty * unit) : undefined };
+  };
+  const byGroup = new Map<string, QuoteGroupShare[]>();
+  const whole: QuoteGroupShare[] = [];
+  for (const line of lines) {
+    if (!line.groupShare) { whole.push(shareOf(line, line.qty)); continue; }
+    for (const [groupId, qty] of Object.entries(line.groupShare)) {
+      if (!byGroup.has(groupId)) byGroup.set(groupId, []);
+      byGroup.get(groupId)!.push(shareOf(line, qty));
+    }
+  }
+  const sum = (shares: QuoteGroupShare[]) => round2(shares.reduce((total, share) => total + (share.amount ?? 0), 0));
+  const unpricedIn = (shares: QuoteGroupShare[]) => shares.filter((share) => share.amount === undefined).length;
+  /* 组的顺序：有标签表就按表的顺序，没有就按出现顺序 */
+  const order = Object.keys(labels);
+  const ids = Array.from(byGroup.keys()).sort((a, b) => {
+    const ia = order.indexOf(a); const ib = order.indexOf(b);
+    return (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) - (ib < 0 ? Number.MAX_SAFE_INTEGER : ib);
+  });
+  return {
+    groups: ids.map((id) => ({ id, label: labels[id] ?? id, shares: byGroup.get(id)!, subtotal: sum(byGroup.get(id)!), unpriced: unpricedIn(byGroup.get(id)!) })),
+    whole: { shares: whole, subtotal: sum(whole), unpriced: unpricedIn(whole) },
+  };
 }
 
 /** 对话里那一句：「已计价 20 项 ¥612,340；5 项未计价（待确认 2 · 无价目 3）」。 */

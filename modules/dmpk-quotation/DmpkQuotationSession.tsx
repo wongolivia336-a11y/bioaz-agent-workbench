@@ -19,7 +19,7 @@ import { quoteAnchorLabel, quoteCurrentValue, type QuoteNote } from "../../lib/w
 import { catalogHitsFor } from "./catalogHits";
 import { noteAnchorToField } from "./noteFieldMap";
 import { applyPendingToFields, dmpkSourceParsers } from "./parseFixtures";
-import { buildDmpkQuoteLines, type ExtraPackage } from "./quoteLineFixtures";
+import { buildDmpkQuoteLines, dmpkGroupLabels, type ExtraPackage } from "./quoteLineFixtures";
 import { DmpkPackageBlocks } from "./packageBlocks";
 import {
   applyDmpkApplicability,
@@ -1008,6 +1008,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     fieldStatus,
     quoteLines,
     manualPrices,
+    groupLabels: dmpkGroupLabels(fields, sources),
     onSetManualPrice: setManualPrice,
     onClearManualPrice: clearManualPrice,
     adjustments,

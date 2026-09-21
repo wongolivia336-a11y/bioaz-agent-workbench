@@ -20,7 +20,7 @@ import {
   MessageSquareText,
   SlidersHorizontal,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ParameterLedger, type ParamField } from "../../components/params";
 import { fullQuotePermissions, type QuotePermissions } from "../../lib/workbench/permissions";
 import { extractionDimLabels, extractionDimMarks, sourceKindLabels, sourceRoleLabels, type ParseResult, type ParsedFact } from "../../lib/workbench/sources";
@@ -28,6 +28,7 @@ import {
   adjustedTotal,
   effectiveStatus,
   formatCny,
+  groupBreakdown,
   hasAdjustments,
   lineAmount,
   lineUnitPrice,
@@ -89,6 +90,8 @@ export type DmpkInspectorContext = {
      「报价明细」按工作包列行、小计、总额，「费用明细」弹窗读同一份。 */
   quoteLines?: QuoteLine[];
   manualPrices?: Record<string, ManualPrice>;
+  /** 按组明细的组标签（组 id → 「2 组 · 3 mg/kg · 核心 2 只」）。没有就按 id 显示。 */
+  groupLabels?: Record<string, string>;
   onSetManualPrice?: (lineId: string, price: number) => void;
   onClearManualPrice?: (lineId: string) => void;
   /* 人工调整项：折扣、其他费用。作用在合计上，只在本单（P0 第五层）。 */
@@ -744,12 +747,89 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
  * 「改单价」展开一个输入，回车落下。改过的行并排显示「SD 手动 ¥X」和划掉的
  * 价目价——两边都在，人才知道自己改的是哪一档、改了多少。价目表本身一个字不动。
  */
+/** 「按板块 / 按组」两颗小胶囊。 */
+function QuoteCutSwitch({ cut, onChange }: { cut: "package" | "group"; onChange: (cut: "package" | "group") => void }) {
+  return (
+    <div className="dmpkQuoteCut" role="tablist" aria-label="明细切法">
+      {(["package", "group"] as const).map((value) => (
+        <button type="button" role="tab" key={value} aria-selected={cut === value} onClick={() => onChange(value)}>{value === "package" ? "按板块" : "按组"}</button>
+      ))}
+    </div>
+  );
+}
+
 function QuoteLinesPanel({ context }: { context: DmpkInspectorContext }) {
   const lines = context.quoteLines ?? [];
   const manualPrices = context.manualPrices ?? {};
   const summary = summarizeLines(lines, manualPrices);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
   const [draftPrice, setDraftPrice] = useState("");
+  /* 同一份账两种切法：按板块（右栏那样）/ 按组（P0 的输出口径：按组费用明细）。 */
+  const [cut, setCut] = useState<"package" | "group">("package");
+  /* null = 还没点过，开第一个；"" = 全收起 */
+  const [openGroupId, setOpenGroupId] = useState<string | null>(null);
+  const breakdown = useMemo(() => groupBreakdown(lines, manualPrices, context.groupLabels), [lines, manualPrices, context.groupLabels]);
+  const canCutByGroup = breakdown.groups.length > 0;
+
+  if (cut === "group" && canCutByGroup) {
+    return (
+      <div className="dmpkInspectorList dmpkQuoteLines">
+        <PanelIntro
+          title={`已计价 ${summary.pricedCount} 项 · ${formatCny(summary.total)}`}
+          meta={`${breakdown.groups.length} 个组 · 各组小计 + 整单项 = 合计`}
+        />
+        <QuoteCutSwitch cut={cut} onChange={setCut} />
+        {/* 七个组每组二十来行，全铺开是一堵墙：段头能折，默认只开第一个。 */}
+        {breakdown.groups.map((group) => {
+          const open = (openGroupId ?? breakdown.groups[0]?.id) === group.id;
+          return (
+            <section className="dmpkQuotePackage dmpkQuoteGroup" key={group.id}>
+              <header className="dmpkQuoteGroupHead" role="button" tabIndex={0} aria-expanded={open}
+                onClick={() => setOpenGroupId(open ? "" : group.id)}
+                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setOpenGroupId(open ? "" : group.id); } }}>
+                <strong>{group.label}</strong>
+                <span>{group.unpriced ? <em>{group.unpriced} 项未计价 · </em> : null}小计 {formatCny(group.subtotal)}</span>
+                <ChevronDown size={13} className="dmpkQuoteGroupChevron" aria-hidden="true" />
+              </header>
+              {open ? (
+                <ul>
+                  {group.shares.map(({ line, qty, amount }) => (
+                    <li key={line.id} className="dmpkQuoteGroupShare">
+                      <span>{line.service}</span>
+                      <small>{qty.toLocaleString("zh-CN")} {line.unit}</small>
+                      {amount !== undefined ? <b>{formatCny(amount)}</b> : <i className={`dmpkQuoteLineStatus is-${effectiveStatus(line, manualPrices[line.id])}`}>{quoteLineStatusLabels[effectiveStatus(line, manualPrices[line.id])]}</i>}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          );
+        })}
+        {breakdown.whole.shares.length ? (
+          <section className="dmpkQuotePackage dmpkQuoteGroup">
+            <header>
+              <strong>整单项</strong>
+              <span>{breakdown.whole.unpriced ? <em>{breakdown.whole.unpriced} 项未计价 · </em> : null}小计 {formatCny(breakdown.whole.subtotal)}</span>
+            </header>
+            {/* 方法开发、报告这类不拆到组；触发「少于 30 按 30」的样品检测也在这儿——那条规则按化合物计 */}
+            <ul>
+              {breakdown.whole.shares.map(({ line, qty, amount }) => (
+                <li key={line.id} className="dmpkQuoteGroupShare">
+                  <span>{line.service}</span>
+                  <small>{qty.toLocaleString("zh-CN")} {line.unit}</small>
+                  {amount !== undefined ? <b>{formatCny(amount)}</b> : <i className={`dmpkQuoteLineStatus is-${effectiveStatus(line, manualPrices[line.id])}`}>{quoteLineStatusLabels[effectiveStatus(line, manualPrices[line.id])]}</i>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        <footer className="dmpkQuoteTotal">
+          <span>已计价合计{summary.manualCount ? <em>含 {summary.manualCount} 项临时价</em> : null}</span>
+          <strong>{formatCny(summary.total)}</strong>
+        </footer>
+      </div>
+    );
+  }
 
   const beginEdit = (line: QuoteLine) => {
     setEditingLineId(line.id);
@@ -767,6 +847,7 @@ function QuoteLinesPanel({ context }: { context: DmpkInspectorContext }) {
         title={`已计价 ${summary.pricedCount} 项 · ${formatCny(summary.total)}`}
         meta={summary.unpricedCount ? `${summary.unpricedCount} 项未计价；总额不含这些行` : "全部行已计价"}
       />
+      {canCutByGroup ? <QuoteCutSwitch cut={cut} onChange={setCut} /> : null}
       {summary.packages.map((pkg) => (
         <section className="dmpkQuotePackage" key={pkg.id}>
           <header>

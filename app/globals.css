@@ -9193,3 +9193,16 @@ button {
 .dmpkBlockAdd > button { border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); background: transparent; padding: 3px 11px; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; }
 .dmpkBlockAdd > button:hover { border-style: solid; background: var(--soft, #f7f8fb); }
 .dmpkBlockDims dd small { display: block; color: var(--muted); font-size: 11.5px; }
+
+/* 报价明细：按板块 / 按组两颗胶囊，和按组那种一行三格的份额行 */
+.dmpkQuoteCut { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--soft); justify-self: start; }
+.dmpkQuoteCut > button { border: 0; border-radius: var(--bioaz-radius-full); background: transparent; padding: 3px 11px; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+.dmpkQuoteCut > button[aria-selected="true"] { background: var(--bioaz-surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); }
+.dmpkQuoteGroupShare { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; gap: 8px; padding: 5px 8px; border-radius: var(--bioaz-radius-tool); background: var(--soft); font-size: 12px; }
+.dmpkQuoteGroupShare > span { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmpkQuoteGroupShare > small { color: var(--muted); font-size: 11.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dmpkQuoteGroupShare > b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dmpkQuoteGroupHead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; cursor: pointer; border-radius: var(--bioaz-radius-tool); }
+.dmpkQuoteGroupHead:hover { background: var(--bioaz-surface-hover, rgba(0, 0, 0, .03)); }
+.dmpkQuoteGroupChevron { color: var(--muted); transition: transform var(--bioaz-motion-standard) ease; }
+.dmpkQuoteGroupHead[aria-expanded="true"] .dmpkQuoteGroupChevron { transform: rotate(180deg); }

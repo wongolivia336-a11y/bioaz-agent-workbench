@@ -37,6 +37,24 @@ const platformPrice: Record<string, { methodDev: number; methodDevId: string; pe
 
 const PLATFORM_ANALYTES = "dpADC · spADC-IMQ · spADC-MMAF · Total mAb";
 
+/* BB-001 的七个组（表 2）。按组明细用它排顺序、写标签；行上的 groupShare 用 id 指组。 */
+export const protocolGroupLabels: Record<string, string> = {
+  G1: "1 组 · 对照载体 · 核心 2 只",
+  G2: "2 组 · 3 mg/kg · 核心 2 只",
+  G3: "3 组 · 10 mg/kg · 核心 2 只",
+  G4: "4 组 · 30 mg/kg · 核心 2 只",
+  "G2-S": "2 组卫星 · 3 mg/kg · 1 只",
+  "G3-S": "3 组卫星 · 10 mg/kg · 1 只",
+  "G4-S": "4 组卫星 · 30 mg/kg · 1 只",
+};
+const CORE_GROUPS = ["G1", "G2", "G3", "G4"];
+const SATELLITE_GROUPS = ["G2-S", "G3-S", "G4-S"];
+/** 每个核心组 core 份、每个卫星组 sat 份（不传就只有核心组）。 */
+const share = (core: number, sat?: number, satellites: string[] = SATELLITE_GROUPS): Record<string, number> => ({
+  ...Object.fromEntries(CORE_GROUPS.map((group) => [group, core])),
+  ...(sat === undefined ? {} : Object.fromEntries(satellites.map((group) => [group, sat]))),
+});
+
 function buildProtocolLines(fields: DmpkField[]): QuoteLine[] {
   const value = (id: string) => fields.find((field) => field.id === id)?.value ?? "";
   const method = value("method");
@@ -44,48 +62,48 @@ function buildProtocolLines(fields: DmpkField[]): QuoteLine[] {
   const language = value("language");
   const region = value("region");
 
-  const pendingPlatform = (id: string, service: string, qty: number, unit: string, formula: string, pkg: QuoteLine["package"], perSample: boolean): QuoteLine =>
+  const pendingPlatform = (id: string, service: string, qty: number, unit: string, formula: string, pkg: QuoteLine["package"], perSample: boolean, groupShare?: Record<string, number>): QuoteLine =>
     platform
-      ? { id, package: pkg, scope: PLATFORM_ANALYTES, service: `${service} · ${platform.label}`, analyte: PLATFORM_ANALYTES, method: platform.label, qty, unit, formula, catalogPrice: perSample ? platform.perSample : platform.methodDev, catalogId: perSample ? "bio-plasma" : platform.methodDevId, status: "priced" }
-      : { id, package: pkg, scope: PLATFORM_ANALYTES, service, analyte: PLATFORM_ANALYTES, method: "待确认（ELISA / LC-MS/MS）", qty, unit, formula, status: "pending-confirm", reason: "分析方法待确认（ELISA 或 LC-MS/MS），两档单价不同", dependsOn: "method" };
+      ? { id, package: pkg, scope: PLATFORM_ANALYTES, service: `${service} · ${platform.label}`, analyte: PLATFORM_ANALYTES, method: platform.label, qty, unit, formula, catalogPrice: perSample ? platform.perSample : platform.methodDev, catalogId: perSample ? "bio-plasma" : platform.methodDevId, groupShare, status: "priced" }
+      : { id, package: pkg, scope: PLATFORM_ANALYTES, service, analyte: PLATFORM_ANALYTES, method: "待确认（ELISA / LC-MS/MS）", qty, unit, formula, groupShare, status: "pending-confirm", reason: "分析方法待确认（ELISA 或 LC-MS/MS），两档单价不同", dependsOn: "method" };
 
   return [
     /* ── PK / TK ── */
-    { id: "tk-sampling", package: "pk-tk", scope: "1–4 组核心", service: "TK 毒代采血（血清）", analyte: "血清 · 6 个分析物", qty: 128, unit: "份", formula: "2 只 × 16 点 × 4 组", catalogPrice: 130, status: "priced" },
-    { id: "pk-sampling", package: "pk-tk", scope: "2–4 组卫星", service: "单次给药 PK 采血（血清）", analyte: "血清 · 6 个分析物", qty: 33, unit: "份", formula: "1 只 × 11 点 × 3 组", catalogPrice: 130, status: "priced" },
+    { id: "tk-sampling", package: "pk-tk", scope: "1–4 组核心", service: "TK 毒代采血（血清）", analyte: "血清 · 6 个分析物", qty: 128, unit: "份", formula: "2 只 × 16 点 × 4 组", catalogPrice: 130, groupShare: share(32), status: "priced" },
+    { id: "pk-sampling", package: "pk-tk", scope: "2–4 组卫星", service: "单次给药 PK 采血（血清）", analyte: "血清 · 6 个分析物", qty: 33, unit: "份", formula: "1 只 × 11 点 × 3 组", catalogPrice: 130, groupShare: Object.fromEntries(SATELLITE_GROUPS.map((group) => [group, 11])), status: "priced" },
     { id: "md-imq", package: "pk-tk", scope: "游离 IMQ", service: "方法开发 / 资格确认 · LC-MS/MS", analyte: "游离 IMQ", method: "LC-MS/MS", qty: 1, unit: "项", catalogPrice: 6000, catalogId: "bio-lcms", status: "priced" },
     { id: "md-mmaf", package: "pk-tk", scope: "游离 MMAF", service: "方法开发 / 资格确认 · LC-MS/MS", analyte: "游离 MMAF", method: "LC-MS/MS", qty: 1, unit: "项", catalogPrice: 6000, catalogId: "bio-lcms", status: "priced" },
     pendingPlatform("md-platform", "方法开发 / 资格确认", 4, "项", "4 个分析物各 1 项", "pk-tk", false),
-    { id: "sa-imq", package: "pk-tk", scope: "游离 IMQ", service: "PK/TK 样品检测 · LC-MS/MS", analyte: "游离 IMQ", method: "LC-MS/MS", qty: SERUM_SAMPLES, unit: "份", formula: "8 只 × 16 点 + 3 只 × 11 点", catalogPrice: 180, catalogId: "bio-plasma", status: "priced" },
-    { id: "sa-mmaf", package: "pk-tk", scope: "游离 MMAF", service: "PK/TK 样品检测 · LC-MS/MS", analyte: "游离 MMAF", method: "LC-MS/MS", qty: SERUM_SAMPLES, unit: "份", formula: "8 只 × 16 点 + 3 只 × 11 点", catalogPrice: 180, catalogId: "bio-plasma", status: "priced" },
-    pendingPlatform("sa-platform", "PK/TK 样品检测", SERUM_SAMPLES * 4, "份", "161 份 × 4 个分析物", "pk-tk", true),
+    { id: "sa-imq", package: "pk-tk", scope: "游离 IMQ", service: "PK/TK 样品检测 · LC-MS/MS", analyte: "游离 IMQ", method: "LC-MS/MS", qty: SERUM_SAMPLES, unit: "份", formula: "8 只 × 16 点 + 3 只 × 11 点", catalogPrice: 180, catalogId: "bio-plasma", groupShare: share(32, 11), status: "priced" },
+    { id: "sa-mmaf", package: "pk-tk", scope: "游离 MMAF", service: "PK/TK 样品检测 · LC-MS/MS", analyte: "游离 MMAF", method: "LC-MS/MS", qty: SERUM_SAMPLES, unit: "份", formula: "8 只 × 16 点 + 3 只 × 11 点", catalogPrice: 180, catalogId: "bio-plasma", groupShare: share(32, 11), status: "priced" },
+    pendingPlatform("sa-platform", "PK/TK 样品检测", SERUM_SAMPLES * 4, "份", "161 份 × 4 个分析物", "pk-tk", true, share(32 * 4, 11 * 4)),
 
     /* ── TOX ── */
-    { id: "clin-chem", package: "tox", scope: "1–4 组核心", service: "血清生化检查", analyte: "血清 · 生化指标", method: "生化分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 455, status: "priced" },
-    { id: "hematology", package: "tox", scope: "1–4 组核心", service: "血液学检查（含网织红细胞）", analyte: "全血 · 血液学指标", method: "血球分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 325, status: "priced" },
-    { id: "coagulation", package: "tox", scope: "1–4 组核心", service: "凝血检查", analyte: "血浆 · 凝血指标", method: "凝血分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 390, status: "priced" },
-    { id: "urinalysis", package: "tox", scope: "1–4 组核心", service: "尿液检查", analyte: "尿液", method: "尿液分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 95, status: "priced" },
-    { id: "cyto-sampling", package: "tox", scope: "1–4 组核心 + 2 组卫星", service: "细胞因子采血（血清）", analyte: "血清 · 细胞因子", qty: 175, unit: "份", formula: "2 只 × 21 点 × 4 组 + 1 只 × 7 点", catalogPrice: 130, status: "priced" },
-    { id: "cyto-assay", package: "tox", scope: "1–4 组核心 + 2 组卫星", service: "细胞因子检测（10-plex）", analyte: "细胞因子 10-plex", method: "多重免疫分析（平台待定）", qty: 175, unit: "份", formula: "复用细胞因子采血", status: "no-catalog", reason: "当前没有精确覆盖 10-plex 细胞因子检测的价目" },
-    { id: "immuno-sampling", package: "tox", scope: "1–4 组核心", service: "免疫分型全血采集", analyte: "全血 · 免疫分型", qty: 32, unit: "份", formula: "2 只 × 4 点 × 4 组（声明 16 份 / 组待核）", status: "no-catalog", reason: "临床病理或免疫检测采血未发布适用公式，不能套 PK / TK / ADA 价" },
-    { id: "flow", package: "tox", scope: "1–4 组核心", service: "流式检测（Panel A / B）", analyte: "免疫分型 Panel A / B", method: "流式细胞术", qty: 32, unit: "份", formula: "复用免疫分型全血", status: "no-catalog", reason: "当前没有精确覆盖免疫分型 Panel A / B 的价目" },
-    { id: "dosing", package: "tox", scope: "全部 7 组", service: "给药 · IV infusion 约 60 分钟", qty: 27, unit: "次", formula: "8 只 × 3 次 + 3 只 × 1 次", catalogPrice: 130, status: "priced" },
-    { id: "in-life", package: "tox", scope: "全部 7 组 · 11 只", service: "濒死与临床观察、体重、摄食", qty: 308, unit: "只·天", formula: "11 只 × 28 天", catalogPrice: 15, catalogId: "animal-housing", status: "priced" },
-    { id: "ecg", package: "tox", scope: "1–4 组核心", service: "心电图", method: "ECG", qty: 48, unit: "次", formula: "8 只 × 6 次", catalogPrice: 65, status: "priced" },
-    { id: "ophthalmology", package: "tox", scope: "全部 7 组 · 11 只", service: "眼科检查（裂隙灯 + 荧光素染色）", method: "裂隙灯 + 荧光素染色", qty: 22, unit: "次", formula: "11 只 × 2 次", catalogPrice: 45, status: "priced" },
-    { id: "formulation", package: "tox", scope: "全部 7 组", service: "制剂配制（0 / 3 / 10 / 30 mg/kg）", qty: 7, unit: "组", catalogPrice: 700, status: "priced" },
-    { id: "necropsy", package: "tox", scope: "全部 7 组 · 11 只", service: "终末解剖、脏器称重、标准组织固定", qty: 11, unit: "只", catalogPrice: 800, status: "priced" },
+    { id: "clin-chem", package: "tox", scope: "1–4 组核心", service: "血清生化检查", analyte: "血清 · 生化指标", method: "生化分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 455, groupShare: share(12), status: "priced" },
+    { id: "hematology", package: "tox", scope: "1–4 组核心", service: "血液学检查（含网织红细胞）", analyte: "全血 · 血液学指标", method: "血球分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 325, groupShare: share(12), status: "priced" },
+    { id: "coagulation", package: "tox", scope: "1–4 组核心", service: "凝血检查", analyte: "血浆 · 凝血指标", method: "凝血分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 390, groupShare: share(12), status: "priced" },
+    { id: "urinalysis", package: "tox", scope: "1–4 组核心", service: "尿液检查", analyte: "尿液", method: "尿液分析仪", qty: 48, unit: "份", formula: "2 只 × 6 点 × 4 组", catalogPrice: 95, groupShare: share(12), status: "priced" },
+    { id: "cyto-sampling", package: "tox", scope: "1–4 组核心 + 2 组卫星", service: "细胞因子采血（血清）", analyte: "血清 · 细胞因子", qty: 175, unit: "份", formula: "2 只 × 21 点 × 4 组 + 1 只 × 7 点", catalogPrice: 130, groupShare: share(42, 7, ["G2-S"]), status: "priced" },
+    { id: "cyto-assay", package: "tox", scope: "1–4 组核心 + 2 组卫星", service: "细胞因子检测（10-plex）", analyte: "细胞因子 10-plex", method: "多重免疫分析（平台待定）", qty: 175, unit: "份", formula: "复用细胞因子采血", groupShare: share(42, 7, ["G2-S"]), status: "no-catalog", reason: "当前没有精确覆盖 10-plex 细胞因子检测的价目" },
+    { id: "immuno-sampling", package: "tox", scope: "1–4 组核心", service: "免疫分型全血采集", analyte: "全血 · 免疫分型", qty: 32, unit: "份", formula: "2 只 × 4 点 × 4 组（声明 16 份 / 组待核）", groupShare: share(8), status: "no-catalog", reason: "临床病理或免疫检测采血未发布适用公式，不能套 PK / TK / ADA 价" },
+    { id: "flow", package: "tox", scope: "1–4 组核心", service: "流式检测（Panel A / B）", analyte: "免疫分型 Panel A / B", method: "流式细胞术", qty: 32, unit: "份", formula: "复用免疫分型全血", groupShare: share(8), status: "no-catalog", reason: "当前没有精确覆盖免疫分型 Panel A / B 的价目" },
+    { id: "dosing", package: "tox", scope: "全部 7 组", service: "给药 · IV infusion 约 60 分钟", qty: 27, unit: "次", formula: "8 只 × 3 次 + 3 只 × 1 次", catalogPrice: 130, groupShare: share(6, 1), status: "priced" },
+    { id: "in-life", package: "tox", scope: "全部 7 组 · 11 只", service: "濒死与临床观察、体重、摄食", qty: 308, unit: "只·天", formula: "11 只 × 28 天", catalogPrice: 15, catalogId: "animal-housing", groupShare: share(56, 28), status: "priced" },
+    { id: "ecg", package: "tox", scope: "1–4 组核心", service: "心电图", method: "ECG", qty: 48, unit: "次", formula: "8 只 × 6 次", catalogPrice: 65, groupShare: share(12), status: "priced" },
+    { id: "ophthalmology", package: "tox", scope: "全部 7 组 · 11 只", service: "眼科检查（裂隙灯 + 荧光素染色）", method: "裂隙灯 + 荧光素染色", qty: 22, unit: "次", formula: "11 只 × 2 次", catalogPrice: 45, groupShare: share(4, 2), status: "priced" },
+    { id: "formulation", package: "tox", scope: "全部 7 组", service: "制剂配制（0 / 3 / 10 / 30 mg/kg）", qty: 7, unit: "组", catalogPrice: 700, groupShare: share(1, 1), status: "priced" },
+    { id: "necropsy", package: "tox", scope: "全部 7 组 · 11 只", service: "终末解剖、脏器称重、标准组织固定", qty: 11, unit: "只", catalogPrice: 800, groupShare: share(2, 1), status: "priced" },
 
     /* ── ADA ── */
-    { id: "ada-sampling", package: "ada", scope: "1–4 组核心 + 2–4 组卫星", service: "ADA 采血留样（血清）", analyte: "血清 · ADA", qty: 52, unit: "份", formula: "2 只 × 5 点 × 4 组 + 1 只 × 4 点 × 3 组", catalogPrice: 130, status: "priced" },
+    { id: "ada-sampling", package: "ada", scope: "1–4 组核心 + 2–4 组卫星", service: "ADA 采血留样（血清）", analyte: "血清 · ADA", qty: 52, unit: "份", formula: "2 只 × 5 点 × 4 组 + 1 只 × 4 点 × 3 组", catalogPrice: 130, groupShare: share(10, 4), status: "priced" },
     { id: "ada-md", package: "ada", scope: "ADA", service: "方法开发 · ELISA 筛选", analyte: "ADA", method: "ELISA（筛选）", qty: 1, unit: "项", catalogPrice: 8000, catalogId: "bio-ligand", status: "priced" },
-    { id: "ada-assay", package: "ada", scope: "ADA", service: "ADA 筛选检测（确证与滴度不做）", analyte: "ADA", method: "ELISA（筛选）", qty: 52, unit: "份", formula: "复用 ADA 留样", catalogPrice: 150, status: "priced" },
+    { id: "ada-assay", package: "ada", scope: "ADA", service: "ADA 筛选检测（确证与滴度不做）", analyte: "ADA", method: "ELISA（筛选）", qty: 52, unit: "份", formula: "复用 ADA 留样", catalogPrice: 150, groupShare: share(10, 4), status: "priced" },
 
     /* ── 动物 ──
        猴类价格是**人工输入项**（P0 工程方案第五层：猴类人工价格、折扣和其他费用作为独立人工调整项保存），
        不走价目表。第一版这儿编了一个 ¥32,500 当价目价，等于把一个该人定的数说成系统定的。
        现在它是无价目 · 待补价，SD 在板块里补一个，只作用于本单。 */
-    { id: "animal-use", package: "animal", scope: "全部 7 组 · 11 只", service: "食蟹猴使用费（生物制品初免）", qty: 11, unit: "只", formula: "4 组核心 × 2 只 + 3 组卫星 × 1 只", status: "no-catalog", reason: "猴类价格是人工输入项，不走价目表——请 SD 按本单情况补一个单价" },
+    { id: "animal-use", package: "animal", scope: "全部 7 组 · 11 只", service: "食蟹猴使用费（生物制品初免）", qty: 11, unit: "只", formula: "4 组核心 × 2 只 + 3 组卫星 × 1 只", groupShare: share(2, 1), status: "no-catalog", reason: "猴类价格是人工输入项，不走价目表——请 SD 按本单情况补一个单价" },
 
     /* ── 报告 ── */
     region
@@ -148,11 +166,14 @@ function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
 
   const analyteLabel = [compound, analytes ? `${analytes} 个待测物` : ""].filter(Boolean).join(" · ") || undefined;
   const lines: QuoteLine[] = [];
+  /* 十四项里的组是均匀的（每组 N 只），按组明细就是每组各分 1/组数；组 id 用「1」「2」… */
+  const evenShare = (perGroupQty: number): Record<string, number> | undefined =>
+    groups ? Object.fromEntries(Array.from({ length: groups }, (_, index) => [String(index + 1), perGroupQty])) : undefined;
 
   /* 采血 + 样品检测 + 方法开发（BA Only 没有采血——样品是客户送来的） */
   if (assay !== "BA Only") {
     lines.push(animals && points
-      ? { id: "f-sampling", package: pkg, scope: `${groups} 组 · ${animals} 只`, service: `${assay === "TOX" ? "TK " : "PK "}采血（${sample || "血浆"}）`, analyte: sample ? `${sample}${analytes ? ` · ${analytes} 个待测物` : ""}` : undefined, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, status: "priced" }
+      ? { id: "f-sampling", package: pkg, scope: `${groups} 组 · ${animals} 只`, service: `${assay === "TOX" ? "TK " : "PK "}采血（${sample || "血浆"}）`, analyte: sample ? `${sample}${analytes ? ` · ${analytes} 个待测物` : ""}` : undefined, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, groupShare: evenShare(perGroup! * points), status: "priced" }
       : missing("f-sampling", pkg, `${assay === "TOX" ? "TK " : "PK "}采血`, "份", !animals ? (perGroup ? "groupCount" : "animalsPerGroup") : "bloodPoints", !animals ? "动物数与组数" : "采血点数"));
   }
   /* 每个化合物的实际样本数 = 只数 × 点数；P0 引擎规则「少于 30 按 30」按化合物各自执行，
@@ -168,8 +189,10 @@ function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
     lines.push(missing("f-detection", pkg, "样品检测", "份", "method", "分析方法", { analyte: analyteLabel }));
     lines.push(missing("f-method-dev", pkg, "方法开发", "项", "method", "分析方法", { analyte: analyteLabel }));
   } else {
+    /* 样品检测按组拆只在没触发「少于 30 按 30」时成立——那条规则是按化合物计的，触发了就是整单项 */
+    const detectionShare = assay !== "BA Only" && perAnalyte !== undefined && perAnalyte >= MIN_BILLED_SAMPLES && perGroup && points && analytes ? evenShare(perGroup * points * analytes) : undefined;
     lines.push(detectionQty
-      ? { id: "f-detection", package: pkg, scope: `${analytes} 个待测物`, service: `样品检测 · ${method}`, analyte: analyteLabel, method, qty: detectionQty, unit: "份", formula: detectionFormula, catalogPrice: 180, catalogId: "bio-plasma", status: "priced" }
+      ? { id: "f-detection", package: pkg, scope: `${analytes} 个待测物`, service: `样品检测 · ${method}`, analyte: analyteLabel, method, qty: detectionQty, unit: "份", formula: detectionFormula, catalogPrice: 180, catalogId: "bio-plasma", groupShare: detectionShare, status: "priced" }
       : missing("f-detection", pkg, `样品检测 · ${method}`, "份", !analytes ? "analyteCount" : !points ? "bloodPoints" : "animalsPerGroup", !analytes ? "待测物数量" : !points ? "采血点数" : "动物数", { analyte: analyteLabel, method }));
     lines.push(methodPrice
       ? { id: "f-method-dev", package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `方法开发 · ${method}`, analyte: analyteLabel, method, qty: analytes ?? 1, unit: "项", catalogPrice: methodPrice.price, catalogId: methodPrice.catalogId, status: "priced" }
@@ -185,10 +208,10 @@ function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
     lines.push(!species || !animals
       ? missing("f-animal", "animal", "动物使用费", "只", !species ? "species" : perGroup ? "groupCount" : "animalsPerGroup", !species ? "动物种属" : "动物数与组数")
       : speciesPrice
-        ? { id: "f-animal", package: "animal", scope: `${groups} 组 · ${animals} 只`, service: `${species}使用费`, qty: animals, unit: "只", formula: `${perGroup} 只 × ${groups} 组`, catalogPrice: speciesPrice.price, catalogId: speciesPrice.catalogId, status: "priced" }
-        : { id: "f-animal", package: "animal", scope: `${groups} 组 · ${animals} 只`, service: `${species}使用费`, qty: animals, unit: "只", formula: `${perGroup} 只 × ${groups} 组`, status: "no-catalog", reason: `当前价目表没有${species}这一档动物费` });
+        ? { id: "f-animal", package: "animal", scope: `${groups} 组 · ${animals} 只`, service: `${species}使用费`, qty: animals, unit: "只", formula: `${perGroup} 只 × ${groups} 组`, catalogPrice: speciesPrice.price, catalogId: speciesPrice.catalogId, groupShare: evenShare(perGroup!), status: "priced" }
+        : { id: "f-animal", package: "animal", scope: `${groups} 组 · ${animals} 只`, service: `${species}使用费`, qty: animals, unit: "只", formula: `${perGroup} 只 × ${groups} 组`, groupShare: evenShare(perGroup!), status: "no-catalog", reason: `当前价目表没有${species}这一档动物费` });
     lines.push(animals && days
-      ? { id: "f-housing", package: "animal", scope: `${animals} 只 · ${days} 天`, service: "动物饲养", qty: animals * days, unit: "只·天", formula: `${animals} 只 × ${days} 天`, catalogPrice: 15, catalogId: "animal-housing", status: "priced" }
+      ? { id: "f-housing", package: "animal", scope: `${animals} 只 · ${days} 天`, service: "动物饲养", qty: animals * days, unit: "只·天", formula: `${animals} 只 × ${days} 天`, catalogPrice: 15, catalogId: "animal-housing", groupShare: evenShare(perGroup! * days), status: "priced" }
       : missing("f-housing", "animal", "动物饲养", "只·天", !animals ? (perGroup ? "groupCount" : "animalsPerGroup") : "cycle", !animals ? "动物数与组数" : "试验周期"));
   }
 
@@ -287,6 +310,16 @@ function buildExtraPackageLines(pkg: ExtraPackage, fields: DmpkField[]): QuoteLi
  * 退回会话两样都不要（`fieldsOnly: false`）：它的纸面是批注锚着的固定件，换了账批注就没处落。
  * 人在积木卡上加的板块（`extraPackages`）接在后面；账里本来就有的板块不重复加。
  */
+/** 按组明细的组标签：读过方案用表 2 的七个组；只靠十四项就是「1 组 · N 只」…。 */
+export function dmpkGroupLabels(fields: DmpkField[], sources: ParseResult[]): Record<string, string> {
+  if (sources.some((source) => source.role === "protocol")) return protocolGroupLabels;
+  const value = (id: string) => fields.find((field) => field.id === id)?.value ?? "";
+  const groups = toInt(value("groupCount"));
+  const perGroup = value("animalsPerGroup");
+  if (!groups) return {};
+  return Object.fromEntries(Array.from({ length: groups }, (_, index) => [String(index + 1), `${index + 1} 组${perGroup ? ` · ${perGroup} 只` : ""}`]));
+}
+
 export function buildDmpkQuoteLines(fields: DmpkField[], sources: ParseResult[], options: { fieldsOnly?: boolean; extraPackages?: ExtraPackage[] } = {}): QuoteLine[] {
   const base = sources.some((source) => source.role === "protocol")
     ? buildProtocolLines(fields)
