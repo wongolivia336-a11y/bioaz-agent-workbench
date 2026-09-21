@@ -85,11 +85,21 @@ function bb001(attachment: ComposerAttachment, kind: SourceKind): ParseResult {
       format: { anchor: "§6 报告与交付", quote: "报价以 Excel 形式提供，附计算明细。" },
       language: { anchor: "§6 报告与交付", quote: "报告语言：中文。" },
     },
+    /* 读出来的事实按 P0 工程方案的「8 维提取 Schema」归类（dim 1–8），面板按它排。
+       brief 只留三条——对话里那句「读到 7 组动物、37 个采样事件、7 个分析方法」照旧。 */
     facts: [
       {
+        id: "animal",
+        dim: 1,
+        label: "动物",
+        summary: "食蟹猴 · 雌雄各半 · 生物制品初免 · Non-GLP",
+        anchor: "§1 实验设计",
+      },
+      {
         id: "groups",
-        label: "动物分组",
-        summary: "7 组 · 11 只 · IV infusion",
+        dim: 2,
+        label: "组别",
+        summary: "4 个核心组（对照 + 低 / 中 / 高）+ 3 个卫星 PK 组 · IV infusion",
         brief: "7 组动物",
         anchor: "表 2",
         items: [
@@ -99,11 +109,25 @@ function bb001(attachment: ComposerAttachment, kind: SourceKind): ParseResult {
         ],
       },
       {
-        id: "sampling",
-        label: "采样事件",
-        summary: "37 项 · 479 份（按时点去重）",
-        brief: "37 个采样事件",
-        anchor: "表 3、表 4",
+        id: "counts",
+        dim: 3,
+        label: "数目",
+        summary: "11 只 · 核心 2 只 / 组 × 4 + 卫星 1 只 / 组 × 3",
+        anchor: "表 2",
+      },
+      {
+        id: "operations",
+        dim: 4,
+        label: "实验操作",
+        summary: "给药 · 制剂配制 · 采血 · 临床病理 · 心电 · 眼科 · 观察 · 终末解剖",
+        anchor: "§3",
+      },
+      {
+        id: "frequencies",
+        dim: 5,
+        label: "实验操作次数",
+        summary: "给药 Q1W×3（核心）/ 单次（卫星）· TK 16 点 · PK 11 点 · 临床病理 6 点 · 观察 28 天",
+        anchor: "表 3",
         items: [
           "ADA 留样 · 核心 5 点 / 卫星 4 点",
           "临床病理 · 6 点 · 血清生化 / 血液学 / 凝血 / 尿液",
@@ -111,13 +135,20 @@ function bb001(attachment: ComposerAttachment, kind: SourceKind): ParseResult {
           "TK 毒代 · 16 点 · 4 个核心组各自采集",
           "卫星 PK · 11 点 · D1 丰富采样 + 尾部",
           "免疫分型全血 · 4 点（声明 16 份，推导 8 份）",
-          "终末解剖标准组织 · 福尔马林固定",
         ],
       },
       {
+        id: "scope",
+        dim: 6,
+        label: "检测项目",
+        summary: "TK · PK · 临床病理 · 细胞因子 · ADA · 免疫分型 —— PK/TK、TOX、ADA 三个工作包，42 项委托",
+        anchor: "§2–§5",
+      },
+      {
         id: "methods",
-        label: "分析方法",
-        summary: "7 个分析物 · Non-GLP · 方法开发 + 样品检测",
+        dim: 7,
+        label: "检测方法",
+        summary: "7 个分析物 · LC-MS/MS ×2 · ELISA ×2 · 3 个平台待定 · 流式",
         brief: "7 个分析方法",
         anchor: "§4",
         items: [
@@ -128,13 +159,24 @@ function bb001(attachment: ComposerAttachment, kind: SourceKind): ParseResult {
           "spADC-MMAF · 平台待定",
           "Total mAb · Generic ELISA",
           "ADA · ELISA 筛选、确证、滴度",
+          "免疫分型 Panel A / B · 流式细胞术",
         ],
       },
       {
-        id: "scope",
-        label: "委托范围",
-        summary: "42 项 · PK/TK、TOX、ADA 三个工作包",
-        anchor: "§2–§5",
+        id: "sampling",
+        dim: 8,
+        label: "检测数量",
+        summary: "37 个采样事件 · 479 份（按时点去重）· 给药 27 次 · 剖检 11 只",
+        brief: "37 个采样事件",
+        anchor: "表 3、表 4",
+        items: [
+          "TK / PK 血清 · 8 只 × 16 点 + 3 只 × 11 点 = 161 份 · 6 个分析物共用",
+          "临床病理 · 8 只 × 6 点 = 48 份 × 4 项",
+          "细胞因子 · 175 份",
+          "ADA 留样 · 52 份",
+          "免疫分型全血 · 32 份",
+          "终末解剖标准组织 · 11 只 · 福尔马林固定",
+        ],
       },
     ],
     pending: [
@@ -204,7 +246,8 @@ function dosingTableScreenshot(attachment: ComposerAttachment, kind: SourceKind)
     facts: [
       {
         id: "groups",
-        label: "动物分组",
+        dim: 2,
+        label: "组别",
         summary: "7 组 · 11 只 · IV infusion",
         brief: "7 组动物",
         anchor: "第 1–7 行",

@@ -81,8 +81,11 @@ function buildProtocolLines(fields: DmpkField[]): QuoteLine[] {
     { id: "ada-md", package: "ada", scope: "ADA", service: "方法开发 · ELISA 筛选", analyte: "ADA", method: "ELISA（筛选）", qty: 1, unit: "项", catalogPrice: 8000, catalogId: "bio-ligand", status: "priced" },
     { id: "ada-assay", package: "ada", scope: "ADA", service: "ADA 筛选检测（确证与滴度不做）", analyte: "ADA", method: "ELISA（筛选）", qty: 52, unit: "份", formula: "复用 ADA 留样", catalogPrice: 150, status: "priced" },
 
-    /* ── 动物 ── */
-    { id: "animal-use", package: "animal", scope: "全部 7 组 · 11 只", service: "食蟹猴使用费（生物制品初免）", qty: 11, unit: "只", formula: "4 组核心 × 2 只 + 3 组卫星 × 1 只", catalogPrice: 32500, status: "priced" },
+    /* ── 动物 ──
+       猴类价格是**人工输入项**（P0 工程方案第五层：猴类人工价格、折扣和其他费用作为独立人工调整项保存），
+       不走价目表。第一版这儿编了一个 ¥32,500 当价目价，等于把一个该人定的数说成系统定的。
+       现在它是无价目 · 待补价，SD 在板块里补一个，只作用于本单。 */
+    { id: "animal-use", package: "animal", scope: "全部 7 组 · 11 只", service: "食蟹猴使用费（生物制品初免）", qty: 11, unit: "只", formula: "4 组核心 × 2 只 + 3 组卫星 × 1 只", status: "no-catalog", reason: "猴类价格是人工输入项，不走价目表——请 SD 按本单情况补一个单价" },
 
     /* ── 报告 ── */
     region
@@ -113,6 +116,9 @@ const methodCatalog: Record<string, { price: number; catalogId: string }> = {
 };
 
 const cycleDays: Record<string, number> = { "1 周": 7, "2 周": 14, "4 周": 28 };
+
+/** P0 工程方案第五层：每个化合物「少于 30 按 30」。后台计价规则页写的是同一个数。 */
+export const MIN_BILLED_SAMPLES = 30;
 
 const toInt = (value: string) => {
   const n = Number.parseInt(value, 10);
@@ -149,16 +155,21 @@ function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
       ? { id: "f-sampling", package: pkg, scope: `${groups} 组 · ${animals} 只`, service: `${assay === "TOX" ? "TK " : "PK "}采血（${sample || "血浆"}）`, analyte: sample ? `${sample}${analytes ? ` · ${analytes} 个待测物` : ""}` : undefined, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, status: "priced" }
       : missing("f-sampling", pkg, `${assay === "TOX" ? "TK " : "PK "}采血`, "份", !animals ? (perGroup ? "groupCount" : "animalsPerGroup") : "bloodPoints", !animals ? "动物数与组数" : "采血点数"));
   }
-  const detectionQty = assay === "BA Only"
-    ? (points && analytes ? points * analytes * (animals ?? 1) : undefined)
-    : (animals && points && analytes ? animals * points * analytes : undefined);
+  /* 每个化合物的实际样本数 = 只数 × 点数；P0 引擎规则「少于 30 按 30」按化合物各自执行，
+     计费量 = 化合物数 × max(实际, 30)。实际数和计费数都写在公式里——P0 的输出口径里两者要分开给。 */
+  const perAnalyte = assay === "BA Only" ? (points ? points * (animals ?? 1) : undefined) : (animals && points ? animals * points : undefined);
+  const billedPerAnalyte = perAnalyte !== undefined ? Math.max(perAnalyte, MIN_BILLED_SAMPLES) : undefined;
+  const detectionQty = billedPerAnalyte !== undefined && analytes ? billedPerAnalyte * analytes : undefined;
+  const detectionFormula = perAnalyte !== undefined && analytes
+    ? `${assay === "BA Only" ? `${points} 点${animals ? ` × ${animals} 只` : ""}` : `${animals} 只 × ${points} 点`} = 每化合物 ${perAnalyte} 份${perAnalyte < MIN_BILLED_SAMPLES ? `，少于 ${MIN_BILLED_SAMPLES} 按 ${MIN_BILLED_SAMPLES} 计` : ""} × ${analytes} 个待测物`
+    : undefined;
   const methodPrice = methodCatalog[method];
   if (!method) {
     lines.push(missing("f-detection", pkg, "样品检测", "份", "method", "分析方法", { analyte: analyteLabel }));
     lines.push(missing("f-method-dev", pkg, "方法开发", "项", "method", "分析方法", { analyte: analyteLabel }));
   } else {
     lines.push(detectionQty
-      ? { id: "f-detection", package: pkg, scope: `${analytes} 个待测物`, service: `样品检测 · ${method}`, analyte: analyteLabel, method, qty: detectionQty, unit: "份", formula: assay === "BA Only" ? `${points} 点 × ${analytes} 个待测物${animals ? ` × ${animals} 只` : ""}` : `${animals} 只 × ${points} 点 × ${analytes} 个待测物`, catalogPrice: 180, catalogId: "bio-plasma", status: "priced" }
+      ? { id: "f-detection", package: pkg, scope: `${analytes} 个待测物`, service: `样品检测 · ${method}`, analyte: analyteLabel, method, qty: detectionQty, unit: "份", formula: detectionFormula, catalogPrice: 180, catalogId: "bio-plasma", status: "priced" }
       : missing("f-detection", pkg, `样品检测 · ${method}`, "份", !analytes ? "analyteCount" : !points ? "bloodPoints" : "animalsPerGroup", !analytes ? "待测物数量" : !points ? "采血点数" : "动物数", { analyte: analyteLabel, method }));
     lines.push(methodPrice
       ? { id: "f-method-dev", package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `方法开发 · ${method}`, analyte: analyteLabel, method, qty: analytes ?? 1, unit: "项", catalogPrice: methodPrice.price, catalogId: methodPrice.catalogId, status: "priced" }

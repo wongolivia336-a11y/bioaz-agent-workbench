@@ -99,7 +99,7 @@ export default function DmpkRuleAssistant({ onTabChange, onRuleDraft }: Props) {
         })}
       >
           <div className="ambientAssistantSuggestions" aria-hidden={!expanded || open}>
-          <button type="button" tabIndex={expanded && !open ? 0 : -1} onClick={() => submit("以后 PK 样品少于 40 个都按 40 个收费")}>
+          <button type="button" tabIndex={expanded && !open ? 0 : -1} onClick={() => submit("以后 PK 样品少于 30 个都按 30 个收费")}>
             <GitBranch size={14} /><span>改规则</span>
           </button>
           <button type="button" tabIndex={expanded && !open ? 0 : -1} onClick={() => submit("给 PK 检测增加一个自定义采血时间点字段")}>

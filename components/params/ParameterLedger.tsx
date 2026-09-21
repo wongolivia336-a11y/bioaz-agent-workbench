@@ -94,9 +94,10 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, st
                     ) : null}
                   </Fragment>
                 ) : (
-                  <div className="inspectorParameterField isEmpty" key={field.id}>
+                  /* 不适用的空格子不是欠着：写「不适用」，不写「待填写」，也不进进度 */
+                  <div className={`inspectorParameterField isEmpty${field.notApplicable ? " isNotApplicable" : ""}`} key={field.id} title={field.notApplicable ? field.hint : undefined}>
                     <span>{field.label}</span>
-                    <strong>待填写</strong>
+                    <strong>{field.notApplicable ? "不适用" : "待填写"}</strong>
                     <span aria-hidden="true" />
                   </div>
                 ))}

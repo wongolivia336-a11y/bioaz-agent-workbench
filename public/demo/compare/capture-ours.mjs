@@ -82,23 +82,55 @@ async function main() {
   // 4. 传方案 → 解析轨迹 + 参数收集（识别态）
   await uploadProtocol();
   await sleep(6000);
+  // 讲稿里引用的那句「已读取…」：数字随账变，打出来好核对讲稿的文案
+  console.log("reply:", await evaluate(`return [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && /已读取/.test(e.textContent)).map(e => e.textContent.trim()).at(-1) ?? '';`));
   await evaluate(`[...document.querySelectorAll('[role=tab]')].find(t => t.textContent.trim() === '参数收集')?.click(); return true;`);
   await sleep(600);
   await shot("ours-session-protocol");
+
+  // 4b. 输入材料：读出来的事实按八维排
+  await evaluate(`document.querySelector('button[aria-label="添加面板"]').click(); await new Promise(r => setTimeout(r, 250)); [...document.querySelectorAll('[role=menu] button, [role=menuitem]')].find(b => /输入材料/.test(b.textContent)).click(); return true;`);
+  await sleep(300);
+  // 勾完面板菜单不自己收，点一下外面
+  await evaluate(`document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); return true;`);
+  await sleep(300);
+  await evaluate(`document.querySelector('.dmpkFactList')?.scrollIntoView({ block: 'start' }); return true;`);
+  await sleep(300);
+  await shot("ours-materials-dims");
 
   // 5. 板块面板（折叠态）
   await evaluate(`[...document.querySelectorAll('[role=tab]')].find(t => t.textContent.trim() === '报价板块').click(); return true;`);
   await sleep(500);
   await shot("ours-sections");
 
-  // 6. 临时改价：展开动物使用，改食蟹猴使用费
-  await evaluate(`[...document.querySelectorAll('.dmpkSectionHead')].find(h => h.querySelector('strong').textContent === '动物使用').click(); return true;`);
+  // 6. 临时改价：展开 PK / TK 样品采集，改 TK 毒代采血的单价
+  const sectionRow = (name) => `[...document.querySelectorAll('.dmpkSectionRow')].find(r => r.querySelector('.dmpkSectionRowName')?.textContent.startsWith(${JSON.stringify(name)}))`;
+  const typeInto = (rowExpr, value) => `const row = ${rowExpr}; const input = row.querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(value)}); input.dispatchEvent(new Event('input', { bubbles: true })); return true;`;
+  const confirmRow = (rowExpr) => `const row = ${rowExpr}; [...row.querySelectorAll('button')].find(b => b.textContent.trim() === '确认').click(); return true;`;
+  // 板块默认哪些是展开的随账变，所以按 aria-expanded 开合，不盲点
+  const setSection = (name, open) => evaluate(`const h = [...document.querySelectorAll('.dmpkSectionHead')].find(h => h.querySelector('strong').textContent === ${JSON.stringify(name)}); if ((h.getAttribute('aria-expanded') === 'true') !== ${open}) h.click(); return true;`);
+  await setSection("PK / TK 样品采集", true);
   await sleep(300);
-  await evaluate(`const row = [...document.querySelectorAll('.dmpkSectionRow')].find(r => r.querySelector('.dmpkSectionRowName')?.textContent.startsWith('食蟹猴使用费')); row.querySelector('.dmpkPriceEdit').click(); await new Promise(r => setTimeout(r, 200)); const input = row.querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '30000'); input.dispatchEvent(new Event('input', { bubbles: true })); return true;`);
+  await evaluate(`${sectionRow("TK 毒代采血")}.querySelector('.dmpkPriceEdit').click(); return true;`);
+  await sleep(200);
+  await evaluate(typeInto(sectionRow("TK 毒代采血"), "120"));
   await sleep(300);
   await shot("ours-temp-price-editor");
-  await evaluate(`const row = [...document.querySelectorAll('.dmpkSectionRow')].find(r => r.querySelector('.dmpkSectionRowName')?.textContent.startsWith('食蟹猴使用费')); [...row.querySelectorAll('button')].find(b => b.textContent.trim() === '确认').click(); return true;`);
+  await evaluate(confirmRow(sectionRow("TK 毒代采血")));
+  await sleep(500);
+  // 6b. 补价：猴类价是人工输入项，账上标「待补价」，同一条路补上；再记一个本单折扣
+  await setSection("PK / TK 样品采集", false);
+  await setSection("动物使用", true);
+  await sleep(300);
+  await evaluate(`${sectionRow("食蟹猴使用费")}.querySelector('.dmpkQuoteLineGo').click(); return true;`);
+  await sleep(200);
+  await evaluate(typeInto(sectionRow("食蟹猴使用费"), "30000"));
+  await evaluate(confirmRow(sectionRow("食蟹猴使用费")));
+  await sleep(400);
+  await evaluate(`document.querySelector('button[aria-label="改本单折扣"]').click(); await new Promise(r => setTimeout(r, 200)); const input = document.querySelector('input[aria-label="本单折扣"]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '0.9'); input.dispatchEvent(new Event('input', { bubbles: true })); await new Promise(r => setTimeout(r, 100)); [...document.querySelectorAll('.dmpkSectionAdjust button')].find(b => b.textContent.trim() === '确认').click(); return true;`);
   await sleep(600);
+  await evaluate(`document.querySelector('.dmpkSectionFooter')?.scrollIntoView({ block: 'end' }); return true;`);
+  await sleep(300);
   await shot("ours-temp-price-done");
 
   // 7. 对话里问本单价目

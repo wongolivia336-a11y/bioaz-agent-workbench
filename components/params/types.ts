@@ -87,6 +87,12 @@ export type ParamField = {
   exclusiveOptions?: string[];
   /** 这个值的原文依据。见 ParamSource。 */
   source?: ParamSource;
+  /**
+   * 当前这一单用不上这一项（P0 完成清单里的「不适用」态）。
+   * BA Only 是客户送样，动物那一组就是不适用——空着不算缺，台账写「不适用」而不是「待填写」，
+   * 参数卡不追问。由各模块按检测类型算出来，值是"这一项此刻的处境"，不是配置。
+   */
+  notApplicable?: boolean;
 };
 
 export type ParamDraft = { fieldId: string; label: string; value: string };

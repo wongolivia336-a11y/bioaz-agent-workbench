@@ -23,15 +23,18 @@ import {
 import { useState } from "react";
 import { ParameterLedger, type ParamField } from "../../components/params";
 import { fullQuotePermissions, type QuotePermissions } from "../../lib/workbench/permissions";
-import { sourceKindLabels, sourceRoleLabels, type ParseResult } from "../../lib/workbench/sources";
+import { extractionDimLabels, extractionDimMarks, sourceKindLabels, sourceRoleLabels, type ParseResult, type ParsedFact } from "../../lib/workbench/sources";
 import {
+  adjustedTotal,
   effectiveStatus,
   formatCny,
+  hasAdjustments,
   lineAmount,
   lineUnitPrice,
   quoteLineStatusLabels,
   summarizeLines,
   type ManualPrice,
+  type QuoteAdjustments,
   type QuoteLine,
   type QuotePackageSummary,
 } from "../../lib/workbench/quoteLines";
@@ -88,6 +91,9 @@ export type DmpkInspectorContext = {
   manualPrices?: Record<string, ManualPrice>;
   onSetManualPrice?: (lineId: string, price: number) => void;
   onClearManualPrice?: (lineId: string) => void;
+  /* 人工调整项：折扣、其他费用。作用在合计上，只在本单（P0 第五层）。 */
+  adjustments?: QuoteAdjustments;
+  onSetAdjustment?: (kind: keyof QuoteAdjustments, value: number | null) => void;
   /* 出过的那版跟眼前的参数 / 单价对不上了。改单价不经过参数卡，
      「重新生成」的出口就在报价结果的版本卡上。 */
   quoteStale?: boolean;
@@ -390,9 +396,16 @@ function MaterialsPanel({ context }: { context: DmpkInspectorContext }) {
   );
 }
 
+/* 事实按八维的序号排；没标维度的（聊天里的交付要求）排到最后，标签留空。 */
+function sortFactsByDim(facts: ParsedFact[]): ParsedFact[] {
+  return [...facts].sort((a, b) => (a.dim ?? 99) - (b.dim ?? 99));
+}
+
 function SourceCard({ source }: { source: ParseResult }) {
   const [openFactId, setOpenFactId] = useState<string | null>(null);
   const readable = source.role !== "unknown";
+  const facts = sortFactsByDim(source.facts);
+  const dimCount = facts.filter((fact) => fact.dim).length;
   return (
     <section className={`dmpkSourceCard${readable ? "" : " isUnread"}`}>
       <header>
@@ -416,9 +429,11 @@ function SourceCard({ source }: { source: ParseResult }) {
           ))}
         </ul>
       ) : null}
-      {source.facts.length ? (
+      {facts.length ? (
         <ul className="dmpkFactList">
-          {source.facts.map((fact) => {
+          {/* 按八维归类的，先说清「读到了 8 维里的几维」——缺的那几维就是还没读到的。 */}
+          {dimCount ? <li className="dmpkFactDimNote" aria-hidden="true">按八维提取 · 读到 {dimCount} / 8 维</li> : null}
+          {facts.map((fact) => {
             const expandable = Boolean(fact.items?.length);
             const open = openFactId === fact.id;
             return (
@@ -430,6 +445,7 @@ function SourceCard({ source }: { source: ParseResult }) {
                   onClick={() => setOpenFactId(open ? null : fact.id)}
                 >
                   <span className="dmpkFactHead">
+                    {fact.dim ? <i className="dmpkFactDim" title={`八维 · ${extractionDimLabels[fact.dim]}`}>{extractionDimMarks[fact.dim]}</i> : null}
                     <strong>{fact.label}</strong>
                     {fact.anchor ? <em>{fact.anchor}</em> : null}
                   </span>
@@ -508,6 +524,11 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
   /* 人点过的板块记在这儿；没点过的按默认规则开合。这样新长出来的板块
      （比如补了方法之后多出一行待定）也能按「有待定就开」自己冒出来。 */
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  /* 人工调整项的就地编辑：正在改哪一项、草稿值 */
+  const [editingAdjustment, setEditingAdjustment] = useState<keyof QuoteAdjustments | null>(null);
+  const [draftAdjustment, setDraftAdjustment] = useState("");
+  const adjustments = context.adjustments ?? {};
+  const finalTotal = adjustedTotal(summary.total, adjustments);
   const permissions = context.permissions ?? fullQuotePermissions;
   /* 没权限改价：铅笔不出、编辑器不开，行上其余都不变——能看，只是不能动。 */
   const canEdit = Boolean(context.onSetManualPrice) && permissions.canAdjustTempPrice;
@@ -628,6 +649,60 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
           <span>已计价合计{summary.manualCount ? <em>含 {summary.manualCount} 项临时价 · 仅本次报价</em> : null}</span>
           <strong>{formatCny(summary.total)}</strong>
         </div>
+        {/* 人工调整项（P0 第五层）：折扣、其他费用作用在合计上，不属于任何一行。
+            跟改价同一套就地编辑；有调整时下面多一行「调整后」。 */}
+        {context.onSetAdjustment && canEdit ? (
+          <div className="dmpkSectionAdjust">
+            <span className="dmpkSectionRulesLabel">人工调整项</span>
+            {(["discount", "otherFees"] as const).map((kind) => {
+              const value = adjustments[kind];
+              const editing = editingAdjustment === kind;
+              const label = kind === "discount" ? "折扣" : "其他费用";
+              return (
+                <span className={`dmpkSectionAdjustItem${value !== undefined ? " isSet" : ""}`} key={kind}>
+                  {editing ? (
+                    <span className="dmpkPriceEditor isInline">
+                      <span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={kind === "discount" ? "0.01" : "1"}
+                          max={kind === "discount" ? 1 : undefined}
+                          value={draftAdjustment}
+                          autoFocus
+                          placeholder={kind === "discount" ? "如 0.9" : "¥"}
+                          aria-label={`本单${label}`}
+                          onChange={(event) => setDraftAdjustment(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" && draftAdjustment.trim()) { context.onSetAdjustment?.(kind, Number(draftAdjustment)); setEditingAdjustment(null); }
+                            if (event.key === "Escape") setEditingAdjustment(null);
+                          }}
+                        />
+                        <button type="button" className="isConfirm" disabled={!draftAdjustment.trim() || !Number.isFinite(Number(draftAdjustment))} onClick={() => { context.onSetAdjustment?.(kind, Number(draftAdjustment)); setEditingAdjustment(null); }}>确认</button>
+                        <button type="button" onClick={() => setEditingAdjustment(null)}>取消</button>
+                      </span>
+                    </span>
+                  ) : (
+                    <>
+                      <em>{label}</em>
+                      <b>{value === undefined ? "—" : kind === "discount" ? `${value} 折` : formatCny(value)}</b>
+                      <button type="button" className="dmpkPriceEdit" aria-label={`改本单${label}`} onClick={() => { setEditingAdjustment(kind); setDraftAdjustment(value === undefined ? "" : String(value)); }}><Edit3 size={11} aria-hidden="true" /></button>
+                      {value !== undefined ? <button type="button" className="dmpkSectionAdjustClear" onClick={() => context.onSetAdjustment?.(kind, null)}>去掉</button> : null}
+                    </>
+                  )}
+                </span>
+              );
+            })}
+            {hasAdjustments(adjustments) ? <span className="dmpkSectionAdjustTotal">调整后 <b>{formatCny(finalTotal)}</b></span> : null}
+          </div>
+        ) : hasAdjustments(adjustments) ? (
+          <div className="dmpkSectionAdjust">
+            <span className="dmpkSectionRulesLabel">人工调整项</span>
+            {adjustments.discount !== undefined ? <span className="dmpkSectionAdjustItem isSet"><em>折扣</em><b>{adjustments.discount} 折</b></span> : null}
+            {adjustments.otherFees !== undefined ? <span className="dmpkSectionAdjustItem isSet"><em>其他费用</em><b>{formatCny(adjustments.otherFees)}</b></span> : null}
+            <span className="dmpkSectionAdjustTotal">调整后 <b>{formatCny(finalTotal)}</b></span>
+          </div>
+        ) : null}
         {/* 本单命中的规则：区域、模板 / 管理费。原来在「报价规则」tab 里，那个 tab 撤了，
             这两条是它唯一不跟板块重复的东西。改仍然经对话确认。 */}
         <div className="dmpkSectionRules">

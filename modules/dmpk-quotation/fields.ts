@@ -68,6 +68,31 @@ export const initialDmpkFields: DmpkField[] = [
   field("region", "报价区域", "delivery"),
 ];
 
+/**
+ * 「不适用」（P0 工程方案完成清单里的一态）：这一单用不上的项不算缺。
+ *
+ * BA Only 是客户送样本来测，没有动物、没有分组、没有周期——原来十四项一律必填，
+ * BA Only 的会话开口就追问「动物种属、每组动物数、组数、试验周期」，P0 明写
+ * "字段缺失先判断是否适用"。所以按检测类型把这几项标成不适用：不必填、卡里不列、
+ * 台账写「不适用」。人硬要填也可以（比如客户顺便说了种属），填了就照常显示。
+ *
+ * 每次字段变化都过一遍——它是"这一项此刻的处境"，跟着检测类型走，不是写死的配置。
+ */
+const NOT_APPLICABLE_BY_ASSAY: Record<string, { ids: string[]; hint: string }> = {
+  "BA Only": { ids: ["species", "animalsPerGroup", "groupCount", "cycle"], hint: "BA Only 由客户送样，不涉及动物与周期" },
+};
+
+export function applyDmpkApplicability(fields: DmpkField[]): DmpkField[] {
+  const assay = fields.find((field) => field.id === "assayType")?.value ?? "";
+  const rule = NOT_APPLICABLE_BY_ASSAY[assay];
+  return fields.map((field) => {
+    const off = Boolean(rule?.ids.includes(field.id));
+    if (off === Boolean(field.notApplicable) && field.required === !off) return field;
+    /* DMPK 十四项本来没有 hint，这里的 hint 只用来说明「为什么不适用」，退回时清掉即可 */
+    return { ...field, required: !off, notApplicable: off || undefined, hint: off ? rule!.hint : undefined };
+  });
+}
+
 export const dmpkGroupDescriptions: Record<DmpkGroupId, string> = {
   assay: "确认 DMPK 下的检测业务线与分子类型。",
   animal: "动物数量、组数和周期会直接影响报价规则。",
@@ -110,6 +135,14 @@ export function parseDmpkRequest(text: string): Record<string, string> {
     text.match(new RegExp(`(\\d+)\\s*个?(?:非加班)?${points}`)) ??
     text.match(new RegExp(`${points}\\s*(\\d+)\\s*个?`));
   if (bloodMatch) patch.bloodPoints = bloodMatch[1];
+
+  /* 待测物数：P0 八维里的⑥检测项目按化合物计价（30 的规则也按化合物执行），
+     人会说「2 个待测物」「化合物 2 个」「分析物 2 项」，三种叫法一个意思。 */
+  const analytes = "(?:待测物|分析物|化合物)";
+  const analyteMatch =
+    text.match(new RegExp(`(\\d+)\\s*[个项]?${analytes}`)) ??
+    text.match(new RegExp(`${analytes}\\s*(\\d+)\\s*[个项]?`));
+  if (analyteMatch) patch.analyteCount = analyteMatch[1];
 
   /* 下面四项以前一条规则都没有，可选项表里明明列着。
      用户一句话里把样品、方法、格式都说了，识别结果却只回四项，

@@ -142,8 +142,52 @@ export function summarizeLines(lines: QuoteLine[], manualPrices: Record<string, 
   };
 }
 
+/**
+ * 人工调整项（P0 工程方案第五层：猴类人工价格、折扣和其他费用作为独立人工调整项保存）。
+ * 猴类价格走的是行上的补价（它是某一行的单价）；折扣和其他费用不属于任何一行，
+ * 作用在合计上，所以另存一份、另算一次。跟 manualPrices 一样只在会话里，不进价目表。
+ *   discount   折扣系数，0.9 = 九折；不填 = 不打折
+ *   otherFees  其他费用，整单一笔
+ */
+export type QuoteAdjustments = { discount?: number; otherFees?: number };
+
+export function adjustedTotal(total: number, adjustments: QuoteAdjustments = {}): number {
+  const discounted = adjustments.discount !== undefined ? total * adjustments.discount : total;
+  return round2(discounted + (adjustments.otherFees ?? 0));
+}
+
+export function hasAdjustments(adjustments: QuoteAdjustments = {}): boolean {
+  return adjustments.discount !== undefined || adjustments.otherFees !== undefined;
+}
+
 export function formatCny(amount: number): string {
   return `¥${amount.toLocaleString("zh-CN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+}
+
+/**
+ * 影响提示：改了参数之后，账上哪些板块变了、变了几行、合计从多少到多少。
+ * 「影响 PK / TK 样品采集 2 行、动物使用 1 行；合计 ¥14,580 → ¥16,200。」
+ * 两份账逐行比：行的数量、单价、状态任一不同就算变了；新增或消失的行也算。
+ * 没变返回空串——没影响就别说话。
+ */
+export function impactSentence(before: QuoteSummary, after: QuoteSummary, manualPrices: Record<string, ManualPrice> = {}): string {
+  const fingerprint = (line: QuoteLine) => `${line.qty}|${lineUnitPrice(line, manualPrices[line.id]) ?? ""}|${effectiveStatus(line, manualPrices[line.id])}`;
+  const beforeLines = new Map(before.packages.flatMap((pkg) => pkg.lines).map((line) => [line.id, fingerprint(line)]));
+  const changed: Record<string, number> = {};
+  for (const pkg of after.packages) {
+    for (const line of pkg.lines) {
+      if (beforeLines.get(line.id) === fingerprint(line)) continue;
+      changed[pkg.label] = (changed[pkg.label] ?? 0) + 1;
+    }
+  }
+  const afterIds = new Set(after.packages.flatMap((pkg) => pkg.lines.map((line) => line.id)));
+  for (const pkg of before.packages) {
+    for (const line of pkg.lines) if (!afterIds.has(line.id)) changed[pkg.label] = (changed[pkg.label] ?? 0) + 1;
+  }
+  const parts = Object.entries(changed).map(([label, count]) => `${label} ${count} 行`);
+  if (!parts.length && before.total === after.total) return "";
+  const totals = before.total !== after.total ? `合计 ${formatCny(before.total)} → ${formatCny(after.total)}` : "合计不变";
+  return `影响 ${parts.join("、") || "计价状态"}；${totals}。`;
 }
 
 /** 对话里那一句：「已计价 20 项 ¥612,340；5 项未计价（待确认 2 · 无价目 3）」。 */
