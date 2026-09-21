@@ -8896,7 +8896,7 @@ button {
 .newTaskIntro.isSpaceHome:has(.taskExampleGrid button:hover), .newTaskIntro.isSpaceHome:has(.taskExampleGrid button:focus-visible) { z-index: 21; }
 .taskExampleGrid button > .expertIntro {
   position: absolute; z-index: 8; left: 0; top: calc(100% + 10px);
-  display: grid; gap: 8px; width: 272px;
+  display: grid; gap: 9px; width: 400px;
   border: 1px solid var(--line-strong, #d7dce3); border-radius: var(--bioaz-radius-control);
   background: var(--bioaz-surface); padding: 12px 13px 11px;
   box-shadow: 0 14px 34px rgba(18, 24, 38, .12), 0 2px 6px rgba(18, 24, 38, .05);
@@ -8925,18 +8925,19 @@ button {
 .expertIntroTitle { display: grid; gap: 2px; min-width: 0; }
 .expertIntroTitle strong { color: var(--ink); font-size: 13px; font-weight: 620; line-height: 1.25; }
 .expertIntroTitle small { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
-.expertIntroRow { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 6px; }
+.expertIntroRow { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 8px; }
 .expertIntroRow > em { padding-top: 2px; color: var(--muted); font-size: 11px; font-style: normal; font-weight: 600; letter-spacing: .02em; }
-.expertIntroChain { display: flex; flex-wrap: wrap; gap: 4px; }
-.expertIntroChain > span {
-  display: inline-flex; align-items: center;
-  border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--soft, #f7f8fb);
-  padding: 1px 7px; color: var(--body); font-size: 11px; line-height: 1.5; white-space: nowrap;
-  opacity: 0; transform: translateY(3px);
-}
-.expertIntroChain > span:not(:last-child)::after { margin-left: 5px; color: var(--muted); content: "→"; }
-.taskExampleGrid button:not(:disabled):hover .expertIntroChain > span,
-.taskExampleGrid button:not(:disabled):focus-visible .expertIntroChain > span {
+/* 步骤条：N 步等分整行，点排在一条线上，名字在点下面。最多 6 步、名字最长 5 个字，
+   等分之后每格 ≥ 56px，5 个字 11px 也放得下，永远不折行。 */
+.expertIntroSteps { position: relative; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); padding-top: 2px; }
+.expertIntroSteps::before { position: absolute; top: 5px; left: calc(50% / var(--n, 4)); right: calc(50% / var(--n, 4)); height: 1px; background: var(--line-strong, #d7dce3); content: ""; }
+.expertIntroSteps > span { display: grid; justify-items: center; gap: 5px; min-width: 0; opacity: 0; transform: translateY(3px); }
+.expertIntroDot { position: relative; z-index: 1; width: 7px; height: 7px; border: 1px solid var(--bioaz-agent-accent, #5c60b8); border-radius: 50%; background: var(--bioaz-surface); }
+/* 最后一步是终点，实心。 */
+.expertIntroSteps > span:last-child > .expertIntroDot { background: var(--bioaz-agent-accent, #5c60b8); }
+.expertIntroSteps > span > span:last-child { color: var(--body); font-size: 11px; line-height: 1.3; white-space: nowrap; }
+.taskExampleGrid button:not(:disabled):hover .expertIntroSteps > span,
+.taskExampleGrid button:not(:disabled):focus-visible .expertIntroSteps > span {
   animation: expertIntroChipIn var(--bioaz-motion-spatial) ease calc(160ms + var(--i, 0) * 45ms) both;
 }
 @keyframes expertIntroChipIn { to { opacity: 1; transform: translateY(0); } }
