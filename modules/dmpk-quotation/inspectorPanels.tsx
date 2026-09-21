@@ -97,6 +97,8 @@ export type DmpkInspectorContext = {
      viewerRole 决定门是按钮还是一行说明——权限分级后置，这只是账号切换器上的演示。 */
   viewerRole?: "author" | "approver" | "owner";
   onOpenCatalog?: () => void;
+  /* 去后台某一页。走壳层的状态、不走 window.location——整页导航会把会话全丢掉。 */
+  onOpenBackOffice?: (tab: "prices" | "rules" | "parameters" | "templates") => void;
   reworkBy?: string;
   reworkAt?: string;
   reworkReason?: string;
@@ -386,7 +388,10 @@ function RulesPanel({ context }: { context: DmpkInspectorContext }) {
     .map((item) => item.label.replace(/^(对照|\d+\s*组)(核心|卫星)?(组)?/, ""))
     .filter((label, index, labels) => labels.indexOf(label) === index);
 
+  /* 原来是 window.location.href = "/?view=quotation-management…"——整页导航，回来会话就没了。
+     现在走壳层：后台盖在工作台上面，工作台不卸载。没接回调的环境（不该有）才退回整页跳转。 */
   const goToBackOffice = (tab: "prices" | "rules" | "parameters" | "templates") => {
+    if (context.onOpenBackOffice) { context.onOpenBackOffice(tab); return; }
     const params = new URLSearchParams({ view: "quotation-management", business: "dmpk", tab });
     window.location.href = `/?${params.toString()}`;
   };

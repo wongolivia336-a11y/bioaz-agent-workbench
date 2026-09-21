@@ -902,6 +902,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
        author 看到的是一行灰字说明，不是按钮。 */
     viewerRole,
     onOpenCatalog: onOpenQuotationManagement ? () => onOpenQuotationManagement({ business: "dmpk", tab: "prices" }) : undefined,
+    onOpenBackOffice: onOpenQuotationManagement ? (tab) => onOpenQuotationManagement({ business: "dmpk", tab }) : undefined,
     reworkBy: rework?.by,
     reworkAt: rework?.at,
     reworkReason: rework?.reason,
