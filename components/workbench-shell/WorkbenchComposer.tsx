@@ -4,6 +4,7 @@ import { Link2, Paperclip, Plus, Sparkles, X } from "lucide-react";
 import { type DragEvent as ReactDragEvent, type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import {
   type ComposerAttachment,
+  type ComposerSessionAction,
   fileAttachmentFromUpload,
   mergeAttachments,
 } from "../../lib/workbench/composerAttachments";
@@ -25,6 +26,8 @@ type Props = {
   globalDrop?: boolean;
   disabled?: boolean;
   onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+  /** 会话里「+ › 技能」列的动作（首页不传）；传了，连接器那一栏也只看不挂。 */
+  sessionActions?: ComposerSessionAction[];
   children: ReactNode;
 };
 
@@ -39,6 +42,7 @@ export function WorkbenchComposer({
   globalDrop = false,
   disabled,
   onSubmit,
+  sessionActions,
   children,
 }: Props) {
   const [dropActive, setDropActive] = useState(false);
@@ -121,6 +125,8 @@ export function WorkbenchComposer({
           onAdd={(attachment) => onAttachmentsChange(mergeAttachments(attachments, [attachment]))}
           onRemove={(id) => onAttachmentsChange(attachments.filter((item) => item.id !== id))}
           onLocalFiles={addFiles}
+          sessionActions={sessionActions}
+          connectorsReadOnly={Boolean(sessionActions)}
         />
       ) : (
         <label className="composerAddButton" aria-label="上传文件">

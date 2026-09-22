@@ -15,7 +15,7 @@ interface WorkflowNode {
 const pkWorkflowNodes: WorkflowNode[] = [
   { id: "start", type: "start", label: "读取 PK 入参", description: "接收对话字段和上下文" },
   { id: "condition", type: "condition", label: "判断是否 PK", description: "按条件拆分满足，否则路径" },
-  { id: "prepare", type: "formula", label: "准备 PK 计价数量", formula: "max(实际样品数, 40)" },
+  { id: "prepare", type: "formula", label: "准备 PK 计价数量", formula: "每化合物 max(实际样品数, 30)" },
   { id: "fixed_prices", type: "formula", label: "PK 固定价格表", formula: "执行规则运算或表达式" },
   { id: "animal_in_vivo", type: "fee_item", label: "动物费和体内费", formula: "动物单价 × 数量 × 折扣" },
   { id: "bioanalysis", type: "fee_item", label: "生物分析费", formula: "样品检测单价 × 计价数量" },
@@ -35,7 +35,7 @@ const pkWorkflowNodes: WorkflowNode[] = [
 const baWorkflowNodes: WorkflowNode[] = [
   { id: "start", type: "start", label: "读取 BA Only 入参", description: "接收对话字段和上下文" },
   { id: "condition", type: "condition", label: "判断是否 BA Only", description: "检测类型 = BA Only" },
-  { id: "prepare", type: "formula", label: "准备 BA 计价数量", formula: "实际样品数" },
+  { id: "prepare", type: "formula", label: "准备 BA 计价数量", formula: "每化合物 max(实际样品数, 30)" },
   { id: "fixed_prices", type: "formula", label: "BA 固定价格表", formula: "执行规则运算或表达式" },
   { id: "bioanalysis", type: "fee_item", label: "生物分析费", formula: "样品检测单价 × 计价数量" },
   { id: "report", type: "fee_item", label: "报告费", formula: "固定费用 ¥3,000" },

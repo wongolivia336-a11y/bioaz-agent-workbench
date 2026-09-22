@@ -480,7 +480,7 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
       ) : null}
 
       {preview ? (
-        <TicketFilePreview file={preview.file} view={preview.view} notes={noted} onClose={() => setPreview(null)} />
+        <TicketFilePreview file={preview.file} view={preview.view} notes={noted} paper={ticket.review?.paper} onClose={() => setPreview(null)} />
       ) : null}
 
       {/* 批注随这件事一起走,不锁在批注画布里。

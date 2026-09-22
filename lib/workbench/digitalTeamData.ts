@@ -175,7 +175,8 @@ export const digitalScenarios: DigitalScenario[] = [
 ];
 
 export const mcpData: McpConnector[] = [
-  { id: "mcp-library", name: "项目文件库", system: "内部存储", status: "connected", scope: "全部项目", usedBy: ["file-assistant", "tumor-report-coworker", "qa-review-coworker"], lastSync: "刚刚" },
+  /* 两位报价同事也读它：会话里「添加文件 › 项目文件库」挑的方案和清单就是从这儿来的。 */
+  { id: "mcp-library", name: "项目文件库", system: "内部存储", status: "connected", scope: "全部项目", usedBy: ["file-assistant", "tumor-report-coworker", "qa-review-coworker", "dmpk-quotation-coworker", "tumor-quotation-coworker"], lastSync: "刚刚" },
   { id: "mcp-pubmed", name: "PubMed", system: "外部数据库", status: "connected", scope: "全局只读", usedBy: ["tumor-report-coworker"], lastSync: "1 小时前" },
   /* 两条报价线读的是同一个计价规则库——scope 写成「DMPK 报价」的话，
      肿瘤报价的价格看起来像是从别处来的，而后台其实只有这一份。 */

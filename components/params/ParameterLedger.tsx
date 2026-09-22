@@ -77,7 +77,7 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, st
                       onClick={() => onEditField(field.id)}
                       title={formatParamValue(field, field.value)}
                     >
-                      <span>{field.label}</span>
+                      <span>{field.mark ? <i className="paramFieldMark">{field.mark}</i> : null}{field.label}</span>
                       <strong>{formatParamValue(field, field.value)}</strong>
                       {field.source ? (
                         <SourceMark
@@ -94,9 +94,10 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, st
                     ) : null}
                   </Fragment>
                 ) : (
-                  <div className="inspectorParameterField isEmpty" key={field.id}>
-                    <span>{field.label}</span>
-                    <strong>待填写</strong>
+                  /* 不适用的空格子不是欠着：写「不适用」，不写「待填写」，也不进进度 */
+                  <div className={`inspectorParameterField isEmpty${field.notApplicable ? " isNotApplicable" : ""}`} key={field.id} title={field.notApplicable ? field.hint : undefined}>
+                    <span>{field.mark ? <i className="paramFieldMark">{field.mark}</i> : null}{field.label}</span>
+                    <strong>{field.notApplicable ? "不适用" : "待填写"}</strong>
                     <span aria-hidden="true" />
                   </div>
                 ))}

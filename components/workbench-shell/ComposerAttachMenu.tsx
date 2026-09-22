@@ -1,11 +1,12 @@
 "use client";
 
-import { Check, ChevronRight, Link2, Paperclip, Plus, Search, Sparkles, Upload } from "lucide-react";
+import { Check, ChevronRight, Link2, Paperclip, Play, Plus, Search, Sparkles, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
   type ComposerAttachment,
   type ComposerOption,
   type ComposerOptionGroup,
+  type ComposerSessionAction,
   connectorGroups,
   fileAttachmentFromUpload,
   knowledgeFileOptions,
@@ -30,18 +31,46 @@ type Props = {
   activeCoworkerId?: string | null;
   project?: string | null;
   disabled?: boolean;
+  /* 会话里的两种形态（首页不传，照旧是「挑一项挂成 chip」）：
+     技能 = 让数字同事现在就做的一件事，点了就跑；数字同事自带的那几项只列出来说明「在自动跑」。
+     连接器 = 这条会话在读哪些源，只看不挂——单价从计价规则库来、材料从项目文件库来，
+     人得知道，但不需要每条消息都「带上」它们。 */
+  sessionActions?: ComposerSessionAction[];
+  connectorsReadOnly?: boolean;
 };
 
-export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles, activeCoworkerId = null, project = null, disabled }: Props) {
+export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles, activeCoworkerId = null, project = null, disabled, sessionActions, connectorsReadOnly = false }: Props) {
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState<SectionId | null>(null);
   const [query, setQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const layerRef = useDismissableLayer<HTMLDivElement>(open, () => { setOpen(false); setSection(null); setQuery(""); });
 
+  const inSession = Boolean(sessionActions);
   const groups = useMemo<ComposerOptionGroup[]>(() => {
-    if (section === "skill") return skillGroups(activeCoworkerId);
-    if (section === "connector") return connectorGroups(activeCoworkerId);
+    if (section === "skill") {
+      /* 会话里：数字同事自带的技能只列「已具备」那组，作为「自动运行中」的说明；
+         「其他可用」在会话里没有意义——这一单对面是谁已经定了。 */
+      const all = skillGroups(activeCoworkerId);
+      return inSession ? all.filter((group) => group.id === "owned").map((group) => ({ ...group, id: "running", label: "自动运行中" })) : all;
+    }
+    if (section === "connector") {
+      const all = connectorGroups(activeCoworkerId);
+      /* 只读时不再按「已具备 / 其他可用」分，按「在读 / 未接」分——问题从「要不要带上」变成「它读得到什么」。 */
+      if (!connectorsReadOnly) return all;
+      /* 在读 = 这位数字同事用着的、已连接的；其余已连接的对这条会话没用（PubMed 对报价没用），
+         单列一组说清楚；没接上的另起一组。 */
+      const owned = all.find((group) => group.id === "owned")?.options ?? [];
+      const others = all.filter((group) => group.id !== "owned").flatMap((group) => group.options);
+      const live = owned.filter((option) => !option.disabled);
+      const idle = others.filter((option) => !option.disabled);
+      const off = [...owned, ...others].filter((option) => option.disabled);
+      return [
+        ...(live.length ? [{ id: "live", label: "本会话在读", options: live }] : []),
+        ...(idle.length ? [{ id: "idle", label: "已连接 · 本会话不用", options: idle }] : []),
+        ...(off.length ? [{ id: "off", label: "未接入", options: off }] : []),
+      ];
+    }
     if (section === "file") {
       const library = libraryFileOptions(project);
       const knowledge = knowledgeFileOptions();
@@ -51,7 +80,7 @@ export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles,
       ];
     }
     return [];
-  }, [activeCoworkerId, project, section]);
+  }, [activeCoworkerId, connectorsReadOnly, inSession, project, section]);
 
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -60,6 +89,12 @@ export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles,
       .map((group) => ({ ...group, options: group.options.filter((option) => `${option.label}${option.meta ?? ""}`.toLowerCase().includes(keyword)) }))
       .filter((group) => group.options.length > 0);
   }, [groups, query]);
+  const filteredActions = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    return (sessionActions ?? []).filter((action) => !keyword || `${action.label}${action.meta ?? ""}`.toLowerCase().includes(keyword));
+  }, [query, sessionActions]);
+  /* 这一节里有没有能点的东西——只读的连接器、自动运行中的技能都不算 */
+  const inert = (section === "connector" && connectorsReadOnly) || (section === "skill" && inSession);
 
   const openSection = (next: SectionId) => {
     setSection((current) => (current === next ? null : next));
@@ -138,11 +173,50 @@ export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles,
                       />
                     </label>
                     <div className="composerAttachList">
+                      {/* 会话里的技能：先是「让它做」——点了就跑、菜单收起 */}
+                      {item.id === "skill" && sessionActions ? (
+                        filteredActions.length ? (
+                          <div className="composerAttachGroup">
+                            <span className="composerAttachGroupLabel">让数字同事做</span>
+                            {filteredActions.map((action) => (
+                              <button
+                                type="button"
+                                key={action.id}
+                                className="composerAttachOption isAction"
+                                disabled={action.disabled}
+                                title={action.disabled ? action.disabledReason : undefined}
+                                onClick={() => { action.run(); setOpen(false); setSection(null); setQuery(""); }}
+                              >
+                                <Play size={12} aria-hidden="true" />
+                                <span className="composerAttachOptionCopy">
+                                  <strong>{action.label}</strong>
+                                  {action.meta ? <small>{action.meta}</small> : null}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : null
+                      ) : null}
                       {filtered.length ? filtered.map((group) => (
                         <div className="composerAttachGroup" key={group.id}>
                           {group.label ? <span className="composerAttachGroupLabel">{group.label}</span> : null}
                           {group.options.map((option) => {
                             const attached = attachments.some((entry) => entry.id === option.id);
+                            /* 只读行：不是按钮，不勾选，右边一个状态词 */
+                            if (inert) {
+                              /* 规划中的技能不能标「运行中」——它还没有 */
+                              const planned = item.id === "skill" && Boolean(option.meta?.includes("规划中"));
+                              const off = option.disabled || planned;
+                              return (
+                                <div className={`composerAttachOption isInert ${off ? "isOff" : ""}`} key={option.id} title={option.disabled ? option.disabledReason : undefined}>
+                                  <span className="composerAttachOptionCopy">
+                                    <strong>{option.label}</strong>
+                                    {option.meta ? <small>{option.meta}</small> : null}
+                                  </span>
+                                  <em>{item.id === "skill" ? (planned ? "规划中" : "运行中") : option.disabled ? option.disabledReason : group.id === "idle" ? "不用" : "在读"}</em>
+                                </div>
+                              );
+                            }
                             return (
                               <button
                                 type="button"
@@ -161,7 +235,8 @@ export function ComposerAttachMenu({ attachments, onAdd, onRemove, onLocalFiles,
                             );
                           })}
                         </div>
-                      )) : <p className="composerAttachEmpty">没有匹配的结果</p>}
+                      )) : (item.id === "skill" && filteredActions.length) ? null : <p className="composerAttachEmpty">没有匹配的结果</p>}
+                      {inert && item.id === "connector" ? <p className="composerAttachNote">单价从计价规则库来，材料从项目文件库来。接入与授权在「数字团队 › 连接器」里管。</p> : null}
                     </div>
                   </div>
                 ) : null}

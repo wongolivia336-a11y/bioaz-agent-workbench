@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { ComposerAttachment } from "../lib/workbench/composerAttachments";
 import type { QuotePermissions } from "../lib/workbench/permissions";
+import type { ReviewBundle } from "../lib/workbench/reviewBundle";
 
 export type ModuleAvailability = "available" | "placeholder";
 export type ModuleRunStatus = "active" | "completed";
@@ -191,6 +192,9 @@ export type SessionHandoff = {
   /* 随单产物。一张不带东西的工单等于一句「你去处理一下」,接手的人还得回来问
      到底审什么——所以交接卡上写了「随单带上产物」,这里就必须真的带。 */
   attachments?: Array<{ id: string; name: string; meta: string }>;
+  /* 审核人要看的不只是两个文件：同一份草稿的纸面、每项参数的原文依据、这一版改过什么
+     （P0 第五层）。会话在交出去那一下打包，壳层原样挂到工单上。 */
+  review?: ReviewBundle;
 };
 
 export type QuotationManagementTarget = {

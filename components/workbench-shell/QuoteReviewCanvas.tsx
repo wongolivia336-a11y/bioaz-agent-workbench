@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2 } from "lucide-react";
+import { ArrowRight, BookOpen, Check, FileSpreadsheet, FileText, Highlighter, MessageSquare, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Dialog } from "../ui";
+import { Dialog, EmptyState } from "../ui";
 import { QuoteDocPaper, QuoteSheetPaper, money, quoteCategories } from "./QuotePaper";
+import type { ReviewBundle } from "../../lib/workbench/reviewBundle";
 import { useDismissableLayer } from "./useDismissableLayer";
 import {
   quoteItems,
@@ -91,6 +92,63 @@ function QuoteDecisionDialog({ kind, ticket, notes, reviewer, anchorLabel, onClo
 /** 草稿:还没落盘的一条批注,连同它在纸面上的纵向位置。 */
 type Draft = { anchorId: string; quote: string; top: number; note: QuoteNote };
 
+const evidenceKindLabel: Record<ReviewBundle["evidence"][number]["kind"], string> = {
+  document: "读自材料",
+  manual: "人改过",
+  sentence: "人填的",
+  derived: "系统判定",
+};
+
+/**
+ * 第三张纸：依据与变更。
+ * 左半是每项参数从哪儿来（材料的哪一节、原句是什么，人改过的写「原文为 X，已改为 Y」），
+ * 右半是这一版改过什么（临时价、补价、折扣、搭上的板块、出过几版）。
+ * 审核人先看这张再看计算表，批注就有的放矢——批的是「这个数为什么是这个数」。
+ */
+function ReviewEvidencePaper({ review }: { review: ReviewBundle }) {
+  const unconfirmed = review.evidence.filter((item) => item.unconfirmed).length;
+  return (
+    <article className="quoteSheet reviewEvidence">
+      <header>
+        <strong>依据与变更</strong>
+        <small>{review.sources.length ? review.sources.map((source) => source.label).join(" · ") : "没有读过材料，参数全是人给的"}</small>
+      </header>
+      <div className="reviewEvidenceGrid">
+        <section>
+          <h3>参数的原文依据<em>{review.evidence.length} 项{unconfirmed ? ` · ${unconfirmed} 项文件认出、撰写人未逐项确认` : ""}</em></h3>
+          <ul className="reviewEvidenceList">
+            {review.evidence.map((item) => (
+              <li key={item.id} data-kind={item.kind} data-anchor={`f-${item.id}`}>
+                <div className="reviewEvidenceHead">
+                  <strong>{item.label}</strong>
+                  <b>{item.value}</b>
+                  <i>{evidenceKindLabel[item.kind]}{item.unconfirmed ? " · 未确认" : ""}</i>
+                </div>
+                {item.kind === "document" ? <p><span>{item.sourceLabel} · {item.anchor}</span>「{item.quote}」</p> : null}
+                {item.kind === "manual" && item.original ? <p><span>{item.original.sourceLabel} · {item.original.anchor}</span>原文为「{item.original.value}」（{item.original.quote}），已改为 {item.value}</p> : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section>
+          <h3>这一版改过什么<em>{review.changes.length} 条</em></h3>
+          {review.changes.length ? (
+            <ul className="reviewChangeList">
+              {review.changes.map((change) => (
+                <li key={change.id} data-kind={change.kind}>
+                  <strong>{change.what}</strong>
+                  {change.detail ? <small>{change.detail}</small> : null}
+                  <span>{change.by} · {change.at}</span>
+                </li>
+              ))}
+            </ul>
+          ) : <EmptyState variant="inline" title="没有人工改动" description="没有临时价、折扣或加板块，全按价目表和材料。" />}
+        </section>
+      </div>
+    </article>
+  );
+}
+
 /**
  * 报价审核画布。跟 QA 审核台同构,不是另起一套:
  *
@@ -119,7 +177,11 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
   onReject: (summary: string) => void;
   onArchive: () => void;
 }) {
-  const [form, setForm] = useState<"sheet" | "doc">("sheet");
+  /* 会话交出来的那一包：有就读它的纸（账折成的），没有就用固定件。
+     第三个 tab「依据与变更」也只在有包时出现——固定件没有原文，也没有变更可讲。 */
+  const review = ticket.review;
+  const paper = review?.paper;
+  const [form, setForm] = useState<"sheet" | "doc" | "evidence">("sheet");
   const [annotateMode, setAnnotateMode] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
   /* 待确认的处置。不叫 confirm——那个名字会跟全局的 window.confirm 撞上。 */
@@ -142,16 +204,20 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
     noted.map((note) => note.customLabel?.trim()).filter((label): label is string => Boolean(label)),
   ));
 
+  /* 锚点词表跟着纸走：有包就查包里的纸，没有就查固定件。 */
+  const params = paper?.params ?? quoteParams;
+  const items = paper?.items ?? quoteItems;
+  const subtotals = paper?.subtotals ?? quoteSubtotals;
   const anchorLabel = (id: string) =>
-    quoteParams.find((param) => param.id === id)?.label
-    ?? quoteItems.find((item) => item.id === id)?.item
-    ?? quoteSubtotals.find((sub) => sub.id === id)?.label
+    params.find((param) => param.id === id)?.label
+    ?? items.find((item) => item.id === id)?.item
+    ?? subtotals.find((sub) => sub.id === id)?.label
     ?? id;
 
   const currentValue = (id: string) => {
-    const param = quoteParams.find((item) => item.id === id);
+    const param = params.find((item) => item.id === id);
     if (param) return param.value;
-    const item = quoteItems.find((entry) => entry.id === id);
+    const item = items.find((entry) => entry.id === id);
     return item?.unitPrice === undefined ? "" : money(item.unitPrice);
   };
 
@@ -239,8 +305,8 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
     <section className="workbenchView quoteReviewCanvas">
       <div className="quoteReviewHead">
         <div className="ticketDetailTitle">
-          <h1>{quoteMeta.title}</h1>
-          <p>报价复核 · 全程人工 · 复核人 {reviewer}</p>
+          <h1>{paper?.meta.title ?? quoteMeta.title}</h1>
+          <p>报价复核 · 全程人工 · 复核人 {reviewer}{review?.sources.length ? ` · 读过 ${review.sources.length} 份材料` : ""}</p>
         </div>
         <div className="quoteHeadTools">
           {/* 批注是模式。跟 QA 一样给一个明确的开关,而不是"选中就弹"。 */}
@@ -260,15 +326,22 @@ export function QuoteReviewCanvas({ ticket, notes, onNotesChange, reviewer, revi
             <button type="button" role="tab" aria-selected={form === "doc"} className={form === "doc" ? "active" : ""} onClick={() => setForm("doc")}>
               <FileText size={14} />报价书
             </button>
+            {review ? (
+              <button type="button" role="tab" aria-selected={form === "evidence"} className={form === "evidence" ? "active" : ""} onClick={() => setForm("evidence")}>
+                <BookOpen size={14} />依据与变更
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
 
       <div className="quoteReviewBody">
-        <div className={`quoteDocPane ${annotateMode ? "isAnnotating" : ""}`} ref={paneRef} onMouseUp={captureSelection}>
+        <div className={`quoteDocPane ${annotateMode && form !== "evidence" ? "isAnnotating" : ""}`} ref={paneRef} onMouseUp={form === "evidence" ? undefined : captureSelection}>
           {form === "sheet"
-            ? <QuoteSheetPaper rowClass={rowClass} bubble={bubble} />
-            : <QuoteDocPaper rowClass={rowClass} bubble={bubble} />}
+            ? <QuoteSheetPaper rowClass={rowClass} bubble={bubble} data={paper} />
+            : form === "doc"
+              ? <QuoteDocPaper rowClass={rowClass} bubble={bubble} data={paper} />
+              : review ? <ReviewEvidencePaper review={review} /> : null}
 
           {/* 就地气泡卡。跟 QA 一个量级:引用 + 一行输入 + 去向,批注多数是一句话,
               给三行文本域等于暗示"你得写一段"。 */}

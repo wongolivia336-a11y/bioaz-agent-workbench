@@ -59,7 +59,7 @@ export function ParameterFieldRow({
       <div className="decisionCopy">
         <div className="decisionTitleRow">
           <span className="decisionIndex">{done ? <Check size={15} /> : index}</span>
-          <strong>{field.label}</strong>
+          <strong>{field.mark ? <i className="paramFieldMark">{field.mark}</i> : null}{field.label}</strong>
           <span className="requiredTag">{field.required ? "必填" : "可选"}</span>
         </div>
         {field.hint ? <em className="paramFieldHint">{field.hint}</em> : null}

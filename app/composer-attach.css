@@ -171,6 +171,19 @@
 .composerAttachOption.isAttached { color: var(--bioaz-agent-accent); }
 .composerAttachOption.isAttached svg { color: var(--bioaz-agent-accent); }
 .composerAttachOption:disabled { cursor: not-allowed; opacity: .48; }
+/* 会话里的两种行：动作行（点了就跑，带一个小播放标）；只读行（不是按钮，右边一个状态词） */
+.composerAttachOption.isAction > svg { flex: none; color: var(--bioaz-agent-accent); }
+.composerAttachOption.isInert { cursor: default; }
+.composerAttachOption.isInert > em {
+  flex: none; border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface-hover);
+  padding: 1px 7px; color: var(--bioaz-text-secondary); font-size: var(--bioaz-type-label-size); font-style: normal; font-weight: 600; white-space: nowrap;
+}
+.composerAttachOption.isInert.isOff { opacity: .55; }
+.composerAttachOption.isInert.isOff > em { background: transparent; color: var(--bioaz-text-tertiary); }
+.composerAttachNote {
+  margin: 4px 0 0; border-top: 1px solid var(--bioaz-border); padding: 8px 8px 2px;
+  color: var(--bioaz-text-tertiary); font-size: var(--bioaz-type-label-size); line-height: 1.5;
+}
 
 .composerAttachEmpty {
   margin: 0;

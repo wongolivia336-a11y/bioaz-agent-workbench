@@ -1,11 +1,13 @@
 import { quoteItems, quoteMeta, quoteParams, quoteSubtotals, type QuoteItem, type QuoteParam, type QuoteSubtotal } from "./quoteData";
 import {
+  adjustedTotal,
   effectiveStatus,
   lineUnitPrice,
   quoteLineStatusLabels,
   quotePackageLabels,
   summarizeLines,
   type ManualPrice,
+  type QuoteAdjustments,
   type QuoteLine,
 } from "./quoteLines";
 
@@ -45,9 +47,18 @@ export function quotePaperFromLines(
   manualPrices: Record<string, ManualPrice>,
   fields: Array<{ id: string; label: string; value: string; group?: string }>,
   title: string,
+  adjustments: QuoteAdjustments = {},
 ): QuotePaperData {
   const withManual = summarizeLines(lines, manualPrices);
-  const catalogOnly = summarizeLines(lines, {});
+  /* Standard 是「全按价目表」的数：临时改价的行按价目价倒回去。
+     没价目、现场补价的行（猴类价）例外——补价不是让利，它就是这行唯一的价，Standard 里也按它算；
+     不然 Standard 会漏掉整行，跟 Discounted 差出一截，看的人以为打了对折。 */
+  const standardTotal = withManual.total + lines.reduce((sum, line) => {
+    const manual = manualPrices[line.id];
+    return manual && line.catalogPrice !== undefined ? sum + (line.catalogPrice - manual.price) * line.qty : sum;
+  }, 0);
+  /* 折扣和其他费用作用在合计上：Discounted / Total 是调整后的数 */
+  const finalTotal = adjustedTotal(withManual.total, adjustments);
   const items: QuoteItem[] = lines.map((line) => {
     const manual = manualPrices[line.id];
     const status = effectiveStatus(line, manual);
@@ -72,13 +83,18 @@ export function quotePaperFromLines(
       validity: "本报价自出具之日起 30 天内有效。",
       currency: "CNY",
       packagePrice: withManual.total,
-      otherFees: 0,
-      totalPrice: withManual.total,
-      standardPrice: catalogOnly.total,
-      discountedPrice: withManual.total,
+      otherFees: adjustments.otherFees ?? 0,
+      totalPrice: finalTotal,
+      standardPrice: standardTotal,
+      discountedPrice: finalTotal,
     },
     items,
-    params: fields.filter((field) => field.value).map((field) => ({ id: `f-${field.id}`, label: field.label, value: field.value })),
+    params: [
+      ...fields.filter((field) => field.value).map((field) => ({ id: `f-${field.id}`, label: field.label, value: field.value })),
+      /* 人工调整项也是"可编辑参数"——原表第 22 行黄格子里的 Discount 就是它 */
+      ...(adjustments.discount !== undefined ? [{ id: "adj-discount", label: "折扣（人工）", value: String(adjustments.discount) }] : []),
+      ...(adjustments.otherFees !== undefined ? [{ id: "adj-other", label: "其他费用（人工）", value: adjustments.otherFees.toLocaleString("zh-CN") }] : []),
+    ],
     subtotals: withManual.packages.map((pkg) => ({
       id: `s-${pkg.id}`,
       label: `${pkg.label}${pkg.unpriced ? `（${pkg.unpriced} 行未计价）` : ""}`,

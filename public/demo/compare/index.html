@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>原型 × beta5 · 差异讲稿</title>
+<meta name="description" content="2026-09-22 给另一个组讲：现在的 DMPK 报价原型和 beta5 版本差在哪。">
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --paper: #ffffff;
+    --ink: #17191e;
+    --body: #4c5361;
+    --muted: #8b93a1;
+    --line: #e4e2db;
+    --accent: #2f22d3;
+    --accent-soft: #ecebfb;
+    --beta: #0f766e;
+    --beta-soft: #e6f4f1;
+    --ours: #2f22d3;
+    --ours-soft: #ecebfb;
+    --shadow: 0 18px 50px rgba(23, 25, 30, .10), 0 2px 8px rgba(23, 25, 30, .05);
+    --radius: 18px;
+    --slide-pad: clamp(28px, 4.5vw, 72px);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  /* ── 幻灯片轨道：横向滚动 + 吸附，键盘左右翻 ── */
+  .deck { height: 100%; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; }
+  .deck::-webkit-scrollbar { display: none; }
+  .slide { flex: 0 0 100%; height: 100%; scroll-snap-align: start; padding: var(--slide-pad); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: clamp(14px, 2.2vh, 26px); position: relative; }
+  .slide > header { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+  .kicker { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .kicker::before { content: ""; width: 22px; height: 2px; background: var(--accent); border-radius: 2px; }
+  h1, h2 { margin: 0; letter-spacing: -.02em; line-height: 1.15; font-weight: 700; }
+  h1 { font-size: clamp(38px, 5.4vw, 74px); }
+  h2 { font-size: clamp(26px, 3.1vw, 42px); }
+  h2 small { display: block; margin-top: 8px; color: var(--body); font-size: clamp(14px, 1.15vw, 18px); font-weight: 400; letter-spacing: 0; }
+  .slide > footer { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ── 两栏对比 ── */
+  .compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 32px); min-height: 0; }
+  .compare.wide { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  .panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; min-height: 0; }
+  .tag { display: inline-flex; align-items: center; gap: 8px; align-self: start; border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+  .tag i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .tag.beta { background: var(--beta-soft); color: var(--beta); }
+  .tag.ours { background: var(--ours-soft); color: var(--ours); }
+  .shot { position: relative; min-height: 0; border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--line); }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .shot.contain img { object-fit: contain; object-position: center; background: #fff; }
+  .shot.missing img { display: none; }
+  .shot.missing::after { content: attr(data-missing); position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); font-size: 15px; border: 2px dashed var(--line); border-radius: var(--radius); background: repeating-linear-gradient(135deg, #fafaf7 0 12px, #f4f3ee 12px 24px); }
+  .shot.none { display: grid; place-items: center; background: repeating-linear-gradient(135deg, #fafaf7 0 12px, #f4f3ee 12px 24px); border-style: dashed; box-shadow: none; }
+  .shot.none span { color: var(--muted); font-size: 16px; text-align: center; padding: 24px; }
+  .shot.none span b { display: block; margin-bottom: 6px; color: var(--body); font-size: 22px; }
+  .shot.dims { place-items: stretch; padding: clamp(12px, 1.4vw, 22px); }
+  .shot.dims ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(4px, 1vh, 10px) 16px; align-content: center; }
+  .shot.dims li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; border-left: 3px solid var(--beta); padding-left: 10px; font-size: clamp(12px, 1vw, 15px); line-height: 1.35; color: var(--body); }
+  .shot.dims li b { color: var(--ink); white-space: nowrap; }
+  .shot.dims li span { padding: 0; font-size: inherit; text-align: left; color: inherit; }
+  .caption { color: var(--body); font-size: 14px; line-height: 1.5; }
+  .caption b { color: var(--ink); }
+
+  /* ── 差异点 ── */
+  .diff { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .diff div { border-top: 2px solid var(--line); padding-top: 10px; font-size: 14.5px; color: var(--body); }
+  .diff div b { display: block; margin-bottom: 4px; color: var(--ink); font-size: 15px; }
+  .diff div.hi { border-top-color: var(--accent); }
+
+  /* ── 封面 / 结论 ── */
+  .cover { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .cover .hero { align-self: center; max-width: 60ch; }
+  .cover h1 { max-width: 12em; }
+  .cover .hero p { max-width: 46ch; margin: 22px 0 0; color: var(--body); font-size: clamp(16px, 1.4vw, 21px); }
+  .cover .hero p b { color: var(--ink); }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+  .pills span { border: 1px solid var(--line); border-radius: 999px; background: var(--paper); padding: 6px 14px; font-size: 14px; color: var(--body); }
+  .verdict { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-content: center; }
+  .card { border-radius: var(--radius); background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); padding: clamp(20px, 2.4vw, 34px); display: grid; gap: 10px; align-content: start; }
+  .card .n { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .12em; }
+  .card h3 { margin: 0; font-size: clamp(20px, 1.9vw, 28px); letter-spacing: -.01em; line-height: 1.2; }
+  .card p { margin: 0; color: var(--body); font-size: 15.5px; }
+  .card ul { margin: 4px 0 0; padding-left: 18px; color: var(--body); font-size: 15px; }
+  .card li + li { margin-top: 4px; }
+
+  /* ── 总表 ── */
+  table.matrix { width: 100%; border-collapse: collapse; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); font-size: clamp(13px, 1.05vw, 16px); }
+  table.matrix th, table.matrix td { padding: 11px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  table.matrix th { background: #fbfaf6; color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: .06em; }
+  table.matrix tr:last-child td { border-bottom: 0; }
+  table.matrix td:first-child { color: var(--ink); font-weight: 700; white-space: nowrap; }
+  table.matrix td.beta { color: var(--beta); }
+  table.matrix td.ours { color: var(--ours); }
+  table.matrix td.beta.no, table.matrix td.ours.no { color: var(--muted); }
+  .matrixWrap { min-height: 0; overflow: auto; border-radius: var(--radius); }
+
+  /* ── 控件 ── */
+  .progress { position: fixed; left: 0; top: 0; height: 3px; background: var(--accent); width: 0; z-index: 5; transition: width 240ms ease; }
+  .hint { position: fixed; right: 18px; bottom: 14px; color: var(--muted); font-size: 12px; z-index: 5; opacity: .8; }
+  .dots { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; z-index: 5; }
+  .dots button { width: 8px; height: 8px; border-radius: 50%; border: 0; background: var(--line); cursor: pointer; padding: 0; }
+  .dots button.on { background: var(--accent); width: 22px; border-radius: 4px; }
+  /* 点截图放大看细节 */
+  .shot:not(.none):not(.missing) { cursor: zoom-in; }
+  .lightbox { position: fixed; inset: 0; z-index: 20; display: none; place-items: center; padding: 32px; background: rgba(23, 25, 30, .78); cursor: zoom-out; }
+  .lightbox.on { display: grid; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 12px; box-shadow: 0 30px 80px rgba(0, 0, 0, .4); background: #fff; }
+  @media (max-width: 900px) {
+    .compare, .compare.wide, .verdict, .diff { grid-template-columns: 1fr; }
+    .slide { overflow-y: auto; grid-template-rows: auto auto auto; }
+  }
+  @media print { .deck { display: block; overflow: visible; } .slide { height: auto; min-height: 100vh; page-break-after: always; } .progress, .dots, .hint { display: none; } }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main class="deck" id="deck">
+
+  <!-- 1 封面 -->
+  <section class="slide cover">
+    <header><span class="kicker">2026-09-22 · 报价原型对齐</span><span class="num">澎立 · BioAZ Agent Workbench</span></header>
+    <div class="hero">
+      <h1>DMPK 报价：<br>原型 与 beta5<br>差在哪</h1>
+      <p>先完整演示一遍原型（15 分钟），再回到这份讲稿逐页对照。<b>结论先说：会话层同源，壳层跟着 beta5 改名，其余是我们多出来的。</b></p>
+      <div class="pills"><span>会议共识：右栏 = 参数状态 + 单价</span><span>改价是临时调价唯一路径</span><span>完整价目表独立入口</span><span>权限分级后置</span></div>
+    </div>
+    <footer><span>心蕊 · 原型分支 codex/dmpk-composer-params</span><span>→ 翻页</span></footer>
+  </section>
+
+  <!-- 2 一页结论 -->
+  <section class="slide">
+    <header><span class="kicker">一页结论</span><h2>三句话</h2></header>
+    <div class="verdict">
+      <div class="card"><span class="n">01 · 同源</span><h3>会话层是同一套设计</h3><p>三栏、对话流、参数卡、右栏、产物卡——beta5 已经采用了我们的会话设计。演示里看到的会话骨架，两边一样。</p></div>
+      <div class="card"><span class="n">02 · 跟着改</span><h3>壳层只改了名字和一页</h3><p>「项目」→「空间」；进空间先到一个入口页；数据中枢多一档「产物」。侧栏结构、知识库、数字团队没动，会话层一个像素没动。</p></div>
+      <div class="card"><span class="n">03 · 多出来</span><h3>十件事 beta5 里没有</h3><ul><li>右栏「报价板块」：参数状态 + 单价</li><li>临时改价、补价、折扣——一条路，仅本单</li><li>价目表独立入口 + 对话里问本单价目</li><li>多模态材料识别 + 原文依据 + 确认两态 + 按八维归位</li><li>参数收集按八维分卡：基础 ①②③ / 板块 ④–⑧，命中一块长一块</li><li>人 / 站内信 / 工单 / 交接 / 退回 / 复核画布 + 审核人看依据与变更</li><li>演示级权限（SD / SD 助理）</li><li>「+」菜单：技能 = 让它做，连接器 = 它在读什么</li><li>P0 规则：少于 30 按 30、不适用、影响提示、按组明细</li><li>空间首页的专家绑定与介绍</li></ul></div>
+    </div>
+    <footer><span>硬冲突只有一处：beta5 没有「人」。以我们为准。</span><span class="num">2</span></footer>
+  </section>
+
+  <!-- 3 壳层 · 空间 -->
+  <section class="slide">
+    <header><span class="kicker">壳层</span><h2>空间与入口页<small>beta5 把项目改成了空间，每个空间先落到一个「我能为你做什么」的入口页——我们照做，但把这一页做成了这个空间的门。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot" data-missing="beta5 · 空间入口页（Admin123，我能为你做什么？）"><img src="img/beta5-space-home.jpg" alt="beta5 空间入口页" onerror="this.parentElement.classList.add('missing')"></div><p class="caption"><b>一句问候 + 输入框 + 专家 chip</b>，底下四个数字（文件 / 记忆 / 知识 / 产物）和专家头像。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-space-home.png" alt="原型 空间首页"></div><p class="caption"><b>空间插画 + 标签 + 四张专家卡（hover 出介绍）+ 配置专家 + 概览三卡</b>。任务仍在第一句话发出时才建立。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>一致</b>叫法（空间）、入口页、专家从空间里选。</div><div><b>我们多的</b>专家卡的介绍（做什么 / 几步 / 交出什么）、页上直接配置专家、概览可点进数据中枢。</div><div><b>beta5 多的</b>「记忆」这一档——我们没做，先要定义它是什么。</div></div>
+    <footer><span>侧栏点空间行仍是开合；进入口页走 hover 的 ↗。</span><span class="num">3</span></footer>
+  </section>
+
+  <!-- 4 会话开始 -->
+  <section class="slide">
+    <header><span class="kicker">会话 · 右栏</span><h2>一句话之后，右栏放什么<small>会议定了：右栏不再收集参数，只做「已收集参数的状态展示 + 对应单价」。这是这次最大的分岔。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot" data-missing="beta5 · 会话右栏「报价参数收集 13/13」四组全部已完成"><img src="img/beta5-session-rail.jpg" alt="beta5 会话右栏" onerror="this.parentElement.classList.add('missing')"></div><p class="caption">右栏是<b>参数分组完成度</b>（检测类型 / 动物实验 / 生物分析 / 报告与报价，13/13）——这是我们上一版的参数面板。对话里是一段文字把参数全倒出来。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-session-sentence.png" alt="原型 一句话后的板块"></div><p class="caption">右栏是<b>报价板块</b>：按 PK/TK · TOX · BA · ADA · 动物 · 报告分板块，行内只有「数量 × 单价」和待测物 · 方法。<b>账不等参数齐</b>：填一项亮一行，缺的写「去填」。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>分岔点</b>beta5 的右栏回答"参数收了多少"；我们的回答"收了什么、多少钱"。</div><div><b>保留</b>参数收集面板还在（第二个 tab），文件识别的逐项确认在那儿。</div><div><b>撤掉</b>「报价规则」tab——两条真规则折进板块底部，其余都是板块在做的事。</div></div>
+    <footer><span>板块可折叠，默认只开第一个有待定项的。</span><span class="num">4</span></footer>
+  </section>
+
+  <!-- 5 材料识别 -->
+  <section class="slide">
+    <header><span class="kicker">甲方 P0-1</span><h2>传一份方案，发生了什么<small>多模态入口（Word / PDF / 截图 / 聊天记录）、解析轨迹、每项参数的原文依据、「识别」与「确认」两态。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot none"><span><b>没有这一步</b>参数由用户在对话里逐项打字给出；没有材料入口，没有轨迹，没有原文。</span></div><p class="caption">beta5 的会话从「请向用户追问 11 项」开始，用户回一段 13 项参数的文字。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 读方案后的解析轨迹与参数收集"></div><p class="caption">「已读取 BB-001 方案」：7 组 / 7 分析方法 / 37 采样事件 → 识别 11 项、2 项待确认，<b>已计价 20 项 ¥222,860</b>，7 项未计价（待确认 2 · 无价目 4 · 缺参数 1）各带原因。右栏每一项标「识别」，铅笔逐项确认，点来源看原文句子。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>规则</b>文件为准；机器读出来的是提议，人点过头的才是参数。</div><div><b>入口</b>本地文件、项目文件库、知识库；截图走 OCR 剧本，聊天记录走要求提取。</div><div><b>边界</b>只有本地上传才算材料；工单附件不读；退回会话不读。</div></div>
+    <footer><span>演示材料：docs/demo/materials</span><span class="num">5</span></footer>
+  </section>
+
+  <!-- 6 八维 -->
+  <section class="slide">
+    <header><span class="kicker">P0 方案 · 八维</span><h2>读出来的东西，按八维归位<small>工程方案第一层定了「8 维提取 Schema」。原型把材料面板按它排，每一维落到参数模型的哪个格子、哪一行账，都对得上。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag beta"><i></i>P0 方案 · 第一层</span><div class="shot none dims"><ol>
+        <li><b>① 动物</b><span>→ 动物种属</span></li><li><b>② 组别</b><span>→ 组数 · 核心 / 卫星</span></li>
+        <li><b>③ 数目</b><span>→ 每组动物数</span></li><li><b>④ 实验操作</b><span>→ 板块里的行（给药 / 采血 / 剖检…）</span></li>
+        <li><b>⑤ 操作次数</b><span>→ 采血点数 · 试验周期</span></li><li><b>⑥ 检测项目</b><span>→ PK/TK · TOX · ADA 板块</span></li>
+        <li><b>⑦ 检测方法</b><span>→ 分析方法</span></li><li><b>⑧ 检测数量</b><span>→ 每行的份数</span></li>
+      </ol></div><p class="caption">方案第三、四、五层的几条规则也补进了原型：<b>每化合物少于 30 份按 30 计</b>；<b>猴类价 / 折扣 / 其他费用是人工输入项</b>，不假装有价目；BA Only 不问动物参数，台账写「不适用」。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-materials-dims.png" alt="原型 输入材料按八维分组"></div><p class="caption">「输入材料」面板：<b>按八维提取 · 读到 8 / 8 维</b>，每一维带原文位置（§1 / 表 2 / 表 3），能展开看明细。没归到八维的（聊天记录里的交付要求）排在最后。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>影响提示</b>每次参数或单价一变，对话里一句「影响 PK / TK 样品采集 2 行；合计 A → B」——转换确认模块首期要的那一项。</div><div><b>按组明细</b>「报价明细」能翻成按组看：每组分到的行、份额、小计，各组 + 整单项 = 合计——方案的输出口径。</div><div><b>要讨论</b>八维之外的东西（交付要求、报价区域）在方案里没有位置，原型先放在「其他」；按组参数（每组各自的时点）还没有格子。</div></div>
+    <footer><span>docs/QUOTE_SECTIONS.md §6b · 对照《DMPK 复杂报价 P0 工程方案（五层链路版）》</span><span class="num">6</span></footer>
+  </section>
+
+  <!-- 7 积木 -->
+  <section class="slide">
+    <header><span class="kicker">会议 · 积木</span><h2>参数收集按八维分卡，命中一块长一块<small>八维就是参数收集的结构：基础卡 ①②③，每个板块一张 ④–⑧，报告与交付一张。会上说的「TOX 的卡片在下面再长出一个卡片」，就是台账下面再长一张同样的卡。</small></h2></header>
+    <div class="compare wide">
+      <div class="panel"><span class="tag ours"><i></i>原型 09-22</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 参数收集按八维分卡，台账下面长出 TOX 卡"></div><p class="caption">右栏「参数收集」：<b>基础 ①②③</b> / <b>PK / TK ④–⑧</b> / <b>报告与交付</b>，每行标维度记号，能折能开。「再搭一块」点 TOX，下面<b>再长一张 TOX ④–⑧</b>（④ 操作 ⑤ 次数 ⑦ 方法 ⑧ 数量，缺的写「待填写」点了去填），板块面板同时多一段。中间参数卡的分页跟右栏是同一份——那边填一格，这边亮一行。</p></div>
+      <div class="panel"><span class="tag beta"><i></i>怎么做到的</span><div class="shot none"><span><b>十四项不加不减</b>只是按八维重新分组、标上记号：原来的「检测类型 / 动物实验 / 生物分析 / 报告与报价」是按业务环节分的，跟方案对不上。<br><br><b>板块卡读的就是账</b>主板块由「检测类型」定，卡名跟着改（PK → PK / TK）；再搭的板块记在会话上，账里当场长出那一段，行大多缺参数、指回参数卡那一格；拆掉就收回。</span></div><p class="caption">加、拆都进对话（「已搭上 TOX：多了 4 行，其中 2 行缺参数（采血点数）」+ 影响提示），也进快照——出过版之后再搭，版本卡标「待重出」。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>回答了</b>⑥ 检测项目多选：检测类型定主板块 + 搭上去的板块 = 这一单做什么。</div><div><b>没回答</b>每个板块各自的组 / 时点（按组参数）：现在全单共用一套采血点数，方案里 TK 16 点 / PK 11 点 / 临床病理 6 点是三套。</div><div><b>要定</b>搭上去的板块卡上要哪些格子——等吴迪的表；现在它是读账，有了表就能填。</div></div>
+    <footer><span>modules/dmpk-quotation/fields.ts（分组）· packageBlocks.tsx（长出来的卡）</span><span class="num">7</span></footer>
+  </section>
+
+  <!-- 6 费用 / 改价 -->
+  <section class="slide">
+    <header><span class="kicker">会议共识 1</span><h2>费用怎么看，价怎么改<small>beta5 把费用明细作为一次性输出贴在对话里；我们把它做成右栏常驻的账，单价旁就是改价。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot" data-missing="beta5 · 对话里的「费用明细」卡：费用项 / 单价 / 数量说明 / 费用，总价 2,353 USD，下面两个文件"><img src="img/beta5-session-quote.jpg" alt="beta5 费用明细" onerror="this.parentElement.classList.add('missing')"></div><p class="caption">「费用明细」卡：6 行、总价、「计算详情」按钮，再下面 xlsx / docx 两个文件。<b>改价没有路径</b>——要改只能重新对话。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-temp-price-done.png" alt="原型 临时改价后的板块"></div><p class="caption">同一条路走了三种价：<b>改价</b>——TK 毒代采血 ¥130 → ¥120，行上挂「临时价 · 原价 · 恢复」；<b>补价</b>——猴类价系统没有，标「待补价」，人给 ¥30,000 只作用于本单；<b>本单折扣 0.9</b>——人工调整项，作用在合计上，写进纸面的黄格子。每一步对话里都留一句「仅本次报价，价目表不动」。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>唯一路径</b>改价只在板块里，不经对话、不进后台。</div><div><b>不按零元</b>无价目的项留在账上标「待补价」，人补一个只作用于本单；折扣、其他费用同理，是人工项不是价目。</div><div><b>重出</b>出过版之后改价，版本卡标「待重出」，一键重新生成。</div></div>
+    <footer><span>纸面（Excel 计算表 / Word 报价书）读的就是这份账：Standard 按价目、Discounted 按调整后。</span><span class="num">8</span></footer>
+  </section>
+
+  <!-- 7 价目表 -->
+  <section class="slide">
+    <header><span class="kicker">会议共识 2</span><h2>完整价目表不进对话<small>独立入口给 SD；但「这单用了哪些价」可以在对话里问，回一张本单命中的表。</small></h2></header>
+    <div class="compare wide">
+      <div class="panel"><span class="tag ours"><i></i>原型 · 对话里问</span><div class="shot"><img src="img/ours-catalog-hits.png" alt="原型 对话里的本单命中价目表"></div><p class="caption">「列出本单命中的价目」→ 费用项目 / 板块 / 单价 / 本单用量 / 状态。同一档价折一行，临时价带原价，无价目另起。<b>谁都能问</b>，那不是完整表。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 后台</span><div class="shot"><img src="img/ours-catalog-backoffice.png" alt="原型 报价管理 标准价格"></div><p class="caption">「查看完整价目表 →」进报价管理，页首一行：<b>这里是全局，改本单回会话</b>。SD 助理进来是只读。</p></div>
+    </div>
+    <div class="diff"><div><b>beta5</b>没有价目表的入口，也没有"这单用了哪些价"。</div><div class="hi"><b>边界</b>全局（底表）和本单（临时价）是两条路，文案在两头都写了。</div><div><b>状态保留</b>进后台再返回，会话原样还在（今天修的）。</div></div>
+    <footer><span>价目表版本 v1.0.13</span><span class="num">9</span></footer>
+  </section>
+
+  <!-- 8 人与工单 -->
+  <section class="slide">
+    <header><span class="kicker">硬冲突 · 以我们为准</span><h2>人、站内信、工单、复核<small>beta5 里没有「人」的概念；报价审批和退回在我们这里是一条完整的链。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag ours"><i></i>原型 · 站内信</span><div class="shot"><img src="img/ours-inbox.png" alt="原型 站内信"></div><p class="caption">待办与动态分开；工单带附件、时间线、处理人；交接从会话里一键发出——刚交过来的「请复核：DMPK 报价任务」就在最上面。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 复核画布</span><div class="shot"><img src="img/ours-review-evidence.png" alt="原型 报价复核画布 · 依据与变更"></div><p class="caption">审核人看的是<b>同一份草稿</b>：计算表 / 报价书之外多一页「依据与变更」——每项参数读自材料哪一节、原句是什么，人改过的写「原文为 X，已改为 Y」；右边是这一版改过什么（改价、补价、折扣、出过几版）。批完 → 退回修订 → 撰写人那边批注回到会话、改参数、重出 v2。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>beta5</b>没有账号角色、没有工单、没有交接——这是唯一的硬冲突。</div><div><b>P0 第五层</b>审核人要看原文依据 + 参数变更 + 计算明细：交接那一下打成一包挂在工单上，画布读包；老工单没有包，照旧。</div><div><b>要问的</b>空间会不会有成员和岗位？没有的话审批和退回在 beta5 里怎么落？</div></div>
+    <footer><span>切账号演示：王林彬（撰写）→ 李林（审核）；演示范围切「总览」才看得到李林</span><span class="num">10</span></footer>
+  </section>
+
+  <!-- 9 数据中枢 -->
+  <section class="slide">
+    <header><span class="kicker">数据中枢</span><h2>文件、产物、来源会话<small>两边都有「产物」和它来自哪条会话；beta5 多「记忆」「知识」两档。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot"><img src="img/beta5-hub.jpg" alt="beta5 数据中枢" onerror="this.parentElement.classList.add('missing')"></div><p class="caption">文件 / 记忆 / 知识 / 产物四档，按空间筛，有回收站和「问问文件助手」。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-hub-artifacts.png" alt="原型 数据中枢 产物档"></div><p class="caption">根级「全部文件 | 产物」分段，产物档多一列<b>来源任务</b>，点进那条会话。</p></div>
+    </div>
+    <div class="diff"><div class="hi"><b>一致</b>产物 + 来源会话。</div><div><b>没做</b>「记忆」——先问工程师它是会话级摘要还是跨会话的用户记忆，决定会话快照往哪儿接。</div><div><b>没改名</b>知识库照旧。</div></div>
+    <footer><span></span><span class="num">11</span></footer>
+  </section>
+
+  <!-- 10 权限 + 「+」 -->
+  <section class="slide">
+    <header><span class="kicker">演示级</span><h2>权限，和「+」里的技能 / 连接器<small>权限分级会上后置了；我们用账号切换器演出"同一单在 SD 和 SD 助理眼里各是什么样"。</small></h2></header>
+    <div class="compare wide">
+      <div class="panel"><span class="tag ours"><i></i>原型 · 「+」菜单</span><div class="shot"><img src="img/ours-plus-skills.png" alt="原型 + 菜单 技能"></div><p class="caption"><b>技能 = 让数字同事现在就做</b>（总结 / 列价目 / 核对 / 预览 / 生成，做不了的灰掉写原因）；<b>连接器 = 本会话在读哪些源</b>（项目文件库、计价规则库）。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 权限</span>
+        <div class="card" style="align-self:start">
+          <table class="matrix" style="box-shadow:none;border:0">
+            <tr><th></th><th>SD 助理</th><th>SD</th></tr>
+            <tr><td>看板块 / 参数 / 价格</td><td class="ours">✓</td><td class="ours">✓</td></tr>
+            <tr><td>改临时价 / 补价</td><td class="ours">✓</td><td class="ours">✓</td></tr>
+            <tr><td>完整价目表</td><td class="no">一行说明</td><td class="ours">✓</td></tr>
+            <tr><td>后台改底表</td><td class="no">只读</td><td class="ours">✓</td></tr>
+          </table>
+          <p>赵敏 = SD 助理，王林彬 / 李林 = SD。级别显示在左下角账号行。</p>
+        </div>
+      </div>
+    </div>
+    <div class="diff"><div><b>beta5</b>「+」只有上传；专家是全局页的一个入口。</div><div class="hi"><b>说服力</b>技能不是挂在消息上的标签，是可以让它做的事；连接器回答"它读得到什么"。</div><div><b>待定</b>两级够不够？会上原话是"SD 助理改临时价、SD 改底表"。</div></div>
+    <footer><span></span><span class="num">12</span></footer>
+  </section>
+
+  <!-- 11 总表 -->
+  <section class="slide">
+    <header><span class="kicker">总表</span><h2>逐项对照</h2></header>
+    <div class="matrixWrap">
+      <table class="matrix">
+        <thead><tr><th></th><th>beta5</th><th>原型 09-21</th></tr></thead>
+        <tbody>
+          <tr><td>壳</td><td class="beta">项目 → 空间，空间入口页，侧栏一级入口多</td><td class="ours">只改名 + 空间首页；侧栏结构没动，数据中枢多一档产物</td></tr>
+          <tr><td>会话层</td><td class="beta">已采用我们的设计</td><td class="ours">同</td></tr>
+          <tr><td>右栏</td><td class="beta">参数分组完成度</td><td class="ours">报价板块（参数状态 + 单价）+ 参数收集 + 报价结果</td></tr>
+          <tr><td>费用</td><td class="beta">对话里一次性的费用明细卡</td><td class="ours">右栏常驻的账，按板块折叠、小计合计</td></tr>
+          <tr><td>改价</td><td class="beta no">无路径</td><td class="ours">临时价闭环（原价 → 新价 → 确认），仅本单；无价目可补价</td></tr>
+          <tr><td>价目表</td><td class="beta no">无</td><td class="ours">独立入口；对话里能问本单命中的那一截</td></tr>
+          <tr><td>材料识别</td><td class="beta no">无（参数靠打字）</td><td class="ours">多模态入口 + 解析轨迹 + 原文依据 + 识别 / 确认两态；读出来的按 P0 八维归位</td></tr>
+          <tr><td>P0 规则</td><td class="beta no">无</td><td class="ours">少于 30 按 30、猴类价 / 折扣 / 其他费用人工项、不适用、影响提示、按组明细</td></tr>
+          <tr><td>参数收集</td><td class="beta">四组完成度</td><td class="ours">按八维分卡：基础 ①②③ / 板块 ④–⑧ / 交付；命中一块长一块，「再搭一块」加 TOX · BA · ADA</td></tr>
+          <tr><td>审核人看什么</td><td class="beta no">无</td><td class="ours">同一份草稿：计算表 / 报价书 + 依据与变更（原文依据、改价补价折扣、版本）</td></tr>
+          <tr><td>人与工单</td><td class="beta no">没有「人」</td><td class="ours">站内信、工单、交接、退回、复核画布——硬冲突，以我们为准</td></tr>
+          <tr><td>权限</td><td class="beta no">无</td><td class="ours">演示级 SD / SD 助理</td></tr>
+          <tr><td>数据中枢</td><td class="beta">文件 / 记忆 / 知识 / 产物</td><td class="ours">文件 / 产物（来源任务）；记忆待定义</td></tr>
+          <tr><td>数字团队</td><td class="beta">「专家」入口</td><td class="ours">保留我们的形态；空间可绑专家</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer><span>docs/BETA5_ALIGNMENT.md · docs/QUOTE_SECTIONS.md</span><span class="num">13</span></footer>
+  </section>
+
+  <!-- 12 要确认的 -->
+  <section class="slide">
+    <header><span class="kicker">今天想带走的</span><h2>三个要一起定的问题</h2></header>
+    <div class="verdict">
+      <div class="card"><span class="n">Q1 · 颗粒度</span><h3>板块 = 一行，还是一板块多项服务？</h3><p>会上的例子「PK 样品采集机制：血浆 · 6 种 / ELISA / 11 只 / 0.5 USD」一板块一行；我们一个板块里有采血、方法开发、样品检测多项。行首保留了服务名，四要素在下面。</p></div>
+      <div class="card"><span class="n">Q2 · 人</span><h3>空间会不会有成员和岗位？</h3><p>没有的话，报价审批、退回、交接在 beta5 里怎么落？我们这条链要接到哪个对象上。</p></div>
+      <div class="card"><span class="n">Q3 · 记忆</span><h3>数据中枢的「记忆」是什么？</h3><p>会话级摘要，还是跨会话的用户记忆？决定我们的会话快照和摘要往哪儿接。另：「八维」表拿到后逐板块定字段。</p></div>
+    </div>
+    <footer><span>原型分支 codex/dmpk-composer-params · GitHub wongolivia336-a11y/bioaz-agent-workbench</span><span class="num">14</span></footer>
+  </section>
+
+</main>
+<div class="dots" id="dots"></div>
+<div class="hint">← → 翻页 · Home / End · 点截图放大</div>
+<div class="lightbox" id="lightbox"><img alt=""></div>
+<script>
+  const lightbox = document.getElementById("lightbox");
+  document.querySelectorAll(".shot:not(.none) img").forEach((img) => img.addEventListener("click", () => { lightbox.querySelector("img").src = img.src; lightbox.classList.add("on"); }));
+  lightbox.addEventListener("click", () => lightbox.classList.remove("on"));
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") lightbox.classList.remove("on"); });
+</script>
+<script>
+  const deck = document.getElementById("deck");
+  const slides = [...deck.querySelectorAll(".slide")];
+  const dots = document.getElementById("dots");
+  const progress = document.getElementById("progress");
+  slides.forEach((_, i) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", `第 ${i + 1} 页`); b.addEventListener("click", () => go(i)); dots.appendChild(b); });
+  const current = () => Math.round(deck.scrollLeft / deck.clientWidth);
+  const go = (i) => { const n = Math.max(0, Math.min(slides.length - 1, i)); deck.scrollTo({ left: n * deck.clientWidth, behavior: "smooth" }); };
+  const sync = () => { const i = current(); [...dots.children].forEach((d, k) => d.classList.toggle("on", k === i)); progress.style.width = `${((i + 1) / slides.length) * 100}%`; try { localStorage.setItem("compare-slide", String(i)); } catch {} };
+  deck.addEventListener("scroll", () => window.requestAnimationFrame(sync), { passive: true });
+  window.addEventListener("keydown", (e) => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); go(current() + 1); }
+    if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); go(current() - 1); }
+    if (e.key === "Home") go(0);
+    if (e.key === "End") go(slides.length - 1);
+  });
+  window.addEventListener("resize", () => go(current()));
+  let start = 0; try { start = Number(localStorage.getItem("compare-slide") ?? 0) || 0; } catch {}
+  if (location.hash) start = Number(location.hash.slice(1)) - 1 || 0;
+  window.requestAnimationFrame(() => { deck.scrollTo({ left: start * deck.clientWidth }); sync(); });
+</script>
+</body>
+</html>

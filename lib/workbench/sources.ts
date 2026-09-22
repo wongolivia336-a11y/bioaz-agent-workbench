@@ -85,7 +85,27 @@ export type ParseStep = {
   tech?: string;
 };
 
-/** 读到了、但现有参数模型里没有格子放的东西。只读展示，不进字段。 */
+/**
+ * P0 工程方案第一层的「8 维提取 Schema」：材料里提取到的东西按这八个维度归类。
+ * 序号就是他们表里的顺序；面板按它排、按它打标。
+ */
+export type ExtractionDim = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+export const extractionDimLabels: Record<ExtractionDim, string> = {
+  1: "动物",
+  2: "组别",
+  3: "数目",
+  4: "实验操作",
+  5: "实验操作次数",
+  6: "检测项目",
+  7: "检测方法",
+  8: "检测数量",
+};
+
+export const extractionDimMarks: Record<ExtractionDim, string> = { 1: "①", 2: "②", 3: "③", 4: "④", 5: "⑤", 6: "⑥", 7: "⑦", 8: "⑧" };
+
+/** 读到了、但现有参数模型里没有格子放的东西。只读展示，不进字段。
+    P0 完成清单里这叫「未归位」：已识别、还没落到对象上——不能静默丢失，所以在这儿列着。 */
 export type ParsedFact = {
   id: string;
   label: string;
@@ -94,6 +114,8 @@ export type ParsedFact = {
   brief?: string;
   anchor?: string;
   items?: string[];
+  /** 属于八维里的哪一维。没标的（比如聊天里的交付要求）归到「其他」。 */
+  dim?: ExtractionDim;
 };
 
 /**
