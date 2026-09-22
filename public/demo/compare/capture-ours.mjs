@@ -79,14 +79,21 @@ async function main() {
   await sleep(1500);
   await shot("ours-session-sentence");
 
-  // 3b. 积木：基础卡底下再搭一块 TOX，右栏同时长出 TOX 段；拍完拆掉，后面的流程不受影响
-  await evaluate(`[...document.querySelectorAll('.dmpkBlockAdd button')].find(b => b.textContent.trim() === 'TOX').click(); return true;`);
+  // 3b. 积木：右栏「参数收集」的台账（基础 ①②③ / PK-TK ④–⑧ / 交付）下面再搭一块 TOX，
+  //     台账多一张 TOX 卡、板块面板多一段；composer 参数卡展开看分页联动。拍完拆掉。
+  await evaluate(`[...document.querySelectorAll('[role=tab]')].find(t => t.textContent.trim() === '参数收集').click(); return true;`);
+  await sleep(400);
+  await evaluate(`[...document.querySelectorAll('.dmpkPackageAdd button')].find(b => b.textContent.trim() === 'TOX').click(); return true;`);
   await sleep(900);
-  await evaluate(`document.querySelector('.dmpkBlocks')?.scrollIntoView({ block: 'end' }); return true;`);
+  await evaluate(`const head = document.querySelector('.parameterTaskCard .warningDecisionHeader'); if (head && head.getAttribute('aria-expanded') !== 'true') head.click(); return true;`);
+  await sleep(400);
+  await evaluate(`document.querySelector('.dmpkPackageCards')?.scrollIntoView({ block: 'end' }); return true;`);
   await sleep(300);
   await shot("ours-blocks");
-  await evaluate(`document.querySelector('.dmpkBlockRemove')?.click(); return true;`);
+  await evaluate(`document.querySelector('.dmpkPackageCardRemove')?.click(); return true;`);
   await sleep(600);
+  await evaluate(`document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); return true;`);
+  await sleep(300);
 
   // 4. 传方案 → 解析轨迹 + 参数收集（识别态）
   await uploadProtocol();

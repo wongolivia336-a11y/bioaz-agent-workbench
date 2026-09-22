@@ -39,7 +39,9 @@ import {
   type QuoteLine,
   type QuotePackageSummary,
 } from "../../lib/workbench/quoteLines";
-import { dmpkGroups, initialDmpkFields } from "./fields";
+import { dmpkGroupsFor, initialDmpkFields, type DmpkField } from "./fields";
+import { DmpkPackageCards } from "./packageBlocks";
+import type { ExtraPackage } from "./quoteLineFixtures";
 import {
   resolveInspectorPanels,
   type InspectorContentState,
@@ -51,7 +53,7 @@ import { noteAnchorToField } from "./noteFieldMap";
 import { quoteAnchorLabel, quoteCurrentValue, quoteNoteSeverityLabel, type QuoteNote } from "../../lib/workbench/quoteData";
 
 export type DmpkInspectorStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
-export type DmpkInspectorGroup = "assay" | "animal" | "analysis" | "delivery";
+export type DmpkInspectorGroup = "base" | "package" | "delivery";
 
 export type DmpkInspectorField = {
   id: string;
@@ -92,6 +94,10 @@ export type DmpkInspectorContext = {
   manualPrices?: Record<string, ManualPrice>;
   /** 按组明细的组标签（组 id → 「2 组 · 3 mg/kg · 核心 2 只」）。没有就按 id 显示。 */
   groupLabels?: Record<string, string>;
+  /* 积木：人在主板块之外再搭的板块。台账下面每个命中的板块一张卡，「再搭一块」在最底下。 */
+  extraPackages?: ExtraPackage[];
+  onAddPackage?: (pkg: ExtraPackage) => void;
+  onRemovePackage?: (pkg: ExtraPackage) => void;
   onSetManualPrice?: (lineId: string, price: number) => void;
   onClearManualPrice?: (lineId: string) => void;
   /* 人工调整项：折扣、其他费用。作用在合计上，只在本单（P0 第五层）。 */
@@ -125,10 +131,9 @@ export type DmpkInspectorContext = {
 const CATALOG_VERSION = "v1.0.13";
 
 const groupLabels: Record<DmpkInspectorGroup, string> = {
-  assay: "检测类型",
-  animal: "动物实验",
-  analysis: "生物分析",
-  delivery: "报告与报价",
+  base: "基础",
+  package: "检测项目",
+  delivery: "报告与交付",
 };
 
 const stageLabels: Record<DmpkInspectorStage, string> = {
@@ -351,18 +356,37 @@ function ProcessPanel({ context }: { context: DmpkInspectorContext }) {
 }
 
 /* 台账搬到了 components/params/ParameterLedger——跟肿瘤报价共用同一份。
-   DMPK 十四项全是必填，所以按必填算进度和原来按全量算是同一个数。 */
+   DMPK 十四项全是必填，所以按必填算进度和原来按全量算是同一个数。
+   台账三张卡（基础 / 主板块 / 交付）下面，主板块之外命中的板块各长一张同样的卡（积木），
+   最底下「再搭一块」。 */
 function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
+  const fields = context.fields as DmpkField[];
+  const lines = context.quoteLines ?? [];
   return (
-    <ParameterLedger
-      groups={dmpkGroups}
-      fields={context.fields as ParamField[]}
-      openGroups={context.openGroups}
-      editingFieldId={context.editingFieldId}
-      statusOf={context.fieldStatus ? (fieldId) => context.fieldStatus?.[fieldId] : undefined}
-      onToggleGroup={(groupId) => context.onToggleGroup(groupId as DmpkInspectorGroup)}
-      onEditField={context.onEditField}
-    />
+    <>
+      <ParameterLedger
+        groups={dmpkGroupsFor(fields)}
+        fields={context.fields as ParamField[]}
+        openGroups={context.openGroups}
+        editingFieldId={context.editingFieldId}
+        statusOf={context.fieldStatus ? (fieldId) => context.fieldStatus?.[fieldId] : undefined}
+        onToggleGroup={(groupId) => context.onToggleGroup(groupId as DmpkInspectorGroup)}
+        onEditField={context.onEditField}
+      />
+      {lines.length ? (
+        <div className="dmpkInspectorList paramCollectList dmpkPackageCards">
+          <DmpkPackageCards
+            summary={summarizeLines(lines, context.manualPrices ?? {})}
+            fields={fields}
+            manualPrices={context.manualPrices ?? {}}
+            extraPackages={context.extraPackages ?? []}
+            onAddPackage={context.onAddPackage}
+            onRemovePackage={context.onRemovePackage}
+            onEditField={context.onEditField}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }
 

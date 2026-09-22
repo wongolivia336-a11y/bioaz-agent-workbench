@@ -9156,43 +9156,23 @@ button {
 .dmpkCatalogHits tr[data-status="manual"] td:nth-child(3) { color: var(--bioaz-agent-accent, #5c60b8); }
 .dmpkCatalogHits tr[data-status="no-catalog"] td { color: var(--muted); }
 
-/* ── 积木卡：基础卡底下按板块长出来的那一叠（modules/dmpk-quotation/packageBlocks.tsx）──
-   跟参数卡、确认卡同一个槽位，所以圆角、边线、底色全按 .warningDecision 走；
-   板块卡之间只留细线，叠在一起才像一摞积木而不是三张卡。 */
-.dmpkBlocks { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 24px; background: var(--bioaz-surface); overflow: hidden; }
-.dmpkBlockBase { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--soft, #f7f8fb); font-size: 12.5px; color: var(--ink); }
-.dmpkBlockBaseLabel { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; }
-.dmpkBlockBase > span { display: inline-flex; align-items: baseline; gap: 6px; }
-.dmpkBlockBase > span > em { color: var(--muted); font-size: 11.5px; font-style: normal; }
-.dmpkBlockBase > span.isEmpty { color: var(--muted); }
-.dmpkBlockBase > span > button { border: 0; background: transparent; padding: 0; color: var(--bioaz-agent-accent, #5c60b8); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
-.dmpkBlockStack { display: grid; }
-.dmpkBlock + .dmpkBlock { border-top: 1px solid var(--line); }
-.dmpkBlockHead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; column-gap: 10px; width: 100%; border: 0; background: transparent; padding: 11px 18px; text-align: left; color: inherit; cursor: pointer; }
-.dmpkBlockHead:hover { background: var(--bioaz-surface-hover, rgba(0, 0, 0, .025)); }
-.dmpkBlockHead > strong { font-size: 13.5px; font-weight: 700; color: var(--ink); }
-.dmpkBlockHead > small { color: var(--muted); font-size: 11.5px; }
-.dmpkBlockHead > b { font-size: 13px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-.dmpkBlockChevron { color: var(--muted); transition: transform var(--bioaz-motion-standard) ease; }
-.dmpkBlockHead[aria-expanded="true"] .dmpkBlockChevron { transform: rotate(180deg); }
-.dmpkBlock.isExtra > .dmpkBlockHead > strong::after { content: "搭上的"; margin-left: 8px; color: var(--bioaz-agent-accent, #5c60b8); font-size: 10.5px; font-weight: 600; }
-.dmpkBlockBody { display: grid; gap: 10px; padding: 0 18px 12px; }
-.dmpkBlockDims { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 14px; margin: 0; }
-.dmpkBlockDims > div { display: grid; gap: 2px; min-width: 0; }
-.dmpkBlockDims dt { color: var(--muted); font-size: 11px; }
-.dmpkBlockDims dd { margin: 0; color: var(--ink); font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
-.dmpkBlockPending { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.dmpkBlockPending li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; font-size: 12px; color: var(--ink-soft); }
-.dmpkBlockPending li > i { flex: none; border-radius: var(--bioaz-radius-full); padding: 1px 7px; font-size: 10.5px; font-style: normal; font-weight: 600; background: var(--soft); color: var(--muted); }
-.dmpkBlockPending li[data-status="missing-param"] > i { background: var(--amber-soft); color: var(--amber); }
-.dmpkBlockPending li > button { border: 0; background: transparent; padding: 0; color: var(--bioaz-agent-accent, #5c60b8); font-size: 12px; font-weight: 600; cursor: pointer; }
-.dmpkBlockRemove { justify-self: start; display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent; padding: 0; color: var(--muted); font-size: 11.5px; cursor: pointer; }
-.dmpkBlockRemove:hover { color: var(--ink); }
-.dmpkBlockAdd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 9px 18px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
-.dmpkBlockAdd > span { display: inline-flex; align-items: center; gap: 4px; }
-.dmpkBlockAdd > button { border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); background: transparent; padding: 3px 11px; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; }
-.dmpkBlockAdd > button:hover { border-style: solid; background: var(--soft, #f7f8fb); }
-.dmpkBlockDims dd small { display: block; color: var(--muted); font-size: 11.5px; }
+/* ── 积木：台账下面按板块长出来的卡（modules/dmpk-quotation/packageBlocks.tsx）──
+   跟台账三张卡同一副样子（.inspectorParameterGroup），只加自己的几处：维度记号、只读行、「搭上的」小标、再搭一块。 */
+.paramFieldMark { display: inline-block; margin-right: 4px; color: var(--muted); font-style: normal; font-size: 12px; }
+.dmpkPackageCards { padding-top: 0; grid-template-columns: minmax(0, 1fr); }
+.dmpkPackageCards .inspectorParameterGroup, .dmpkPackageCards .inspectorParameterFields { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.dmpkPackageCards .paramCollectProgress { display: none; }
+.dmpkPackageCardTag { margin-left: 6px; color: var(--bioaz-agent-accent, #5c60b8); font-size: 10.5px; font-style: normal; font-weight: 600; }
+.inspectorParameterField.isStatic { cursor: default; }
+.paramCollectList .inspectorParameterField.isStatic > span:first-child { flex: none; white-space: nowrap; }
+.paramCollectList .inspectorParameterField.isStatic > strong { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inspectorParameterField.dmpkPackageCardNote > strong { color: var(--muted); font-weight: 500; }
+.dmpkPackageCardRemove { display: inline-flex; align-items: center; gap: 4px; margin: 6px 0 2px; border: 0; background: transparent; padding: 0; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.dmpkPackageCardRemove:hover { color: var(--ink); }
+.dmpkPackageAdd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 4px 2px; font-size: 12px; color: var(--muted); }
+.dmpkPackageAdd > span { display: inline-flex; align-items: center; gap: 4px; }
+.dmpkPackageAdd > button { border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); background: transparent; padding: 3px 11px; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; }
+.dmpkPackageAdd > button:hover { border-style: solid; background: var(--soft); }
 
 /* 报价明细：按板块 / 按组两颗胶囊，和按组那种一行三格的份额行 */
 .dmpkQuoteCut { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--soft); justify-self: start; }

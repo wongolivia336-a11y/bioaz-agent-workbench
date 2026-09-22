@@ -140,7 +140,7 @@
     <div class="verdict">
       <div class="card"><span class="n">01 · 同源</span><h3>会话层是同一套设计</h3><p>三栏、对话流、参数卡、右栏、产物卡——beta5 已经采用了我们的会话设计。演示里看到的会话骨架，两边一样。</p></div>
       <div class="card"><span class="n">02 · 跟着改</span><h3>壳层只改了名字和一页</h3><p>「项目」→「空间」；进空间先到一个入口页；数据中枢多一档「产物」。侧栏结构、知识库、数字团队没动，会话层一个像素没动。</p></div>
-      <div class="card"><span class="n">03 · 多出来</span><h3>十件事 beta5 里没有</h3><ul><li>右栏「报价板块」：参数状态 + 单价</li><li>临时改价、补价、折扣——一条路，仅本单</li><li>价目表独立入口 + 对话里问本单价目</li><li>多模态材料识别 + 原文依据 + 确认两态 + 按八维归位</li><li>积木卡：基础卡底下按板块搭</li><li>人 / 站内信 / 工单 / 交接 / 退回 / 复核画布 + 审核人看依据与变更</li><li>演示级权限（SD / SD 助理）</li><li>「+」菜单：技能 = 让它做，连接器 = 它在读什么</li><li>P0 规则：少于 30 按 30、不适用、影响提示、按组明细</li><li>空间首页的专家绑定与介绍</li></ul></div>
+      <div class="card"><span class="n">03 · 多出来</span><h3>十件事 beta5 里没有</h3><ul><li>右栏「报价板块」：参数状态 + 单价</li><li>临时改价、补价、折扣——一条路，仅本单</li><li>价目表独立入口 + 对话里问本单价目</li><li>多模态材料识别 + 原文依据 + 确认两态 + 按八维归位</li><li>参数收集按八维分卡：基础 ①②③ / 板块 ④–⑧，命中一块长一块</li><li>人 / 站内信 / 工单 / 交接 / 退回 / 复核画布 + 审核人看依据与变更</li><li>演示级权限（SD / SD 助理）</li><li>「+」菜单：技能 = 让它做，连接器 = 它在读什么</li><li>P0 规则：少于 30 按 30、不适用、影响提示、按组明细</li><li>空间首页的专家绑定与介绍</li></ul></div>
     </div>
     <footer><span>硬冲突只有一处：beta5 没有「人」。以我们为准。</span><span class="num">2</span></footer>
   </section>
@@ -196,13 +196,13 @@
 
   <!-- 7 积木 -->
   <section class="slide">
-    <header><span class="kicker">会议 · 积木</span><h2>基础卡底下，一块一块搭<small>会上说的「TOX 的卡片在下面再长出一个卡片，像搭积木」。八维正好切成两层：基础卡是 ①②③，每个板块一张 ④–⑧。</small></h2></header>
+    <header><span class="kicker">会议 · 积木</span><h2>参数收集按八维分卡，命中一块长一块<small>八维就是参数收集的结构：基础卡 ①②③，每个板块一张 ④–⑧，报告与交付一张。会上说的「TOX 的卡片在下面再长出一个卡片」，就是台账下面再长一张同样的卡。</small></h2></header>
     <div class="compare wide">
-      <div class="panel"><span class="tag ours"><i></i>原型 09-22</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 积木卡：基础卡底下按板块长出的板块卡"></div><p class="caption">参数卡底边长出一叠：<b>基础</b>一行（动物 · 组别 · 数目 · 周期），下面每个板块一张，折起来是「TOX · 4 行 · 3 待定 · ¥14,400」，展开是这个板块的 ④ 操作 ⑤ 次数 ⑥ 项目 ⑦ 方法 ⑧ 数量，以及它还缺什么、点「去填」。<b>「再搭一块」</b>点 TOX，右栏同时长出 TOX 段。</p></div>
-      <div class="panel"><span class="tag beta"><i></i>怎么做到的</span><div class="shot none"><span><b>板块卡不另存一份定义</b>它读的就是右栏那份账：一个板块一张卡，卡上摆这个板块的账里有什么、还缺什么。右栏改了它跟着改，反之亦然。<br><br><b>十四项不动</b>「检测类型」仍是单选、定主板块；再要哪个板块点一下加，账里当场长出那一段（行大多缺参数、指回参数卡那一格），格子填一个亮一行；拆掉就收回。</span></div><p class="caption">加、拆都进对话（「已搭上 TOX：多了 4 行，其中 2 行缺参数（采血点数）」+ 影响提示），也进快照——出过版之后再搭，版本卡标「待重出」。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 09-22</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 参数收集按八维分卡，台账下面长出 TOX 卡"></div><p class="caption">右栏「参数收集」：<b>基础 ①②③</b> / <b>PK / TK ④–⑧</b> / <b>报告与交付</b>，每行标维度记号，能折能开。「再搭一块」点 TOX，下面<b>再长一张 TOX ④–⑧</b>（④ 操作 ⑤ 次数 ⑦ 方法 ⑧ 数量，缺的写「待填写」点了去填），板块面板同时多一段。中间参数卡的分页跟右栏是同一份——那边填一格，这边亮一行。</p></div>
+      <div class="panel"><span class="tag beta"><i></i>怎么做到的</span><div class="shot none"><span><b>十四项不加不减</b>只是按八维重新分组、标上记号：原来的「检测类型 / 动物实验 / 生物分析 / 报告与报价」是按业务环节分的，跟方案对不上。<br><br><b>板块卡读的就是账</b>主板块由「检测类型」定，卡名跟着改（PK → PK / TK）；再搭的板块记在会话上，账里当场长出那一段，行大多缺参数、指回参数卡那一格；拆掉就收回。</span></div><p class="caption">加、拆都进对话（「已搭上 TOX：多了 4 行，其中 2 行缺参数（采血点数）」+ 影响提示），也进快照——出过版之后再搭，版本卡标「待重出」。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>回答了</b>⑥ 检测项目多选：检测类型 + 搭上去的板块 = 这一单做什么。</div><div><b>没回答</b>每个板块各自的组 / 时点（按组参数）：现在全单共用一套采血点数，方案里 TK 16 点 / PK 11 点 / 临床病理 6 点是三套。</div><div><b>要定</b>板块卡上要哪些格子——等吴迪的表；有了表，卡上就能填，不只是看。</div></div>
-    <footer><span>modules/dmpk-quotation/packageBlocks.tsx · 板块定义与右栏共用一份</span><span class="num">7</span></footer>
+    <div class="diff"><div class="hi"><b>回答了</b>⑥ 检测项目多选：检测类型定主板块 + 搭上去的板块 = 这一单做什么。</div><div><b>没回答</b>每个板块各自的组 / 时点（按组参数）：现在全单共用一套采血点数，方案里 TK 16 点 / PK 11 点 / 临床病理 6 点是三套。</div><div><b>要定</b>搭上去的板块卡上要哪些格子——等吴迪的表；现在它是读账，有了表就能填。</div></div>
+    <footer><span>modules/dmpk-quotation/fields.ts（分组）· packageBlocks.tsx（长出来的卡）</span><span class="num">7</span></footer>
   </section>
 
   <!-- 6 费用 / 改价 -->
@@ -286,7 +286,7 @@
           <tr><td>价目表</td><td class="beta no">无</td><td class="ours">独立入口；对话里能问本单命中的那一截</td></tr>
           <tr><td>材料识别</td><td class="beta no">无（参数靠打字）</td><td class="ours">多模态入口 + 解析轨迹 + 原文依据 + 识别 / 确认两态；读出来的按 P0 八维归位</td></tr>
           <tr><td>P0 规则</td><td class="beta no">无</td><td class="ours">少于 30 按 30、猴类价 / 折扣 / 其他费用人工项、不适用、影响提示、按组明细</td></tr>
-          <tr><td>积木卡</td><td class="beta no">无</td><td class="ours">基础卡 ①②③ + 每板块一张 ④–⑧；「再搭一块」加 PK/TK · TOX · BA · ADA</td></tr>
+          <tr><td>参数收集</td><td class="beta">四组完成度</td><td class="ours">按八维分卡：基础 ①②③ / 板块 ④–⑧ / 交付；命中一块长一块，「再搭一块」加 TOX · BA · ADA</td></tr>
           <tr><td>审核人看什么</td><td class="beta no">无</td><td class="ours">同一份草稿：计算表 / 报价书 + 依据与变更（原文依据、改价补价折扣、版本）</td></tr>
           <tr><td>人与工单</td><td class="beta no">没有「人」</td><td class="ours">站内信、工单、交接、退回、复核画布——硬冲突，以我们为准</td></tr>
           <tr><td>权限</td><td class="beta no">无</td><td class="ours">演示级 SD / SD 助理</td></tr>

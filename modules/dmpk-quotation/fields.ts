@@ -1,20 +1,42 @@
 import type { ParamDraft, ParamField, ParamGroup } from "../../components/params";
 
 export type DmpkStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
-export type DmpkGroupId = "assay" | "animal" | "analysis" | "delivery";
+
+/**
+ * 参数按 P0 工程方案的八维分组（09-22 心蕊定的：八维就是参数收集的结构）。
+ *
+ *   base      基础卡 = ①动物 ②组别 ③数目（+ 周期），全单一份
+ *   package   板块卡 = ④实验操作 ⑤次数 ⑥检测项目 ⑦方法 ⑧数量，跟着检测类型走：
+ *             选了 PK 这张卡就叫「PK / TK」，选了 TOX 就叫「TOX」
+ *   delivery  报告与交付——八维之外的东西，方案里没有位置，先单独一组
+ *
+ * 十四个字段一个不加不减，只是重新分组、标上维度记号（mark）。
+ * 原来的四组（检测类型 / 动物实验 / 生物分析 / 报告与报价）是按业务环节分的，
+ * 跟方案对不上；右栏台账和 composer 参数卡读的是同一份分组，两边一起变。
+ */
+export type DmpkGroupId = "base" | "package" | "delivery";
 
 /* 字段形状搬到了 components/params：肿瘤报价用的是同一副骨架、同一套类名。
-   这里只把 group 收窄成 DMPK 自己的四组，别的一个字没改——十四项仍然全是
+   这里只把 group 收窄成 DMPK 自己的三组，别的一个字没改——十四项仍然全是
    选项按钮（kind 缺省就是 options）。 */
 export type DmpkField = ParamField & { group: DmpkGroupId };
 export type DmpkDraftTab = ParamDraft;
 
 export const dmpkGroups: Array<ParamGroup & { id: DmpkGroupId }> = [
-  { id: "assay", title: "检测类型" },
-  { id: "animal", title: "动物实验" },
-  { id: "analysis", title: "生物分析" },
-  { id: "delivery", title: "报告与报价" },
+  { id: "base", title: "基础 ①②③" },
+  { id: "package", title: "检测项目 ④–⑧" },
+  { id: "delivery", title: "报告与交付" },
 ];
+
+/** 板块卡的名字跟着检测类型走。 */
+const packageTitleByAssay: Record<string, string> = { PK: "PK / TK", TOX: "TOX", "BA Only": "BA" };
+
+/** 分组表，板块那一组的标题按当前检测类型填：没选之前叫「检测项目」，选了叫「PK / TK ④–⑧」。 */
+export function dmpkGroupsFor(fields: DmpkField[]): Array<ParamGroup & { id: DmpkGroupId }> {
+  const assay = fields.find((field) => field.id === "assayType")?.value ?? "";
+  const title = packageTitleByAssay[assay];
+  return dmpkGroups.map((group) => group.id === "package" && title ? { ...group, title: `${title} ④–⑧` } : group);
+}
 
 export const dmpkFieldOptions: Record<string, string[]> = {
   assayType: ["PK", "BA Only", "TOX"],
@@ -41,7 +63,7 @@ export const dmpkFieldOptions: Record<string, string[]> = {
    采血点、待测物数，它们天然是开放取值；封闭词表（报告格式、分析方法）不开。 */
 const OPEN_VALUE_FIELDS = new Set(["animalsPerGroup", "groupCount", "cycle", "bloodPoints", "analyteCount"]);
 
-const field = (id: string, label: string, group: DmpkGroupId): DmpkField => ({
+const field = (id: string, label: string, group: DmpkGroupId, mark?: string): DmpkField => ({
   id,
   label,
   value: "",
@@ -49,20 +71,23 @@ const field = (id: string, label: string, group: DmpkGroupId): DmpkField => ({
   group,
   options: dmpkFieldOptions[id] ?? [],
   allowCustom: OPEN_VALUE_FIELDS.has(id),
+  mark,
 });
 
+/* 顺序就是八维的顺序；每项标它属于哪一维。周期是 ⑤ 里的「周期」，但全单一份，放在基础卡。
+   ⑥ 检测项目对我们是三项：检测类型（定板块）、分子类型、化合物类别。样品类型是 ④ 采血采的什么。 */
 export const initialDmpkFields: DmpkField[] = [
-  field("assayType", "检测类型", "assay"),
-  field("molecule", "分子类型", "assay"),
-  field("species", "动物种属", "animal"),
-  field("animalsPerGroup", "每组动物数", "animal"),
-  field("groupCount", "组数", "animal"),
-  field("cycle", "试验周期", "animal"),
-  field("compoundType", "化合物类别", "analysis"),
-  field("method", "分析方法", "analysis"),
-  field("sampleType", "样品类型", "analysis"),
-  field("bloodPoints", "采血点数", "analysis"),
-  field("analyteCount", "待测物数量", "analysis"),
+  field("species", "动物种属", "base", "①"),
+  field("groupCount", "组数", "base", "②"),
+  field("animalsPerGroup", "每组动物数", "base", "③"),
+  field("cycle", "试验周期", "base", "⑤"),
+  field("assayType", "检测类型", "package", "⑥"),
+  field("molecule", "分子类型", "package", "⑥"),
+  field("compoundType", "化合物类别", "package", "⑥"),
+  field("sampleType", "样品类型", "package", "④"),
+  field("bloodPoints", "采血点数", "package", "⑤"),
+  field("method", "分析方法", "package", "⑦"),
+  field("analyteCount", "待测物数量", "package", "⑧"),
   field("format", "报告格式", "delivery"),
   field("language", "报告语言", "delivery"),
   field("region", "报价区域", "delivery"),
@@ -94,14 +119,13 @@ export function applyDmpkApplicability(fields: DmpkField[]): DmpkField[] {
 }
 
 export const dmpkGroupDescriptions: Record<DmpkGroupId, string> = {
-  assay: "确认 DMPK 下的检测业务线与分子类型。",
-  animal: "动物数量、组数和周期会直接影响报价规则。",
-  analysis: "请补齐分析方法、样品和待测物参数。",
+  base: "动物、组别、数目和周期，全单一份。",
+  package: "这个板块做什么、怎么做、做多少。",
   delivery: "确认交付格式、语言、区域和管理费规则。",
 };
 
-export function getDmpkGroupTitle(id: DmpkGroupId) {
-  return dmpkGroups.find((group) => group.id === id)?.title ?? "";
+export function getDmpkGroupTitle(id: DmpkGroupId, fields?: DmpkField[]) {
+  return (fields ? dmpkGroupsFor(fields) : dmpkGroups).find((group) => group.id === id)?.title ?? "";
 }
 
 export function parseDmpkRequest(text: string): Record<string, string> {

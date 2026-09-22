@@ -21,7 +21,6 @@ import { catalogHitsFor } from "./catalogHits";
 import { noteAnchorToField } from "./noteFieldMap";
 import { applyPendingToFields, dmpkSourceParsers } from "./parseFixtures";
 import { buildDmpkQuoteLines, dmpkGroupLabels, type ExtraPackage } from "./quoteLineFixtures";
-import { DmpkPackageBlocks } from "./packageBlocks";
 import {
   applyDmpkApplicability,
   dmpkGroups,
@@ -68,8 +67,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   /* 每次落字段都过一遍「不适用」：BA Only 一选上，动物那一组当场退出必填。 */
   const setFields = (next: DmpkField[] | ((items: DmpkField[]) => DmpkField[])) =>
     setRawFields((items) => applyDmpkApplicability(typeof next === "function" ? next(items) : next));
-  const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("assay");
-  const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ assay: true, animal: false, analysis: false, delivery: false });
+  const [activeGroup, setActiveGroup] = useState<DmpkGroupId>("base");
+  const [openGroups, setOpenGroups] = useState<Record<DmpkGroupId, boolean>>({ base: true, package: false, delivery: false });
   // 一组参数收齐后自动折叠，把注意力交给还缺的那组
   useEffect(() => {
     setOpenGroups((current) => {
@@ -393,14 +392,14 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const nextFields = applyDmpkApplicability(fields.map((field) => patch[field.id] ? withValue(field, patch[field.id]) : field));
       const recognized = nextFields.filter((field) => patch[field.id]);
       const remaining = nextFields.filter((field) => field.required && !field.value);
-      const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
+      const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "base";
       setFields(nextFields);
       /* 一句话认出了检测类型，账就有行了，右栏切到「报价板块」（会议定的正主）；
          什么都没认出来才停在参数收集。传文件那条路不走这儿——文件认出来的要人逐项确认，留在参数收集。 */
       suggestPanel(buildDmpkQuoteLines(nextFields, sources, lineOptions).length ? "sections" : "parameters");
       setParametersExpanded(Boolean(patch.assayType));
       setActiveGroup(nextGroup);
-      setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
+      setOpenGroups({ base: nextGroup === "base", package: nextGroup === "package", delivery: nextGroup === "delivery" });
       /* 一句话把最后几项补齐了，就跟从参数卡里补齐一样，进「报价前确认」；
          以前这条路一律停在 collecting，嘴上说「已齐全」，确认卡却不出来。 */
       setStage(remaining.length ? "collecting" : "ready");
@@ -470,7 +469,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const recognized = nextFields.filter((field) => patch[field.id]);
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const confirmCount = pending.filter((item) => item.kind === "confirm").length;
-      const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "assay";
+      const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id ?? "base";
       const nextSources = [...sources, ...results];
       setSources(nextSources);
       setLiveParse(null);
@@ -485,7 +484,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       suggestPanel("parameters");
       setParametersExpanded(Boolean(patch.assayType));
       setActiveGroup(nextGroup);
-      setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
+      setOpenGroups({ base: nextGroup === "base", package: nextGroup === "package", delivery: nextGroup === "delivery" });
       setStage("collecting");
       setMessages((current) => [...current, { id: `run-${Date.now()}-${current.length}`, role: "run", ...dmpkRunRecord("parse", { parse: { label, steps } }) }]);
       const readable = results.filter((result) => result.role !== "unknown");
@@ -560,7 +559,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     setParamsOpen(true);
     setDraftTabs((items) => items.filter((item) => item.fieldId !== field.id));
     setActiveGroup(field.group);
-    setOpenGroups({ assay: field.group === "assay", animal: field.group === "animal", analysis: field.group === "analysis", delivery: field.group === "delivery" });
+    setOpenGroups({ base: field.group === "base", package: field.group === "package", delivery: field.group === "delivery" });
     setStage("collecting");
     setComposerAttention(false);
     window.requestAnimationFrame(() => setComposerAttention(true));
@@ -606,7 +605,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       setEditingFieldId(null);
       if (nextGroup) {
         setActiveGroup(nextGroup);
-        setOpenGroups({ assay: nextGroup === "assay", animal: nextGroup === "animal", analysis: nextGroup === "analysis", delivery: nextGroup === "delivery" });
+        setOpenGroups({ base: nextGroup === "base", package: nextGroup === "package", delivery: nextGroup === "delivery" });
         setStage("collecting");
         appendRun("params", remaining.length);
         appendMessage("agent", `已更新报价参数。${impact}${pricingNote}${missingFieldHint(remaining)}`);
@@ -1025,9 +1024,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     requestText: messages.find((message) => message.role === "user")?.text ?? "",
     openGroups,
     onToggleGroup: (group) => setOpenGroups((current) => ({
-      assay: false,
-      animal: false,
-      analysis: false,
+      base: false,
+      package: false,
       delivery: false,
       [group]: !current[group],
     })),
@@ -1052,6 +1050,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     quoteLines,
     manualPrices,
     groupLabels: dmpkGroupLabels(fields, sources),
+    /* 积木：主板块之外命中的板块，在台账下面各长一张卡；「再搭一块」就在那儿 */
+    extraPackages,
+    onAddPackage: rework ? undefined : addPackage,
+    onRemovePackage: removePackage,
     onSetManualPrice: setManualPrice,
     onClearManualPrice: clearManualPrice,
     adjustments,
@@ -1181,9 +1183,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : (
           <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} liveRun={liveParse} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} /></div>
         )}
-        <DmpkComposer paramsOpen={paramsOpen} onParamsOpenChange={setParamsOpen} blocks={quoteLines.length && !rework ? (
-          <DmpkPackageBlocks summary={quoteSummary} fields={fields} manualPrices={manualPrices} extraPackages={extraPackages} onAddPackage={addPackage} onRemovePackage={removePackage} onEditField={requestFieldEdit} />
-        ) : null} unresolvedNotes={reworkNotes
+        <DmpkComposer paramsOpen={paramsOpen} onParamsOpenChange={setParamsOpen} unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
           .map((note) => ({ anchorId: note.anchorId, label: quoteAnchorLabel(note.anchorId) }))} /* 这张卡在「这一轮改完」之前一直在。
              以前条件里还有 !reworkCanvasSeen：画布看过一次它就永久退场，

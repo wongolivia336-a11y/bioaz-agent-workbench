@@ -147,11 +147,17 @@ DMPK 右栏只剩 参数收集 / 报价板块 / 报价结果（+ 菜单里那几
 
 三件事都是 §6b 表里"没做"的，当晚接着做完了。参数模型仍然一个字没动。
 
-**积木卡**（`modules/dmpk-quotation/packageBlocks.tsx`）。八维切成两层：基础卡 = ①②③（全单一份），板块卡 = ④⑤⑥⑦⑧（每个工作包一张）。
-板块卡不另存定义——它读的就是右栏那份账（`summarizeLines`），一个板块一张，卡上摆这个板块的账里有什么、还缺什么（缺参数的指回那一格）。
-「再搭一块」= ⑥ 检测项目多选的落法：`assayType` 仍单选、定主板块；再要哪个板块记在会话的 `extraPackages` 里，
-`buildDmpkQuoteLines(fields, sources, { extraPackages })` 接一段 `buildExtraPackageLines`（每个板块 2–4 行，缩自 BB-001 的细账），
-右栏当场长出那一段，行大多缺参数，填一格亮一行；拆掉就收回。加、拆都进对话（多了几行、缺什么 + 影响提示）和快照（出过版再搭 → 待重出）。
+**八维 = 参数收集的结构，积木 = 命中一块长一块**（09-22 早上心蕊定的形态；凌晨那版是参数卡底下另长一叠只读卡，两个东西叠在一个槽位，看不出关系，撤了）。
+- 分组改了（`fields.ts`）：`DmpkGroupId = "base" | "package" | "delivery"`——**基础 ①②③**（种属 / 组数 / 每组只数 + 周期）、
+  **板块 ④–⑧**（检测类型 / 分子类型 / 化合物类别 = ⑥，样品类型 = ④，采血点数 = ⑤，分析方法 = ⑦，待测物数量 = ⑧）、**报告与交付**。
+  十四个字段 id 不加不减；每项带 `mark`（圈字）只做显示，不进 label（label 还要进对话和纸面）。板块那组的标题跟着检测类型走（`dmpkGroupsFor`：PK → 「PK / TK ④–⑧」）。
+  右栏台账和 composer 参数卡读同一份分组——这就是"两边联动"。共用组件只加了 `ParamField.mark` 的渲染（不传就跟原来一样）。
+- 主板块之外命中的板块（方案读出的 TOX / ADA，或人点「再搭一块」），在台账下面各长一张**同样的卡**（`packageBlocks.tsx` → `DmpkPackageCards`，
+  用的就是 `.inspectorParameterGroup` 那副样子），卡上只摆 ④⑤⑦⑧ 各一行、文案压到一行，缺的写「待填写」点了去填；待确认 / 无价目一行一句原因。
+  卡不另存定义，读的是账（`summarizeLines`）。「再搭一块」在台账最底下。
+- ⑥ 检测项目多选的落法：`assayType` 仍单选、定主板块；再要哪个板块记在会话的 `extraPackages` 里，
+  `buildDmpkQuoteLines(fields, sources, { extraPackages })` 接一段 `buildExtraPackageLines`（每个板块 2–4 行，缩自 BB-001 的细账），
+  板块面板当场长出那一段，行大多缺参数，填一格亮一行；拆掉就收回。加、拆都进对话（多了几行、缺什么 + 影响提示）和快照（出过版再搭 → 待重出）。
 
 **按组明细**（`报价明细` 面板顶上「按板块 / 按组」）。`QuoteLine.groupShare`：组 id → 这一行落在这组的数量；BB-001 的行按核心 / 卫星标（`share(core, sat)`），
 十四项推的行按组数均分（`evenShare`）。`groupBreakdown` 每组按有效单价算金额，各组小计 + 整单项 = 按板块看的合计。
