@@ -6724,7 +6724,7 @@ button {
   --sidebar-dot-attention: #9a7a3a;
   /* 低饱和 logo 蓝。指过去而不是写死，将来 agent accent 因为别的页面调整时
      这里有个地方可以断开。 */
-  --sidebar-dot-unread: var(--bioaz-agent-accent, #5c60b8);
+  --sidebar-dot-unread: var(--bioaz-agent-accent);
 }
 
 .chatRow {
@@ -6774,7 +6774,7 @@ button {
 /* 未读：agent 在你不在场时交付的。低饱和 logo 蓝，对比度 5.31:1。
    指向 agent accent 而不是写死，将来那个色因为别的页面调整时这里能断开。 */
 .chatRowDot.is-unread {
-  background: var(--sidebar-dot-unread, var(--bioaz-agent-accent, #5c60b8));
+  background: var(--sidebar-dot-unread, var(--bioaz-agent-accent));
 }
 
 /* 用运动换饱和度：静止的低饱和小点在余光里约等于不存在，缓慢运动的东西
@@ -7521,7 +7521,7 @@ button {
 
 /* 未读只有「看没看过」这一个状态,跟工单自己的状态是两回事。
    用侧栏那颗未读蓝,不用黄——黄是「要你动手」,而列表这一层还没到动手。 */
-.messageRow.isUnread .messageDot { background: var(--sidebar-dot-unread, var(--bioaz-agent-accent, #5c60b8)); }
+.messageRow.isUnread .messageDot { background: var(--sidebar-dot-unread, var(--bioaz-agent-accent)); }
 .messageRow.isUnread strong { font-weight: 700; }
 
 .messageFrom {
@@ -7591,13 +7591,13 @@ button {
 .quotationReviewGroup h3 { margin: 0 0 8px; color: var(--body); font-size: 12px; font-weight: 700; }
 .quotationReviewLine { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); padding: 10px 12px; }
 .quotationReviewLine + .quotationReviewLine { margin-top: 8px; }
-.quotationReviewLine.hasNote { border-color: color-mix(in srgb, var(--bioaz-agent-accent, #5c60b8) 34%, transparent); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.quotationReviewLine.hasNote { border-color: color-mix(in srgb, var(--bioaz-agent-accent) 34%, transparent); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
 .quotationReviewMeta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 12px; }
 .quotationReviewMeta strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .quotationReviewMeta small { grid-column: 1; color: var(--muted); font-size: 12px; }
 .quotationReviewMeta b { grid-row: 1 / 3; grid-column: 2; color: var(--ink); font-size: 14px; font-weight: 700; }
 .quotationReviewLine input { min-height: 32px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 0 10px; color: var(--ink); font-size: 13px; }
-.quotationReviewLine input:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
+.quotationReviewLine input:focus-visible { border-color: var(--bioaz-agent-accent); outline: 0; }
 
 /* ═══ 收件箱:工单台账那一档的状态筛选 ═══════════════════════════════════
    状态只属于台账。挂在消息列表上会让「今天有什么新的」和「那件事在谁那儿」
@@ -7643,7 +7643,7 @@ button {
   transition: background var(--bioaz-motion-standard) ease, border-color var(--bioaz-motion-standard) ease;
 }
 .quoteDocLine:hover { border-color: var(--line); background: var(--bioaz-surface-subtle); }
-.quoteDocLine.isActive { border-color: var(--bioaz-agent-accent, #5c60b8); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
+.quoteDocLine.isActive { border-color: var(--bioaz-agent-accent); background: var(--bioaz-agent-accent-soft, #f3f3fb); }
 /* 已批注的行在原件上留个记号——清单给结论,原件给证据,两边要能互相找到。 */
 .quoteDocLine.hasNote { background: rgba(154, 122, 58, .07); }
 .quoteDocMark { position: absolute; top: 50%; left: -9px; width: 3px; height: 20px; border-radius: var(--bioaz-radius-full); background: var(--sidebar-dot-attention, #9a7a3a); transform: translateY(-50%); }
@@ -7661,7 +7661,7 @@ button {
 .quoteNoteEditor { display: grid; gap: 8px; border: 1px solid var(--bioaz-agent-accent-border, #dcddf2); border-radius: var(--bioaz-radius-control); background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 12px; }
 .quoteNoteEditor > span { color: var(--ink); font-size: 12.5px; font-weight: 600; }
 .quoteNoteEditor textarea { min-height: 76px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); padding: 8px 10px; color: var(--ink); font: inherit; font-size: 13px; resize: vertical; }
-.quoteNoteEditor textarea:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
+.quoteNoteEditor textarea:focus-visible { border-color: var(--bioaz-agent-accent); outline: 0; }
 .quoteNoteEditor > div { display: flex; justify-content: flex-end; gap: 8px; }
 
 .quoteNoteList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -7763,7 +7763,7 @@ button {
    不能只写在右边清单里,否则扫一遍原件不知道哪儿卡着。 */
 .quoteSheetGrid tr.hasNote td, .quoteDocTable tr.hasNote td { background: rgba(154, 122, 58, .08); }
 .quoteSheetGrid tr.hasNote.is-advisory td, .quoteDocTable tr.hasNote.is-advisory td { background: rgba(17, 19, 24, .04); }
-.quoteSheetGrid tr.isActive td, .quoteDocTable tr.isActive td { background: var(--bioaz-agent-accent-soft, #f3f3fb); box-shadow: inset 2px 0 0 var(--bioaz-agent-accent, #5c60b8); }
+.quoteSheetGrid tr.isActive td, .quoteDocTable tr.isActive td { background: var(--bioaz-agent-accent-soft, #f3f3fb); box-shadow: inset 2px 0 0 var(--bioaz-agent-accent); }
 
 /* 批注编辑器。分类做成选项而不是自由文本:报价复核的改法就那么几类,
    固定下来,下一版才能按类核验。 */
@@ -7841,7 +7841,7 @@ button {
   position: relative; z-index: 1; width: 7px; height: 7px; margin-top: 6px;
   border-radius: var(--bioaz-radius-full); background: var(--line-strong, #cfd6e2);
 }
-.ticketDetailFlow li.isLatest .ticketFlowDot { background: var(--bioaz-agent-accent, #5c60b8); }
+.ticketDetailFlow li.isLatest .ticketFlowDot { background: var(--bioaz-agent-accent); }
 .ticketFlowMain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .ticketFlowMain strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .ticketFlowMain small { color: var(--body); font-size: 12px; }
@@ -7913,7 +7913,7 @@ button {
   background: var(--line);
   content: "";
 }
-.ticketStageBar li.is-done::after { background: var(--bioaz-agent-accent, #5c60b8); }
+.ticketStageBar li.is-done::after { background: var(--bioaz-agent-accent); }
 
 .ticketStageDot {
   display: grid;
@@ -7930,9 +7930,9 @@ button {
 }
 .ticketStageLabel { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
 
-.ticketStageBar li.is-done .ticketStageDot { border-color: transparent; background: var(--bioaz-agent-accent, #5c60b8); color: var(--bioaz-text-inverse); }
+.ticketStageBar li.is-done .ticketStageDot { border-color: transparent; background: var(--bioaz-agent-accent); color: var(--bioaz-text-inverse); }
 .ticketStageBar li.is-done .ticketStageLabel { color: var(--body); }
-.ticketStageBar li.is-current .ticketStageDot { border-color: var(--bioaz-agent-accent, #5c60b8); color: var(--bioaz-agent-accent, #5c60b8); box-shadow: 0 0 0 3px var(--bioaz-agent-accent-soft, #f3f3fb); }
+.ticketStageBar li.is-current .ticketStageDot { border-color: var(--bioaz-agent-accent); color: var(--bioaz-agent-accent); box-shadow: 0 0 0 3px var(--bioaz-agent-accent-soft, #f3f3fb); }
 .ticketStageBar li.is-current .ticketStageLabel { color: var(--ink); font-weight: 600; }
 /* 驳回不是一个新阶段,是当前这一格出了问题——用色不用位置来说这件事。 */
 .ticketStageBar li.is-rejected .ticketStageDot { border-color: var(--sidebar-dot-attention, #9a7a3a); color: var(--sidebar-dot-attention, #9a7a3a); box-shadow: 0 0 0 3px rgba(154, 122, 58, .12); }
@@ -7977,14 +7977,14 @@ button {
 .quoteAnnotateToggle.isOn {
   border-color: transparent;
   background: var(--bioaz-agent-accent-soft, #f3f3fb);
-  color: var(--bioaz-agent-accent, #5c60b8);
+  color: var(--bioaz-agent-accent);
 }
 
 /* 模式态:纸面整体透一层极淡的底,光标变十字。 */
 .quoteDocPane.isAnnotating { position: relative; background: var(--bioaz-agent-accent-soft, #f3f3fb); }
 .quoteDocPane.isAnnotating .quoteSheet,
 .quoteDocPane.isAnnotating .quoteDoc { cursor: crosshair; }
-.quoteDocPane.isAnnotating ::selection { background: color-mix(in srgb, var(--bioaz-agent-accent, #5c60b8) 22%, transparent); }
+.quoteDocPane.isAnnotating ::selection { background: color-mix(in srgb, var(--bioaz-agent-accent) 22%, transparent); }
 
 /* 选中的那一行:淡紫蓝底,不要深色线框。线框是"这里有个控件"的语言,
    而这一行是被指着的原文,不是控件——底色说"就是这一处"就够了。 */
@@ -8013,7 +8013,7 @@ button {
 }
 @keyframes quoteBubbleIn { from { opacity: 0; } to { opacity: 1; } }
 .quoteNoteBubble blockquote {
-  display: grid; gap: 3px; margin: 0; border-left: 2px solid var(--bioaz-agent-accent, #5c60b8);
+  display: grid; gap: 3px; margin: 0; border-left: 2px solid var(--bioaz-agent-accent);
   padding-left: 8px; color: var(--ink); font-size: 12.5px; line-height: 1.5;
 }
 .quoteNoteBubble blockquote em { color: var(--muted); font-size: 11px; font-style: normal; }
@@ -8022,7 +8022,7 @@ button {
   min-height: 32px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
   padding: 7px 9px; color: var(--ink); font: inherit; font-size: 12.5px; resize: none;
 }
-.quoteNoteRow textarea:focus-visible { border-color: var(--bioaz-agent-accent, #5c60b8); outline: 0; }
+.quoteNoteRow textarea:focus-visible { border-color: var(--bioaz-agent-accent); outline: 0; }
 .quoteNoteSend {
   display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool);
   background: var(--bioaz-action-primary, #17191e); color: var(--bioaz-text-inverse); cursor: pointer;
@@ -8277,12 +8277,12 @@ button {
   margin: 0; border-radius: var(--bioaz-radius-tool); background: var(--bioaz-agent-accent-soft, #f3f3fb);
   padding: 8px 10px; color: var(--ink); font-size: 12.5px; line-height: 1.7;
 }
-.reworkNotePlan > span { color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; }
+.reworkNotePlan > span { color: var(--bioaz-agent-accent); font-size: 11.5px; font-weight: 600; }
 
 
 /* 定了的那一行:状态推到左边，撤销留在右边——跟未定时按钮的落点一致。 */
 .reworkNoteState { display: flex; margin: 0 auto 0 0; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
-.reworkNoteState > svg { color: var(--bioaz-agent-accent, #5c60b8); }
+.reworkNoteState > svg { color: var(--bioaz-agent-accent); }
 
 /* 全屏里内容自己滚，脚在下面钉住。 */
 .reworkModal { width: min(820px, calc(100vw - 48px)); max-height: min(760px, calc(100dvh - 48px)); }
@@ -8365,7 +8365,7 @@ button {
 .quotePreviewNotes > ul > li.is-advisory { border-left-color: var(--line); }
 /* 选中的那条:跟纸面上那一行同一套强调色,两边一眼能对上是同一件事。 */
 .quotePreviewNotes > ul > li.isActive {
-  border-color: var(--bioaz-agent-accent, #5c60b8);
+  border-color: var(--bioaz-agent-accent);
   background: var(--bioaz-agent-accent-soft, #f3f3fb);
 }
 .quotePreviewNoteBody {
@@ -8468,7 +8468,7 @@ button {
 .dmpkQuoteVersion > button:hover { background: var(--soft, #f7f8fb); }
 .dmpkQuoteVersionTag {
   border-radius: 6px; background: var(--bioaz-agent-accent-soft, #f3f3fb);
-  padding: 2px 8px; color: var(--bioaz-agent-accent, #5c60b8);
+  padding: 2px 8px; color: var(--bioaz-agent-accent);
   font-size: 11.5px; font-weight: 650; font-variant-numeric: tabular-nums;
 }
 .dmpkQuoteVersionMeta { display: grid; min-width: 0; gap: 1px; }
@@ -8648,7 +8648,7 @@ button {
   display: grid; width: 28px; height: 28px; flex: none; place-items: center;
   border-radius: var(--bioaz-radius-full);
   background: var(--bioaz-agent-accent-soft, #f3f3fb);
-  color: var(--bioaz-agent-accent, #5c60b8);
+  color: var(--bioaz-agent-accent);
 }
 .changeConfirmCard > header strong { display: block; color: var(--ink); font-size: 13.5px; font-weight: 650; }
 .changeConfirmCard > header small { color: var(--muted); font-size: 12px; }
@@ -8749,7 +8749,7 @@ button {
   background: var(--bioaz-surface); padding: 4px 9px;
   color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
-.paramConfirmAllButton:hover { border-color: var(--bioaz-agent-accent-border, #dcddf2); background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent, #5c60b8); }
+.paramConfirmAllButton:hover { border-color: var(--bioaz-agent-accent-border, #dcddf2); background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent); }
 
 /* ═══ 原文依据 ═════════════════════════════════════════════════════════
    值后面一枚小标写锚点；点开在这一行下面插一张小卡：材料名、位置、原句。
@@ -8811,7 +8811,7 @@ button {
 .dmpkQuoteVersionStaleNote button {
   display: inline-flex; align-items: center; gap: 3px;
   border: 0; background: transparent; padding: 0;
-  color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  color: var(--bioaz-agent-accent); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 .dmpkHandoffStale {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
@@ -8914,7 +8914,7 @@ button {
 }
 .expertIntroHead { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 10px; }
 /* 介绍卡里的那张底纹是主图了——比卡上的那张深一档，用数字同事那个偏灰的紫，但还是线稿。 */
-.expertIntroHead > .roleMotif { width: 44px; height: 36px; color: var(--bioaz-agent-accent, #5c60b8); }
+.expertIntroHead > .roleMotif { width: 44px; height: 36px; color: var(--bioaz-agent-accent); }
 .expertIntroTitle { display: grid; gap: 2px; min-width: 0; }
 .expertIntroTitle strong { color: var(--ink); font-size: 13px; font-weight: 620; line-height: 1.25; }
 .expertIntroTitle small { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
@@ -8925,9 +8925,9 @@ button {
 .expertIntroSteps { position: relative; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); padding-top: 2px; }
 .expertIntroSteps::before { position: absolute; top: 5px; left: calc(50% / var(--n, 4)); right: calc(50% / var(--n, 4)); height: 1px; background: var(--line-strong); content: ""; }
 .expertIntroSteps > span { display: grid; justify-items: center; gap: 5px; min-width: 0; opacity: 0; transform: translateY(3px); }
-.expertIntroDot { position: relative; z-index: 1; width: 7px; height: 7px; border: 1px solid var(--bioaz-agent-accent, #5c60b8); border-radius: 50%; background: var(--bioaz-surface); }
+.expertIntroDot { position: relative; z-index: 1; width: 7px; height: 7px; border: 1px solid var(--bioaz-agent-accent); border-radius: 50%; background: var(--bioaz-surface); }
 /* 最后一步是终点，实心。 */
-.expertIntroSteps > span:last-child > .expertIntroDot { background: var(--bioaz-agent-accent, #5c60b8); }
+.expertIntroSteps > span:last-child > .expertIntroDot { background: var(--bioaz-agent-accent); }
 .expertIntroSteps > span > span:last-child { color: var(--body); font-size: 11px; line-height: 1.3; white-space: nowrap; }
 .taskExampleGrid button:not(:disabled):hover .expertIntroSteps > span,
 .taskExampleGrid button:not(:disabled):focus-visible .expertIntroSteps > span {
@@ -8977,12 +8977,12 @@ button {
 .spaceCoworkerList input { margin: 0; }
 .spaceCoworkerIcon {
   display: grid; width: 28px; height: 28px; place-items: center;
-  border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb); color: var(--bioaz-agent-accent, #5c60b8);
+  border-radius: var(--bioaz-radius-tool); background: var(--soft, #f7f8fb); color: var(--bioaz-agent-accent);
 }
 .spaceCoworkerCopy { display: grid; gap: 1px; min-width: 0; }
 .spaceCoworkerCopy strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .spaceCoworkerCopy small { color: var(--muted); font-size: 11.5px; }
-.spaceCoworkerList label > svg { color: var(--bioaz-agent-accent, #5c60b8); }
+.spaceCoworkerList label > svg { color: var(--bioaz-agent-accent); }
 
 /* ═══ 报价明细 ═════════════════════════════════════════════════════════
    按工作包分段，一行一项服务：范围与公式在小字，金额靠右；算不出的行
@@ -9015,7 +9015,7 @@ button {
   background: var(--soft, #f7f8fb); color: var(--muted);
 }
 .dmpkQuoteLineStatus.is-pending-confirm { background: rgba(154, 122, 58, .14); color: #7d6229; }
-.dmpkQuoteLineStatus.is-missing-param { background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkQuoteLineStatus.is-missing-param { background: var(--bioaz-agent-accent-soft, #f3f3fb); color: var(--bioaz-agent-accent); }
 .dmpkQuoteLineMath {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
   color: var(--body); font-size: 11.5px; font-variant-numeric: tabular-nums;
@@ -9025,7 +9025,7 @@ button {
 .dmpkQuoteLinePrice b { color: var(--ink); font-weight: 600; }
 .dmpkQuoteLinePrice em {
   border-radius: var(--bioaz-radius-full); background: var(--bioaz-agent-accent-soft, #f3f3fb); padding: 0 6px;
-  color: var(--bioaz-agent-accent, #5c60b8); font-size: 10.5px; font-style: normal; font-weight: 600;
+  color: var(--bioaz-agent-accent); font-size: 10.5px; font-style: normal; font-weight: 600;
 }
 .dmpkQuoteLinePrice s { color: var(--muted); }
 .dmpkQuoteLineMath input {
@@ -9036,7 +9036,7 @@ button {
 .dmpkQuoteLineActions button, .dmpkQuoteLineGo {
   display: inline-flex; align-items: center; gap: 3px;
   border: 0; background: transparent; padding: 0;
-  color: var(--bioaz-agent-accent, #5c60b8); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  color: var(--bioaz-agent-accent); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 .dmpkQuoteLineMath > .dmpkQuoteLineGo { margin-left: auto; }
 .dmpkQuoteTotal {
@@ -9074,19 +9074,19 @@ button {
 }
 .dmpkSectionRow:not(.is-priced) { border-style: dashed; background: var(--soft, #f7f8fb); }
 .dmpkSectionRow.isManual { border-color: var(--bioaz-agent-accent-border, #dcddf2); }
-.dmpkSectionRow.isEditing { border-color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkSectionRow.isEditing { border-color: var(--bioaz-agent-accent); }
 .dmpkSectionRowMain { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .dmpkSectionRowName { flex: 1 1 auto; min-width: 0; color: var(--ink); font-size: 12px; font-weight: 600; line-height: 1.4; }
 .dmpkSectionRowPrice { display: inline-flex; align-items: baseline; gap: 4px; flex: none; color: var(--body); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .dmpkSectionRowX { color: var(--muted); }
 .dmpkSectionRowPrice > b { color: var(--ink); font-size: 12px; font-weight: 650; }
 .dmpkSectionRowFacts { color: var(--muted); font-size: 11px; line-height: 1.45; }
-.dmpkSectionRowManual { display: inline-flex; align-items: baseline; gap: 6px; color: var(--bioaz-agent-accent, #5c60b8); font-size: 11px; font-weight: 600; }
+.dmpkSectionRowManual { display: inline-flex; align-items: baseline; gap: 6px; color: var(--bioaz-agent-accent); font-size: 11px; font-weight: 600; }
 .dmpkSectionRowManual button { border: 0; background: transparent; padding: 0; color: var(--muted); font: inherit; font-weight: 500; cursor: pointer; }
 .dmpkSectionRowManual button:hover { color: var(--ink); }
 /* 铅笔：常态很淡，行 hover 才深。它是每行都有的东西，都亮着就是一列铅笔。 */
 .dmpkPriceEdit { display: inline-flex; align-self: center; border: 0; background: transparent; padding: 0 0 0 2px; color: var(--muted); opacity: .55; cursor: pointer; transition: opacity var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease; }
-.dmpkSectionRow:hover .dmpkPriceEdit, .dmpkPriceEdit:focus-visible { opacity: 1; color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkSectionRow:hover .dmpkPriceEdit, .dmpkPriceEdit:focus-visible { opacity: 1; color: var(--bioaz-agent-accent); }
 .dmpkSectionRowPrice .dmpkQuoteLineGo { margin-left: 2px; }
 /* 改价编辑器：原价一行、新价一行 */
 .dmpkPriceEditor { display: grid; gap: 5px; width: 100%; margin-top: 4px; }
@@ -9121,13 +9121,13 @@ button {
   padding: 2px 8px; color: var(--body); font-size: 11.5px; font-weight: 600;
 }
 .dmpkSectionRule button { display: inline-flex; border: 0; background: transparent; padding: 0 0 0 2px; color: var(--muted); cursor: pointer; }
-.dmpkSectionRule button:hover { color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkSectionRule button:hover { color: var(--bioaz-agent-accent); }
 /* 人工调整项：折扣 / 其他费用两枚，值在标签后面，铅笔同板块行；改的时候就地展开成输入框 */
 .dmpkSectionAdjust { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .dmpkSectionAdjustItem { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--body); }
 .dmpkSectionAdjustItem em { font-style: normal; color: var(--muted); }
 .dmpkSectionAdjustItem b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-.dmpkSectionAdjustItem.isSet b { color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkSectionAdjustItem.isSet b { color: var(--bioaz-agent-accent); }
 .dmpkSectionAdjustItem .dmpkPriceEdit { opacity: .55; }
 .dmpkSectionAdjust:hover .dmpkPriceEdit { opacity: 1; }
 .dmpkSectionAdjustClear { border: 0; background: transparent; padding: 0; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; }
@@ -9153,7 +9153,7 @@ button {
 /* 对话里那张「本单命中的价目」表 */
 .dmpkCatalogHits td small { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; }
 .dmpkCatalogHits td b { color: var(--ink); font-weight: 600; }
-.dmpkCatalogHits tr[data-status="manual"] td:nth-child(3) { color: var(--bioaz-agent-accent, #5c60b8); }
+.dmpkCatalogHits tr[data-status="manual"] td:nth-child(3) { color: var(--bioaz-agent-accent); }
 .dmpkCatalogHits tr[data-status="no-catalog"] td { color: var(--muted); }
 
 /* ── 积木：台账下面按板块长出来的卡（modules/dmpk-quotation/packageBlocks.tsx）──
@@ -9162,7 +9162,7 @@ button {
 .dmpkPackageCards { padding-top: 0; grid-template-columns: minmax(0, 1fr); }
 .dmpkPackageCards .inspectorParameterGroup, .dmpkPackageCards .inspectorParameterFields { grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .dmpkPackageCards .paramCollectProgress { display: none; }
-.dmpkPackageCardTag { margin-left: 6px; color: var(--bioaz-agent-accent, #5c60b8); font-size: 10.5px; font-style: normal; font-weight: 600; }
+.dmpkPackageCardTag { margin-left: 6px; color: var(--bioaz-agent-accent); font-size: 10.5px; font-style: normal; font-weight: 600; }
 .inspectorParameterField.isStatic { cursor: default; }
 .paramCollectList .inspectorParameterField.isStatic > span:first-child { flex: none; white-space: nowrap; }
 .paramCollectList .inspectorParameterField.isStatic > strong { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -9198,14 +9198,58 @@ button {
 .reviewEvidenceHead strong { font-size: 12.5px; color: var(--ink); }
 .reviewEvidenceHead b { font-size: 12.5px; color: var(--ink); font-weight: 600; }
 .reviewEvidenceHead i { color: var(--muted); font-size: 10.5px; font-style: normal; white-space: nowrap; }
-.reviewEvidenceList > li[data-kind="document"] .reviewEvidenceHead i { color: var(--bioaz-agent-accent, #5c60b8); }
+.reviewEvidenceList > li[data-kind="document"] .reviewEvidenceHead i { color: var(--bioaz-agent-accent); }
 .reviewEvidenceList > li[data-kind="manual"] .reviewEvidenceHead i { color: var(--amber); }
 .reviewEvidenceList > li > p { margin: 5px 0 0; color: var(--body); font-size: 11.5px; line-height: 1.5; }
 .reviewEvidenceList > li > p > span { display: block; color: var(--muted); font-size: 10.5px; }
 .reviewChangeList > li { display: grid; gap: 2px; border-left: 3px solid var(--line); padding: 2px 0 2px 10px; }
 .reviewChangeList > li[data-kind="price"], .reviewChangeList > li[data-kind="adjustment"] { border-left-color: var(--amber); }
-.reviewChangeList > li[data-kind="package"] { border-left-color: var(--bioaz-agent-accent, #5c60b8); }
+.reviewChangeList > li[data-kind="package"] { border-left-color: var(--bioaz-agent-accent); }
 .reviewChangeList > li strong { font-size: 12.5px; color: var(--ink); }
 .reviewChangeList > li small { color: var(--body); font-size: 11.5px; }
 .reviewChangeList > li span { color: var(--muted); font-size: 10.5px; }
 @media (max-width: 1100px) { .reviewEvidenceGrid { grid-template-columns: 1fr; } }
+
+/* 板块按上层四类分之后，工作包退到行上做小标；明细面板段头列出这一类里有哪几个工作包 */
+.dmpkSectionRowPkg { margin-left: 6px; color: var(--muted); font-size: 10.5px; font-style: normal; font-weight: 500; }
+.dmpkQuotePackageTags { margin-left: 6px; color: var(--muted); font-size: 11px; font-style: normal; font-weight: 400; }
+
+/* ── 正文里的识别清单 + hover 溯源卡（modules/dmpk-quotation/views.tsx RecognizedList）── */
+/* 回复里的一段：图标 + 标题一行，下面是内容。识别清单、还缺的项各一段，段头底色不同，一眼分得开。 */
+.dmpkReplySection { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-container); background: var(--bioaz-surface); overflow: visible; }
+.dmpkReplySection + .dmpkReplySection { margin-top: 10px; }
+.dmpkReplySection > header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); border-radius: var(--bioaz-radius-container) var(--bioaz-radius-container) 0 0; }
+.dmpkReplySection > header strong { font-size: 13px; color: var(--ink); }
+.dmpkReplySection > header em { color: var(--muted); font-size: 11.5px; font-style: normal; }
+.dmpkReplySection > header em.isDone { color: var(--green); }
+.dmpkReplySection > header button { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface); padding: 3px 10px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.dmpkReplySection > header button:hover { border-color: var(--line-strong); background: var(--soft); }
+.dmpkReplySectionIcon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; flex: none; }
+.dmpkRecognized > header { background: var(--bioaz-agent-accent-soft); }
+.dmpkRecognized .dmpkReplySectionIcon { background: var(--bioaz-agent-accent); color: #fff; }
+.dmpkMissing > header { background: var(--amber-soft); }
+.dmpkMissing .dmpkReplySectionIcon { background: var(--amber); color: #fff; }
+.dmpkMissing > ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 10px 12px; list-style: none; }
+.dmpkMissing > ul > li { display: inline-flex; align-items: baseline; gap: 6px; border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); padding: 3px 10px; font-size: 12px; color: var(--ink); }
+.dmpkMissing > ul > li small { color: var(--muted); font-size: 10.5px; }
+.dmpkRecognized > ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0; padding: 4px 0; list-style: none; }
+.dmpkRecognized > ul > li { position: relative; display: grid; grid-template-columns: 78px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-height: 34px; padding: 4px 12px; font-size: 12.5px; }
+.dmpkRecognized > ul > li:nth-child(odd) { border-right: 1px solid var(--line); }
+.dmpkRecognizedLabel { color: var(--muted); }
+.dmpkRecognizedValue { color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmpkRecognized > ul > li[data-status="recognized"] .dmpkRecognizedValue { color: var(--bioaz-agent-accent); }
+.dmpkRecognizedSource { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; color: var(--bioaz-agent-accent); background: var(--bioaz-agent-accent-soft); cursor: help; outline: none; }
+.dmpkRecognizedSource:hover, .dmpkRecognizedSource:focus-visible { background: var(--bioaz-agent-accent); color: #fff; }
+.dmpkRecognizedManual { font-size: 10px; font-weight: 700; letter-spacing: .02em; }
+/* 溯源卡：从小标下面长出来，宽一点，压在正文上；hover 和键盘聚焦都开 */
+.dmpkRecognizedPop { position: absolute; top: calc(100% + 6px); left: 50%; z-index: 6; display: none; width: 300px; transform: translateX(-50%); border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 10px 12px; box-shadow: 0 12px 32px rgba(23, 25, 30, .12); text-align: left; cursor: default; }
+.dmpkRecognizedSource:hover .dmpkRecognizedPop, .dmpkRecognizedSource:focus-visible .dmpkRecognizedPop, .dmpkRecognizedSource:focus-within .dmpkRecognizedPop { display: grid; gap: 6px; }
+.dmpkRecognizedPop::before { content: ""; position: absolute; top: -5px; left: 50%; width: 8px; height: 8px; transform: translateX(-50%) rotate(45deg); border-left: 1px solid var(--line); border-top: 1px solid var(--line); background: var(--bioaz-surface); }
+.dmpkRecognizedPop em { display: flex; flex-wrap: wrap; gap: 4px 8px; color: var(--ink); font-size: 11.5px; font-style: normal; font-weight: 600; }
+.dmpkRecognizedPop em i { color: var(--muted); font-style: normal; font-weight: 500; }
+.dmpkRecognizedPop q { display: block; color: var(--body); font-size: 12px; line-height: 1.55; quotes: "「" "」"; }
+.dmpkRecognizedActions { display: inline-flex; align-items: center; gap: 4px; justify-self: end; }
+.dmpkRecognizedActions button { border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface); padding: 2px 9px; font-size: 11.5px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.dmpkRecognizedActions button:hover { border-color: var(--line-strong); background: var(--soft); }
+.dmpkRecognizedActions button.isEdit { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 22px; padding: 0; color: var(--muted); }
+.dmpkRecognizedOk { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--soft); color: var(--muted); }

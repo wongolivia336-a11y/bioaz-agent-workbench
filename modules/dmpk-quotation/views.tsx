@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRight, Check, ChevronDown, CircleDollarSign, CornerDownLeft, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, CircleDollarSign, CircleHelp, CornerDownLeft, Edit3, Eye, FileSpreadsheet, FileText, ListChecks, Maximize2, Quote, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ComposerChipTray as SharedComposerChipTray, ParameterTaskCard } from "../../components/params";
+import { ComposerChipTray as SharedComposerChipTray, ParameterTaskCard, formatParamValue } from "../../components/params";
 import { PersonPicker } from "../../components/ui";
 import { PreviewModal } from "../../components/ui/PreviewModal";
 import { ScrollTopButton } from "../../components/ui/ScrollTopButton";
@@ -63,6 +63,9 @@ export type DmpkChatMessage = {
   summary?: DmpkSessionSummary;
   /** 首轮文件识别后，直接在回复正文里列出的缺失参数。 */
   missingFields?: { label: string; group: string }[];
+  /** 读文件那一轮认出来的字段 id。正文里列成一张清单：值、来源小标（hover 看原句）、逐项确认。
+      只存 id——值和确认状态渲染时从会话取，人后来改了这张清单跟着变。 */
+  recognizedIds?: string[];
   /** 人问「这单用了哪些价」时回的那张表：本单命中的价目，问的那一刻的快照。 */
   catalogHits?: CatalogHit[];
 };
@@ -152,7 +155,80 @@ function RuleScopePreview() {
   );
 }
 
-export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, liveRun: liveRunOverride, onOpenInspector, onArtifactPreview }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; /** 正在读文件时由会话递进来：步骤是逐条揭开的，stage 本身推不出来。 */ liveRun?: { text: string; runSteps: DmpkRunStep[] } | null; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void }) {
+/**
+ * 正文里的识别清单（09-22 下午陈曦慧要的：溯源放正文，右栏留给复杂报价）。
+ *
+ * 读完文件，回复下面列出认出来的每一项：标签、值、一枚来源小标。小标 hover / 聚焦时
+ * 从下面长出一张小卡——哪份材料、哪一节、原句是什么；人改过原文的写「原文为 X，已改为 Y」。
+ * 每项一颗「确认」，右上一颗「全部确认」；确认过的换成对勾，不再催。
+ * 值和状态从会话取，不存在消息里：人在别处改了、确认了，这张清单跟着变。
+ */
+function RecognizedList({ ids, fields, fieldStatus, onConfirmField, onConfirmAll, onEditField }: {
+  ids: string[];
+  fields: DmpkField[];
+  fieldStatus: Record<string, "recognized" | "confirmed">;
+  onConfirmField?: (fieldId: string) => void;
+  onConfirmAll?: () => void;
+  onEditField?: (fieldId: string) => void;
+}) {
+  const items = ids.map((id) => fields.find((field) => field.id === id)).filter((field): field is DmpkField => Boolean(field?.value));
+  if (!items.length) return null;
+  const pendingCount = items.filter((field) => fieldStatus[field.id] === "recognized").length;
+  return (
+    <div className="dmpkReplySection dmpkRecognized" data-minimap="recognized" data-minimap-label="识别清单">
+      {/* 段头只说事：图标 + 识别到几项 + 几项待确认；说明文字不放（09-22 反馈：标注性文字去掉） */}
+      <header>
+        <i className="dmpkReplySectionIcon"><ListChecks size={14} aria-hidden="true" /></i>
+        <strong>识别到 {items.length} 项</strong>
+        {pendingCount ? <em>{pendingCount} 项待确认</em> : <em className="isDone">已全部确认</em>}
+        {pendingCount && onConfirmAll ? <button type="button" onClick={onConfirmAll}><Check size={13} aria-hidden="true" />全部确认</button> : null}
+      </header>
+      <ul>
+        {items.map((field) => {
+          const status = fieldStatus[field.id];
+          const source = field.source;
+          const confirmed = status !== "recognized";
+          return (
+            <li key={field.id} data-status={confirmed ? "confirmed" : "recognized"}>
+              <span className="dmpkRecognizedLabel">{field.label}</span>
+              <b className="dmpkRecognizedValue">{formatParamValue(field, field.value)}</b>
+              {source ? (
+                <span className="dmpkRecognizedSource" tabIndex={0} aria-label={source.kind === "document" ? `来源：${source.sourceLabel} · ${source.anchor}` : "人填，原文已改"}>
+                  {source.kind === "document" ? <Quote size={11} aria-hidden="true" /> : <span className="dmpkRecognizedManual">人填</span>}
+                  <span className="dmpkRecognizedPop" role="note">
+                    {source.kind === "document" ? (
+                      <>
+                        <em>{source.sourceLabel}<i>{source.anchor}</i></em>
+                        <q>{source.quote}</q>
+                      </>
+                    ) : (
+                      <>
+                        <em>人填{source.original ? <i>原文为「{source.original.value}」，已改为「{field.value}」</i> : null}</em>
+                        {source.original ? <q>{source.original.quote}</q> : null}
+                      </>
+                    )}
+                  </span>
+                </span>
+              ) : null}
+              <span className="dmpkRecognizedActions">
+                {confirmed ? (
+                  <i className="dmpkRecognizedOk" title="已确认"><Check size={12} aria-hidden="true" /></i>
+                ) : (
+                  <>
+                    {onConfirmField ? <button type="button" onClick={() => onConfirmField(field.id)}>确认</button> : null}
+                    {onEditField ? <button type="button" className="isEdit" aria-label={`改${field.label}`} title="改这一项" onClick={() => onEditField(field.id)}><Edit3 size={12} aria-hidden="true" /></button> : null}
+                  </>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, liveRun: liveRunOverride, onOpenInspector, onArtifactPreview, fields = [], fieldStatus = {}, onConfirmField, onConfirmAll, onEditField }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; /** 正在读文件时由会话递进来：步骤是逐条揭开的，stage 本身推不出来。 */ liveRun?: { text: string; runSteps: DmpkRunStep[] } | null; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void; /** 正文里那张识别清单要的：当前字段（取值、来源）、确认状态、逐项 / 全部确认、去改 */ fields?: DmpkField[]; fieldStatus?: Record<string, "recognized" | "confirmed">; onConfirmField?: (fieldId: string) => void; onConfirmAll?: () => void; onEditField?: (fieldId: string) => void }) {
   const liveRun = liveRunOverride ?? (stage === "thinking" || stage === "generating"
     ? dmpkRunRecord(stage === "generating" ? "quote" : "params", { running: true, missingCount: currentMissing.length })
     : null);
@@ -164,20 +240,30 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
         if (message.role === "inbound") return <DmpkInboundEvent key={message.id} text={message.text} attachments={message.attachments} />;
         if (message.role === "artifacts") return <DmpkArtifactCards key={message.id} onPreview={onArtifactPreview} onOpenInspector={onOpenInspector} />;
         if (message.role === "summary" && message.summary) return <DmpkSummaryCard key={message.id} summary={message.summary} />;
-        if (message.role === "agent" && message.missingFields?.length) {
+        if (message.role === "agent" && (message.missingFields?.length || message.recognizedIds?.length)) {
           return (
             <div className="agentReply" data-minimap="agent" key={message.id}>
               <span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span>
               <div>
                 <p>{message.text}</p>
-                <table className="previewTable" style={{ marginTop: 10 }}>
-                  <thead><tr><th>待补充参数</th><th>所属环节</th><th>状态</th></tr></thead>
-                  <tbody>
-                    {message.missingFields.map((field) => (
-                      <tr key={field.label}><td>{field.label}</td><td>{field.group}</td><td>待填写</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+                {message.recognizedIds?.length ? (
+                  <RecognizedList ids={message.recognizedIds} fields={fields} fieldStatus={fieldStatus} onConfirmField={onConfirmField} onConfirmAll={onConfirmAll} onEditField={onEditField} />
+                ) : null}
+                {message.missingFields?.length ? (
+                  /* 缺的那些另起一段，段头带图标——跟上面的识别清单一眼分得开（09-22 反馈：混成一片） */
+                  <div className="dmpkReplySection dmpkMissing">
+                    <header>
+                      <i className="dmpkReplySectionIcon"><CircleHelp size={14} aria-hidden="true" /></i>
+                      <strong>还需补充 {message.missingFields.length} 项</strong>
+                      <em>在下方参数卡里填，或直接一句话说</em>
+                    </header>
+                    <ul>
+                      {message.missingFields.map((field) => (
+                        <li key={field.label}><span>{field.label}</span><small>{field.group}</small></li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             </div>
           );
