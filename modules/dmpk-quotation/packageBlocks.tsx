@@ -14,7 +14,7 @@ import { extraPackageOptions, type ExtraPackage } from "./quoteLineFixtures";
  * 下面**再长一张同样的卡**——同一副样子（`.inspectorParameterGroup`），能折能开，
  * 像报价结果里 v1 / v2 那种一块一块的。
  *
- * 卡上只摆这个板块的 ④⑤⑦⑧（⑥ 就是卡名），文案压到一行；缺的写「待填写」，点了去那一格。
+ * 卡上只摆这个板块的实验操作 / 次数 / 方法 / 数量（检测项目就是卡名），文案压到一行，不带序号；缺的写「待填写」，点了去那一格。
  * 不另存定义：读的就是右栏那份账（summarizeLines）。composer 上方的参数卡读的是
  * 同一份分组，所以两边联动——那边填一格，这边亮一行。
  */
@@ -45,37 +45,37 @@ function PackageCard({ id, label, lines, subtotal, manualPrices, extra, defaultO
   const qtyByUnit = lines.reduce<Record<string, number>>((acc, line) => { if (line.qty) acc[line.unit] = (acc[line.unit] ?? 0) + line.qty; return acc; }, {});
   const qty = Object.entries(qtyByUnit).slice(0, 2).map(([unit, n]) => `${n.toLocaleString("zh-CN")} ${unit}`).join(" · ");
   const state = pending.length ? (pending.length === lines.length ? "isEmpty" : "isPartial") : "isComplete";
-  const rows: Array<{ mark: string; label: string; value: string; fieldId?: string }> = [
-    { mark: "④", label: "实验操作", value: ops.join(" · ") },
-    { mark: "⑤", label: "次数", value: times.join("；"), fieldId: missing.find((line) => line.dependsOn === "bloodPoints")?.dependsOn },
-    { mark: "⑦", label: "方法", value: methods.join(" · "), fieldId: missing.find((line) => line.dependsOn === "method")?.dependsOn },
-    { mark: "⑧", label: "数量", value: qty, fieldId: missing.find((line) => line.dependsOn === "analyteCount" || line.dependsOn === "animalsPerGroup" || line.dependsOn === "groupCount")?.dependsOn },
+  const rows: Array<{ label: string; value: string; fieldId?: string }> = [
+    { label: "实验操作", value: ops.join(" · ") },
+    { label: "次数", value: times.join("；"), fieldId: missing.find((line) => line.dependsOn === "bloodPoints")?.dependsOn },
+    { label: "方法", value: methods.join(" · "), fieldId: missing.find((line) => line.dependsOn === "method")?.dependsOn },
+    { label: "数量", value: qty, fieldId: missing.find((line) => line.dependsOn === "analyteCount" || line.dependsOn === "animalsPerGroup" || line.dependsOn === "groupCount")?.dependsOn },
   ];
 
   return (
     <section className={`inspectorParameterGroup dmpkPackageCard ${state} ${open ? "isOpen" : ""}`} data-package={id}>
       <button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <i className="paramGroupDot" aria-hidden="true" />
-        <strong>{label} ④–⑧{extra ? <em className="dmpkPackageCardTag">搭上的</em> : null}</strong>
+        <strong>{label}{extra ? <em className="dmpkPackageCardTag">搭上的</em> : null}</strong>
         <span className={state}><em className="paramGroupState">{pending.length ? `${pending.length} 待定` : subtotal ? formatCny(subtotal) : "已完成"}</em><ChevronDown size={14} /></span>
       </button>
       {open ? (
         <div className="inspectorParameterFields">
           {rows.map((row) => row.value ? (
-            <div className="inspectorParameterField isStatic" key={row.mark} title={row.value}>
-              <span><i className="paramFieldMark">{row.mark}</i>{row.label}</span>
+            <div className="inspectorParameterField isStatic" key={row.label} title={row.value}>
+              <span>{row.label}</span>
               <strong>{row.value}</strong>
               <span aria-hidden="true" />
             </div>
           ) : row.fieldId ? (
-            <button className="inspectorParameterField isEmpty" type="button" key={row.mark} onClick={() => onEditField(row.fieldId!)}>
-              <span><i className="paramFieldMark">{row.mark}</i>{row.label}</span>
+            <button className="inspectorParameterField isEmpty" type="button" key={row.label} onClick={() => onEditField(row.fieldId!)}>
+              <span>{row.label}</span>
               <strong>待填写</strong>
               <span aria-hidden="true" />
             </button>
           ) : (
-            <div className="inspectorParameterField isEmpty" key={row.mark}>
-              <span><i className="paramFieldMark">{row.mark}</i>{row.label}</span>
+            <div className="inspectorParameterField isEmpty" key={row.label}>
+              <span>{row.label}</span>
               <strong>—</strong>
               <span aria-hidden="true" />
             </div>

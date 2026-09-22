@@ -175,7 +175,7 @@
     <div class="verdict">
       <div class="card"><span class="n">01 · 架子</span><h3>三列一样，名字随便叫</h3><p>左边任务、中间对话、右边面板，两边一个形状。项目还是空间只是名字，想改就改。beta5 里有一样我们拿来用了：专家按空间配置。它别的那些偏框架的东西——工具页、记忆、知识——用起来不太实在，就没接。</p></div>
       <div class="card"><span class="n">02 · 右栏</span><h3>一张固定的卡，还是一个容器</h3><p>beta5 的右栏是一张「参数收集 13/13」的卡，收完就没事了。我们把右栏做成一个位置固定的容器：放什么面板、几个 tab，可以搭配；能并列、能全屏、能收起。这是从 Codex、Claude Code 那种全自由面板收回来的——那种太灵活，跟做报价这件事不贴。</p></div>
-      <div class="card"><span class="n">03 · 工作流与对话流</span><h3>一条链在会话里走完</h3><p>材料进来，识别、留原文依据；参数卡按八维分页，缺什么问什么；右栏当场成账；改价补价；出纸；交接；对方复核；退回；再重出。这一整条在一个会话里走完。beta5 到追问参数、出一张费用卡就停了。原型花功夫的地方是这条链。</p></div>
+      <div class="card"><span class="n">03 · 工作流与对话流</span><h3>一条链在会话里走完</h3><p>材料进来，识别、留原文依据；参数卡按动物 / 实验 / 检测分页，缺什么问什么；右栏当场成账；改价补价；出纸；交接；对方复核；退回；再重出。这一整条在一个会话里走完。beta5 到追问参数、出一张费用卡就停了。原型花功夫的地方是这条链。</p></div>
     </div>
     <footer><span>3–9 页一项一项对；10 页起是报价线上多出来的功能；第二部分是会上那几处改动的细节。</span><span class="num">·</span></footer>
   </section>
@@ -220,10 +220,10 @@
     <header><span class="kicker">最重要的差异</span><h2>工作流与对话流<small>beta5 的会话是追问参数、用户打一段、出一张费用卡。我们的会话是一条链：材料进来，到报价交出去、被复核、被退回、再重出，都在这一个会话里。</small></h2></header>
     <div class="compare">
       <div class="panel"><span class="tag beta"><i></i>beta5 · 会话</span><div class="shot"><img src="img/beta5-session.png" alt="beta5 会话：追问参数、用户一段话、报价已生成"></div><p class="caption">「还需要补充共 11 项信息」，用户一段话补二十项，然后「报价已生成成功」，一张费用明细卡加两个文件。<b>参数靠打字，改价没有路径，交出去之后没有下文。</b></p></div>
-      <div class="panel"><span class="tag ours"><i></i>原型 · 会话</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 会话：读方案、解析轨迹、参数卡、右栏"></div><p class="caption">一句话或一份方案进来，解析轨迹加原文依据；参数卡按八维分页、缺什么问什么；右栏当场成账；改价补价；出 Word 和 Excel；交接卡交出去；对方在站内信里复核；退回的批注回到会话；重出 v2。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 会话</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 会话：读方案、解析轨迹、参数卡、右栏"></div><p class="caption">一句话或一份方案进来，解析轨迹加原文依据；参数卡按动物 / 实验 / 检测分页、缺什么问什么；右栏当场成账；改价补价；出 Word 和 Excel；交接卡交出去；对方在站内信里复核；退回的批注回到会话；重出 v2。</p></div>
     </div>
     <div class="flowline">
-      <span>材料 / 一句话</span><i>→</i><span>识别 · 原文依据</span><i>→</i><span>参数卡（八维）</span><i>→</i><span>右栏成账</span><i>→</i><span>改价 · 补价</span><i>→</i><span>Word / Excel</span><i>→</i><span>交接</span><i>→</i><span>复核 · 依据与变更</span><i>→</i><span>退回 → 重出</span>
+      <span>材料 / 一句话</span><i>→</i><span>识别 · 原文依据</span><i>→</i><span>参数卡（动物 / 实验 / 检测）</span><i>→</i><span>右栏成账</span><i>→</i><span>改价 · 补价</span><i>→</i><span>Word / Excel</span><i>→</i><span>交接</span><i>→</i><span>复核 · 依据与变更</span><i>→</i><span>退回 → 重出</span>
     </div>
     <footer><span>每一步都在同一个会话里，右栏跟着换 tab；对话里每一步留一句话——影响了哪几行、仅本次报价。</span><span class="num">·</span></footer>
   </section>
@@ -255,7 +255,7 @@
   <section class="slide">
     <header><span class="kicker">数据中枢</span><h2>文件、产物、来源会话<small>两边都有「产物」，也都记它来自哪条会话；beta5 多「记忆」「知识」两档。</small></h2></header>
     <div class="compare">
-      <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot"><img src="img/beta5-hub.jpg" alt="beta5 数据中枢" onerror="this.parentElement.classList.add('missing')"></div><p class="caption">文件、记忆、知识、产物四档，按空间筛，有回收站和「问问文件助手」。</p></div>
+      <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot"><img src="img/beta5-hub.png" alt="beta5 数据中枢"></div><p class="caption">文件、记忆、知识、产物四档，按空间筛，有回收站和「问问文件助手」。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型</span><div class="shot"><img src="img/ours-hub-artifacts.png" alt="原型 数据中枢 产物档"></div><p class="caption">根级「全部文件 | 产物」两段，产物多一列<b>来源任务</b>，点进那条会话。</p></div>
     </div>
     <div class="diff"><div class="hi"><b>一样的</b>产物加来源会话。</div><div><b>差在</b>我们的产物列表带「来源任务」，能点回去；beta5 多「记忆」「知识」，我们没接——先要说清它们是什么。</div><div><b>没改名</b>知识库照旧。</div></div>
@@ -300,8 +300,8 @@
     <header><span class="kicker">报价线 · 功能差异</span><h2>报价线上 beta5 没有的四样<small>都长在右栏和对话流里，不动壳。细节在第二部分，这里只过一眼。</small></h2></header>
     <div class="verdict four">
       <div class="card"><span class="n">A · 改价</span><h3>一条路，只动这一单</h3><p>单价旁的铅笔：原价、新价、确认；没价目的补价；折扣、其他费用是人工项。价目表不动，纸面跟着账走。</p></div>
-      <div class="card"><span class="n">B · 材料</span><h3>传方案，按八维归位</h3><p>Word、PDF、截图、聊天记录进来，读出来的东西按 P0 八维排，每项参数带原文依据；机器认的是提议，人点头才算数。</p></div>
-      <div class="card"><span class="n">C · 积木</span><h3>参数收集按八维分卡</h3><p>基础 ①②③、板块 ④–⑧、交付；命中一块长一块，「再搭一块」加 TOX、BA、ADA，右栏的账同步长出来。</p></div>
+      <div class="card"><span class="n">B · 材料</span><h3>传方案，正文里溯源</h3><p>Word、PDF、截图、聊天记录进来，读完在正文列出认到的每一项，hover 来源标记看原句，逐项点头；右栏留给账。机器认的是提议，人点头才算数。</p></div>
+      <div class="card"><span class="n">C · 积木</span><h3>参数收集和报价板块一一对应</h3><p>动物、实验、检测、报告与交付四类，两边同一套；八维在下层给提取用。命中一块长一块，「再搭一块」加 TOX、BA、ADA，右栏的账同步长出来。</p></div>
       <div class="card"><span class="n">D · 审核</span><h3>审核人看同一份草稿</h3><p>交接带纸、原文依据、变更记录，画布多一页「依据与变更」；批完退回，批注回到会话。</p></div>
     </div>
     <footer><span>第二部分逐页有截图；docs/QUOTE_SECTIONS.md 有细节。</span><span class="num">·</span></footer>
@@ -316,13 +316,13 @@
         <tbody>
           <tr><td>壳</td><td class="beta">项目 → 空间，空间入口页，侧栏一级入口多（专家 / 工具 / 数据中枢）</td><td class="ours">叫法一样；借了专家按空间配置；侧栏只留数据中枢、数字团队、空间</td></tr>
           <tr><td>会话层</td><td class="beta">三列：任务 / 对话 / 右栏一张卡</td><td class="ours">三列：任务 / 对话 / 右栏面板容器</td></tr>
-          <tr><td>右栏</td><td class="beta">一张固定的卡：参数分组完成度</td><td class="ours">面板 + tab：常驻三个加「+」备选；并列、全屏、收起</td></tr>
+          <tr><td>右栏</td><td class="beta">一张固定的卡：参数分组完成度</td><td class="ours">面板 + tab：常驻三个加「+」备选；并列、全屏、收起；账按动物 / 实验 / 检测 / 交付四类</td></tr>
           <tr><td>工作流</td><td class="beta">追问参数 → 一段话 → 费用明细卡加两个文件</td><td class="ours">材料 → 识别 → 参数 → 账 → 改价 → 纸 → 交接 → 复核 → 退回 → 重出</td></tr>
           <tr><td>费用</td><td class="beta">对话里一次性的费用明细卡</td><td class="ours">右栏常驻的账，按板块折叠、小计合计</td></tr>
           <tr><td>改价</td><td class="beta no">无路径</td><td class="ours">原价 → 新价 → 确认，只动这一单；无价目可补价；折扣、其他费用是人工项</td></tr>
           <tr><td>价目表</td><td class="beta no">无</td><td class="ours">独立入口；对话里能问本单命中的那一截</td></tr>
-          <tr><td>材料识别</td><td class="beta no">无（参数靠打字）</td><td class="ours">多模态入口、解析轨迹、原文依据、识别 / 确认两态；读出来的按 P0 八维归位</td></tr>
-          <tr><td>参数收集</td><td class="beta">四组完成度</td><td class="ours">按八维分卡：基础 ①②③ / 板块 ④–⑧ / 交付；命中一块长一块</td></tr>
+          <tr><td>材料识别</td><td class="beta no">无（参数靠打字）</td><td class="ours">多模态入口、解析轨迹；正文里列出认到的项、hover 看原句、逐项确认</td></tr>
+          <tr><td>参数收集</td><td class="beta">四组完成度</td><td class="ours">动物 / 实验 / 检测 / 报告与交付四类，和报价板块一一对应；八维在下层；命中一块长一块</td></tr>
           <tr><td>P0 规则</td><td class="beta no">无</td><td class="ours">少于 30 按 30、猴类价 / 折扣 / 其他费用人工项、不适用、影响提示、按组明细</td></tr>
           <tr><td>审核人看什么</td><td class="beta no">无</td><td class="ours">同一份草稿：计算表、报价书，加依据与变更</td></tr>
           <tr><td>人与工单</td><td class="beta no">没有「人」</td><td class="ours">站内信、工单、交接、退回、复核画布</td></tr>
@@ -353,7 +353,7 @@
     <div class="hero">
       <h1>DMPK 报价：<br>会上说的几处，改成了什么样</h1>
       <p>上次会上定的三条（右栏只放参数状态和单价、改价是临时调价唯一的路、完整价目表单独入口）在原型里怎么落的，拿到 P0 工程方案以后对着八维补的几条，最后和工程师版 beta3 跑同一份 BB-001 方案的结果对一下。边点边讲，大概十分钟，中间随时打断。</p>
-      <div class="pills"><span>1 一句话</span><span>2 八维分卡</span><span>3 搭积木</span><span>4 传方案</span><span>5 改价</span><span>6 价目表与权限</span><span>7 交接与复核</span><span>8 对 beta3</span><span>9 要拍板的</span></div>
+      <div class="pills"><span>1 一句话</span><span>2 参数分四类</span><span>3 搭积木</span><span>4 传方案</span><span>5 改价</span><span>6 价目表与权限</span><span>7 交接与复核</span><span>8 对 beta3</span><span>9 要拍板的</span></div>
     </div>
     <footer><span>操作顺序照 docs/demo/README.md 的 0 → 1 → 1b → 2 → 3 → 4 → 5 → 6 → 7；屏幕开着 http://localhost:3000，账号王林彬</span><span class="num">·</span></footer>
   </section>
@@ -361,26 +361,26 @@
   <!-- 2-1 一句话 -->
   <section class="slide talk">
     <header><span class="kicker">第二部分 · 1</span><h2>先打一句话，右边就是账<small>会上定的：右栏不再收集参数，只放已收集参数的状态和对应单价。</small></h2></header>
-    <p class="say"><b>说</b>先从最简单的开始。我在输入框打一句"PK 小分子，SD 大鼠，每组 6 只，3 组，两周，血浆，中文报告"。右边这一栏现在就是会上说的那个样子了：按 PK、TOX、BA、ADA 分开，每行就一个数量乘单价，能收起来。参数还没给的行写"缺参数"，点一下过去填，不会在右边让你填。</p>
+    <p class="say"><b>说</b>先从最简单的开始。我在输入框打一句"PK 小分子，SD 大鼠，每组 6 只，3 组，两周，血浆，中文报告"。右边这一栏现在就是会上说的那个样子了：按动物、实验、检测、报告与交付四块分，每行就一个数量乘单价，能收起来。参数还没给的行写"缺参数"，点一下过去填，不会在右边让你填。</p>
     <div class="compare">
       <div class="panel"><span class="tag beta"><i></i>工程师版 beta3 · 右栏</span><div class="shot none"><span><b>「补充报价」表单</b>报价还需处理 11 项：按项目名称在对话中补充，或填写下方对应项目；已填写 0 / 11。<br>下面是「已计算的项目金额（非整单总价）」——每项一个数，后面跟一长串适用范围。</span></div><p class="caption">右栏回答的是"还差什么、填给我"：缺失参数、确认项、待补价格、待系统补齐四类，每项一个"为什么需要这项？"。金额是有的，混在文字里，没有账的形状。</p></div>
-      <div class="panel"><span class="tag ours"><i></i>原型 · 报价板块</span><div class="shot"><img src="img/ours-session-sentence.png" alt="原型 一句话后的板块"></div><p class="caption">右栏是账：按 PK/TK、TOX、BA、ADA、动物、报告分板块，行里只有数量 × 单价和待测物、方法。<b>账不等参数齐</b>：填一项亮一行，缺的写「去填」。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 报价板块</span><div class="shot"><img src="img/ours-session-sentence.png" alt="原型 一句话后的板块"></div><p class="caption">右栏是账：按<b>动物、实验、检测、报告与交付</b>四类分板块，和参数收集那四张卡一一对应；行里只有数量 × 单价，工作包（PK/TK、TOX、ADA）写成行上的小标。<b>账不等参数齐</b>：填一项亮一行，缺的写「去填」。</p></div>
     </div>
-    <footer><span>板块能折叠，默认只开第一个有待定项的；「报价规则」tab 撤了，两条真规则折进板块底部。</span><span class="num">·</span></footer>
+    <footer><span>板块能折叠，默认只开第一个有待定项的；工作包是行上的小标，不再是段头。</span><span class="num">·</span></footer>
   </section>
 
-  <!-- 2-2 八维分卡 -->
+  <!-- 2-2 参数分四类 -->
   <section class="slide talk">
-    <header><span class="kicker">第二部分 · 2</span><h2>参数收集按八维分了卡<small>P0 工程方案第一层的「8 维提取 Schema」，就是参数收集的结构。</small></h2></header>
-    <p class="say"><b>说</b>参数收集挪到旁边这个页签了。昨天晚上拿到 P0 那份方案，我照着里面的八维把这块重新分了一下：基础是动物、组别、数目，板块是操作、次数、项目、方法、数量，交付单独一张。字段还是原来那十四个，一个没动，就是分法改成跟方案一样，每行前面标了是第几维，大家看着好对。</p>
+    <header><span class="kicker">第二部分 · 2</span><h2>参数收集分四类，八维在下层<small>上层是动物、实验、检测、报告与交付，跟报价板块一一对应；P0 那八维留给提取和材料面板，展示上不带序号。</small></h2></header>
+    <p class="say"><b>说</b>参数收集挪到旁边这个页签了，分四张卡：动物、实验、检测、报告与交付——跟右边报价板块的四块是一一对应的，给甲方的报价单也按这四类分。字段还是原来那十四个，一个没动，就是分法改了。P0 方案里那八维（动物、组别、数目、操作、次数、检测项目、方法、数量）留在下层给提取用，展示上不标序号了。</p>
     <div class="compare wide">
-      <div class="panel"><span class="tag ours"><i></i>原型 · 参数收集（并列成一列）</span><div class="shot"><img src="img/ours-shell-columns.png" alt="原型 参数收集按八维分卡，并列成一列"></div><p class="caption">三张卡：<b>基础 ①②③</b>（种属、组数、每组只数、周期）、<b>TOX ④–⑧</b>（名字跟检测类型走）、<b>报告与交付</b>；下面是方案里读出来的别的板块。右边「输入材料」里读出来的事实也按 ①–⑧ 排。</p></div>
-      <div class="panel"><span class="tag beta"><i></i>P0 方案 · 八维落到哪</span><div class="shot none dims"><ol>
-        <li><b>① 动物</b><span>→ 动物种属</span></li><li><b>② 组别</b><span>→ 组数</span></li>
-        <li><b>③ 数目</b><span>→ 每组动物数</span></li><li><b>④ 实验操作</b><span>→ 样品类型；板块里的行</span></li>
-        <li><b>⑤ 操作次数</b><span>→ 采血点数 · 试验周期</span></li><li><b>⑥ 检测项目</b><span>→ 检测类型 · 分子类型 · 化合物类别</span></li>
-        <li><b>⑦ 检测方法</b><span>→ 分析方法</span></li><li><b>⑧ 检测数量</b><span>→ 待测物数量；每行的份数</span></li>
-      </ol></div><p class="caption">方案后几层的几条也补了：每化合物少于 30 份按 30 计；猴类价、折扣、其他费用是人工项；BA Only 不问动物参数，台账写「不适用」；改一项参数，对话里说影响了哪几行、合计从多少到多少。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 参数收集（并列成一列）</span><div class="shot"><img src="img/ours-shell-columns.png" alt="原型 参数收集分四类，并列成一列"></div><p class="caption">四张卡：<b>动物</b>（种属、组数、每组只数）、<b>实验</b>（周期、样品类型、采血点数）、<b>检测</b>（检测类型、分子类型、化合物类别、方法、待测物数量）、<b>报告与交付</b>；下面是方案里读出来的别的工作包。右边「输入材料」里读出来的事实按八维排，不带序号。</p></div>
+      <div class="panel"><span class="tag beta"><i></i>八维落到四类、十四项上</span><div class="shot none dims"><ol>
+        <li><b>动物</b><span>→ 动物 · 动物种属</span></li><li><b>组别</b><span>→ 动物 · 组数</span></li>
+        <li><b>数目</b><span>→ 动物 · 每组动物数</span></li><li><b>实验操作</b><span>→ 实验 · 样品类型；板块里的行</span></li>
+        <li><b>操作次数</b><span>→ 实验 · 采血点数 · 试验周期</span></li><li><b>检测项目</b><span>→ 检测 · 检测类型 · 分子类型 · 化合物类别</span></li>
+        <li><b>检测方法</b><span>→ 检测 · 分析方法</span></li><li><b>检测数量</b><span>→ 检测 · 待测物数量；每行的份数</span></li>
+      </ol></div><p class="caption">八维怎么落到四类和十四项上（这张表给 Agent 提取用，不在界面上标）。方案后几层的几条也补了：每化合物少于 30 份按 30 计；猴类价、折扣、其他费用是人工项；BA Only 不问动物参数，台账写「不适用」；改一项参数，对话里说影响了哪几行、合计从多少到多少。</p></div>
     </div>
     <footer><span>右栏台账和中间的参数卡读的是同一份分组——那边填一格，这边亮一行。</span><span class="num">·</span></footer>
   </section>
@@ -390,19 +390,19 @@
     <header><span class="kicker">第二部分 · 3</span><h2>再搭一块<small>会上说的"TOX 的卡片在下面再长出一个卡片"。</small></h2></header>
     <p class="say"><b>说</b>然后是搭积木。台账最下面有个"再搭一块"，我点一下 TOX，下面就多出一张 TOX 的卡，右边板块那边也同时多一段，对话里会告诉你多了几行、还缺什么。这块我拿不准，想听大家说：每个板块自己的组和时点放哪儿。现在整单就一套采血点数，方案里 TK 是 16 个点、PK 是 11 个、临床病理是 6 个，三套，我还没想好怎么摆。</p>
     <div class="compare wide">
-      <div class="panel"><span class="tag ours"><i></i>原型 · 搭上 TOX</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 参数收集台账下面长出 TOX 卡"></div><p class="caption">台账下面<b>再长一张「TOX ④–⑧ · 搭上的」</b>：④ 操作 ⑤ 次数 ⑦ 方法 ⑧ 数量各一行，缺的写「待填写」，点了去填；右边板块同时多一段 TOX（4 行 · 3 待定）。「去掉这块」能拆。</p></div>
-      <div class="panel"><span class="tag beta"><i></i>怎么做到的</span><div class="shot none"><span><b>十四项不加不减</b>「检测类型」还是单选，定主板块，卡名跟着改（PK → PK / TK）。<br><br><b>再搭的板块记在会话上</b>账里当场长出那一段，行大多缺参数、指回参数卡那一格；填一格亮一行；拆掉就收回。加、拆都进对话，也进快照——出过版之后再搭，版本卡标「待重出」。</span></div><p class="caption">这是 ⑥ 检测项目多选在现有模型上的落法：检测类型定主板块，加搭上去的板块，等于这一单做什么。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 搭上 TOX</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 参数收集台账下面长出 TOX 卡"></div><p class="caption">台账下面<b>再长一张「TOX · 搭上的」</b>：实验操作、次数、方法、数量各一行，缺的写「待填写」，点了去填；右边板块里实验、检测两块各多几行，标着 TOX。「去掉这块」能拆。</p></div>
+      <div class="panel"><span class="tag beta"><i></i>怎么做到的</span><div class="shot none"><span><b>十四项不加不减</b>「检测类型」还是单选，定主板块，卡名跟着改（PK → PK / TK）。<br><br><b>再搭的板块记在会话上</b>账里当场长出那一段，行大多缺参数、指回参数卡那一格；填一格亮一行；拆掉就收回。加、拆都进对话，也进快照——出过版之后再搭，版本卡标「待重出」。</span></div><p class="caption">这是"检测项目多选"在现有模型上的落法：检测类型定主板块，加搭上去的板块，等于这一单做什么。</p></div>
     </div>
     <footer><span>没做的：每个板块各自的组和时点；搭上去的卡现在是读账，有了字段表就能填。</span><span class="num">·</span></footer>
   </section>
 
   <!-- 2-4 传方案 -->
   <section class="slide talk">
-    <header><span class="kicker">第二部分 · 4</span><h2>传一份方案<small>读出来的东西按八维归位；文件认出来的是提议，人点过头才算数。</small></h2></header>
-    <p class="say"><b>说</b>传方案是这样。我把 BB-001 那个 docx 拖进来，它读一遍，读出来的东西按八维归到位，"输入材料"这里能看到读到了几维、原文在哪一节。文件认出来的参数会标"识别"，得人点过才算确认；点任一行的来源标记，能看到原文那句话。</p>
+    <header><span class="kicker">第二部分 · 4</span><h2>传一份方案，正文里溯源<small>读完在正文列出认到的每一项，hover 来源标记看原句，逐项点头；右栏留给账（下午陈曦慧定的）。</small></h2></header>
+    <p class="say"><b>说</b>传方案是这样。我把 BB-001 那个 docx 拖进来，它读一遍，回复下面直接列出认到的十一项，每项后面一个小标，鼠标放上去能看到是从材料哪一节、哪句话读的。对的就点确认，或者右上角一键全确认；不对点"改"。没确认之前它标着"识别"，右边台账上也是——机器读的是提议，人点头才算数。</p>
     <div class="compare">
-      <div class="panel"><span class="tag ours"><i></i>原型 · 读完之后</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 读方案后的解析轨迹与参数收集"></div><p class="caption">「已读取 BB-001 方案」：7 组、7 个分析方法、37 个采样事件；识别 11 项、2 项待确认；<b>已计价 20 项 ¥222,860</b>，7 项未计价各带原因。右栏每一项标「识别」，铅笔逐项确认。</p></div>
-      <div class="panel"><span class="tag ours"><i></i>原型 · 输入材料</span><div class="shot"><img src="img/ours-materials-dims.png" alt="原型 输入材料按八维分组"></div><p class="caption">「按八维提取 · 读到 8 / 8 维」，每一维带原文位置（§1、表 2、表 3），能展开看明细；没归到八维的排最后。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 读完之后</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 读方案后的解析轨迹与参数收集"></div><p class="caption">「已读取 BB-001 方案」下面一张识别清单：11 项，每项带来源小标，hover 出原句，逐项「确认」或「改」，右上「全部确认」；再往下是还缺的项。<b>已计价 20 项 ¥222,860</b>，7 项未计价各带原因。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 输入材料</span><div class="shot"><img src="img/ours-materials-dims.png" alt="原型 输入材料按八维分组"></div><p class="caption">「输入材料」面板：读出来的事实按八维排（不带序号），每条带原文位置（§1、表 2、表 3），能展开看明细；没归到八维的排最后。</p></div>
     </div>
     <div class="diff"><div class="hi"><b>规则</b>文件为准；机器读出来的是提议，人点过头的才是参数。</div><div><b>原文依据</b>每项参数带位置和原句；人改过的写「原文为 X，已改为 Y」。</div><div><b>入口与边界</b>Word、PDF、截图、聊天记录都能进；只有本地上传算材料，工单附件和退回会话不读。</div></div>
     <footer><span>演示材料：docs/demo/materials</span><span class="num">·</span></footer>

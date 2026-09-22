@@ -125,7 +125,7 @@ async function main() {
   const confirmRow = (rowExpr) => `const row = ${rowExpr}; [...row.querySelectorAll('button')].find(b => b.textContent.trim() === '确认').click(); return true;`;
   // 板块默认哪些是展开的随账变，所以按 aria-expanded 开合，不盲点
   const setSection = (name, open) => evaluate(`const h = [...document.querySelectorAll('.dmpkSectionHead')].find(h => h.querySelector('strong').textContent === ${JSON.stringify(name)}); if ((h.getAttribute('aria-expanded') === 'true') !== ${open}) h.click(); return true;`);
-  await setSection("PK / TK 样品采集", true);
+  await setSection("实验", true);
   await sleep(300);
   await evaluate(`${sectionRow("TK 毒代采血")}.querySelector('.dmpkPriceEdit').click(); return true;`);
   await sleep(200);
@@ -135,8 +135,8 @@ async function main() {
   await evaluate(confirmRow(sectionRow("TK 毒代采血")));
   await sleep(500);
   // 6b. 补价：猴类价是人工输入项，账上标「待补价」，同一条路补上；再记一个本单折扣
-  await setSection("PK / TK 样品采集", false);
-  await setSection("动物使用", true);
+  await setSection("实验", false);
+  await setSection("动物", true);
   await sleep(300);
   await evaluate(`${sectionRow("食蟹猴使用费")}.querySelector('.dmpkQuoteLineGo').click(); return true;`);
   await sleep(200);

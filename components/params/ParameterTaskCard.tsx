@@ -96,18 +96,10 @@ export function ParameterTaskCard({
   const values = effectiveValues(allFields, draftTabs);
   const remaining = remainingCount ?? fields.length;
 
-  /* 能翻到第几页，由**数据**说了算，不是由「自动翻页把你推到了哪儿」说了算。
-     原来写的是 `index > safePage` 就禁用，靠自动翻页往前推。而自动翻页只对
-     一次点完的控件成立（多选和重复行不能一填就跳走，见 selectValue），于是
-     一页的最后一项是多选或重复行时，下一页永远解不开——卡里没路可走，
-     人只能去开全屏，而全屏本来是「想一次看全」时才用的东西。
-     现在的判据是：前面每一页都不欠输入了，下一页就开。 */
-  /* 只有**必填**项空着才锁后面的页。可选项留空是一种完成状态，不是欠着——
-     收集阶段这条差别看不出来（那时卡里本来就只有缺的必填项），
-     但人把参数填齐之后再打开表单回头改时，卡里列的是全部字段，
-     一个空着的「报告语言」会把它后面所有页都锁死。 */
-  const firstPendingPage = groups.findIndex((group) => fields.some((field) => field.group === group.id && field.required && !values[field.id]));
-  const maxReachablePage = Math.max(firstPendingPage < 0 ? groups.length - 1 : firstPendingPage, safePage);
+  /* 页不再锁（09-22）。以前后面的页要等前面填完才开，理由是"按顺序填"；
+     分组改成动物 / 实验 / 检测之后，「检测类型」排到了第三页，人想先定检测类型
+     得先把动物和实验填完，卡在那儿像坏了。哪页有东西要填就能点哪页，
+     顺序只是建议；自动翻页照旧（见 selectValue）。 */
 
   const selectValue = (field: ParamField, value: string) => {
     onSelect(field, value);
@@ -203,8 +195,9 @@ export function ParameterTaskCard({
           <>
             {mode === "collect" ? (
               <div className="parameterPages">
+                {/* 哪页有东西要填就能点哪页（见上面 firstPendingPage 那段注释） */}
                 {groups.map((group, index) => (
-                  <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={index > maxReachablePage} onClick={() => setPage(index)}>{group.title}</button>
+                  <button className={index === safePage ? "active" : ""} type="button" key={group.id} disabled={!fields.some((field) => field.group === group.id) && index !== safePage} onClick={() => setPage(index)}>{group.title}</button>
                 ))}
               </div>
             ) : null}

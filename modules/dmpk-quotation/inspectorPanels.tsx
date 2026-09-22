@@ -23,7 +23,7 @@ import {
 import { useMemo, useState } from "react";
 import { ParameterLedger, type ParamField } from "../../components/params";
 import { fullQuotePermissions, type QuotePermissions } from "../../lib/workbench/permissions";
-import { extractionDimLabels, extractionDimMarks, sourceKindLabels, sourceRoleLabels, type ParseResult, type ParsedFact } from "../../lib/workbench/sources";
+import { extractionDimLabels, sourceKindLabels, sourceRoleLabels, type ParseResult, type ParsedFact } from "../../lib/workbench/sources";
 import {
   adjustedTotal,
   effectiveStatus,
@@ -33,11 +33,13 @@ import {
   lineAmount,
   lineUnitPrice,
   quoteLineStatusLabels,
+  quotePackageLabels,
+  summarizeByCategory,
   summarizeLines,
   type ManualPrice,
   type QuoteAdjustments,
+  type QuoteCategorySummary,
   type QuoteLine,
-  type QuotePackageSummary,
 } from "../../lib/workbench/quoteLines";
 import { dmpkGroupsFor, initialDmpkFields, type DmpkField } from "./fields";
 import { DmpkPackageCards } from "./packageBlocks";
@@ -53,7 +55,7 @@ import { noteAnchorToField } from "./noteFieldMap";
 import { quoteAnchorLabel, quoteCurrentValue, quoteNoteSeverityLabel, type QuoteNote } from "../../lib/workbench/quoteData";
 
 export type DmpkInspectorStage = "idle" | "thinking" | "collecting" | "ready" | "generating" | "generated";
-export type DmpkInspectorGroup = "base" | "package" | "delivery";
+export type DmpkInspectorGroup = "animal" | "procedure" | "assay" | "delivery";
 
 export type DmpkInspectorField = {
   id: string;
@@ -131,8 +133,9 @@ export type DmpkInspectorContext = {
 const CATALOG_VERSION = "v1.0.13";
 
 const groupLabels: Record<DmpkInspectorGroup, string> = {
-  base: "基础",
-  package: "检测项目",
+  animal: "动物",
+  procedure: "实验",
+  assay: "检测",
   delivery: "报告与交付",
 };
 
@@ -458,8 +461,8 @@ function SourceCard({ source }: { source: ParseResult }) {
       ) : null}
       {facts.length ? (
         <ul className="dmpkFactList">
-          {/* 按八维归类的，先说清「读到了 8 维里的几维」——缺的那几维就是还没读到的。 */}
-          {dimCount ? <li className="dmpkFactDimNote" aria-hidden="true">按八维提取 · 读到 {dimCount} / 8 维</li> : null}
+          {/* 按八维归类的，先说清「读到了 8 维里的几维」——缺的那几维就是还没读到的。序号不显示（会上说形式上不好看），维度名保留。 */}
+          {dimCount ? <li className="dmpkFactDimNote" aria-hidden="true">按八维提取 · 读到 {dimCount} / 8</li> : null}
           {facts.map((fact) => {
             const expandable = Boolean(fact.items?.length);
             const open = openFactId === fact.id;
@@ -472,8 +475,7 @@ function SourceCard({ source }: { source: ParseResult }) {
                   onClick={() => setOpenFactId(open ? null : fact.id)}
                 >
                   <span className="dmpkFactHead">
-                    {fact.dim ? <i className="dmpkFactDim" title={`八维 · ${extractionDimLabels[fact.dim]}`}>{extractionDimMarks[fact.dim]}</i> : null}
-                    <strong>{fact.label}</strong>
+                    <strong title={fact.dim ? `八维 · ${extractionDimLabels[fact.dim]}` : undefined}>{fact.label}</strong>
                     {fact.anchor ? <em>{fact.anchor}</em> : null}
                   </span>
                   <small>{fact.summary}</small>
@@ -563,8 +565,10 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
   const hasQuoteDraft = ["ready", "generating", "generated"].includes(context.stage);
   /* 默认只开一个：第一个有待定项的板块（要人动手的那个），都没有就开第一个。
      其余折着——段头上的「N 待定」已经把该看哪儿说了，全开等于没折。 */
-  const defaultOpenId = (summary.packages.find((pkg) => pkg.unpriced > 0) ?? summary.packages[0])?.id;
-  const isOpen = (pkg: QuotePackageSummary) => toggled[pkg.id] ?? pkg.id === defaultOpenId;
+  /* 板块 = 上层四类（动物 / 实验 / 检测 / 报告与交付），跟参数收集那四张卡一一对应；工作包退到行上做小标。 */
+  const categories = summarizeByCategory(lines, manualPrices);
+  const defaultOpenId = (categories.find((pkg) => pkg.unpriced > 0) ?? categories[0])?.id;
+  const isOpen = (pkg: QuoteCategorySummary) => toggled[pkg.id] ?? pkg.id === defaultOpenId;
 
   const beginEdit = (line: QuoteLine) => {
     setEditingLineId(line.id);
@@ -581,10 +585,11 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
     <div className="dmpkInspectorList dmpkQuoteSections">
       <PanelIntro
         title={`已计价 ${summary.pricedCount} 项 · ${formatCny(summary.total)}`}
-        meta={summary.unpricedCount ? `${summary.unpricedCount} 项待定 · ${summary.packages.length} 个板块` : `${summary.packages.length} 个板块 · 只列本单涉及的`}
+        meta={summary.unpricedCount ? `${summary.unpricedCount} 项待定 · ${categories.length} 个板块` : `${categories.length} 个板块 · 只列本单涉及的`}
       />
-      {summary.packages.map((pkg) => {
+      {categories.map((pkg) => {
         const open = isOpen(pkg);
+        const showPackage = pkg.packages.length > 1;
         return (
           <section className={`dmpkSection${open ? " isOpen" : ""}`} key={pkg.id}>
             <button type="button" className="dmpkSectionHead" aria-expanded={open} onClick={() => setToggled((current) => ({ ...current, [pkg.id]: !open }))}>
@@ -608,7 +613,7 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
                   return (
                     <li key={line.id} className={`dmpkSectionRow is-${status}${manual ? " isManual" : ""}${editing ? " isEditing" : ""}`}>
                       <div className="dmpkSectionRowMain">
-                        <span className="dmpkSectionRowName">{line.service}</span>
+                        <span className="dmpkSectionRowName">{line.service}{showPackage ? <em className="dmpkSectionRowPkg">{quotePackageLabels[line.package]}</em> : null}</span>
                         {status === "priced" ? (
                           <span className="dmpkSectionRowPrice">
                             <span>{line.qty.toLocaleString("zh-CN")} {line.unit}</span>
@@ -872,10 +877,11 @@ function QuoteLinesPanel({ context }: { context: DmpkInspectorContext }) {
         meta={summary.unpricedCount ? `${summary.unpricedCount} 项未计价；总额不含这些行` : "全部行已计价"}
       />
       {canCutByGroup ? <QuoteCutSwitch cut={cut} onChange={setCut} /> : null}
-      {summary.packages.map((pkg) => (
+      {/* 跟板块面板同一套四类；一类里混着几个工作包时，段头把它们列出来 */}
+      {summarizeByCategory(lines, manualPrices).map((pkg) => (
         <section className="dmpkQuotePackage" key={pkg.id}>
           <header>
-            <strong>{pkg.label}</strong>
+            <strong>{pkg.label}{pkg.packages.length > 1 ? <em className="dmpkQuotePackageTags">{pkg.packages.map((id) => quotePackageLabels[id]).join(" · ")}</em> : null}</strong>
             <span>{pkg.unpriced ? <em>{pkg.unpriced} 项未计价 · </em> : null}小计 {formatCny(pkg.subtotal)}</span>
           </header>
           <ul>

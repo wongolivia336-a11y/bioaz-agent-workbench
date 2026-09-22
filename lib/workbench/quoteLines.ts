@@ -38,6 +38,32 @@ export const quotePackageLabels: Record<QuotePackage, string> = {
 
 export const quotePackageOrder: QuotePackage[] = ["pk-tk", "tox", "ba", "ada", "animal", "report"];
 
+/**
+ * 上层四类（09-22 下午产研协同会陈曦慧定的）：动物 / 实验 / 检测 / 报告与交付。
+ * 参数收集按这四类分卡，右栏「报价板块」和给甲方看的报价单也按这四类分——一一对应。
+ * 工作包（PK/TK、TOX、ADA）退到行上做一枚小标，不再是段头。
+ *
+ * 一行属于哪一类看它做的是什么，不看它属于哪个工作包：采血、留样、给药、观察、剖检是实验；
+ * 检查、检测、方法开发、分析是检测；使用费、饲养是动物；报告是交付。
+ */
+export type QuoteCategory = "animal" | "procedure" | "assay" | "report";
+
+export const quoteCategoryLabels: Record<QuoteCategory, string> = {
+  animal: "动物",
+  procedure: "实验",
+  assay: "检测",
+  report: "报告与交付",
+};
+
+export const quoteCategoryOrder: QuoteCategory[] = ["animal", "procedure", "assay", "report"];
+
+export function categoryOf(line: Pick<QuoteLine, "package" | "service">): QuoteCategory {
+  if (line.package === "animal") return "animal";
+  if (line.package === "report") return "report";
+  if (/采血|留样|采集|给药|观察|心电|眼科|配制|解剖|剖检|体温|耐受/.test(line.service)) return "procedure";
+  return "assay";
+}
+
 export type QuoteLineStatus = "priced" | "missing-param" | "pending-confirm" | "no-catalog";
 
 export const quoteLineStatusLabels: Record<QuoteLineStatus, string> = {
@@ -146,6 +172,29 @@ export function summarizeLines(lines: QuoteLine[], manualPrices: Record<string, 
     unpricedByStatus,
     manualCount: lines.filter((line) => manualPrices[line.id]).length,
   };
+}
+
+export type QuoteCategorySummary = {
+  id: QuoteCategory;
+  label: string;
+  lines: QuoteLine[];
+  subtotal: number;
+  unpriced: number;
+  /** 这一类里出现了哪几个工作包——多于一个时行上才标工作包小标 */
+  packages: QuotePackage[];
+};
+
+/** 同一份账按上层四类切：右栏板块面板和纸面用它；工作包那套（summarizeLines）留给积木、影响提示、价目命中。 */
+export function summarizeByCategory(lines: QuoteLine[], manualPrices: Record<string, ManualPrice> = {}): QuoteCategorySummary[] {
+  return quoteCategoryOrder
+    .map((id) => {
+      const categoryLines = lines.filter((line) => categoryOf(line) === id);
+      const subtotal = round2(categoryLines.reduce((sum, line) => sum + (lineAmount(line, manualPrices[line.id]) ?? 0), 0));
+      const unpriced = categoryLines.filter((line) => effectiveStatus(line, manualPrices[line.id]) !== "priced").length;
+      const packages = quotePackageOrder.filter((pkg) => categoryLines.some((line) => line.package === pkg));
+      return { id, label: quoteCategoryLabels[id], lines: categoryLines, subtotal, unpriced, packages };
+    })
+    .filter((item) => item.lines.length);
 }
 
 /**

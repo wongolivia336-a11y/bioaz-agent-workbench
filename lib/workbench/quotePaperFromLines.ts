@@ -4,7 +4,10 @@ import {
   effectiveStatus,
   lineUnitPrice,
   quoteLineStatusLabels,
+  categoryOf,
+  quoteCategoryLabels,
   quotePackageLabels,
+  summarizeByCategory,
   summarizeLines,
   type ManualPrice,
   type QuoteAdjustments,
@@ -67,9 +70,10 @@ export function quotePaperFromLines(
     if (!priced) parts.push(`${quoteLineStatusLabels[status]}${line.reason ? `：${line.reason}` : ""}`);
     return {
       id: line.id,
-      category: quotePackageLabels[line.package],
+      /* 给甲方看的纸按上层四类分（动物 / 实验 / 检测 / 报告与交付）；工作包写在说明里 */
+      category: quoteCategoryLabels[categoryOf(line)],
       item: `${line.service} × ${line.qty.toLocaleString("zh-CN")} ${line.unit}`,
-      description: parts.join(" · "),
+      description: [quotePackageLabels[line.package], ...parts].filter((part, index) => index === 0 ? line.package !== "animal" && line.package !== "report" : Boolean(part)).join(" · "),
       unitPrice: priced ? lineUnitPrice(line, manual) : undefined,
       note: manual
         ? `${manual.by} 手动单价${line.catalogPrice !== undefined ? ` · 价目表 ${line.catalogPrice.toLocaleString("zh-CN")}` : ""}`
@@ -95,10 +99,10 @@ export function quotePaperFromLines(
       ...(adjustments.discount !== undefined ? [{ id: "adj-discount", label: "折扣（人工）", value: String(adjustments.discount) }] : []),
       ...(adjustments.otherFees !== undefined ? [{ id: "adj-other", label: "其他费用（人工）", value: adjustments.otherFees.toLocaleString("zh-CN") }] : []),
     ],
-    subtotals: withManual.packages.map((pkg) => ({
-      id: `s-${pkg.id}`,
-      label: `${pkg.label}${pkg.unpriced ? `（${pkg.unpriced} 行未计价）` : ""}`,
-      amount: pkg.subtotal,
+    subtotals: summarizeByCategory(lines, manualPrices).map((group) => ({
+      id: `s-${group.id}`,
+      label: `${group.label}${group.unpriced ? `（${group.unpriced} 行未计价）` : ""}`,
+      amount: group.subtotal,
     })),
   };
 }
