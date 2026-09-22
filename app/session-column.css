@@ -48,6 +48,25 @@
   max-width: min(var(--bioaz-session-column), calc(100% - var(--panel-width, 400px)));
 }
 
+/* 车道那 52px 让错了位（09-22 心蕊截图：输入框比消息卡左偏一截、右缘又短一截）。
+   对话流在 scroller 的内容盒里，那个盒子左边已经被 minimap 车道缩掉 52px；
+   composer 是绝对定位，包含块是整个工作区，review.css:7122 用 padding-left 52 让位。
+   列宽是 100% 的年代这样对——外框满宽、padding 把里面挤窄一条车道就齐了；
+   现在列宽是定值 900，padding 只把里面的卡片挤到 848，外框的中轴还是按整个
+   工作区算的，于是 composer 比对话流左偏 26px、窄 52px。
+   改成 left 让位、padding 归零：外框跟对话流共用同一个盒子，卡片跟着满宽 900。
+   上限也要扣掉车道，否则窄屏下 100% 那一项会把右缘顶进面板。 */
+.dmpkShell.dmpk-quotationModuleShell > .dmpkWorkspace > .dmpkComposerWrap {
+  left: var(--bioaz-minimap-lane, 52px);
+  padding-inline: 0;
+  max-width: min(var(--bioaz-session-column), calc(100% - var(--bioaz-session-gutter) - var(--bioaz-minimap-lane, 52px)));
+}
+
+.dmpkShell.dmpk-quotationModuleShell > .dmpkWorkspace:has(.workbenchPanel.isOpen) > .dmpkComposerWrap {
+  left: var(--bioaz-minimap-lane, 52px);
+  max-width: min(var(--bioaz-session-column), calc(100% - var(--panel-width, 400px) - var(--bioaz-minimap-lane, 52px)));
+}
+
 /* 肿瘤报告的对话流走的是 --bioaz-chat-width（920），比它自己的 composer 宽 20px。
    收到同一个列宽上，三个会话的对话流才是一个数。 */
 .dmpkShell.tumor-reportModuleShell,

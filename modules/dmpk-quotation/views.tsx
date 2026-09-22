@@ -163,10 +163,12 @@ function RuleScopePreview() {
  * 每项一颗「确认」，右上一颗「全部确认」；确认过的换成对勾，不再催。
  * 值和状态从会话取，不存在消息里：人在别处改了、确认了，这张清单跟着变。
  */
-function RecognizedList({ ids, fields, fieldStatus, onConfirmField, onConfirmAll, onEditField }: {
+function RecognizedList({ ids, fields, fieldStatus, queuedIds = [], onConfirmField, onConfirmAll, onEditField }: {
   ids: string[];
   fields: DmpkField[];
   fieldStatus: Record<string, "recognized" | "confirmed">;
+  /** 已经点过「确认」、正躺在输入框里等发送的那些。行上换成撤回态，不再催。 */
+  queuedIds?: string[];
   onConfirmField?: (fieldId: string) => void;
   onConfirmAll?: () => void;
   onEditField?: (fieldId: string) => void;
@@ -174,61 +176,78 @@ function RecognizedList({ ids, fields, fieldStatus, onConfirmField, onConfirmAll
   const items = ids.map((id) => fields.find((field) => field.id === id)).filter((field): field is DmpkField => Boolean(field?.value));
   if (!items.length) return null;
   const pendingCount = items.filter((field) => fieldStatus[field.id] === "recognized").length;
+  const queuedCount = items.filter((field) => fieldStatus[field.id] === "recognized" && queuedIds.includes(field.id)).length;
+  /* 按四类分块（09-22 心蕊：这张表要分类、结构化一些）：跟右栏台账、报价板块同一套四类，
+     一块一个小标题，块内两列。没命中的类不出现。 */
+  const groups = dmpkGroups
+    .map((group) => ({ group, items: items.filter((field) => field.group === group.id) }))
+    .filter((entry) => entry.items.length);
   return (
     <div className="dmpkReplySection dmpkRecognized" data-minimap="recognized" data-minimap-label="识别清单">
       {/* 段头只说事：图标 + 识别到几项 + 几项待确认；说明文字不放（09-22 反馈：标注性文字去掉） */}
       <header>
         <i className="dmpkReplySectionIcon"><ListChecks size={14} aria-hidden="true" /></i>
         <strong>识别到 {items.length} 项</strong>
-        {pendingCount ? <em>{pendingCount} 项待确认</em> : <em className="isDone">已全部确认</em>}
-        {pendingCount && onConfirmAll ? <button type="button" onClick={onConfirmAll}><Check size={13} aria-hidden="true" />全部确认</button> : null}
+        {pendingCount
+          ? <em>{pendingCount - queuedCount ? `${pendingCount - queuedCount} 项待确认` : ""}{queuedCount ? `${pendingCount - queuedCount ? " · " : ""}${queuedCount} 项在输入框` : ""}</em>
+          : <em className="isDone">已全部确认</em>}
+        {pendingCount - queuedCount > 0 && onConfirmAll ? <button type="button" onClick={onConfirmAll}><Check size={13} aria-hidden="true" />全部确认</button> : null}
       </header>
-      <ul>
-        {items.map((field) => {
-          const status = fieldStatus[field.id];
-          const source = field.source;
-          const confirmed = status !== "recognized";
-          return (
-            <li key={field.id} data-status={confirmed ? "confirmed" : "recognized"}>
-              <span className="dmpkRecognizedLabel">{field.label}</span>
-              <b className="dmpkRecognizedValue">{formatParamValue(field, field.value)}</b>
-              {source ? (
-                <span className="dmpkRecognizedSource" tabIndex={0} aria-label={source.kind === "document" ? `来源：${source.sourceLabel} · ${source.anchor}` : "人填，原文已改"}>
-                  {source.kind === "document" ? <Quote size={11} aria-hidden="true" /> : <span className="dmpkRecognizedManual">人填</span>}
-                  <span className="dmpkRecognizedPop" role="note">
-                    {source.kind === "document" ? (
-                      <>
-                        <em>{source.sourceLabel}<i>{source.anchor}</i></em>
-                        <q>{source.quote}</q>
-                      </>
+      {groups.map(({ group, items: groupItems }) => (
+        <section className="dmpkRecognizedGroup" key={group.id}>
+          <h5>{group.title}<i>{groupItems.length}</i></h5>
+          <ul>
+            {groupItems.map((field) => {
+              const status = fieldStatus[field.id];
+              const source = field.source;
+              const confirmed = status !== "recognized";
+              const queued = !confirmed && queuedIds.includes(field.id);
+              return (
+                <li key={field.id} data-status={confirmed ? "confirmed" : queued ? "queued" : "recognized"}>
+                  <span className="dmpkRecognizedLabel">{field.label}</span>
+                  <b className="dmpkRecognizedValue">{formatParamValue(field, field.value)}</b>
+                  {source ? (
+                    <span className="dmpkRecognizedSource" tabIndex={0} aria-label={source.kind === "document" ? `来源：${source.sourceLabel} · ${source.anchor}` : "人填，原文已改"}>
+                      {source.kind === "document" ? <Quote size={11} aria-hidden="true" /> : <span className="dmpkRecognizedManual">人填</span>}
+                      <span className="dmpkRecognizedPop" role="note">
+                        {source.kind === "document" ? (
+                          <>
+                            <em>{source.sourceLabel}<i>{source.anchor}</i></em>
+                            <q>{source.quote}</q>
+                          </>
+                        ) : (
+                          <>
+                            <em>人填{source.original ? <i>原文为「{source.original.value}」，已改为「{field.value}」</i> : null}</em>
+                            {source.original ? <q>{source.original.quote}</q> : null}
+                          </>
+                        )}
+                      </span>
+                    </span>
+                  ) : null}
+                  <span className="dmpkRecognizedActions">
+                    {confirmed ? (
+                      <i className="dmpkRecognizedOk" title="已确认"><Check size={12} aria-hidden="true" /></i>
+                    ) : queued ? (
+                      /* 点过了：对勾亮着、落在输入框里等发送。再点一下撤回。 */
+                      <button type="button" className="isQueued" aria-label={`撤回确认${field.label}`} title="已放进输入框，发送后生效 · 再点一下撤回" onClick={() => onConfirmField?.(field.id)}><Check size={12} aria-hidden="true" /></button>
                     ) : (
                       <>
-                        <em>人填{source.original ? <i>原文为「{source.original.value}」，已改为「{field.value}」</i> : null}</em>
-                        {source.original ? <q>{source.original.quote}</q> : null}
+                        {onConfirmField ? <button type="button" onClick={() => onConfirmField(field.id)}>确认</button> : null}
+                        {onEditField ? <button type="button" className="isEdit" aria-label={`改${field.label}`} title="改这一项" onClick={() => onEditField(field.id)}><Edit3 size={12} aria-hidden="true" /></button> : null}
                       </>
                     )}
                   </span>
-                </span>
-              ) : null}
-              <span className="dmpkRecognizedActions">
-                {confirmed ? (
-                  <i className="dmpkRecognizedOk" title="已确认"><Check size={12} aria-hidden="true" /></i>
-                ) : (
-                  <>
-                    {onConfirmField ? <button type="button" onClick={() => onConfirmField(field.id)}>确认</button> : null}
-                    {onEditField ? <button type="button" className="isEdit" aria-label={`改${field.label}`} title="改这一项" onClick={() => onEditField(field.id)}><Edit3 size={12} aria-hidden="true" /></button> : null}
-                  </>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }
 
-export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, liveRun: liveRunOverride, onOpenInspector, onArtifactPreview, fields = [], fieldStatus = {}, onConfirmField, onConfirmAll, onEditField }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; /** 正在读文件时由会话递进来：步骤是逐条揭开的，stage 本身推不出来。 */ liveRun?: { text: string; runSteps: DmpkRunStep[] } | null; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void; /** 正文里那张识别清单要的：当前字段（取值、来源）、确认状态、逐项 / 全部确认、去改 */ fields?: DmpkField[]; fieldStatus?: Record<string, "recognized" | "confirmed">; onConfirmField?: (fieldId: string) => void; onConfirmAll?: () => void; onEditField?: (fieldId: string) => void }) {
+export function DmpkConversation({ messages, stage, currentMissing, handoffNotice, liveRun: liveRunOverride, onOpenInspector, onArtifactPreview, fields = [], fieldStatus = {}, queuedIds, onConfirmField, onConfirmAll, onEditField }: { messages: DmpkChatMessage[]; stage: DmpkStage; currentMissing: DmpkField[]; handoffNotice?: string; /** 正在读文件时由会话递进来：步骤是逐条揭开的，stage 本身推不出来。 */ liveRun?: { text: string; runSteps: DmpkRunStep[] } | null; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; onArtifactPreview: (kind: "word" | "excel") => void; /** 正文里那张识别清单要的：当前字段（取值、来源）、确认状态、已落进输入框的、逐项 / 全部确认、去改 */ fields?: DmpkField[]; fieldStatus?: Record<string, "recognized" | "confirmed">; queuedIds?: string[]; onConfirmField?: (fieldId: string) => void; onConfirmAll?: () => void; onEditField?: (fieldId: string) => void }) {
   const liveRun = liveRunOverride ?? (stage === "thinking" || stage === "generating"
     ? dmpkRunRecord(stage === "generating" ? "quote" : "params", { running: true, missingCount: currentMissing.length })
     : null);
@@ -247,7 +266,7 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
               <div>
                 <p>{message.text}</p>
                 {message.recognizedIds?.length ? (
-                  <RecognizedList ids={message.recognizedIds} fields={fields} fieldStatus={fieldStatus} onConfirmField={onConfirmField} onConfirmAll={onConfirmAll} onEditField={onEditField} />
+                  <RecognizedList ids={message.recognizedIds} fields={fields} fieldStatus={fieldStatus} queuedIds={queuedIds} onConfirmField={onConfirmField} onConfirmAll={onConfirmAll} onEditField={onEditField} />
                 ) : null}
                 {message.missingFields?.length ? (
                   /* 缺的那些另起一段，段头带图标——跟上面的识别清单一眼分得开（09-22 反馈：混成一片） */

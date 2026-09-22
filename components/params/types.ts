@@ -101,7 +101,17 @@ export type ParamField = {
   notApplicable?: boolean;
 };
 
-export type ParamDraft = { fieldId: string; label: string; value: string };
+export type ParamDraft = {
+  fieldId: string;
+  label: string;
+  value: string;
+  /**
+   * confirm：这颗 chip 不是改值，是对机器认出来的值点头——值跟台账上一样，发出去之后
+   * 那一项从「识别」变「已确认」。正文识别清单上每点一次「确认」就落一颗到输入框
+   * （09-22 心蕊：点了确认得看得见落在哪、还能反悔），发送才算数。不传就是普通的填值。
+   */
+  kind?: "confirm";
+};
 
 export const MULTI_SEPARATOR = "、";
 export const REPEAT_ROW_SEPARATOR = ";";

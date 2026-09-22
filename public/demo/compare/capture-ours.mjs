@@ -140,7 +140,8 @@ async function main() {
   await setSection("实验", false);
   await setSection("动物", true);
   await sleep(300);
-  await evaluate(`${sectionRow("食蟹猴使用费")}.querySelector('.dmpkQuoteLineGo').click(); return true;`);
+  // 行右端那枚 ¥ 圆钮（原来是「补价」两个字）
+  await evaluate(`${sectionRow("食蟹猴使用费")}.querySelector('.dmpkRowFix').click(); return true;`);
   await sleep(200);
   await evaluate(typeInto(sectionRow("食蟹猴使用费"), "30000"));
   await evaluate(confirmRow(sectionRow("食蟹猴使用费")));

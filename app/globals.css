@@ -9072,7 +9072,8 @@ button {
   border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface);
   padding: 6px 9px;
 }
-.dmpkSectionRow:not(.is-priced) { border-style: dashed; background: var(--soft, #f7f8fb); }
+/* 算不出来的行：琥珀色虚线框 + 名字压成琥珀（原来是灰虚线 + 「待确认 · 去填」两截字，09-22 改成颜色和 icon 说话） */
+.dmpkSectionRow:not(.is-priced) { border-style: dashed; border-color: var(--amber); background: var(--amber-soft); }
 .dmpkSectionRow.isManual { border-color: var(--bioaz-agent-accent-border, #dcddf2); }
 .dmpkSectionRow.isEditing { border-color: var(--bioaz-agent-accent); }
 .dmpkSectionRowMain { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -9088,6 +9089,20 @@ button {
 .dmpkPriceEdit { display: inline-flex; align-self: center; border: 0; background: transparent; padding: 0 0 0 2px; color: var(--muted); opacity: .55; cursor: pointer; transition: opacity var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease; }
 .dmpkSectionRow:hover .dmpkPriceEdit, .dmpkPriceEdit:focus-visible { opacity: 1; color: var(--bioaz-agent-accent); }
 .dmpkSectionRowPrice .dmpkQuoteLineGo { margin-left: 2px; }
+/* 算不出来的行右端一枚圆钮（? 差参数 / ¥ 没价目）。
+   不写「待确认 · 去填」那两截字——一栏里十几行全是这四个字，反而没人看（09-22 反馈）。 */
+.dmpkSectionRow:not(.is-priced) .dmpkSectionRowName { color: var(--amber); }
+.dmpkRowFix {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center;
+  width: 20px; height: 20px; margin-left: 2px;
+  border: 0; border-radius: 50%; background: var(--amber); padding: 0;
+  color: #fff; cursor: pointer;
+  transition: transform var(--bioaz-motion-standard) ease, box-shadow var(--bioaz-motion-standard) ease;
+}
+.dmpkRowFix.isStatic { cursor: default; opacity: .7; }
+.dmpkRowFix.is-missing-param { background: var(--bioaz-agent-accent); }
+button.dmpkRowFix:hover, button.dmpkRowFix:focus-visible { transform: scale(1.08); box-shadow: 0 0 0 3px var(--amber-soft); }
+button.dmpkRowFix.is-missing-param:hover, button.dmpkRowFix.is-missing-param:focus-visible { box-shadow: 0 0 0 3px var(--bioaz-agent-accent-soft); }
 /* 改价编辑器：原价一行、新价一行 */
 .dmpkPriceEditor { display: grid; gap: 5px; width: 100%; margin-top: 4px; }
 .dmpkPriceEditor > small { color: var(--muted); font-size: 11px; }
@@ -9225,7 +9240,8 @@ button {
 @media (max-width: 1100px) { .reviewEvidenceGrid { grid-template-columns: 1fr; } }
 
 /* 板块按上层四类分之后，工作包退到行上做小标；明细面板段头列出这一类里有哪几个工作包 */
-.dmpkSectionRowPkg { margin-left: 6px; color: var(--muted); font-size: 10.5px; font-style: normal; font-weight: 500; }
+/* 工作包小标整个一块换行，不在「样品采集」中间断开 */
+.dmpkSectionRowPkg { display: inline-block; margin-left: 6px; color: var(--muted); font-size: 10.5px; font-style: normal; font-weight: 500; white-space: nowrap; }
 .dmpkQuotePackageTags { margin-left: 6px; color: var(--muted); font-size: 11px; font-style: normal; font-weight: 400; }
 
 /* ── 正文里的识别清单 + hover 溯源卡（modules/dmpk-quotation/views.tsx RecognizedList）── */
@@ -9246,12 +9262,24 @@ button {
 .dmpkMissing > ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 10px 12px; list-style: none; }
 .dmpkMissing > ul > li { display: inline-flex; align-items: baseline; gap: 6px; border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); padding: 3px 10px; font-size: 12px; color: var(--ink); }
 .dmpkMissing > ul > li small { color: var(--muted); font-size: 10.5px; }
-.dmpkRecognized > ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0; padding: 4px 0; list-style: none; }
-.dmpkRecognized > ul > li { position: relative; display: grid; grid-template-columns: 78px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-height: 34px; padding: 4px 12px; font-size: 12.5px; }
-.dmpkRecognized > ul > li:nth-child(odd) { border-right: 1px solid var(--line); }
+/* 识别清单按四类分块：块头一行小标题（类名 + 几项），块内两列。跟右栏台账、报价板块同一套四类。 */
+.dmpkRecognizedGroup { border-top: 1px solid var(--line); }
+.dmpkRecognizedGroup:first-of-type { border-top: 0; }
+.dmpkRecognizedGroup > h5 { display: flex; align-items: baseline; gap: 6px; margin: 0; padding: 7px 12px 2px; color: var(--ink); font-size: 11.5px; font-weight: 700; letter-spacing: .02em; }
+.dmpkRecognizedGroup > h5 > i { color: var(--muted); font-size: 10.5px; font-style: normal; font-weight: 600; }
+.dmpkRecognizedGroup > ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0; padding: 0 0 4px; list-style: none; }
+.dmpkRecognizedGroup > ul > li { position: relative; display: grid; grid-template-columns: 78px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-height: 34px; padding: 4px 12px; font-size: 12.5px; }
+.dmpkRecognizedGroup > ul > li:nth-child(odd) { border-right: 1px solid var(--line); }
 .dmpkRecognizedLabel { color: var(--muted); }
 .dmpkRecognizedValue { color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dmpkRecognized > ul > li[data-status="recognized"] .dmpkRecognizedValue { color: var(--bioaz-agent-accent); }
+.dmpkRecognizedGroup > ul > li[data-status="recognized"] .dmpkRecognizedValue { color: var(--bioaz-agent-accent); }
+/* 点过「确认」、还躺在输入框里的：值先不变色，动作位换成一枚亮着的对勾（再点撤回） */
+.dmpkRecognizedGroup > ul > li[data-status="queued"] .dmpkRecognizedValue { color: var(--bioaz-agent-accent); }
+.dmpkRecognizedActions button.isQueued { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 22px; padding: 0; border-color: var(--bioaz-agent-accent); background: var(--bioaz-agent-accent); color: #fff; }
+.dmpkRecognizedActions button.isQueued:hover { background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+/* 输入框里的确认 chip：前面带对勾，底色淡一点——它不是改值，是点头 */
+.draftTabs button.isConfirm { border-color: var(--bioaz-agent-accent-border, var(--line)); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+.draftTabs button.isConfirm > svg:first-child { flex: none; }
 .dmpkRecognizedSource { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; color: var(--bioaz-agent-accent); background: var(--bioaz-agent-accent-soft); cursor: help; outline: none; }
 .dmpkRecognizedSource:hover, .dmpkRecognizedSource:focus-visible { background: var(--bioaz-agent-accent); color: #fff; }
 .dmpkRecognizedManual { font-size: 10px; font-weight: 700; letter-spacing: .02em; }
