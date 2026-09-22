@@ -366,30 +366,34 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
   const fields = context.fields as DmpkField[];
   const lines = context.quoteLines ?? [];
   return (
-    <>
-      <ParameterLedger
-        groups={dmpkGroupsFor(fields)}
-        fields={context.fields as ParamField[]}
-        openGroups={context.openGroups}
-        editingFieldId={context.editingFieldId}
-        statusOf={context.fieldStatus ? (fieldId) => context.fieldStatus?.[fieldId] : undefined}
-        onToggleGroup={(groupId) => context.onToggleGroup(groupId as DmpkInspectorGroup)}
-        onEditField={context.onEditField}
-      />
-      {lines.length ? (
-        <div className="dmpkInspectorList paramCollectList dmpkPackageCards">
-          <DmpkPackageCards
-            summary={summarizeLines(lines, context.manualPrices ?? {})}
-            fields={fields}
-            manualPrices={context.manualPrices ?? {}}
-            extraPackages={context.extraPackages ?? []}
-            onAddPackage={context.onAddPackage}
-            onRemovePackage={context.onRemovePackage}
-            onEditField={context.onEditField}
-          />
-        </div>
+    <ParameterLedger
+      groups={dmpkGroupsFor(fields)}
+      fields={context.fields as ParamField[]}
+      openGroups={context.openGroups}
+      editingFieldId={context.editingFieldId}
+      statusOf={context.fieldStatus ? (fieldId) => context.fieldStatus?.[fieldId] : undefined}
+      onToggleGroup={(groupId) => context.onToggleGroup(groupId as DmpkInspectorGroup)}
+      onEditField={context.onEditField}
+      /* 工作包挂在「检测」组里：检测类型定的是主包，方案里读出的 / 人再搭的各一行，
+         「再搭一块」也在这儿——工作包就是"检测项目"这一维的多选，不是第五类。
+         组折着的时候，标题后面写一句「PK / TK · TOX」，人知道里面挂着什么。 */
+      groupHint={(groupId) => {
+        if (groupId !== "assay" || !lines.length) return undefined;
+        const labels = summarizeLines(lines, context.manualPrices ?? {}).packages.filter((pkg) => pkg.id !== "animal" && pkg.id !== "report").map((pkg) => pkg.label.replace(" 样品采集", ""));
+        return labels.length ? labels.join(" · ") : undefined;
+      }}
+      groupExtra={(groupId) => groupId === "assay" && lines.length ? (
+        <DmpkPackageCards
+          summary={summarizeLines(lines, context.manualPrices ?? {})}
+          fields={fields}
+          manualPrices={context.manualPrices ?? {}}
+          extraPackages={context.extraPackages ?? []}
+          onAddPackage={context.onAddPackage}
+          onRemovePackage={context.onRemovePackage}
+          onEditField={context.onEditField}
+        />
       ) : null}
-    </>
+    />
   );
 }
 

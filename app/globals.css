@@ -9156,22 +9156,36 @@ button {
 .dmpkCatalogHits tr[data-status="manual"] td:nth-child(3) { color: var(--bioaz-agent-accent); }
 .dmpkCatalogHits tr[data-status="no-catalog"] td { color: var(--muted); }
 
-/* ── 积木：台账下面按板块长出来的卡（modules/dmpk-quotation/packageBlocks.tsx）──
-   跟台账三张卡同一副样子（.inspectorParameterGroup），只加自己的几处：维度记号、只读行、「搭上的」小标、再搭一块。 */
+/* ── 工作包：挂在「检测」组字段下面的一叠小卡（modules/dmpk-quotation/packageBlocks.tsx）──
+   比台账的组低一级：浅底、小字、缩进；标签行说清这一叠是什么。 */
 .paramFieldMark { display: inline-block; margin-right: 4px; color: var(--muted); font-style: normal; font-size: 12px; }
-.dmpkPackageCards { padding-top: 0; grid-template-columns: minmax(0, 1fr); }
-.dmpkPackageCards .inspectorParameterGroup, .dmpkPackageCards .inspectorParameterFields { grid-template-columns: minmax(0, 1fr); min-width: 0; }
-.dmpkPackageCards .paramCollectProgress { display: none; }
+.dmpkPackageCards { display: grid; gap: 4px; margin: 6px 0 4px 12px; padding: 8px 8px 6px; border-radius: var(--bioaz-radius-control); background: var(--soft); }
+.dmpkPackageCardsHead { display: flex; align-items: baseline; gap: 8px; padding: 0 4px 4px; }
+.dmpkPackageCardsHead > span { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+.dmpkPackageCardsHead > small { color: var(--muted); font-size: 11px; }
+.dmpkPackageCard { border: 1px solid var(--line); border-radius: var(--bioaz-radius-tool); background: var(--bioaz-surface); min-width: 0; }
+.dmpkPackageCardHead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 8px; width: 100%; border: 0; background: transparent; padding: 7px 10px; text-align: left; color: inherit; cursor: pointer; font: inherit; }
+.dmpkPackageCardHead:hover { background: var(--bioaz-surface-hover, rgba(0, 0, 0, .025)); }
+.dmpkPackageCardHead > strong { font-size: 12.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmpkPackageCardHead > span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.dmpkPackageCardHead > span > em { font-size: 11px; font-style: normal; }
+.dmpkPackageCardHead > span svg { transition: transform var(--bioaz-motion-standard) ease; }
+.dmpkPackageCardHead[aria-expanded="true"] > span svg { transform: rotate(180deg); }
 .dmpkPackageCardTag { margin-left: 6px; color: var(--bioaz-agent-accent); font-size: 10.5px; font-style: normal; font-weight: 600; }
-.inspectorParameterField.isStatic { cursor: default; }
+.dmpkPackageCardTag.isPrimary { color: var(--muted); }
+.dmpkPackageCard .inspectorParameterFields { grid-template-columns: minmax(0, 1fr); min-width: 0; padding: 0 6px 6px; }
+.paramCollectList .dmpkPackageCard .inspectorParameterField { padding: 6px 4px 6px 14px; min-height: 30px; }
+.paramCollectList .dmpkPackageCard .inspectorParameterField > span:first-child { font-size: 12px; }
+.paramCollectList .dmpkPackageCard .inspectorParameterField > strong { font-size: 12px; }
 .paramCollectList .inspectorParameterField.isStatic > span:first-child { flex: none; white-space: nowrap; }
 .paramCollectList .inspectorParameterField.isStatic > strong { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inspectorParameterField.isStatic { cursor: default; }
 .inspectorParameterField.dmpkPackageCardNote > strong { color: var(--muted); font-weight: 500; }
-.dmpkPackageCardRemove { display: inline-flex; align-items: center; gap: 4px; margin: 6px 0 2px; border: 0; background: transparent; padding: 0; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.dmpkPackageCardRemove { display: inline-flex; align-items: center; gap: 4px; margin: 4px 0 2px 14px; border: 0; background: transparent; padding: 0; color: var(--muted); font-size: 11.5px; cursor: pointer; }
 .dmpkPackageCardRemove:hover { color: var(--ink); }
-.dmpkPackageAdd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 4px 2px; font-size: 12px; color: var(--muted); }
+.dmpkPackageAdd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 4px 4px 0; font-size: 12px; color: var(--muted); }
 .dmpkPackageAdd > span { display: inline-flex; align-items: center; gap: 4px; }
-.dmpkPackageAdd > button { border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); background: transparent; padding: 3px 11px; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; }
+.dmpkPackageAdd > button { border: 1px dashed var(--line-strong); border-radius: var(--bioaz-radius-full); background: var(--bioaz-surface); padding: 2px 10px; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; }
 .dmpkPackageAdd > button:hover { border-style: solid; background: var(--soft); }
 
 /* 报价明细：按板块 / 按组两颗胶囊，和按组那种一行三格的份额行 */
@@ -9253,3 +9267,6 @@ button {
 .dmpkRecognizedActions button:hover { border-color: var(--line-strong); background: var(--soft); }
 .dmpkRecognizedActions button.isEdit { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 22px; padding: 0; color: var(--muted); }
 .dmpkRecognizedOk { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--soft); color: var(--muted); }
+
+/* 台账组头标题后的一小句：「检测 PK / TK · TOX」——组折着也知道里面挂了什么 */
+.paramGroupHint { margin-left: 8px; color: var(--muted); font-size: 11px; font-style: normal; font-weight: 500; }

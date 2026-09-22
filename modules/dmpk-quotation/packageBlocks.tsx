@@ -7,28 +7,29 @@ import type { DmpkField } from "./fields";
 import { extraPackageOptions, type ExtraPackage } from "./quoteLineFixtures";
 
 /**
- * 积木：台账下面按板块长出来的卡（09-22 心蕊定的形态）。
+ * 工作包：挂在「检测」那一组里的一叠小卡（09-22 下午定的层级）。
  *
- * 右栏「参数收集」的台账本身就是按八维分的三张卡：基础 ①②③ / 主板块 ④–⑧ / 报告与交付。
- * 主板块之外再命中一个板块（方案里读出 TOX、ADA，或人点「再搭一块」），就在台账
- * 下面**再长一张同样的卡**——同一副样子（`.inspectorParameterGroup`），能折能开，
- * 像报价结果里 v1 / v2 那种一块一块的。
+ * 右栏「参数收集」是四张卡：动物 / 实验 / 检测 / 报告与交付。工作包（PK/TK、TOX、ADA、BA）
+ * 不是第五类，它是"检测项目"这一维的多选——检测类型定主包，方案里读出的、人点「再搭一块」
+ * 搭上的各一张小卡，都挂在「检测」组的字段下面（ParameterLedger 的 groupExtra）。
+ * 早上那版把它们平铺在四张卡后面，看着像第五、第六类，撤了。
  *
- * 卡上只摆这个板块的实验操作 / 次数 / 方法 / 数量（检测项目就是卡名），文案压到一行，不带序号；缺的写「待填写」，点了去那一格。
- * 不另存定义：读的就是右栏那份账（summarizeLines）。composer 上方的参数卡读的是
- * 同一份分组，所以两边联动——那边填一格，这边亮一行。
+ * 每张小卡：实验操作 / 次数 / 方法 / 数量各一行，文案压到一行，不带序号；缺的写「待填写」，点了去那一格。
+ * 不另存定义：读的就是右栏那份账（summarizeLines）。
  */
 
 /** 服务名去掉括号和「· 方法」尾巴，几行并成一句 */
 const shortService = (service: string) => service.replace(/[（(].*?[)）]/g, "").split(" · ")[0].trim();
 const uniq = (items: Array<string | undefined>) => Array.from(new Set(items.filter((item): item is string => Boolean(item))));
 
-function PackageCard({ id, label, lines, subtotal, manualPrices, extra, defaultOpen, onEditField, onRemove }: {
+function PackageCard({ id, label, lines, subtotal, manualPrices, primary, extra, defaultOpen, onEditField, onRemove }: {
   id: QuotePackage;
   label: string;
   lines: QuoteLine[];
   subtotal: number;
   manualPrices: Record<string, ManualPrice>;
+  /** 检测类型定的那一个 */
+  primary: boolean;
   extra: boolean;
   defaultOpen: boolean;
   onEditField: (fieldId: string) => void;
@@ -53,10 +54,10 @@ function PackageCard({ id, label, lines, subtotal, manualPrices, extra, defaultO
   ];
 
   return (
-    <section className={`inspectorParameterGroup dmpkPackageCard ${state} ${open ? "isOpen" : ""}`} data-package={id}>
-      <button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+    <section className={`dmpkPackageCard ${state} ${open ? "isOpen" : ""}`} data-package={id}>
+      <button className="dmpkPackageCardHead" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <i className="paramGroupDot" aria-hidden="true" />
-        <strong>{label}{extra ? <em className="dmpkPackageCardTag">搭上的</em> : null}</strong>
+        <strong>{label}{primary ? <em className="dmpkPackageCardTag isPrimary">主</em> : extra ? <em className="dmpkPackageCardTag">搭上的</em> : null}</strong>
         <span className={state}><em className="paramGroupState">{pending.length ? `${pending.length} 待定` : subtotal ? formatCny(subtotal) : "已完成"}</em><ChevronDown size={14} /></span>
       </button>
       {open ? (
@@ -113,14 +114,15 @@ export function DmpkPackageCards({ summary, fields, manualPrices, extraPackages,
   onEditField: (fieldId: string) => void;
 }) {
   const primary = primaryPackageOf(fields);
-  /* 动物 / 报告是配套，不是检测项目；主板块已经在台账里 */
-  const cards = summary.packages.filter((pkg) => pkg.id !== "animal" && pkg.id !== "report" && pkg.id !== primary);
+  /* 动物 / 报告是配套，不是检测项目。主包（检测类型定的）也列出来、标「主」——这一单做什么，一处看全。 */
+  const cards = summary.packages.filter((pkg) => pkg.id !== "animal" && pkg.id !== "report");
   const present = new Set(summary.packages.map((pkg) => pkg.id));
   const addable = onAddPackage ? extraPackageOptions.filter((option) => !present.has(option.id) && option.id !== primary) : [];
   if (!cards.length && !addable.length) return null;
 
   return (
-    <>
+    <div className="dmpkPackageCards">
+      <div className="dmpkPackageCardsHead"><span>工作包</span><small>这一单测什么——检测类型定主包，再要的搭上去</small></div>
       {cards.map((pkg) => (
         <PackageCard
           key={pkg.id}
@@ -129,8 +131,9 @@ export function DmpkPackageCards({ summary, fields, manualPrices, extraPackages,
           lines={pkg.lines}
           subtotal={pkg.subtotal}
           manualPrices={manualPrices}
+          primary={pkg.id === primary}
           extra={extraPackages.includes(pkg.id as ExtraPackage)}
-          /* 刚搭上的开着——人要看它长出了什么；方案里读出来的折着，右栏板块面板已经在列 */
+          /* 刚搭上的开着——人要看它长出了什么；别的折着，右栏板块面板已经在列 */
           defaultOpen={extraPackages.includes(pkg.id as ExtraPackage)}
           onEditField={onEditField}
           onRemove={onRemovePackage && extraPackages.includes(pkg.id as ExtraPackage) ? () => onRemovePackage(pkg.id as ExtraPackage) : undefined}
@@ -144,6 +147,6 @@ export function DmpkPackageCards({ summary, fields, manualPrices, extraPackages,
           ))}
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
