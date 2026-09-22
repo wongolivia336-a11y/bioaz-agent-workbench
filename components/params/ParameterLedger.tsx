@@ -22,11 +22,18 @@ import { formatParamValue, type ParamField, type ParamGroup, type ParamSource } 
  * 卡片不悬浮、不压暗，就在这一行下面插一块——320px 的一栏里，悬浮层没地方摆。
  * 人改过的格子换成「人填」，卡片写「原文为 X，已改为 Y」。
  */
-export function ParameterLedger({ groups, fields, openGroups, editingFieldId, statusOf, onToggleGroup, onEditField }: {
+export function ParameterLedger({ groups, fields, openGroups, editingFieldId, statusOf, onToggleGroup, onEditField, groupExtra, groupHint }: {
   groups: ParamGroup[];
   fields: ParamField[];
   openGroups: Record<string, boolean>;
   editingFieldId?: string | null;
+  /**
+   * 某一组字段行下面再挂一块东西（DMPK 把「工作包」挂在「检测」组里：检测类型定主包，
+   * 再搭的包各一行）。可选，不传就跟原来一模一样；只在这组展开时渲染。
+   */
+  groupExtra?: (groupId: string) => React.ReactNode;
+  /** 组头标题后面的一小句（DMPK 用它写「PK / TK · TOX」）：组折着的时候也知道里面挂了什么。可选。 */
+  groupHint?: (groupId: string) => string | undefined;
   /**
    * 这一项的值是机器认出来的还是人确认过的。
    * 可选：不传就跟原来一模一样（肿瘤线没有文件识别，也就没有这一维）。
@@ -61,7 +68,7 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, st
           <section className={`inspectorParameterGroup ${progressClass} ${open ? "isOpen" : ""}`} key={group.id}>
             <button className="inspectorParameterGroupHeader" type="button" aria-expanded={open} onClick={() => onToggleGroup(group.id)}>
               <i className="paramGroupDot" aria-hidden="true" />
-              <strong>{group.title}</strong>
+              <strong>{group.title}{groupHint?.(group.id) ? <em className="paramGroupHint">{groupHint(group.id)}</em> : null}</strong>
               <span className={progressClass}><em className="paramGroupState">{stateLabel}</em><ChevronDown size={14} /></span>
             </button>
             {open ? (
@@ -101,6 +108,7 @@ export function ParameterLedger({ groups, fields, openGroups, editingFieldId, st
                     <span aria-hidden="true" />
                   </div>
                 ))}
+                {groupExtra?.(group.id)}
               </div>
             ) : null}
           </section>

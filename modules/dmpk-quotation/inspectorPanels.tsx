@@ -6,6 +6,8 @@ import {
   Calculator,
   ChevronDown,
   CircleAlert,
+  CircleDollarSign,
+  CircleHelp,
   Edit3,
   Eye,
   FileCheck2,
@@ -366,30 +368,34 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
   const fields = context.fields as DmpkField[];
   const lines = context.quoteLines ?? [];
   return (
-    <>
-      <ParameterLedger
-        groups={dmpkGroupsFor(fields)}
-        fields={context.fields as ParamField[]}
-        openGroups={context.openGroups}
-        editingFieldId={context.editingFieldId}
-        statusOf={context.fieldStatus ? (fieldId) => context.fieldStatus?.[fieldId] : undefined}
-        onToggleGroup={(groupId) => context.onToggleGroup(groupId as DmpkInspectorGroup)}
-        onEditField={context.onEditField}
-      />
-      {lines.length ? (
-        <div className="dmpkInspectorList paramCollectList dmpkPackageCards">
-          <DmpkPackageCards
-            summary={summarizeLines(lines, context.manualPrices ?? {})}
-            fields={fields}
-            manualPrices={context.manualPrices ?? {}}
-            extraPackages={context.extraPackages ?? []}
-            onAddPackage={context.onAddPackage}
-            onRemovePackage={context.onRemovePackage}
-            onEditField={context.onEditField}
-          />
-        </div>
+    <ParameterLedger
+      groups={dmpkGroupsFor(fields)}
+      fields={context.fields as ParamField[]}
+      openGroups={context.openGroups}
+      editingFieldId={context.editingFieldId}
+      statusOf={context.fieldStatus ? (fieldId) => context.fieldStatus?.[fieldId] : undefined}
+      onToggleGroup={(groupId) => context.onToggleGroup(groupId as DmpkInspectorGroup)}
+      onEditField={context.onEditField}
+      /* 工作包挂在「检测」组里：检测类型定的是主包，方案里读出的 / 人再搭的各一行，
+         「再搭一块」也在这儿——工作包就是"检测项目"这一维的多选，不是第五类。
+         组折着的时候，标题后面写一句「PK / TK · TOX」，人知道里面挂着什么。 */
+      groupHint={(groupId) => {
+        if (groupId !== "assay" || !lines.length) return undefined;
+        const labels = summarizeLines(lines, context.manualPrices ?? {}).packages.filter((pkg) => pkg.id !== "animal" && pkg.id !== "report").map((pkg) => pkg.label.replace(" 样品采集", ""));
+        return labels.length ? labels.join(" · ") : undefined;
+      }}
+      groupExtra={(groupId) => groupId === "assay" && lines.length ? (
+        <DmpkPackageCards
+          summary={summarizeLines(lines, context.manualPrices ?? {})}
+          fields={fields}
+          manualPrices={context.manualPrices ?? {}}
+          extraPackages={context.extraPackages ?? []}
+          onAddPackage={context.onAddPackage}
+          onRemovePackage={context.onRemovePackage}
+          onEditField={context.onEditField}
+        />
       ) : null}
-    </>
+    />
   );
 }
 
@@ -544,6 +550,11 @@ function GapsPanel({ context }: { context: DmpkInspectorContext }) {
  * 底部一扇门去报价管理的标准价格。权限分级后置，这里只是账号切换器上的演示：
  * 审批人 / 负责人看到按钮，撰写人看到一行说明。
  */
+/** 行上那枚问号钮的 title 要写「差的是哪一项」：字段 id → 台账上的标签，找不到就原样给。 */
+function fieldLabelOf(context: DmpkInspectorContext, fieldId: string) {
+  return context.fields.find((field) => field.id === fieldId)?.label ?? fieldId;
+}
+
 function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
   const lines = context.quoteLines ?? [];
   const manualPrices = context.manualPrices ?? {};
@@ -624,14 +635,33 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
                             ) : null}
                           </span>
                         ) : (
+                          /* 算不出来的行不再挂「待确认 · 去填」「待补价 · 补价」两截字（09-22 反馈：说明性文字去掉，
+                             颜色和 icon 就够直观）：行本身是琥珀色虚线框，右端一枚琥珀圆钮说是哪一种——
+                             问号 = 差一个参数，点了去填那一格；¥ = 系统没这档价，点了就地补一个本单价。
+                             字面意思都收进 title / aria-label，hover 一下还在。 */
                           <span className="dmpkSectionRowPrice">
                             {hasQty ? <span>{line.qty.toLocaleString("zh-CN")} {line.unit}</span> : null}
-                            <i className={`dmpkQuoteLineStatus is-${status}`}>{status === "no-catalog" ? "待补价" : quoteLineStatusLabels[status]}</i>
                             {line.dependsOn ? (
-                              <button type="button" className="dmpkQuoteLineGo" onClick={() => context.onEditField(line.dependsOn!)}>去填<ArrowRight size={11} aria-hidden="true" /></button>
+                              <button
+                                type="button"
+                                className={`dmpkRowFix is-${status}`}
+                                title={`${quoteLineStatusLabels[status]}：${fieldLabelOf(context, line.dependsOn)} · 点去填`}
+                                aria-label={`${quoteLineStatusLabels[status]}，去填${fieldLabelOf(context, line.dependsOn)}`}
+                                onClick={() => context.onEditField(line.dependsOn!)}
+                              ><CircleHelp size={13} aria-hidden="true" /></button>
                             ) : status === "no-catalog" && canEdit && !editing ? (
-                              <button type="button" className="dmpkQuoteLineGo" onClick={() => beginEdit(line)}>补价</button>
-                            ) : null}
+                              <button
+                                type="button"
+                                className="dmpkRowFix is-no-catalog"
+                                title="系统无价目 · 点这里补一个本单价"
+                                aria-label={`无价目，补「${line.service}」的本单价`}
+                                onClick={() => beginEdit(line)}
+                              ><CircleDollarSign size={13} aria-hidden="true" /></button>
+                            ) : (
+                              <i className={`dmpkRowFix is-${status} isStatic`} title={status === "no-catalog" ? "系统无价目" : quoteLineStatusLabels[status]} aria-label={status === "no-catalog" ? "无价目" : quoteLineStatusLabels[status]}>
+                                {status === "no-catalog" ? <CircleDollarSign size={13} aria-hidden="true" /> : <CircleHelp size={13} aria-hidden="true" />}
+                              </i>
+                            )}
                           </span>
                         )}
                       </div>

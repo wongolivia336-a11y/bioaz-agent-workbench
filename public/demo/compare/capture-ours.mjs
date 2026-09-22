@@ -83,6 +83,8 @@ async function main() {
   //     台账多一张 TOX 卡、板块面板多一段；composer 参数卡展开看分页联动。拍完拆掉。
   await evaluate(`[...document.querySelectorAll('[role=tab]')].find(t => t.textContent.trim() === '参数收集').click(); return true;`);
   await sleep(400);
+  await evaluate(`const h = [...document.querySelectorAll('.inspectorParameterGroupHeader')].find(b => b.textContent.trim().startsWith('检测')); if (h && h.getAttribute('aria-expanded') !== 'true') h.click(); return true;`);
+  await sleep(400);
   await evaluate(`[...document.querySelectorAll('.dmpkPackageAdd button')].find(b => b.textContent.trim() === 'TOX').click(); return true;`);
   await sleep(900);
   await evaluate(`const head = document.querySelector('.parameterTaskCard .warningDecisionHeader'); if (head && head.getAttribute('aria-expanded') !== 'true') head.click(); return true;`);
@@ -138,7 +140,8 @@ async function main() {
   await setSection("实验", false);
   await setSection("动物", true);
   await sleep(300);
-  await evaluate(`${sectionRow("食蟹猴使用费")}.querySelector('.dmpkQuoteLineGo').click(); return true;`);
+  // 行右端那枚 ¥ 圆钮（原来是「补价」两个字）
+  await evaluate(`${sectionRow("食蟹猴使用费")}.querySelector('.dmpkRowFix').click(); return true;`);
   await sleep(200);
   await evaluate(typeInto(sectionRow("食蟹猴使用费"), "30000"));
   await evaluate(confirmRow(sectionRow("食蟹猴使用费")));

@@ -361,10 +361,10 @@
   <!-- 2-1 一句话 -->
   <section class="slide talk">
     <header><span class="kicker">第二部分 · 1</span><h2>先打一句话，右边就是账<small>会上定的：右栏不再收集参数，只放已收集参数的状态和对应单价。</small></h2></header>
-    <p class="say"><b>说</b>先从最简单的开始。我在输入框打一句"PK 小分子，SD 大鼠，每组 6 只，3 组，两周，血浆，中文报告"。右边这一栏现在就是会上说的那个样子了：按动物、实验、检测、报告与交付四块分，每行就一个数量乘单价，能收起来。参数还没给的行写"缺参数"，点一下过去填，不会在右边让你填。</p>
+    <p class="say"><b>说</b>先从最简单的开始。我在输入框打一句"PK 小分子，SD 大鼠，每组 6 只，3 组，两周，血浆，中文报告"。右边这一栏现在就是会上说的那个样子了：按动物、实验、检测、报告与交付四块分，每行就一个数量乘单价，能收起来。参数还没给的行是琥珀色的，右边一个问号，点一下过去填，不会在右边让你填。</p>
     <div class="compare">
       <div class="panel"><span class="tag beta"><i></i>工程师版 beta3 · 右栏</span><div class="shot none"><span><b>「补充报价」表单</b>报价还需处理 11 项：按项目名称在对话中补充，或填写下方对应项目；已填写 0 / 11。<br>下面是「已计算的项目金额（非整单总价）」——每项一个数，后面跟一长串适用范围。</span></div><p class="caption">右栏回答的是"还差什么、填给我"：缺失参数、确认项、待补价格、待系统补齐四类，每项一个"为什么需要这项？"。金额是有的，混在文字里，没有账的形状。</p></div>
-      <div class="panel"><span class="tag ours"><i></i>原型 · 报价板块</span><div class="shot"><img src="img/ours-session-sentence.png" alt="原型 一句话后的板块"></div><p class="caption">右栏是账：按<b>动物、实验、检测、报告与交付</b>四类分板块，和参数收集那四张卡一一对应；行里只有数量 × 单价，工作包（PK/TK、TOX、ADA）写成行上的小标。<b>账不等参数齐</b>：填一项亮一行，缺的写「去填」。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 报价板块</span><div class="shot"><img src="img/ours-session-sentence.png" alt="原型 一句话后的板块"></div><p class="caption">右栏是账：按<b>动物、实验、检测、报告与交付</b>四类分板块，和参数收集那四张卡一一对应；行里只有数量 × 单价，工作包（PK/TK、TOX、ADA）写成行上的小标。<b>账不等参数齐</b>：填一项亮一行，算不出的行是琥珀色，行尾一枚「?」（差参数，点了去填）或「¥」（没价目，点了补价）——不写字，颜色和图标说话。</p></div>
     </div>
     <footer><span>板块能折叠，默认只开第一个有待定项的；工作包是行上的小标，不再是段头。</span><span class="num">·</span></footer>
   </section>
@@ -388,9 +388,9 @@
   <!-- 2-3 搭积木 -->
   <section class="slide talk">
     <header><span class="kicker">第二部分 · 3</span><h2>再搭一块<small>会上说的"TOX 的卡片在下面再长出一个卡片"。</small></h2></header>
-    <p class="say"><b>说</b>然后是搭积木。台账最下面有个"再搭一块"，我点一下 TOX，下面就多出一张 TOX 的卡，右边板块那边也同时多一段，对话里会告诉你多了几行、还缺什么。这块我拿不准，想听大家说：每个板块自己的组和时点放哪儿。现在整单就一套采血点数，方案里 TK 是 16 个点、PK 是 11 个、临床病理是 6 个，三套，我还没想好怎么摆。</p>
+    <p class="say"><b>说</b>然后是搭积木。工作包不是第五类，它挂在"检测"这一组里——检测类型定的是主包，下面有个"再搭一块"，我点一下 TOX，就多出一张 TOX 的卡，右边板块那边也同时多几行，对话里会告诉你多了几行、还缺什么。这块我拿不准，想听大家说：每个板块自己的组和时点放哪儿。现在整单就一套采血点数，方案里 TK 是 16 个点、PK 是 11 个、临床病理是 6 个，三套，我还没想好怎么摆。</p>
     <div class="compare wide">
-      <div class="panel"><span class="tag ours"><i></i>原型 · 搭上 TOX</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 参数收集台账下面长出 TOX 卡"></div><p class="caption">台账下面<b>再长一张「TOX · 搭上的」</b>：实验操作、次数、方法、数量各一行，缺的写「待填写」，点了去填；右边板块里实验、检测两块各多几行，标着 TOX。「去掉这块」能拆。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 搭上 TOX</span><div class="shot"><img src="img/ours-blocks.png" alt="原型 参数收集台账下面长出 TOX 卡"></div><p class="caption">「检测」组下面的<b>工作包</b>多一张「TOX · 搭上的」（主包 PK / TK 标着「主」）：实验操作、次数、方法、数量各一行，缺的写「待填写」，点了去填；右边板块里实验、检测两块各多几行，标着 TOX。「去掉这块」能拆。</p></div>
       <div class="panel"><span class="tag beta"><i></i>怎么做到的</span><div class="shot none"><span><b>十四项不加不减</b>「检测类型」还是单选，定主板块，卡名跟着改（PK → PK / TK）。<br><br><b>再搭的板块记在会话上</b>账里当场长出那一段，行大多缺参数、指回参数卡那一格；填一格亮一行；拆掉就收回。加、拆都进对话，也进快照——出过版之后再搭，版本卡标「待重出」。</span></div><p class="caption">这是"检测项目多选"在现有模型上的落法：检测类型定主板块，加搭上去的板块，等于这一单做什么。</p></div>
     </div>
     <footer><span>没做的：每个板块各自的组和时点；搭上去的卡现在是读账，有了字段表就能填。</span><span class="num">·</span></footer>
@@ -399,9 +399,9 @@
   <!-- 2-4 传方案 -->
   <section class="slide talk">
     <header><span class="kicker">第二部分 · 4</span><h2>传一份方案，正文里溯源<small>读完在正文列出认到的每一项，hover 来源标记看原句，逐项点头；右栏留给账（下午陈曦慧定的）。</small></h2></header>
-    <p class="say"><b>说</b>传方案是这样。我把 BB-001 那个 docx 拖进来，它读一遍，回复下面直接列出认到的十一项，每项后面一个小标，鼠标放上去能看到是从材料哪一节、哪句话读的。对的就点确认，或者右上角一键全确认；不对点"改"。没确认之前它标着"识别"，右边台账上也是——机器读的是提议，人点头才算数。</p>
+    <p class="say"><b>说</b>传方案是这样。我把 BB-001 那个 docx 拖进来，它读一遍，回复下面直接列出认到的十一项，按动物、实验、检测、报告与交付分成四块，每项后面一个小标，鼠标放上去能看到是从材料哪一节、哪句话读的。对的点确认——它不是当场落库，是像选参数那样落一颗带对勾的 chip 到输入框，发送才算数，发之前还能点叉撤回；右上角一键全确认也是一样，一次落十一颗。不对点铅笔改。没确认之前它标着"识别"，右边台账上也是——机器读的是提议，人点头才算数。</p>
     <div class="compare">
-      <div class="panel"><span class="tag ours"><i></i>原型 · 读完之后</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 读方案后的解析轨迹与参数收集"></div><p class="caption">「已读取 BB-001 方案」下面一张识别清单：11 项，每项带来源小标，hover 出原句，逐项「确认」或「改」，右上「全部确认」；再往下是还缺的项。<b>已计价 20 项 ¥222,860</b>，7 项未计价各带原因。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 读完之后</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 读方案后的解析轨迹与参数收集"></div><p class="caption">「已读取 BB-001 方案」下面一张识别清单：11 项按四类分块，每项带来源小标，hover 出原句；「确认」落一颗对勾 chip 到输入框、发送才生效，右上「全部确认」一次落全，铅笔是改；再往下是还缺的项。<b>已计价 20 项 ¥222,860</b>，7 项未计价各带原因。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型 · 输入材料</span><div class="shot"><img src="img/ours-materials-dims.png" alt="原型 输入材料按八维分组"></div><p class="caption">「输入材料」面板：读出来的事实按八维排（不带序号），每条带原文位置（§1、表 2、表 3），能展开看明细；没归到八维的排最后。</p></div>
     </div>
     <div class="diff"><div class="hi"><b>规则</b>文件为准；机器读出来的是提议，人点过头的才是参数。</div><div><b>原文依据</b>每项参数带位置和原句；人改过的写「原文为 X，已改为 Y」。</div><div><b>入口与边界</b>Word、PDF、截图、聊天记录都能进；只有本地上传算材料，工单附件和退回会话不读。</div></div>
@@ -414,9 +414,9 @@
     <p class="say"><b>说</b>改价是改得最多的地方。每一行单价旁边有支笔，点开先给你看原价，填个新的，确认，就只改这一单，价目表不碰。像猴价这种本来就没有价目的，也是在这儿补一个。折扣和其他费用在最底下单独一行，我按方案里说的做成人工项了，不当价目。接下来任何一次改参数，回复里都会说影响了哪几行、合计从多少到多少。</p>
     <div class="compare">
       <div class="panel"><span class="tag ours"><i></i>原型 · 改一行</span><div class="shot"><img src="img/ours-temp-price-editor.png" alt="原型 临时改价编辑器"></div><p class="caption">TK 毒代采血：原价 ¥130 → 填 120 → 确认。行上挂「临时价 · 原 ¥130 · 恢复」，对话里一句「仅本次报价，价目表不动」。</p></div>
-      <div class="panel"><span class="tag ours"><i></i>原型 · 补价与折扣</span><div class="shot"><img src="img/ours-temp-price-done.png" alt="原型 补价与折扣之后的板块"></div><p class="caption">食蟹猴使用费没有价目，标「待补价」，人给 ¥30,000 只作用于本单；尾卡「人工调整项」记 0.9 折，多一行「调整后」。纸面的 Discounted 按调整后算，Standard 按价目。</p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 补价与折扣</span><div class="shot"><img src="img/ours-temp-price-done.png" alt="原型 补价与折扣之后的板块"></div><p class="caption">食蟹猴使用费没有价目，行是琥珀色、行尾一枚「¥」，点了就地补，人给 ¥30,000 只作用于本单；尾卡「人工调整项」记 0.9 折，多一行「调整后」。纸面的 Discounted 按调整后算，Standard 按价目。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>唯一路径</b>改价只在板块里，不经对话、不进后台。</div><div><b>不按零元</b>无价目的项留在账上标「待补价」；折扣、其他费用是人工项不是价目——工程师版这里是"不要求临时手填价格"，等后台维护公式。</div><div><b>重出</b>出过版之后改价，版本卡标「待重出」，一键重新生成。</div></div>
+    <div class="diff"><div class="hi"><b>唯一路径</b>改价只在板块里，不经对话、不进后台。</div><div><b>不按零元</b>无价目的项留在账上，琥珀色带「¥」钮；折扣、其他费用是人工项不是价目——工程师版这里是"不要求临时手填价格"，等后台维护公式。</div><div><b>重出</b>出过版之后改价，版本卡标「待重出」，一键重新生成。</div></div>
     <footer><span>纸面（Excel 计算表 / Word 报价书）读的就是这份账。</span><span class="num">·</span></footer>
   </section>
 

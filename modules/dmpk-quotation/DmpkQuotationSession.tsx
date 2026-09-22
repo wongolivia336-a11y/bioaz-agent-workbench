@@ -585,7 +585,13 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const sendDraft = () => {
     if (!draftTabs.length) return;
     const sentTabs = draftTabs;
-    appendMessage("user", `补充报价参数：\n${sentTabs.map((tab) => `${tab.label}：${tab.value}`).join("\n")}`, consumeAttachments());
+    /* 确认的和填的分开说：前者值没变，写成「确认 N 项：…」；后者才是「补充报价参数」。 */
+    const confirms = sentTabs.filter((tab) => tab.kind === "confirm");
+    const fills = sentTabs.filter((tab) => tab.kind !== "confirm");
+    appendMessage("user", [
+      confirms.length ? `确认识别结果 ${confirms.length} 项：${confirms.map((tab) => `${tab.label} ${tab.value}`).join("、")}。` : "",
+      fills.length ? `补充报价参数：\n${fills.map((tab) => `${tab.label}：${tab.value}`).join("\n")}` : "",
+    ].filter(Boolean).join("\n"), consumeAttachments());
     setStage("thinking");
     suggestPanel("process");
     window.setTimeout(() => {
@@ -606,16 +612,17 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const impact = impactSentence(before, pricing, manualPrices);
       setDraftTabs([]);
       setEditingFieldId(null);
+      const ack = `${confirms.length ? `已确认 ${confirms.length} 项识别结果。` : ""}${fills.length ? "已更新报价参数。" : ""}`;
       if (nextGroup) {
         setActiveGroup(nextGroup);
         setOpenGroups({ animal: nextGroup === "animal", procedure: nextGroup === "procedure", assay: nextGroup === "assay", delivery: nextGroup === "delivery" });
         setStage("collecting");
         appendRun("params", remaining.length);
-        appendMessage("agent", `已更新报价参数。${impact}${pricingNote}${missingFieldHint(remaining)}`);
+        appendMessage("agent", `${ack}${impact}${pricingNote}${missingFieldHint(remaining)}`);
       } else {
         setStage("ready");
         appendRun("params");
-        appendMessage("agent", `计价关键字段已齐全。${impact}${pricingNote}请进行报价前确认，确认后生成 Word 报价单和 Excel 报价明细。`);
+        appendMessage("agent", `${ack}计价关键字段已齐全。${impact}${pricingNote}请进行报价前确认，确认后生成 Word 报价单和 Excel 报价明细。`);
       }
     }, 700);
   };
@@ -625,8 +632,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     /* 只有「没打字」的时候才走草稿分支。以前不管有没有打字都走这儿，
        撞上参数卡还没填完就直接 return——全屏胶囊里打的字会一声不吭地消失，
        而那个待发草稿正躲在淡出的 composer 里，用户根本看不见。 */
+    /* 有几颗发几颗。以前参数卡还有没填的格子就直接 return——按钮亮着、按了没反应，
+       人只会觉得「卡住了」（09-22 心蕊：参数收集卡一直卡着）。发出去之后
+       sendDraft 自己会把还缺的列出来，不用在这儿拦。 */
     if (draftTabs.length && !text) {
-      if (stage === "collecting" && composerFields.length) return;
       sendDraft();
       return;
     }
@@ -739,20 +748,38 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
    * 逐项确认的路也在——铅笔改一项、参数卡发一轮，都算确认；这颗是给
    * 「我核过了，没问题」的人用的，不用为了确认而把十一项各点一遍。
    */
+  /**
+   * 确认不直接落库，先落成输入框里的 chip（09-22 心蕊：「每点一次确认落在哪里了？」）。
+   * ----------------------------------------------------------------------
+   * 上一版点一下「确认」只把状态翻成 confirmed，正文里换个对勾，别处什么都没动——
+   * 人不知道这一下算不算数、想反悔也没处撤。现在跟填参数走同一条路：点一下，
+   * 一颗带对勾的 chip 落到输入框，跟选出来的参数排在一起；发送那一下才算确认，
+   * 发送前点 chip 上的叉（或再点一次「确认」）就撤回。一条提交路径，
+   * 台账上「已落库」和输入框里「待发」的分界也跟原来一样。
+   */
+  const queueConfirm = (field: DmpkField) => ({ fieldId: field.id, label: field.label, value: field.value, kind: "confirm" as const });
+  const nudgeComposer = () => {
+    setComposerAttention(false);
+    window.requestAnimationFrame(() => setComposerAttention(true));
+    window.setTimeout(() => setComposerAttention(false), 720);
+  };
   const confirmRecognized = () => {
     if (!recognizedFields.length) return;
-    const count = recognizedFields.length;
-    setFieldStatus((current) => {
-      const next = { ...current };
-      for (const field of recognizedFields) next[field.id] = "confirmed";
-      return next;
-    });
-    appendMessage("user", `确认文件识别的 ${count} 项参数：${recognizedFields.map((field) => `${field.label} ${field.value}`).join("、")}。`);
-    appendMessage("agent", `已确认 ${count} 项识别结果。${missingFieldHint(missingFields)}`);
+    setDraftTabs((items) => [
+      ...items.filter((item) => !recognizedFields.some((field) => field.id === item.fieldId)),
+      ...recognizedFields.map(queueConfirm),
+    ]);
+    nudgeComposer();
   };
-  /** 正文里那张识别清单上逐项点头：一项一项确认，不进对话——点一下就该是点一下的分量。 */
+  /** 正文识别清单上逐项点头：落一颗确认 chip；已经在输入框里的再点一次就撤回。 */
   const confirmOneRecognized = (fieldId: string) => {
-    setFieldStatus((current) => current[fieldId] === "confirmed" ? current : { ...current, [fieldId]: "confirmed" });
+    const field = fields.find((item) => item.id === fieldId);
+    if (!field?.value) return;
+    const queued = draftTabs.some((item) => item.fieldId === fieldId && item.kind === "confirm");
+    setDraftTabs((items) => queued
+      ? items.filter((item) => item.fieldId !== fieldId)
+      : [...items.filter((item) => item.fieldId !== fieldId), queueConfirm(field)]);
+    if (!queued) nudgeComposer();
   };
 
   /**
@@ -1189,7 +1216,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             <AnnotatedQuote notes={reworkNotes} className="isPanel" />
           </section>
         ) : (
-          <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} liveRun={liveParse} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} fields={fields} fieldStatus={fieldStatus} onConfirmField={confirmOneRecognized} onConfirmAll={confirmRecognized} onEditField={requestFieldEdit} /></div>
+          <div className="dmpkChatScroller" ref={chatScrollerRef}><PriorSessionHistory snapshots={priorSessionSnapshots} /><DmpkConversation messages={messages} stage={stage} currentMissing={missingFields} handoffNotice={handoffNotice} liveRun={liveParse} onOpenInspector={openInspector} onArtifactPreview={setArtifactPreview} fields={fields} fieldStatus={fieldStatus} queuedIds={draftTabs.filter((tab) => tab.kind === "confirm").map((tab) => tab.fieldId)} onConfirmField={confirmOneRecognized} onConfirmAll={confirmRecognized} onEditField={requestFieldEdit} /></div>
         )}
         <DmpkComposer paramsOpen={paramsOpen} onParamsOpenChange={setParamsOpen} unresolvedNotes={reworkNotes
           .filter((note) => !noteAnchorToField[note.anchorId])
@@ -1220,7 +1247,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
           if (quoteLines.some((line) => line.id === "report")) setManualPrice("report", nextPrice);
           else appendMessage("agent", `已将本次报价的报告费调整为 ¥${nextPrice.toLocaleString()}，仅对当前项目生效，并已保留调整记录。`);
           setEditProposal(null);
-        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} hasQuote={quoteVersions.length > 0} quoteStale={quoteStale} onRegenerate={regenerateQuote} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} sessionActions={sessionActions} disabled={stage === "thinking" || stage === "generating" || (stage === "collecting" && composerFields.length > 0 && !composerText.trim() && !attachments.some((item) => item.kind === "file")) || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
+        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} hasQuote={quoteVersions.length > 0} quoteStale={quoteStale} onRegenerate={regenerateQuote} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} sessionActions={sessionActions}
+          /* 发送键只看「有没有东西可发」：chips、打的字、挂的文件，有一样就亮。
+             以前参数卡还有没填的格子就把它灰掉——选了两项、还差三项，按钮死灰，人只会觉得卡住了
+             （09-22 心蕊）。发出去之后 sendDraft 会把还缺的接着问，不用在这儿拦。 */
+          disabled={stage === "thinking" || stage === "generating" || (!draftTabs.length && !composerText.trim() && !attachments.some((item) => item.kind === "file"))} />
         <WorkbenchPanelBody
           panels={railPanels}
           visibleIds={visiblePanelIds}
