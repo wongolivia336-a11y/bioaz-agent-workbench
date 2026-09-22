@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, ChevronDown, CircleDollarSign, CornerDownLeft, Edit3, Eye, FileSpreadsheet, FileText, Maximize2, Quote, Send, Sparkles, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, CircleDollarSign, CircleHelp, CornerDownLeft, Edit3, Eye, FileSpreadsheet, FileText, ListChecks, Maximize2, Quote, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ComposerChipTray as SharedComposerChipTray, ParameterTaskCard, formatParamValue } from "../../components/params";
 import { PersonPicker } from "../../components/ui";
@@ -175,10 +175,12 @@ function RecognizedList({ ids, fields, fieldStatus, onConfirmField, onConfirmAll
   if (!items.length) return null;
   const pendingCount = items.filter((field) => fieldStatus[field.id] === "recognized").length;
   return (
-    <div className="dmpkRecognized" data-minimap="recognized" data-minimap-label="识别清单">
+    <div className="dmpkReplySection dmpkRecognized" data-minimap="recognized" data-minimap-label="识别清单">
+      {/* 段头只说事：图标 + 识别到几项 + 几项待确认；说明文字不放（09-22 反馈：标注性文字去掉） */}
       <header>
+        <i className="dmpkReplySectionIcon"><ListChecks size={14} aria-hidden="true" /></i>
         <strong>识别到 {items.length} 项</strong>
-        <small>{pendingCount ? `${pendingCount} 项等你点头 · hover 来源标记看原句` : "都确认过了"}</small>
+        {pendingCount ? <em>{pendingCount} 项待确认</em> : <em className="isDone">已全部确认</em>}
         {pendingCount && onConfirmAll ? <button type="button" onClick={onConfirmAll}><Check size={13} aria-hidden="true" />全部确认</button> : null}
       </header>
       <ul>
@@ -214,7 +216,7 @@ function RecognizedList({ ids, fields, fieldStatus, onConfirmField, onConfirmAll
                 ) : (
                   <>
                     {onConfirmField ? <button type="button" onClick={() => onConfirmField(field.id)}>确认</button> : null}
-                    {onEditField ? <button type="button" className="isEdit" onClick={() => onEditField(field.id)}>改</button> : null}
+                    {onEditField ? <button type="button" className="isEdit" aria-label={`改${field.label}`} title="改这一项" onClick={() => onEditField(field.id)}><Edit3 size={12} aria-hidden="true" /></button> : null}
                   </>
                 )}
               </span>
@@ -248,14 +250,19 @@ export function DmpkConversation({ messages, stage, currentMissing, handoffNotic
                   <RecognizedList ids={message.recognizedIds} fields={fields} fieldStatus={fieldStatus} onConfirmField={onConfirmField} onConfirmAll={onConfirmAll} onEditField={onEditField} />
                 ) : null}
                 {message.missingFields?.length ? (
-                <table className="previewTable" style={{ marginTop: 10 }}>
-                  <thead><tr><th>待补充参数</th><th>所属环节</th><th>状态</th></tr></thead>
-                  <tbody>
-                    {message.missingFields.map((field) => (
-                      <tr key={field.label}><td>{field.label}</td><td>{field.group}</td><td>待填写</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+                  /* 缺的那些另起一段，段头带图标——跟上面的识别清单一眼分得开（09-22 反馈：混成一片） */
+                  <div className="dmpkReplySection dmpkMissing">
+                    <header>
+                      <i className="dmpkReplySectionIcon"><CircleHelp size={14} aria-hidden="true" /></i>
+                      <strong>还需补充 {message.missingFields.length} 项</strong>
+                      <em>在下方参数卡里填，或直接一句话说</em>
+                    </header>
+                    <ul>
+                      {message.missingFields.map((field) => (
+                        <li key={field.label}><span>{field.label}</span><small>{field.group}</small></li>
+                      ))}
+                    </ul>
+                  </div>
                 ) : null}
               </div>
             </div>
