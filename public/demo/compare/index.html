@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>同一副架子 · 原型 × beta5</title>
-<meta name="description" content="2026-09-22 给另一个组讲：工作台这副架子怎么稳、怎么长，原型和 beta5 差在哪。">
+<title>原型 × beta5 · 差在哪</title>
+<meta name="description" content="2026-09-22 给另一个组讲：原型和 beta5 差在哪——右栏、工作流、巧思。">
 <style>
   :root {
     --bg: #f6f5f1;
@@ -82,6 +82,9 @@
   .grid4 figcaption { color: var(--body); font-size: clamp(11.5px, .95vw, 13.5px); line-height: 1.4; }
   .grid4 figcaption b { color: var(--ink); margin-right: 6px; }
   .verdict.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .flowline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .flowline span { border: 1px solid var(--line); border-radius: 999px; background: var(--paper); padding: 5px 12px; font-size: 13px; color: var(--ink); white-space: nowrap; }
+  .flowline i { color: var(--muted); font-style: normal; }
   .verdict.four .card h3 { font-size: clamp(17px, 1.5vw, 22px); }
   .verdict.four .card p { font-size: 14px; }
   .caption { color: var(--body); font-size: 14px; line-height: 1.5; }
@@ -151,27 +154,27 @@
   <section class="slide cover">
     <header><span class="kicker">2026-09-22 · 工作台对齐</span><span class="num">澎立 · BioAZ Agent Workbench</span></header>
     <div class="hero">
-      <h1>同一副架子：<br>原型 与 beta5</h1>
-      <p>三列会话骨架两边已经一样。我们想说清的是这副架子怎么<b>稳</b>——结构上不跟 beta5 冲突；怎么<b>长</b>——右栏像积木一样加 tab、并列、全屏、收起。报价那些细节，是长在架子上的叶子。</p>
-      <div class="pills"><span>会话层同源</span><span>壳层跟着 beta5 改名</span><span>右栏 = 可生长的面板容器</span><span>同一副壳装四条业务线</span></div>
+      <h1>原型 × beta5：<br>差在哪</h1>
+      <p>架子（三列）两边一样，名字（项目 / 空间）随便叫。真正的差异在三处：<b>右栏</b>——一张固定卡，还是一个可搭配的面板容器；<b>工作流与对话流</b>——材料进来到报价交出去这条链走不走得完；<b>设计上的巧思</b>——hover、风格一致、图标这些小地方。</p>
+      <div class="pills"><span>三列一样，名字不重要</span><span>右栏：固定位置的面板容器</span><span>工作流：材料 → 账 → 纸 → 交接 → 复核</span><span>巧思：hover · 风格 · 图标</span></div>
       <div class="parts">
-        <button type="button" data-go="part1"><b>第一部分 · 整体原型</b><span>架子怎么稳、怎么长；和 beta5 的关系 · 2–12 页</span></button>
-        <button type="button" data-go="part2"><b>第二部分 · DMPK 报价</b><span>按 09-21 会议改了什么、对着 P0 方案补了什么 · 13 页起</span></button>
+        <button type="button" data-go="part1"><b>第一部分 · 整体原型</b><span>右栏、工作流、巧思，逐项和 beta5 对照 · 2–14 页</span></button>
+        <button type="button" data-go="part2"><b>第二部分 · DMPK 报价</b><span>按 09-21 会议改了什么、对着 P0 方案补了什么 · 15 页起</span></button>
       </div>
     </div>
-    <footer><span>心蕊 · 原型分支 codex/dmpk-composer-params</span><span>→ 翻页 · 按场景挑一部分讲</span></footer>
+    <footer><span>心蕊 · 原型分支 codex/dmpk-composer-params · 2026-09-22</span><span>→ 翻页 · 按场景挑一部分讲</span></footer>
   </section>
 
 
   <!-- 一页结论 -->
   <section class="slide" id="part1">
-    <header><span class="kicker">一页结论</span><h2>三句话</h2></header>
+    <header><span class="kicker">一页结论</span><h2>三个差异点</h2></header>
     <div class="verdict">
-      <div class="card"><span class="n">01 · 同源</span><h3>三列是同一套</h3><p>左任务、中对话、右面板——beta5 的会话页就是这个形状，对话流、参数卡、产物卡也一样。这一层不用重画，两边照着同一张图走。</p></div>
-      <div class="card"><span class="n">02 · 不冲突</span><h3>壳层按 beta5 的走</h3><p>「项目」→「空间」、空间入口页、数据中枢多一档「产物」——我们照做。侧栏、知识库、数字团队没动。唯一的硬冲突是「人」（工单、审批、交接），beta5 里没有，另议。</p></div>
-      <div class="card"><span class="n">03 · 会生长</span><h3>右栏是面板容器，不是一张卡</h3><p>三个常驻 tab，「+」里再加；一个 tab 能拖成自己的一列、能铺满工作区、能收起成两列。哪些 tab 由业务线登记，壳不管内容——同一副壳已经装了 DMPK 报价、肿瘤报价、QA 审核、肿瘤报告四条线。</p></div>
+      <div class="card"><span class="n">01 · 架子</span><h3>三列一样，名字随便叫</h3><p>左任务、中对话、右面板，两边一个形状。「项目」还是「空间」只是叫法，能改。beta5 里我们借了一样：<b>专家 Agent 按空间配置</b>。它别的框架功能（工具页、记忆、知识）偏框架、不够实用，没有接。</p></div>
+      <div class="card"><span class="n">02 · 右栏</span><h3>一张固定卡 vs 面板容器</h3><p>beta5 右栏是一张「参数收集 13/13」卡。我们把右栏做成<b>固定位置的容器</b>：面板模型 + tab 模型，可选搭配、可并列、可全屏、可收起。这是从 Codex / Claude Code 那种全自由面板收回来的——太自由，和业务不贴。</p></div>
+      <div class="card"><span class="n">03 · 工作流与对话流</span><h3>一条链在会话里走完</h3><p>材料进来 → 识别、原文依据 → 参数卡按八维分页 → 右栏成账 → 改价补价 → 生成纸 → 交接 → 复核 → 退回 → 重出。beta5 停在追问参数和一张费用明细卡。这条链，是原型真正花功夫的地方。</p></div>
     </div>
-    <footer><span>先看架子（3–9 页），再看长在上面的叶子（10 页起，附录有细节）。</span><span class="num">·</span></footer>
+    <footer><span>3–9 页逐项对照；10 页起是报价线上的功能差异；第二部分是会议改动的细节。</span><span class="num">·</span></footer>
   </section>
 
 
@@ -182,22 +185,22 @@
       <div class="panel"><span class="tag beta"><i></i>beta5 · 会话</span><div class="shot"><img src="img/beta5-session.png" alt="beta5 会话：左任务、中对话、右栏一张参数收集卡"></div><p class="caption">右栏一张「报价参数收集 13/13」卡，四组完成度；对话里参数靠打字，一段话二十项。<b>形状跟我们一样</b>，右栏是固定的。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型 · 会话</span><div class="shot"><img src="img/ours-shell-3col.png" alt="原型 会话：三列，右栏三个 tab 加一个加号"></div><p class="caption">同样三列；右栏是<b>三个常驻 tab + 「+」</b>（参数收集 / 报价板块 / 报价结果），中间对话流、参数卡、产物卡跟 beta5 同形。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>一致</b>三列、对话流、右面板、产物卡——两边同一张图。</div><div><b>差在</b>右栏的形状：beta5 是一张卡，我们是一个容器。它那张卡放进我们的容器里就是一个 tab。</div><div><b>所以</b>会话层不用改；往 beta5 上落，只是把右栏换成面板容器。</div></div>
+    <div class="diff"><div><b>一样的</b>三列、对话流、右面板、产物卡。</div><div class="hi"><b>差在</b>右栏的形状：beta5 是一张固定的卡，我们是一个容器——它那张卡放进来只是一个 tab。</div><div><b>还差在</b>对话流：beta5 是「追问 11 项 → 用户打一段 → 费用卡」；我们是材料、参数、账、纸、交接一路走下去（第 7 页）。</div></div>
     <footer><span>beta5 截图：next-beta5 · 2026-09-21-154420-DMPK报价自动化 / PK</span><span class="num">·</span></footer>
   </section>
 
 
   <!-- 三列的变形 -->
   <section class="slide">
-    <header><span class="kicker">设计点</span><h2>三列会变形<small>右栏是面板容器：tab 能增减、能拖成一列、能铺满、能收起。容器只管布局和状态，内容由业务线登记。</small></h2></header>
+    <header><span class="kicker">设计点 · 右栏</span><h2>固定位置的面板容器<small>最早想学 Codex / Claude Code 那种自由面板，试了发现太灵活、跟业务不贴、门槛高。收回来：右栏位置固定，里面是可搭配的面板模型 + tab 模型——能加、能并列、能全屏、能收起。</small></h2></header>
     <div class="grid4">
       <figure><div class="shot"><img src="img/ours-shell-menu.png" alt="+ 加面板菜单"></div><figcaption><b>「+」加面板</b>主要 / 更多两组，勾一个多一个 tab；系统不会自己把面板加回来。</figcaption></figure>
       <figure><div class="shot"><img src="img/ours-shell-columns.png" alt="并列：面板拖成第四列"></div><figcaption><b>并列</b>把一个 tab 拖成自己的一列，边看批注边改参数；宽度不够就不给拖，提示先收任务栏。</figcaption></figure>
       <figure><div class="shot"><img src="img/ours-shell-focus.png" alt="全屏：面板铺满工作区"></div><figcaption><b>全屏</b>面板铺满工作区，topbar 和任务栏还在；Esc 退出。</figcaption></figure>
       <figure><div class="shot"><img src="img/ours-shell-2col.png" alt="收起：回到两列"></div><figcaption><b>收起</b>右栏收掉回到两列，tab 状态还记着，展开原样回来。</figcaption></figure>
     </div>
-    <div class="diff"><div class="hi"><b>容器不认内容</b>它只知道有几个 tab、谁并列、谁全屏；面板是什么由模块说。</div><div><b>状态跟会话走</b>切走再回来、进后台再出来，tab 和并列都还在。</div><div><b>beta5 落法</b>它的「报价参数收集」卡就是容器里的一个 tab，其余照旧。</div></div>
-    <footer><span>components/workbench-panel/WorkbenchPanel.tsx · 一份容器，四条业务线共用</span><span class="num">·</span></footer>
+    <div class="diff"><div class="hi"><b>为什么不做全自由</b>Codex 那种想放哪放哪，用户得先学面板；业务要的是"报价时右边就该有这几样"。位置固定、内容可选，门槛最低。</div><div><b>面板模型 / tab 模型</b>常驻的几个是模块登记的，「+」里是备选的；一个 tab 能拖成一列、能铺满、能收起，状态跟会话走。</div><div><b>对 beta5</b>它那张固定卡，在这个模型里就是一个常驻 tab；其余的（来源、明细、产物）它没有位置放。</div></div>
+    <footer><span>components/workbench-panel/WorkbenchPanel.tsx · 一份容器，四条业务线共用 · 这一块迭代了最多轮</span><span class="num">·</span></footer>
   </section>
 
 
@@ -208,19 +211,44 @@
       <div class="panel"><span class="tag ours"><i></i>原型 · QA 审核</span><div class="shot"><img src="img/ours-shell-qa.png" alt="原型 QA 审核会话"></div><p class="caption">右栏登记的是<b>原件 / AI 审核 / 差异 / 批注</b>，中间是对话加审核画布；壳一个字没改。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型 · 肿瘤报价</span><div class="shot"><img src="img/ours-shell-tumor.png" alt="原型 肿瘤报价会话"></div><p class="caption">跟 DMPK 报价<b>同一套参数卡、chips、台账</b>——组件共用，字段不同；右栏是它自己的三个 tab。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>模块只声明</b>「我要哪些面板、哪几个常驻」，壳负责摆。</div><div><b>样式一份</b>参数卡那套类名两条报价线共用，改一处两边一起变。</div><div><b>加一条线</b>= 登记一个模块。这就是"稳"：架子不随业务变。</div></div>
+    <div class="diff"><div class="hi"><b>模块只声明</b>「我要哪些面板、哪几个常驻」，容器负责摆。</div><div><b>样式一份</b>参数卡那套类名两条报价线共用，改一处两边一起变——语言和风格一致靠这个，不靠人盯。</div><div><b>对 beta5</b>它一条线一个页面形态；我们加一条线 = 登记一个模块。</div></div>
     <footer><span>modules/*/ 各自登记面板 · components/params 共用参数组件</span><span class="num">·</span></footer>
   </section>
 
 
+  <!-- 工作流与对话流 -->
+  <section class="slide">
+    <header><span class="kicker">最重要的差异</span><h2>工作流与对话流<small>beta5 的会话是"追问参数 → 用户打一段 → 出一张费用卡"。我们的会话是一条链：材料进来，到报价交出去、被复核、被退回、再重出，都在这一个会话里。</small></h2></header>
+    <div class="compare">
+      <div class="panel"><span class="tag beta"><i></i>beta5 · 会话</span><div class="shot"><img src="img/beta5-session.png" alt="beta5 会话：追问参数、用户一段话、报价已生成"></div><p class="caption">「还需要补充共 11 项信息」→ 用户一段话补二十项 → 「报价已生成成功」+ 费用明细卡 + 两个文件。<b>参数靠打字，改价没有路径，交出去之后没有下文。</b></p></div>
+      <div class="panel"><span class="tag ours"><i></i>原型 · 会话</span><div class="shot"><img src="img/ours-session-protocol.png" alt="原型 会话：读方案、解析轨迹、参数卡、右栏"></div><p class="caption">一句话或一份方案进来 → 解析轨迹 + 原文依据 → 参数卡按八维分页、缺什么问什么 → 右栏当场成账 → 改价补价 → 生成纸 → 交接卡 → 对方站内信复核 → 退回批注回到会话 → 重出 v2。</p></div>
+    </div>
+    <div class="flowline">
+      <span>材料 / 一句话</span><i>→</i><span>识别 · 原文依据</span><i>→</i><span>参数卡（八维）</span><i>→</i><span>右栏成账</span><i>→</i><span>改价 · 补价</span><i>→</i><span>Word / Excel</span><i>→</i><span>交接</span><i>→</i><span>复核 · 依据与变更</span><i>→</i><span>退回 → 重出</span>
+    </div>
+    <footer><span>每一步都在同一个会话里，右栏跟着这一步换 tab；对话里每一步留一句话（影响提示、仅本次报价）。</span><span class="num">·</span></footer>
+  </section>
+
+  <!-- 设计巧思 -->
+  <section class="slide">
+    <header><span class="kicker">小地方</span><h2>设计上的巧思<small>不是功能，是让人少学一步、少点一下、少猜一次的地方。beta5 里对应的位置基本是空的。</small></h2></header>
+    <div class="verdict four">
+      <div class="card"><span class="n">hover</span><h3>动效只在该动的地方</h3><p>专家卡 hover 从卡底长出介绍（做什么 / 几步 / 交出什么）；空间行 hover 出 ↗ 才进入口页；参数卡点卡头开合、点别处自动收——不弹、不抢。</p></div>
+      <div class="card"><span class="n">语言</span><h3>一个口径说到底</h3><p>「仅本次报价，价目表不动」「影响 X 行；合计 A → B」「原文为 X，已改为 Y」——对话、右栏、纸面三处一句话，人不用翻译。</p></div>
+      <div class="card"><span class="n">风格</span><h3>一套令牌管所有线</h3><p>圆角、字号、时长、颜色都是令牌；参数卡那套类名两条报价线共用；跑一遍 audit 就知道哪儿走样。四条业务线看起来是一家的。</p></div>
+      <div class="card"><span class="n">图标</span><h3>右上角两颗，各管一件事</h3><p>「总结对话」把会话钉成四段话，交接卡直接预填；「面板开关」收起右栏回两列。会话顶栏只放这两个，别的都在 tab 里。</p></div>
+    </div>
+    <footer><span>这些都是迭代里改出来的，不是第一版就有的。</span><span class="num">·</span></footer>
+  </section>
+
   <!-- 壳层 · 空间 -->
   <section class="slide">
-    <header><span class="kicker">壳层</span><h2>空间与入口页<small>beta5 把项目改成了空间，每个空间先落到一个「我能为你做什么」的入口页——我们照做，但把这一页做成了这个空间的门。</small></h2></header>
+    <header><span class="kicker">壳层 · 空间</span><h2>空间与入口页<small>「项目」还是「空间」只是叫法。从 beta5 借的是<b>专家 Agent 按空间配置</b>这一点；入口页我们做成了这个空间的门，专家卡 hover 出介绍。</small></h2></header>
     <div class="compare">
       <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot" data-missing="beta5 · 空间入口页（Admin123，我能为你做什么？）"><img src="img/beta5-space-home.png" alt="beta5 空间入口页"></div><p class="caption"><b>一句问候 + 输入框 + 专家 chip</b>，底下四个数字（文件 / 记忆 / 知识 / 产物）和专家头像。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-space-home.png" alt="原型 空间首页"></div><p class="caption"><b>空间插画 + 标签 + 四张专家卡（hover 出介绍）+ 配置专家 + 概览三卡</b>。任务仍在第一句话发出时才建立。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>一致</b>叫法（空间）、入口页、专家从空间里选。</div><div><b>我们多的</b>专家卡的介绍（做什么 / 几步 / 交出什么）、页上直接配置专家、概览可点进数据中枢。</div><div><b>beta5 多的</b>「记忆」这一档——我们没做，先要定义它是什么。</div></div>
+    <div class="diff"><div class="hi"><b>借了</b>专家按空间配置、进空间先有一页入口。</div><div><b>我们的</b>空间插画、专家卡 hover 长出介绍（做什么 / 几步 / 交出什么）、页上直接配置专家、概览三卡能点进数据中枢。</div><div><b>没接</b>「记忆」「知识」「工具页」——偏框架，先要定义它们是什么、给谁用。</div></div>
     <footer><span>侧栏点空间行仍是开合；进入口页走 hover 的 ↗。</span><span class="num">·</span></footer>
   </section>
 
@@ -231,18 +259,18 @@
       <div class="panel"><span class="tag beta"><i></i>beta5</span><div class="shot"><img src="img/beta5-hub.jpg" alt="beta5 数据中枢" onerror="this.parentElement.classList.add('missing')"></div><p class="caption">文件 / 记忆 / 知识 / 产物四档，按空间筛，有回收站和「问问文件助手」。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型 09-21</span><div class="shot"><img src="img/ours-hub-artifacts.png" alt="原型 数据中枢 产物档"></div><p class="caption">根级「全部文件 | 产物」分段，产物档多一列<b>来源任务</b>，点进那条会话。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>一致</b>产物 + 来源会话。</div><div><b>没做</b>「记忆」——先问工程师它是会话级摘要还是跨会话的用户记忆，决定会话快照往哪儿接。</div><div><b>没改名</b>知识库照旧。</div></div>
+    <div class="diff"><div class="hi"><b>一样的</b>产物 + 来源会话。</div><div><b>差在</b>我们的产物列表带「来源任务」一列，点进那条会话；beta5 多「记忆」「知识」两档，我们没接——先要定义它们是什么。</div><div><b>没改名</b>知识库照旧。</div></div>
     <footer><span></span><span class="num">·</span></footer>
   </section>
 
   <!-- 人与工单 -->
   <section class="slide">
-    <header><span class="kicker">硬冲突 · 以我们为准</span><h2>人、站内信、工单、复核<small>beta5 里没有「人」的概念；报价审批和退回在我们这里是一条完整的链。</small></h2></header>
+    <header><span class="kicker">工作流 · 人</span><h2>人、站内信、工单、复核<small>beta5 里没有「人」：没有账号角色、没有交接、没有审批。我们的工作流里报价是交出去、被复核、被退回、再重出的。</small></h2></header>
     <div class="compare">
       <div class="panel"><span class="tag ours"><i></i>原型 · 站内信</span><div class="shot"><img src="img/ours-inbox.png" alt="原型 站内信"></div><p class="caption">待办与动态分开；工单带附件、时间线、处理人；交接从会话里一键发出——刚交过来的「请复核：DMPK 报价任务」就在最上面。</p></div>
       <div class="panel"><span class="tag ours"><i></i>原型 · 复核画布</span><div class="shot"><img src="img/ours-review-evidence.png" alt="原型 报价复核画布 · 依据与变更"></div><p class="caption">审核人看的是<b>同一份草稿</b>：计算表 / 报价书之外多一页「依据与变更」——每项参数读自材料哪一节、原句是什么，人改过的写「原文为 X，已改为 Y」；右边是这一版改过什么（改价、补价、折扣、出过几版）。批完 → 退回修订 → 撰写人那边批注回到会话、改参数、重出 v2。</p></div>
     </div>
-    <div class="diff"><div class="hi"><b>beta5</b>没有账号角色、没有工单、没有交接——这是唯一的硬冲突。</div><div><b>P0 第五层</b>审核人要看原文依据 + 参数变更 + 计算明细：交接那一下打成一包挂在工单上，画布读包；老工单没有包，照旧。</div><div><b>要问的</b>空间会不会有成员和岗位？没有的话审批和退回在 beta5 里怎么落？</div></div>
+    <div class="diff"><div class="hi"><b>差在</b>beta5 没有账号角色、工单、交接；我们有站内信、工单、交接卡、复核画布、退回修订。</div><div><b>审核人看什么</b>同一份草稿：计算表 / 报价书 + 依据与变更（P0 第五层点名的）。</div><div><b>要问的</b>beta5 的空间会不会有成员和岗位？没有的话审批和退回落在哪。</div></div>
     <footer><span>切账号演示：王林彬（撰写）→ 李林（审核）；演示范围切「总览」才看得到李林</span><span class="num">·</span></footer>
   </section>
 
@@ -270,7 +298,7 @@
 
   <!-- 叶子一页 -->
   <section class="slide">
-    <header><span class="kicker">长在架子上的</span><h2>报价线上多出来的几片叶子<small>这些 beta5 没有；都是在同一副架子上长的，不动壳。细节在附录，今天只过一眼。</small></h2></header>
+    <header><span class="kicker">报价线 · 功能差异</span><h2>报价线上 beta5 没有的四样<small>都长在右栏和对话流里，不动壳。细节在第二部分，这里只过一眼。</small></h2></header>
     <div class="verdict four">
       <div class="card"><span class="n">A · 改价</span><h3>一条路，仅本单</h3><p>单价旁的铅笔：原价 → 新价 → 确认；没价目的补价；折扣、其他费用是人工项。价目表不动，纸面跟着账走。</p></div>
       <div class="card"><span class="n">B · 材料</span><h3>传方案，按八维归位</h3><p>Word / PDF / 截图 / 聊天记录进来，读出的东西按 P0 八维排，每项参数带原文依据；机器认的是提议，人点头才是参数。</p></div>
@@ -288,9 +316,10 @@
       <table class="matrix">
         <thead><tr><th></th><th>beta5</th><th>原型 09-21</th></tr></thead>
         <tbody>
-          <tr><td>壳</td><td class="beta">项目 → 空间，空间入口页，侧栏一级入口多</td><td class="ours">只改名 + 空间首页；侧栏结构没动，数据中枢多一档产物</td></tr>
-          <tr><td>会话层</td><td class="beta">已采用我们的设计</td><td class="ours">同</td></tr>
-          <tr><td>右栏</td><td class="beta">参数分组完成度</td><td class="ours">报价板块（参数状态 + 单价）+ 参数收集 + 报价结果</td></tr>
+          <tr><td>壳</td><td class="beta">项目 → 空间，空间入口页，侧栏一级入口多（专家 / 工具 / 数据中枢）</td><td class="ours">叫法一样；借了专家按空间配置；侧栏只留数据中枢、数字团队、空间</td></tr>
+          <tr><td>会话层</td><td class="beta">三列：任务 / 对话 / 右栏一张卡</td><td class="ours">三列：任务 / 对话 / 右栏面板容器</td></tr>
+          <tr><td>右栏</td><td class="beta">一张固定卡：参数分组完成度</td><td class="ours">面板模型 + tab 模型：常驻三个 + 「+」备选；并列 / 全屏 / 收起</td></tr>
+          <tr><td>工作流</td><td class="beta">追问参数 → 一段话 → 费用明细卡 + 两个文件</td><td class="ours">材料 → 识别 → 参数 → 账 → 改价 → 纸 → 交接 → 复核 → 退回 → 重出</td></tr>
           <tr><td>费用</td><td class="beta">对话里一次性的费用明细卡</td><td class="ours">右栏常驻的账，按板块折叠、小计合计</td></tr>
           <tr><td>改价</td><td class="beta no">无路径</td><td class="ours">临时价闭环（原价 → 新价 → 确认），仅本单；无价目可补价</td></tr>
           <tr><td>价目表</td><td class="beta no">无</td><td class="ours">独立入口；对话里能问本单命中的那一截</td></tr>
@@ -298,10 +327,11 @@
           <tr><td>P0 规则</td><td class="beta no">无</td><td class="ours">少于 30 按 30、猴类价 / 折扣 / 其他费用人工项、不适用、影响提示、按组明细</td></tr>
           <tr><td>参数收集</td><td class="beta">四组完成度</td><td class="ours">按八维分卡：基础 ①②③ / 板块 ④–⑧ / 交付；命中一块长一块，「再搭一块」加 TOX · BA · ADA</td></tr>
           <tr><td>审核人看什么</td><td class="beta no">无</td><td class="ours">同一份草稿：计算表 / 报价书 + 依据与变更（原文依据、改价补价折扣、版本）</td></tr>
-          <tr><td>人与工单</td><td class="beta no">没有「人」</td><td class="ours">站内信、工单、交接、退回、复核画布——硬冲突，以我们为准</td></tr>
+          <tr><td>人与工单</td><td class="beta no">没有「人」</td><td class="ours">站内信、工单、交接、退回、复核画布</td></tr>
           <tr><td>权限</td><td class="beta no">无</td><td class="ours">演示级 SD / SD 助理</td></tr>
           <tr><td>数据中枢</td><td class="beta">文件 / 记忆 / 知识 / 产物</td><td class="ours">文件 / 产物（来源任务）；记忆待定义</td></tr>
-          <tr><td>数字团队</td><td class="beta">「专家」入口</td><td class="ours">保留我们的形态；空间可绑专家</td></tr>
+          <tr><td>数字团队</td><td class="beta">「专家」入口</td><td class="ours">数字团队 + 空间可配专家（借的）</td></tr>
+          <tr><td>巧思</td><td class="beta">—</td><td class="ours">专家卡 hover 介绍、参数卡折叠 / 点外收起、右上角总结对话与面板开关、一套令牌管风格</td></tr>
         </tbody>
       </table>
     </div>
