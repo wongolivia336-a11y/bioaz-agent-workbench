@@ -595,9 +595,9 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const changes = sentTabs.filter((tab) => tab.kind === "change");
     const fills = sentTabs.filter((tab) => !tab.kind);
     appendMessage("user", [
-      confirms.length ? `确认识别结果 ${confirms.length} 项：${confirms.map((tab) => `${tab.label} ${tab.value}`).join("、")}。` : "",
+      confirms.length ? `确认识别结果 ${confirms.length} 项：${confirms.map((tab) => `${tab.label} ${tab.value}`).join("；")}。` : "",
       fills.length ? `补充报价参数：\n${fills.map((tab) => `${tab.label}：${tab.value}`).join("\n")}` : "",
-      changes.length ? changes.map((tab) => `${tab.label}：${tab.value}`).join("\n") : "",
+      changes.length ? changes.map((tab) => pendingChanges[tab.fieldId] ? changeMessageLine(pendingChanges[tab.fieldId]) : `${tab.label}：${tab.value}`).join("\n") : "",
     ].filter(Boolean).join("\n"), consumeAttachments());
     /* 改动按「管多远」分两条路落：只改这一单的当场进账（临时价，能恢复）；
        超出本单的不在前台直接生效——记成草稿，去报价管理里发布。 */
@@ -608,11 +608,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         if (draft.kind === "price" && draft.scope === "this-quote" && draft.lineId && draft.nextPrice !== undefined) {
           setManualPrice(draft.lineId, draft.nextPrice);
         } else if (draft.kind === "price") {
-          appendMessage("agent", `已记下改价草稿：「${draft.targetLabel}」${draft.previousPrice !== undefined ? `${formatCny(draft.previousPrice)} → ` : ""}${formatCny(draft.nextPrice ?? 0)}，范围是${changeScopeLabel(draft.scope, "price")}。这一档不在报价里直接生效，要到报价管理里发布；本单想先按新价出，就再改一次、选「只改这一单」。`);
+          appendMessage("agent", `已记录单价调整草稿：「${draft.targetLabel}」${draft.previousPrice !== undefined ? `${formatCny(draft.previousPrice)} → ` : ""}${formatCny(draft.nextPrice ?? 0)}，生效范围为${changeScopeLabel(draft.scope, "price")}。该范围不在本次报价中直接生效，需在报价管理中发布。本次报价如需先按新价出具，请另提交一次「仅本次报价」的调整。`);
         } else {
           appendMessage("agent", draft.scope === "this-quote"
-            ? `这一单按新口径算：PK 样品少于 ${draft.minimumSamples} 个的按 ${draft.minimumSamples} 个计费，规则库不动。`
-            : `已记下规则草稿：PK 样品少于 ${draft.minimumSamples} 个按 ${draft.minimumSamples} 个计费。它影响今后所有 PK 报价，发布前要在报价管理里验证。`);
+            ? `本次报价按新口径计算：PK 样品不足 ${draft.minimumSamples} 个时按 ${draft.minimumSamples} 个计费，规则库不变。`
+            : `已记录计价规则草稿：PK 样品不足 ${draft.minimumSamples} 个时按 ${draft.minimumSamples} 个计费。该规则影响后续所有 PK 报价，需在报价管理中验证并发布后生效。`);
         }
       }
       setPendingChanges({});
@@ -814,15 +814,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
    * 同时把右栏切到报价板块、把目标那一行点亮——卡上说了「右栏会同步」，那就得真同步。
    */
   const changeChipId = (draft: DmpkChangeDraft) => `change:${draft.kind}:${draft.lineId ?? "rule"}`;
+  /* chip 只有一行、放不下服务全名——先给能决定对错的两样：改成多少、管到哪儿。
+     是哪一行由右栏点亮的那一行回答，全名在 chip 的 title 和发出去的那句话里。 */
   const changeChipValue = (draft: DmpkChangeDraft) => draft.kind === "price"
     ? `${draft.previousPrice !== undefined ? `${formatCny(draft.previousPrice)} → ` : ""}${formatCny(draft.nextPrice ?? 0)}${draft.unit ? ` / ${draft.unit}` : ""} · ${changeScopeLabel(draft.scope, "price")}`
-    : `少于 ${draft.minimumSamples} 个按 ${draft.minimumSamples} 个计 · ${changeScopeLabel(draft.scope, "rule")}`;
+    : `样品不足 ${draft.minimumSamples} 个按 ${draft.minimumSamples} 个计费 · ${changeScopeLabel(draft.scope, "rule")}`;
+  /* 进对话的那一句要完整：哪一项、原价、新价、生效范围——复核时翻的就是它 */
+  const changeMessageLine = (draft: DmpkChangeDraft) => draft.kind === "price"
+    ? `单价调整：${draft.targetLabel} ${draft.previousPrice !== undefined ? `${formatCny(draft.previousPrice)} → ` : ""}${formatCny(draft.nextPrice ?? 0)}${draft.unit ? ` / ${draft.unit}` : ""}，生效范围 ${changeScopeLabel(draft.scope, "price")}。`
+    : `计价规则调整：${draft.targetLabel} 样品不足 ${draft.minimumSamples} 个时按 ${draft.minimumSamples} 个计费，生效范围 ${changeScopeLabel(draft.scope, "rule")}。`;
   const queueChange = (draft: DmpkChangeDraft) => {
     const id = changeChipId(draft);
     setPendingChanges((current) => ({ ...current, [id]: draft }));
     setDraftTabs((items) => [
       ...items.filter((item) => item.fieldId !== id),
-      { fieldId: id, label: draft.kind === "price" ? `改价 · ${draft.targetLabel}` : `改规则 · ${draft.targetLabel}`, value: changeChipValue(draft), kind: "change" as const },
+      { fieldId: id, label: draft.kind === "price" ? "单价调整" : "规则调整", value: changeChipValue(draft), kind: "change" as const },
     ]);
     setEditProposal(null);
     if (draft.lineId) setHighlightLineId(draft.lineId);
@@ -980,7 +986,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const added = after.packages.find((item) => item.id === pkg);
     const missing = added?.lines.filter((line) => line.status === "missing-param") ?? [];
     const missingLabels = Array.from(new Set(missing.map((line) => fields.find((field) => field.id === line.dependsOn)?.label).filter(Boolean)));
-    appendMessage("agent", `已搭上「${quotePackageLabels[pkg]}」板块：多了 ${added?.lines.length ?? 0} 行${missing.length ? `，其中 ${missing.length} 行缺参数（${missingLabels.join("、")}）——去参数卡填，或一句话说` : ""}。${impactSentence(before, after, manualPrices)}`);
+    appendMessage("agent", `已加选「${quotePackageLabels[pkg]}」工作包：新增 ${added?.lines.length ?? 0} 行${missing.length ? `，其中 ${missing.length} 行缺参数（${missingLabels.join("、")}），可在参数卡补充或直接在输入框说明` : ""}。${impactSentence(before, after, manualPrices)}`);
     suggestPanel("sections");
   };
   const removePackage = (pkg: ExtraPackage) => {
@@ -1019,7 +1025,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       }),
       ...(adjustments.discount !== undefined ? [{ id: "adj-discount", at: "刚刚", by, kind: "adjustment" as const, what: "本单折扣", detail: `${adjustments.discount} 折，作用于合计` }] : []),
       ...(adjustments.otherFees !== undefined ? [{ id: "adj-other", at: "刚刚", by, kind: "adjustment" as const, what: "其他费用", detail: formatCny(adjustments.otherFees) }] : []),
-      ...extraPackages.map((pkg) => ({ id: `pkg-${pkg}`, at: "刚刚", by, kind: "package" as const, what: `搭上「${quotePackageLabels[pkg]}」板块`, detail: "检测类型之外再加的工作包" })),
+      ...extraPackages.map((pkg) => ({ id: `pkg-${pkg}`, at: "刚刚", by, kind: "package" as const, what: `加选「${quotePackageLabels[pkg]}」工作包`, detail: "检测类型之外加选的工作包" })),
       ...fields.filter((field) => field.source?.kind === "manual" && field.source.original).map((field) => ({
         id: `field-${field.id}`, at: "刚刚", by, kind: "field" as const,
         what: `改「${field.label}」`, detail: `原文为 ${field.source!.kind === "manual" ? field.source!.original!.value : ""}，已改为 ${field.value}`,

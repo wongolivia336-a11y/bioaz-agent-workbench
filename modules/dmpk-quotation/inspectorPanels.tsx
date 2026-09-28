@@ -652,16 +652,16 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
                               <button
                                 type="button"
                                 className={`dmpkRowFix is-${status}`}
-                                title={`${quoteLineStatusLabels[status]}：${fieldLabelOf(context, line.dependsOn)} · 点去填`}
-                                aria-label={`${quoteLineStatusLabels[status]}，去填${fieldLabelOf(context, line.dependsOn)}`}
+                                title={`${quoteLineStatusLabels[status]}：${fieldLabelOf(context, line.dependsOn)}，点击补充`}
+                                aria-label={`${quoteLineStatusLabels[status]}，补充${fieldLabelOf(context, line.dependsOn)}`}
                                 onClick={() => context.onEditField(line.dependsOn!)}
                               ><CircleHelp size={13} aria-hidden="true" /></button>
                             ) : status === "no-catalog" && canEdit && !editing ? (
                               <button
                                 type="button"
                                 className="dmpkRowFix is-no-catalog"
-                                title="系统无价目 · 点这里补一个本单价"
-                                aria-label={`无价目，补「${line.service}」的本单价`}
+                                title="系统无价目，点击补充本单单价"
+                                aria-label={`无价目，补充「${line.service}」的本单单价`}
                                 onClick={() => beginEdit(line)}
                               ><CircleDollarSign size={13} aria-hidden="true" /></button>
                             ) : (

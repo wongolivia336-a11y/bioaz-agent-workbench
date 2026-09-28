@@ -46,7 +46,7 @@ export function ComposerChipTray({ tabs, groups, fields, onRemove }: {
     const confirm = tab.kind === "confirm";
     const change = tab.kind === "change";
     return (
-      <button type="button" key={tab.fieldId} className={confirm ? "isConfirm" : change ? "isChange" : undefined} onClick={() => onRemove(tab.fieldId)} aria-label={`${confirm ? "撤回确认" : change ? "撤回改动" : "移除"} ${tab.label}`} title={confirm ? `确认 ${tab.label}：${text}（发送后生效，点一下撤回）` : change ? `${tab.label}：${text}（发送后生效，点一下撤回）` : `${tab.label}：${text}`}>
+      <button type="button" key={tab.fieldId} className={confirm ? "isConfirm" : change ? "isChange" : undefined} onClick={() => onRemove(tab.fieldId)} aria-label={`${confirm ? "撤回确认" : change ? "撤回调整" : "移除"}：${tab.label}`} title={confirm || change ? `${tab.label}：${text}（发送后生效，点击可撤回）` : `${tab.label}：${text}`}>
         {confirm ? <Check size={12} aria-hidden="true" /> : null}
         {change ? <Edit3 size={12} aria-hidden="true" /> : null}
         <span>{tab.label}：{text}</span>

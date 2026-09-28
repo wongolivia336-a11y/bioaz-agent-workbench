@@ -143,20 +143,20 @@ export type DmpkChangeDraft = {
 
 /** chip、对话、右栏三处写同一个说法。规则的最远一档进的是规则库，不是价目表，所以分开写。 */
 export function changeScopeLabel(scope: DmpkChangeScope, kind: "price" | "rule" = "price") {
-  if (scope === "this-quote") return "仅本单";
+  if (scope === "this-quote") return "仅本次报价";
   if (scope === "this-client") return "客户价目表";
-  return kind === "rule" ? "今后所有 PK 报价" : "标准价目表";
+  return kind === "rule" ? "后续所有 PK 报价" : "标准价目表";
 }
 
 const scopeOptions: Record<"price" | "rule", { id: DmpkChangeScope; label: string; note: string; needsSd?: boolean }[]> = {
   price: [
-    { id: "this-quote", label: "只改这一单", note: "记在这一单里，价目表不动" },
-    { id: "this-client", label: "这个客户以后都用", note: "写进客户价目表，要 SD 发布后生效", needsSd: true },
-    { id: "catalog", label: "改标准价目表", note: "今后所有报价都按新价，要 SD 发布", needsSd: true },
+    { id: "this-quote", label: "仅本次报价", note: "记为本单临时调价，价目表不变" },
+    { id: "this-client", label: "该客户后续报价", note: "写入客户价目表，需 SD 发布后生效", needsSd: true },
+    { id: "catalog", label: "标准价目表", note: "后续所有报价适用，需 SD 发布后生效", needsSd: true },
   ],
   rule: [
-    { id: "this-quote", label: "只改这一单", note: "本单按新口径算，规则库不动" },
-    { id: "catalog", label: "今后所有 PK 报价", note: "进规则库，发布前要验证", needsSd: true },
+    { id: "this-quote", label: "仅本次报价", note: "本单按新口径计算，规则库不变" },
+    { id: "catalog", label: "后续所有 PK 报价", note: "写入规则库，需验证并发布后生效", needsSd: true },
   ],
 };
 
@@ -212,19 +212,19 @@ export function DmpkChangeGuideCard({ proposal, canPublish, onQueue, onCancel }:
       <header>
         <span>{kind === "price" ? <CircleDollarSign size={16} /> : <Sparkles size={16} />}</span>
         <div>
-          <strong>改动确认</strong>
-          <small>你说「{proposal.request}」；下面三步定清楚改什么、改成什么、管多远。右栏会同步。</small>
+          <strong>调整确认</strong>
+          <small>依据输入「{proposal.request}」。确认调整对象、调整后取值与生效范围；右侧报价板块已定位到对应条目。</small>
         </div>
-        <button type="button" className="dmpkChangeGuideClose" aria-label="取消这次改动" onClick={onCancel}><X size={15} /></button>
+        <button type="button" className="dmpkChangeGuideClose" aria-label="取消本次调整" onClick={onCancel}><X size={15} /></button>
       </header>
 
       <div className="dmpkChangeStep">
         <i>1</i>
         <div>
-          <label>改什么</label>
-          <div className="dmpkChangeSegmented" role="radiogroup" aria-label="改什么">
-            <button type="button" role="radio" aria-checked={kind === "price"} className={kind === "price" ? "isOn" : ""} onClick={() => setKind("price")}>一档单价</button>
-            <button type="button" role="radio" aria-checked={kind === "rule"} className={kind === "rule" ? "isOn" : ""} onClick={() => setKind("rule")}>一条计价规则</button>
+          <label>调整对象</label>
+          <div className="dmpkChangeSegmented" role="radiogroup" aria-label="调整对象">
+            <button type="button" role="radio" aria-checked={kind === "price"} className={kind === "price" ? "isOn" : ""} onClick={() => setKind("price")}>单价</button>
+            <button type="button" role="radio" aria-checked={kind === "rule"} className={kind === "rule" ? "isOn" : ""} onClick={() => setKind("rule")}>计价规则</button>
           </div>
         </div>
       </div>
@@ -232,11 +232,11 @@ export function DmpkChangeGuideCard({ proposal, canPublish, onQueue, onCancel }:
       <div className="dmpkChangeStep">
         <i>2</i>
         <div>
-          <label>改成什么</label>
+          <label>调整后取值</label>
           {kind === "price" ? (
             <div className="dmpkPriceChange">
               <span>{seedPrice?.targetLabel ?? "报告费"}</span>
-              {seedPrice?.previousPrice !== undefined ? <em>原价 {formatCny(seedPrice.previousPrice)}{seedPrice.unit ? ` / ${seedPrice.unit}` : ""}</em> : <em>系统无价目</em>}
+              {seedPrice?.previousPrice !== undefined ? <em>现价 {formatCny(seedPrice.previousPrice)}{seedPrice.unit ? ` / ${seedPrice.unit}` : ""}</em> : <em>系统无价目</em>}
               <span className="dmpkChangeArrow" aria-hidden="true">→</span>
               <input
                 type="number"
@@ -244,14 +244,14 @@ export function DmpkChangeGuideCard({ proposal, canPublish, onQueue, onCancel }:
                 step="0.01"
                 value={price}
                 aria-label="新单价"
-                placeholder={`新价 ¥${seedPrice?.unit ? ` / ${seedPrice.unit}` : ""}`}
+                placeholder={`新单价 ¥${seedPrice?.unit ? ` / ${seedPrice.unit}` : ""}`}
                 onChange={(event) => setPrice(event.target.value)}
               />
             </div>
           ) : (
             <div className="dmpkRuleSentencePreview">
-              <span>PK 检测</span>
-              <b>样品数少于<input type="number" min={1} value={samples} aria-label="最少样品数" onChange={(event) => setSamples(event.target.value)} />个</b>
+              <span>PK 样品检测</span>
+              <b>样品数不足<input type="number" min={1} value={samples} aria-label="最低计费样品数" onChange={(event) => setSamples(event.target.value)} />个时</b>
               <strong>按 {Number(samples) || 0} 个计费</strong>
             </div>
           )}
@@ -261,8 +261,8 @@ export function DmpkChangeGuideCard({ proposal, canPublish, onQueue, onCancel }:
       <div className="dmpkChangeStep">
         <i>3</i>
         <div>
-          <label>管多远</label>
-          <div className="dmpkChangeScopes" role="radiogroup" aria-label="作用范围">
+          <label>生效范围</label>
+          <div className="dmpkChangeScopes" role="radiogroup" aria-label="生效范围">
             {options.map((option) => {
               const locked = Boolean(option.needsSd) && !canPublish;
               return (
@@ -273,7 +273,7 @@ export function DmpkChangeGuideCard({ proposal, canPublish, onQueue, onCancel }:
                   aria-checked={activeScope === option.id}
                   className={`${activeScope === option.id ? "isOn" : ""}${locked ? " isLocked" : ""}`}
                   disabled={locked}
-                  title={locked ? "这一档要 SD 权限" : option.note}
+                  title={locked ? "该范围需 SD 权限" : option.note}
                   onClick={() => setScope(option.id)}
                 >
                   <b>{option.label}{locked ? <i aria-label="仅 SD">仅 SD</i> : null}</b>
@@ -287,8 +287,8 @@ export function DmpkChangeGuideCard({ proposal, canPublish, onQueue, onCancel }:
       </div>
 
       <footer>
-        <small>{activeScope === "this-quote" ? "发送后只作用于这一单，随时能恢复" : "发送后记成草稿，要在报价管理里发布才生效"}</small>
-        <button type="button" disabled={!ready} onClick={queue}>放进输入框<CornerDownLeft size={14} /></button>
+        <small>{activeScope === "this-quote" ? "加入输入框后发送生效，仅作用于本次报价，可随时恢复" : "加入输入框后发送记为草稿，需在报价管理中发布方可生效"}</small>
+        <button type="button" disabled={!ready} onClick={queue}>加入输入框<CornerDownLeft size={14} /></button>
       </footer>
     </section>
   );
@@ -351,7 +351,7 @@ function RecognizedList({ ids, fields, fieldStatus, queuedIds = [], onConfirmFie
         <i className="dmpkReplySectionIcon"><ListChecks size={14} aria-hidden="true" /></i>
         <strong>识别到 {items.length} 项</strong>
         {pendingCount
-          ? <em>{pendingCount - queuedCount ? `${pendingCount - queuedCount} 项待确认` : ""}{queuedCount ? `${pendingCount - queuedCount ? " · " : ""}${queuedCount} 项在输入框` : ""}</em>
+          ? <em>{pendingCount - queuedCount ? `${pendingCount - queuedCount} 项待确认` : ""}{queuedCount ? `${pendingCount - queuedCount ? " · " : ""}${queuedCount} 项待发送` : ""}</em>
           : <em className="isDone">已全部确认</em>}
         {pendingCount - queuedCount > 0 && onConfirmAll ? <button type="button" onClick={onConfirmAll}><Check size={13} aria-hidden="true" />全部确认</button> : null}
       </header>
@@ -391,11 +391,11 @@ function RecognizedList({ ids, fields, fieldStatus, queuedIds = [], onConfirmFie
                       <i className="dmpkRecognizedOk" title="已确认"><Check size={12} aria-hidden="true" /></i>
                     ) : queued ? (
                       /* 点过了：对勾亮着、落在输入框里等发送。再点一下撤回。 */
-                      <button type="button" className="isQueued" aria-label={`撤回确认${field.label}`} title="已放进输入框，发送后生效 · 再点一下撤回" onClick={() => onConfirmField?.(field.id)}><Check size={12} aria-hidden="true" /></button>
+                      <button type="button" className="isQueued" aria-label={`撤回确认：${field.label}`} title="已加入输入框，发送后生效；点击可撤回" onClick={() => onConfirmField?.(field.id)}><Check size={12} aria-hidden="true" /></button>
                     ) : (
                       <>
                         {onConfirmField ? <button type="button" onClick={() => onConfirmField(field.id)}>确认</button> : null}
-                        {onEditField ? <button type="button" className="isEdit" aria-label={`改${field.label}`} title="改这一项" onClick={() => onEditField(field.id)}><Edit3 size={12} aria-hidden="true" /></button> : null}
+                        {onEditField ? <button type="button" className="isEdit" aria-label={`修改：${field.label}`} title="修改该项取值" onClick={() => onEditField(field.id)}><Edit3 size={12} aria-hidden="true" /></button> : null}
                       </>
                     )}
                   </span>
