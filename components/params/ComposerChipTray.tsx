@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, Edit3, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { formatParamValue, type ParamDraft, type ParamField, type ParamGroup } from "./types";
 
@@ -41,11 +41,14 @@ export function ComposerChipTray({ tabs, groups, fields, onRemove }: {
 
   const chip = (tab: ParamDraft) => {
     const text = formatParamValue(fieldById.get(tab.fieldId), tab.value);
-    /* 确认 chip 前面带一枚对勾：它跟填值的 chip 长得一样会让人以为改了什么——其实值没动，只是点头。 */
+    /* 确认 chip 前面带一枚对勾：它跟填值的 chip 长得一样会让人以为改了什么——其实值没动，只是点头。
+       改价 / 改规则的 chip 带一枚铅笔：它动的是账，不是参数，得看得出不一样。 */
     const confirm = tab.kind === "confirm";
+    const change = tab.kind === "change";
     return (
-      <button type="button" key={tab.fieldId} className={confirm ? "isConfirm" : undefined} onClick={() => onRemove(tab.fieldId)} aria-label={`${confirm ? "撤回确认" : "移除"} ${tab.label}`} title={confirm ? `确认 ${tab.label}：${text}（发送后生效，点一下撤回）` : `${tab.label}：${text}`}>
+      <button type="button" key={tab.fieldId} className={confirm ? "isConfirm" : change ? "isChange" : undefined} onClick={() => onRemove(tab.fieldId)} aria-label={`${confirm ? "撤回确认" : change ? "撤回调整" : "移除"}：${tab.label}`} title={confirm || change ? `${tab.label}：${text}（发送后生效，点击可撤回）` : `${tab.label}：${text}`}>
         {confirm ? <Check size={12} aria-hidden="true" /> : null}
+        {change ? <Edit3 size={12} aria-hidden="true" /> : null}
         <span>{tab.label}：{text}</span>
         <X size={13} />
       </button>

@@ -57,7 +57,7 @@ function PackageCard({ id, label, lines, subtotal, manualPrices, primary, extra,
     <section className={`dmpkPackageCard ${state} ${open ? "isOpen" : ""}`} data-package={id}>
       <button className="dmpkPackageCardHead" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <i className="paramGroupDot" aria-hidden="true" />
-        <strong>{label}{primary ? <em className="dmpkPackageCardTag isPrimary">主</em> : extra ? <em className="dmpkPackageCardTag">搭上的</em> : null}</strong>
+        <strong>{label}{primary ? <em className="dmpkPackageCardTag isPrimary">主包</em> : extra ? <em className="dmpkPackageCardTag">加选</em> : null}</strong>
         <span className={state}><em className="paramGroupState">{pending.length ? `${pending.length} 待定` : subtotal ? formatCny(subtotal) : "已完成"}</em><ChevronDown size={14} /></span>
       </button>
       {open ? (
@@ -90,7 +90,7 @@ function PackageCard({ id, label, lines, subtotal, manualPrices, primary, extra,
             </div>
           ))}
           {extra && onRemove ? (
-            <button type="button" className="dmpkPackageCardRemove" onClick={onRemove}><X size={12} aria-hidden="true" />去掉这块</button>
+            <button type="button" className="dmpkPackageCardRemove" onClick={onRemove}><X size={12} aria-hidden="true" />移除该工作包</button>
           ) : null}
         </div>
       ) : null}
@@ -122,7 +122,7 @@ export function DmpkPackageCards({ summary, fields, manualPrices, extraPackages,
 
   return (
     <div className="dmpkPackageCards">
-      <div className="dmpkPackageCardsHead"><span>工作包</span><small>这一单测什么——检测类型定主包，再要的搭上去</small></div>
+      <div className="dmpkPackageCardsHead"><span>工作包</span><small>检测类型确定主包，其余按需加选</small></div>
       {cards.map((pkg) => (
         <PackageCard
           key={pkg.id}
@@ -141,7 +141,7 @@ export function DmpkPackageCards({ summary, fields, manualPrices, extraPackages,
       ))}
       {addable.length ? (
         <div className="dmpkPackageAdd">
-          <span><Plus size={12} aria-hidden="true" />再搭一块</span>
+          <span><Plus size={12} aria-hidden="true" />加选工作包</span>
           {addable.map((option) => (
             <button type="button" key={option.id} title={option.hint} onClick={() => onAddPackage?.(option.id)}>{option.label}</button>
           ))}
