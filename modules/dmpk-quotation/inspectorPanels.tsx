@@ -98,6 +98,9 @@ export type DmpkInspectorContext = {
   manualPrices?: Record<string, ManualPrice>;
   /** 按组明细的组标签（组 id → 「2 组 · 3 mg/kg · 核心 2 只」）。没有就按 id 显示。 */
   groupLabels?: Record<string, string>;
+  /* 正在改价的那一行。引导卡上写着「右栏会同步」，这就是同步的那一半：
+     它所在的板块自动展开、行点亮，人能当场看见自己在改账上的哪一笔。 */
+  highlightLineId?: string | null;
   /* 积木：人在主板块之外再搭的板块。台账下面每个命中的板块一张卡，「再搭一块」在最底下。 */
   extraPackages?: ExtraPackage[];
   onAddPackage?: (pkg: ExtraPackage) => void;
@@ -578,7 +581,11 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
      其余折着——段头上的「N 待定」已经把该看哪儿说了，全开等于没折。 */
   /* 板块 = 上层四类（动物 / 实验 / 检测 / 报告与交付），跟参数收集那四张卡一一对应；工作包退到行上做小标。 */
   const categories = summarizeByCategory(lines, manualPrices);
-  const defaultOpenId = (categories.find((pkg) => pkg.unpriced > 0) ?? categories[0])?.id;
+  /* 正在改的那一行所在的板块优先开——否则点亮的行藏在折起来的段里，等于没同步。 */
+  const highlightCategoryId = context.highlightLineId
+    ? categories.find((pkg) => pkg.lines.some((line) => line.id === context.highlightLineId))?.id
+    : undefined;
+  const defaultOpenId = highlightCategoryId ?? (categories.find((pkg) => pkg.unpriced > 0) ?? categories[0])?.id;
   const isOpen = (pkg: QuoteCategorySummary) => toggled[pkg.id] ?? pkg.id === defaultOpenId;
 
   const beginEdit = (line: QuoteLine) => {
@@ -622,7 +629,7 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
                   const hasQty = line.qty > 0;
                   const facts = [line.analyte, line.method].filter(Boolean).join(" · ");
                   return (
-                    <li key={line.id} className={`dmpkSectionRow is-${status}${manual ? " isManual" : ""}${editing ? " isEditing" : ""}`}>
+                    <li key={line.id} className={`dmpkSectionRow is-${status}${manual ? " isManual" : ""}${editing ? " isEditing" : ""}${context.highlightLineId === line.id ? " isTarget" : ""}`}>
                       <div className="dmpkSectionRowMain">
                         <span className="dmpkSectionRowName">{line.service}{showPackage ? <em className="dmpkSectionRowPkg">{quotePackageLabels[line.package]}</em> : null}</span>
                         {status === "priced" ? (

@@ -37,11 +37,12 @@ import {
   DmpkComposer,
   DmpkConversation,
   dmpkRunRecord,
-  DmpkEditProposalCard,
+  changeScopeLabel,
   ComposerChipTray,
   DmpkParameterTaskCard,
   DmpkQuotationPreviewModal,
   DmpkReworkNoticeCard,
+  type DmpkChangeDraft,
   type DmpkChatMessage,
   type DmpkEditProposal,
   type DmpkInspectorPanelId,
@@ -162,6 +163,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const [paramsOpen, setParamsOpen] = useState(false);
   const [conversationEditing, setConversationEditing] = useState(false);
   const [editProposal, setEditProposal] = useState<DmpkEditProposal | null>(null);
+  /* 已经放进输入框、还没发的改动。键是 chip 的 fieldId——chip 上只写得下一行摘要。 */
+  const [pendingChanges, setPendingChanges] = useState<Record<string, DmpkChangeDraft>>({});
+  /* 正在改的那一行：报价板块里点亮它。引导卡说「右栏会同步」，这是同步的那一半。 */
+  const [highlightLineId, setHighlightLineId] = useState<string | null>(null);
   const [composerAttention, setComposerAttention] = useState(false);
   const [pendingCoworkerId, setPendingCoworkerId] = useState<string | null>(null);
   /* 这条会话读过的来源。轨迹钉在消息流里，这里留的是**读出来的东西**——
@@ -587,11 +592,39 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     const sentTabs = draftTabs;
     /* 确认的和填的分开说：前者值没变，写成「确认 N 项：…」；后者才是「补充报价参数」。 */
     const confirms = sentTabs.filter((tab) => tab.kind === "confirm");
-    const fills = sentTabs.filter((tab) => tab.kind !== "confirm");
+    const changes = sentTabs.filter((tab) => tab.kind === "change");
+    const fills = sentTabs.filter((tab) => !tab.kind);
     appendMessage("user", [
       confirms.length ? `确认识别结果 ${confirms.length} 项：${confirms.map((tab) => `${tab.label} ${tab.value}`).join("、")}。` : "",
       fills.length ? `补充报价参数：\n${fills.map((tab) => `${tab.label}：${tab.value}`).join("\n")}` : "",
+      changes.length ? changes.map((tab) => `${tab.label}：${tab.value}`).join("\n") : "",
     ].filter(Boolean).join("\n"), consumeAttachments());
+    /* 改动按「管多远」分两条路落：只改这一单的当场进账（临时价，能恢复）；
+       超出本单的不在前台直接生效——记成草稿，去报价管理里发布。 */
+    const applyChanges = () => {
+      for (const tab of changes) {
+        const draft = pendingChanges[tab.fieldId];
+        if (!draft) continue;
+        if (draft.kind === "price" && draft.scope === "this-quote" && draft.lineId && draft.nextPrice !== undefined) {
+          setManualPrice(draft.lineId, draft.nextPrice);
+        } else if (draft.kind === "price") {
+          appendMessage("agent", `已记下改价草稿：「${draft.targetLabel}」${draft.previousPrice !== undefined ? `${formatCny(draft.previousPrice)} → ` : ""}${formatCny(draft.nextPrice ?? 0)}，范围是${changeScopeLabel(draft.scope, "price")}。这一档不在报价里直接生效，要到报价管理里发布；本单想先按新价出，就再改一次、选「只改这一单」。`);
+        } else {
+          appendMessage("agent", draft.scope === "this-quote"
+            ? `这一单按新口径算：PK 样品少于 ${draft.minimumSamples} 个的按 ${draft.minimumSamples} 个计费，规则库不动。`
+            : `已记下规则草稿：PK 样品少于 ${draft.minimumSamples} 个按 ${draft.minimumSamples} 个计费。它影响今后所有 PK 报价，发布前要在报价管理里验证。`);
+        }
+      }
+      setPendingChanges({});
+      setHighlightLineId(null);
+    };
+    /* 只发了改动：不走参数那条路——没有参数变，跑一遍「已更新报价参数」是撒谎。
+       改价是算术，也不需要那 700ms 的思考感。 */
+    if (!confirms.length && !fills.length) {
+      setDraftTabs([]);
+      applyChanges();
+      return;
+    }
     setStage("thinking");
     suggestPanel("process");
     window.setTimeout(() => {
@@ -600,8 +633,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         return draft ? withValue(field, draft.value) : field;
       }));
       setFields(nextFields);
-      /* 人亲手选过发过的，就是确认过的。 */
-      setFieldStatus((current) => ({ ...current, ...Object.fromEntries(sentTabs.map((tab) => [tab.fieldId, "confirmed" as const])) }));
+      /* 人亲手选过发过的，就是确认过的。改动 chip 的 id 不是字段 id，别写进来。 */
+      setFieldStatus((current) => ({ ...current, ...Object.fromEntries([...confirms, ...fills].map((tab) => [tab.fieldId, "confirmed" as const])) }));
       const remaining = nextFields.filter((field) => field.required && !field.value);
       const nextGroup = dmpkGroups.find((group) => remaining.some((field) => field.group === group.id))?.id;
       const before = summarizeLines(buildDmpkQuoteLines(fields, sources, lineOptions), manualPrices);
@@ -612,7 +645,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
       const impact = impactSentence(before, pricing, manualPrices);
       setDraftTabs([]);
       setEditingFieldId(null);
-      const ack = `${confirms.length ? `已确认 ${confirms.length} 项识别结果。` : ""}${fills.length ? "已更新报价参数。" : ""}`;
+      applyChanges();
+      const ack =`${confirms.length ? `已确认 ${confirms.length} 项识别结果。` : ""}${fills.length ? "已更新报价参数。" : ""}`;
       if (nextGroup) {
         setActiveGroup(nextGroup);
         setOpenGroups({ animal: nextGroup === "animal", procedure: nextGroup === "procedure", assay: nextGroup === "assay", delivery: nextGroup === "delivery" });
@@ -671,7 +705,21 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     if (reportFeeMatch) {
       appendMessage("user", text, consumeAttachments());
       setComposerText("");
-      setEditProposal({ kind: "current-price", request: text, previousPrice: 3000, nextPrice: Number(reportFeeMatch[1].replaceAll(",", "")) });
+      /* 账上有报告那一行就冲它去（原价、单位都从行上读）；没有账就还是那句「报告费 ¥3,000」的固定件。 */
+      const reportLine = quoteLines.find((line) => line.id === "report");
+      setEditProposal({
+        kind: "current-price",
+        request: text,
+        lineId: reportLine?.id ?? "report",
+        targetLabel: reportLine?.service ?? "报告费",
+        unit: reportLine?.unit ?? "份",
+        /* 账上那一行确实有价才写「原价」。没账（没传过方案）用固定件的 3,000；
+           有账但这一行本来就没价目（报价区域还没填）就留空——卡上写「系统无价目」，不编一个原价出来。 */
+        previousPrice: reportLine ? manualPrices[reportLine.id]?.price ?? reportLine.catalogPrice : 3000,
+        nextPrice: Number(reportFeeMatch[1].replaceAll(",", "")),
+      });
+      /* 卡一出来右栏就同步：切到报价板块、把这一行点亮——不等人点完三步。 */
+      if (reportLine) { setHighlightLineId(reportLine.id); openInspector("sections"); }
       setConversationEditing(false);
       return;
     }
@@ -758,6 +806,39 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
    * 台账上「已落库」和输入框里「待发」的分界也跟原来一样。
    */
   const queueConfirm = (field: DmpkField) => ({ fieldId: field.id, label: field.label, value: field.value, kind: "confirm" as const });
+  /**
+   * 改价 / 改规则也落 chip，发送才生效。
+   * ----------------------------------------------------------------------
+   * 引导卡把「改什么 / 改成什么 / 管多远」三件事定下来之后，这里只做两件：
+   * 把它记进 pendingChanges（chip 上写不下全部信息），再往输入框放一颗 chip。
+   * 同时把右栏切到报价板块、把目标那一行点亮——卡上说了「右栏会同步」，那就得真同步。
+   */
+  const changeChipId = (draft: DmpkChangeDraft) => `change:${draft.kind}:${draft.lineId ?? "rule"}`;
+  const changeChipValue = (draft: DmpkChangeDraft) => draft.kind === "price"
+    ? `${draft.previousPrice !== undefined ? `${formatCny(draft.previousPrice)} → ` : ""}${formatCny(draft.nextPrice ?? 0)}${draft.unit ? ` / ${draft.unit}` : ""} · ${changeScopeLabel(draft.scope, "price")}`
+    : `少于 ${draft.minimumSamples} 个按 ${draft.minimumSamples} 个计 · ${changeScopeLabel(draft.scope, "rule")}`;
+  const queueChange = (draft: DmpkChangeDraft) => {
+    const id = changeChipId(draft);
+    setPendingChanges((current) => ({ ...current, [id]: draft }));
+    setDraftTabs((items) => [
+      ...items.filter((item) => item.fieldId !== id),
+      { fieldId: id, label: draft.kind === "price" ? `改价 · ${draft.targetLabel}` : `改规则 · ${draft.targetLabel}`, value: changeChipValue(draft), kind: "change" as const },
+    ]);
+    setEditProposal(null);
+    if (draft.lineId) setHighlightLineId(draft.lineId);
+    openInspector("sections");
+    nudgeComposer();
+  };
+  /* chip 被叉掉 / 发出去之后，那条待办也跟着走——留着它下次会凭空生效 */
+  const dropDraftTab = (fieldId: string) => {
+    setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId));
+    setPendingChanges((current) => {
+      if (!current[fieldId]) return current;
+      const next = { ...current };
+      delete next[fieldId];
+      return next;
+    });
+  };
   const nudgeComposer = () => {
     setComposerAttention(false);
     window.requestAnimationFrame(() => setComposerAttention(true));
@@ -1085,6 +1166,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     quoteLines,
     manualPrices,
     groupLabels: dmpkGroupLabels(fields, sources),
+    highlightLineId,
     /* 积木：主板块之外命中的板块，在台账下面各长一张卡；「再搭一块」就在那儿 */
     extraPackages,
     onAddPackage: rework ? undefined : addPackage,
@@ -1240,14 +1322,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
         ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} handoffNote={handoffNote} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
           { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
           { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
-        ], review: buildReviewBundle() }); }} onConfirmCurrentPrice={() => {
-          /* 对话里改报告费，和明细里改单价是**同一件事**，写进同一张 manualPrices——
-             有账的时候走那条路，账上的报告行跟着变；没账（没传过方案）才只说一句话。 */
-          const nextPrice = editProposal?.kind === "current-price" ? editProposal.nextPrice : 2500;
-          if (quoteLines.some((line) => line.id === "report")) setManualPrice("report", nextPrice);
-          else appendMessage("agent", `已将本次报价的报告费调整为 ¥${nextPrice.toLocaleString()}，仅对当前项目生效，并已保留调整记录。`);
-          setEditProposal(null);
-        }} onOpenRuleManagement={() => { if (editProposal?.kind === "global-rule") onOpenQuotationManagement?.({ business: "dmpk", tab: "rules", draft: editProposal.request }); }} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} hasQuote={quoteVersions.length > 0} quoteStale={quoteStale} onRegenerate={regenerateQuote} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} sessionActions={sessionActions}
+        ], review: buildReviewBundle() }); }}
+          /* 改动引导卡：三步定完落 chip，发送才生效（见 queueChange / sendDraft）。
+             本单以外那两档要 SD——权限跟改价用同一个布尔。 */
+          onQueueChange={queueChange} onCancelChange={() => { setEditProposal(null); setHighlightLineId(null); }} canPublishChange={permissions.canEditCatalog} attention={composerAttention} conversationEditing={conversationEditing} stage={stage} recognizedCount={recognizedFields.length} hasQuote={quoteVersions.length > 0} quoteStale={quoteStale} onRegenerate={regenerateQuote} text={composerText} setText={setComposerText} activeGroup={activeGroup} fields={composerFields} allFields={fields} mode={editingField ? "edit" : "collect"} draftTabs={draftTabs} onSelect={addDraft} onRemove={dropDraftTab} onSend={submitComposer} onPreview={() => setPreviewOpen(true)} onGenerate={startGeneration} onOpenInspector={openInspector} coworkers={businessCoworkers} coworkerLocked={stage !== "generated"} activeCoworkerId={activeCoworkerId} onCoworkerChange={(id) => id !== activeCoworkerId && setPendingCoworkerId(id)} pendingCoworkerId={pendingCoworkerId} onConfirmCoworkerChange={() => { if (pendingCoworkerId) onCoworkerChange(pendingCoworkerId); setPendingCoworkerId(null); }} onCancelCoworkerChange={() => setPendingCoworkerId(null)} projectName={projectName} attachments={attachments} onAttachmentsChange={setAttachments} sessionActions={sessionActions}
           /* 发送键只看「有没有东西可发」：chips、打的字、挂的文件，有一样就亮。
              以前参数卡还有没填的格子就把它灰掉——选了两项、还差三项，按钮死灰，人只会觉得卡住了
              （09-22 心蕊）。发出去之后 sendDraft 会把还缺的接着问，不用在这儿拦。 */
@@ -1285,7 +1363,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             /* 面板全屏时，要当场做的那个决定跟着输入框走：
                用户在右侧参数收集里点了「改这一项」，卡片本来长在 composer 上，
                而 composer 此刻被面板盖住——点了等于没反应。 */
-            chips={draftTabs.length ? <ComposerChipTray tabs={draftTabs} onRemove={(fieldId) => setDraftTabs((items) => items.filter((item) => item.fieldId !== fieldId))} /> : null}
+            chips={draftTabs.length ? <ComposerChipTray tabs={draftTabs} onRemove={dropDraftTab} /> : null}
             card={composerFields.length ? (
               <DmpkParameterTaskCard
                 activeGroup={activeGroup}

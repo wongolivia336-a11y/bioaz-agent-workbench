@@ -118,18 +118,180 @@ export function dmpkRunRecord(
     runSteps: ["读取用户输入", "识别 DMPK / PK 业务线", missingCount ? `还缺 ${missingCount} 项报价参数` : "当前阶段参数已齐全"],
   };
 }
+/** 人那句话解析出来的初值。卡片以它开局，三步都能改。 */
 export type DmpkEditProposal =
-  | { kind: "current-price"; request: string; previousPrice: number; nextPrice: number }
+  | { kind: "current-price"; request: string; lineId: string; targetLabel: string; unit: string; previousPrice?: number; nextPrice: number }
   | { kind: "global-rule"; request: string; minimumSamples: number };
 
-export function DmpkEditProposalCard({ proposal, onConfirmCurrentPrice, onOpenRuleManagement }: { proposal: DmpkEditProposal; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void }) {
-  const isCurrentPrice = proposal.kind === "current-price";
-  return <section className="dmpkEditProposalCard">
-    <header><span>{isCurrentPrice ? <CircleDollarSign size={16} /> : <Sparkles size={16} />}</span><div><strong>{isCurrentPrice ? "调整本次报价" : "全局规则草稿"}</strong><small>{isCurrentPrice ? "仅影响当前项目" : "影响后续 PK 报价，发布前需验证"}</small></div></header>
-    {isCurrentPrice ? <div className="dmpkPriceChange"><span>报告费</span><small>¥{proposal.previousPrice.toLocaleString()} → ¥{proposal.nextPrice.toLocaleString()}</small></div> : <div className="dmpkRuleSentencePreview"><span>PK 检测</span><b>样品数少于 {proposal.minimumSamples} 个</b><strong>按 {proposal.minimumSamples} 个计费</strong></div>}
-    {!isCurrentPrice ? <RuleScopePreview /> : null}
-    <footer><small>{isCurrentPrice ? "确认后保留本次调整记录" : "规则不会在前台直接生效"}</small><button type="button" onClick={isCurrentPrice ? onConfirmCurrentPrice : onOpenRuleManagement}>{isCurrentPrice ? "确认调整" : "前往规则管理"}{!isCurrentPrice ? <ArrowRight size={14} /> : null}</button></footer>
-  </section>;
+/** 这一改作用到哪儿。三档是会上「客户改价 / 新增规则 / 价目表修改」那条线的前台形态。 */
+export type DmpkChangeScope = "this-quote" | "this-client" | "catalog";
+
+/** 卡片确认后交出去的那件事。它先落成 composer 上的一颗 chip，发送才生效。 */
+export type DmpkChangeDraft = {
+  kind: "price" | "rule";
+  scope: DmpkChangeScope;
+  /** 改价时指向账上那一行 */
+  lineId?: string;
+  targetLabel: string;
+  unit?: string;
+  previousPrice?: number;
+  nextPrice?: number;
+  minimumSamples?: number;
+  /** 人原本那句话，留档用 */
+  request: string;
+};
+
+/** chip、对话、右栏三处写同一个说法。规则的最远一档进的是规则库，不是价目表，所以分开写。 */
+export function changeScopeLabel(scope: DmpkChangeScope, kind: "price" | "rule" = "price") {
+  if (scope === "this-quote") return "仅本单";
+  if (scope === "this-client") return "客户价目表";
+  return kind === "rule" ? "今后所有 PK 报价" : "标准价目表";
+}
+
+const scopeOptions: Record<"price" | "rule", { id: DmpkChangeScope; label: string; note: string; needsSd?: boolean }[]> = {
+  price: [
+    { id: "this-quote", label: "只改这一单", note: "记在这一单里，价目表不动" },
+    { id: "this-client", label: "这个客户以后都用", note: "写进客户价目表，要 SD 发布后生效", needsSd: true },
+    { id: "catalog", label: "改标准价目表", note: "今后所有报价都按新价，要 SD 发布", needsSd: true },
+  ],
+  rule: [
+    { id: "this-quote", label: "只改这一单", note: "本单按新口径算，规则库不动" },
+    { id: "catalog", label: "今后所有 PK 报价", note: "进规则库，发布前要验证", needsSd: true },
+  ],
+};
+
+/**
+ * 改价 / 改规则的引导卡。
+ *
+ * 为什么要引导
+ * ----------------------------------------------------------------------
+ * 人说「报告费改成 2500」，这句话里其实缺两件事：**改的是价还是规则**，
+ * 以及**这一改管多远**——只管这一单、这个客户以后都这么算、还是把标准价目表改了。
+ * 上一版直接跳到「确认调整」，等于替人把后两件默认了；而这三档正是 09-28 会上
+ * 王永光那条待办要的「客户改价 / 新增规则 / 价目表修改的完整逻辑」的前台一面。
+ *
+ * 所以卡片是三步：改什么 → 改成什么 → 管多远。每一步都预填人那句话里能读出来的，
+ * 读不出来的留默认（最小的那一档：只改这一单）。
+ *
+ * 为什么确认之后不直接落
+ * ----------------------------------------------------------------------
+ * 落 composer 的一颗 chip，发送才生效——跟识别清单的「确认」、参数卡的选值同一条路。
+ * 一个工作台里只该有一种「我说完了」的手势；而改价是要进复核记录的事，
+ * 更不该有一条绕过输入框的暗路。
+ */
+export function DmpkChangeGuideCard({ proposal, canPublish, onQueue, onCancel }: {
+  proposal: DmpkEditProposal;
+  /** 有没有权限把改动推到本单以外（SD）。没有就只能选「只改这一单」，另两档标锁。 */
+  canPublish: boolean;
+  onQueue: (draft: DmpkChangeDraft) => void;
+  onCancel: () => void;
+}) {
+  const seedKind = proposal.kind === "current-price" ? "price" : "rule";
+  const [kind, setKind] = useState<"price" | "rule">(seedKind);
+  const [scope, setScope] = useState<DmpkChangeScope>("this-quote");
+  const [price, setPrice] = useState(proposal.kind === "current-price" ? String(proposal.nextPrice) : "");
+  const [samples, setSamples] = useState(proposal.kind === "global-rule" ? String(proposal.minimumSamples) : "30");
+  const seedPrice = proposal.kind === "current-price" ? proposal : null;
+  const options = scopeOptions[kind];
+  /* 切换「改什么」时作用范围可能不在新的那组里（价有三档、规则两档），落回最小的一档 */
+  const activeScope = options.some((option) => option.id === scope) ? scope : "this-quote";
+  const nextPrice = Number(price);
+  const ready = kind === "price"
+    ? Boolean(price.trim()) && Number.isFinite(nextPrice) && nextPrice >= 0
+    : Number(samples) > 0;
+
+  const queue = () => {
+    if (!ready) return;
+    onQueue(kind === "price"
+      ? { kind, scope: activeScope, lineId: seedPrice?.lineId, targetLabel: seedPrice?.targetLabel ?? "报告费", unit: seedPrice?.unit, previousPrice: seedPrice?.previousPrice, nextPrice, request: proposal.request }
+      : { kind, scope: activeScope, targetLabel: "PK 样品检测", minimumSamples: Number(samples), request: proposal.request });
+  };
+
+  return (
+    <section className="dmpkEditProposalCard dmpkChangeGuide" aria-label="改动确认">
+      <header>
+        <span>{kind === "price" ? <CircleDollarSign size={16} /> : <Sparkles size={16} />}</span>
+        <div>
+          <strong>改动确认</strong>
+          <small>你说「{proposal.request}」；下面三步定清楚改什么、改成什么、管多远。右栏会同步。</small>
+        </div>
+        <button type="button" className="dmpkChangeGuideClose" aria-label="取消这次改动" onClick={onCancel}><X size={15} /></button>
+      </header>
+
+      <div className="dmpkChangeStep">
+        <i>1</i>
+        <div>
+          <label>改什么</label>
+          <div className="dmpkChangeSegmented" role="radiogroup" aria-label="改什么">
+            <button type="button" role="radio" aria-checked={kind === "price"} className={kind === "price" ? "isOn" : ""} onClick={() => setKind("price")}>一档单价</button>
+            <button type="button" role="radio" aria-checked={kind === "rule"} className={kind === "rule" ? "isOn" : ""} onClick={() => setKind("rule")}>一条计价规则</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="dmpkChangeStep">
+        <i>2</i>
+        <div>
+          <label>改成什么</label>
+          {kind === "price" ? (
+            <div className="dmpkPriceChange">
+              <span>{seedPrice?.targetLabel ?? "报告费"}</span>
+              {seedPrice?.previousPrice !== undefined ? <em>原价 {formatCny(seedPrice.previousPrice)}{seedPrice.unit ? ` / ${seedPrice.unit}` : ""}</em> : <em>系统无价目</em>}
+              <span className="dmpkChangeArrow" aria-hidden="true">→</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={price}
+                aria-label="新单价"
+                placeholder={`新价 ¥${seedPrice?.unit ? ` / ${seedPrice.unit}` : ""}`}
+                onChange={(event) => setPrice(event.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="dmpkRuleSentencePreview">
+              <span>PK 检测</span>
+              <b>样品数少于<input type="number" min={1} value={samples} aria-label="最少样品数" onChange={(event) => setSamples(event.target.value)} />个</b>
+              <strong>按 {Number(samples) || 0} 个计费</strong>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="dmpkChangeStep">
+        <i>3</i>
+        <div>
+          <label>管多远</label>
+          <div className="dmpkChangeScopes" role="radiogroup" aria-label="作用范围">
+            {options.map((option) => {
+              const locked = Boolean(option.needsSd) && !canPublish;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={activeScope === option.id}
+                  className={`${activeScope === option.id ? "isOn" : ""}${locked ? " isLocked" : ""}`}
+                  disabled={locked}
+                  title={locked ? "这一档要 SD 权限" : option.note}
+                  onClick={() => setScope(option.id)}
+                >
+                  <b>{option.label}{locked ? <i aria-label="仅 SD">仅 SD</i> : null}</b>
+                  <small>{option.note}</small>
+                </button>
+              );
+            })}
+          </div>
+          {kind === "rule" && activeScope !== "this-quote" ? <RuleScopePreview /> : null}
+        </div>
+      </div>
+
+      <footer>
+        <small>{activeScope === "this-quote" ? "发送后只作用于这一单，随时能恢复" : "发送后记成草稿，要在报价管理里发布才生效"}</small>
+        <button type="button" disabled={!ready} onClick={queue}>放进输入框<CornerDownLeft size={14} /></button>
+      </footer>
+    </section>
+  );
 }
 
 /**
@@ -483,7 +645,7 @@ function processStepDetail(step: string) {
   return "同步结构化报价参数台账。";
 }
 
-export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHandoff, viewerName, handoffDone, handoffNote, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onConfirmCurrentPrice, onOpenRuleManagement, attention, conversationEditing, stage, recognizedCount = 0, hasQuote = false, quoteStale = false, onRegenerate, text, setText, activeGroup, fields, allFields, mode, paramsOpen, onParamsOpenChange, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange, sessionActions }: { /** 「+ › 技能」列的会话动作：总结、列价目、核对、生成 */ sessionActions?: ComposerSessionAction[]; /** 落不到参数格上的批注，交接卡在送审时问一次 */ unresolvedNotes?: { anchorId: string; label: string }[]; /** 退回批注入口卡。它跟参数卡、交接卡同一个槽位：需要人当场做的事都在这儿 */ reworkNotice?: ReactNode; editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 交接说明的预填：会话摘要生成过就用它 */ handoffNote?: string; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; onConfirmCurrentPrice: () => void; onOpenRuleManagement: () => void; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; /** 还挂着「识别」、没被人点过头的参数有几项。报价前确认卡据此改口成「确认并生成」 */ recognizedCount?: number; /** 这一单出过版没有。出过的话再到 ready 是「重出」不是「生成」 */ hasQuote?: boolean; /** 出过的那版跟眼前的参数 / 单价对不上了 */ quoteStale?: boolean; onRegenerate?: () => void; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; /** 参数卡展开没有。会话持有它，卡片在 thinking 时会卸载重挂 */ paramsOpen?: boolean; onParamsOpenChange?: (open: boolean) => void; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
+export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHandoff, viewerName, handoffDone, handoffNote, rework, reworkNotes = [], reworkStates = {}, reworkCurrentValue, onAcceptRework, onDeferRework, onResetRework, onRegenerateRework, changeConfirm, onConfirmChanges, onCancelChanges, onOpenQuote, onQueueChange, onCancelChange, canPublishChange, attention, conversationEditing, stage, recognizedCount = 0, hasQuote = false, quoteStale = false, onRegenerate, text, setText, activeGroup, fields, allFields, mode, paramsOpen, onParamsOpenChange, draftTabs, onSelect, onRemove, onSend, onPreview, onGenerate, onOpenInspector, coworkers, coworkerLocked, activeCoworkerId, onCoworkerChange, pendingCoworkerId, onConfirmCoworkerChange, onCancelCoworkerChange, disabled, projectName, attachments, onAttachmentsChange, sessionActions }: { /** 「+ › 技能」列的会话动作：总结、列价目、核对、生成 */ sessionActions?: ComposerSessionAction[]; /** 落不到参数格上的批注，交接卡在送审时问一次 */ unresolvedNotes?: { anchorId: string; label: string }[]; /** 退回批注入口卡。它跟参数卡、交接卡同一个槽位：需要人当场做的事都在这儿 */ reworkNotice?: ReactNode; editProposal?: DmpkEditProposal | null; /** 报价生成后把这一单交给下一棒。不传就不显示交接卡 */ onHandoff?: (to: string, note: string) => void; /** 当前账号姓名,用于把自己从交接候选里去掉 */ viewerName?: string; /** 已经交出去了,收起交接卡 */ handoffDone?: boolean; /** 交接说明的预填：会话摘要生成过就用它 */ handoffNote?: string; /** 被退回的那一版:批注跟着回到会话,在这里逐条处理 */ rework?: SessionRework; reworkNotes?: QuoteNote[]; reworkStates?: Record<string, ReworkNoteState>; reworkCurrentValue?: (anchorId: string) => string; onAcceptRework?: (note: QuoteNote) => void; onDeferRework?: (note: QuoteNote) => void; onResetRework?: (note: QuoteNote) => void; onRegenerateRework?: () => void; /** 重新生成前的整体复核 */ changeConfirm?: QuoteChange[] | null; onConfirmChanges?: () => void; onCancelChanges?: () => void; onOpenQuote?: () => void; /** 改动引导卡：确认后落一颗 chip（onQueueChange），叉掉是 onCancelChange；canPublishChange 决定本单以外那两档给不给选 */ onQueueChange: (draft: DmpkChangeDraft) => void; onCancelChange: () => void; canPublishChange?: boolean; attention?: boolean; conversationEditing?: boolean; stage: DmpkStage; /** 还挂着「识别」、没被人点过头的参数有几项。报价前确认卡据此改口成「确认并生成」 */ recognizedCount?: number; /** 这一单出过版没有。出过的话再到 ready 是「重出」不是「生成」 */ hasQuote?: boolean; /** 出过的那版跟眼前的参数 / 单价对不上了 */ quoteStale?: boolean; onRegenerate?: () => void; text: string; setText: (value: string) => void; activeGroup: DmpkGroupId; fields: DmpkField[]; /** 全部 14 项,不只是还缺的——全屏面板要一次列全 */ allFields: DmpkField[]; mode: "collect" | "edit"; /** 参数卡展开没有。会话持有它，卡片在 thinking 时会卸载重挂 */ paramsOpen?: boolean; onParamsOpenChange?: (open: boolean) => void; draftTabs: DmpkDraftTab[]; onSelect: (field: DmpkField, value: string) => void; onRemove: (fieldId: string) => void; onSend: () => void; onPreview: () => void; onGenerate: () => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void; coworkers: CoworkerDefinition[]; coworkerLocked: boolean; activeCoworkerId: string; onCoworkerChange: (coworkerId: string) => void; pendingCoworkerId: string | null; onConfirmCoworkerChange: () => void; onCancelCoworkerChange: () => void; disabled: boolean; projectName: string; attachments: ComposerAttachment[]; onAttachmentsChange: (next: ComposerAttachment[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -496,7 +658,7 @@ export function DmpkComposer({ reworkNotice, unresolvedNotes, editProposal, onHa
   return (
     <footer ref={wrapRef} className={`dmpkComposerWrap ${attention ? "needsAttention" : ""}`}>
       {reworkNotice}
-      {editProposal ? <DmpkEditProposalCard proposal={editProposal} onConfirmCurrentPrice={onConfirmCurrentPrice} onOpenRuleManagement={onOpenRuleManagement} /> : null}
+      {editProposal ? <DmpkChangeGuideCard proposal={editProposal} canPublish={canPublishChange ?? false} onQueue={onQueueChange} onCancel={onCancelChange} /> : null}
       {stage === "collecting" ? <DmpkParameterTaskCard activeGroup={activeGroup} fields={fields} allFields={allFields} draftTabs={draftTabs} mode={mode} open={paramsOpen} onOpenChange={onParamsOpenChange} onSelect={onSelect} /> : null}
       {stage === "ready" ? <DmpkFinalConfirmCard onPreview={onPreview} onGenerate={onGenerate} onOpenInspector={onOpenInspector} recognizedCount={recognizedCount} hasQuote={hasQuote} /> : null}
       {/* 报价出来了,下一步是把它交给谁。入口长在这儿而不是某个列表页顶栏:

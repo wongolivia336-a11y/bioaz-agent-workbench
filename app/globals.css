@@ -9279,7 +9279,61 @@ button.dmpkRowFix.is-missing-param:hover, button.dmpkRowFix.is-missing-param:foc
 .dmpkRecognizedActions button.isQueued:hover { background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
 /* 输入框里的确认 chip：前面带对勾，底色淡一点——它不是改值，是点头 */
 .draftTabs button.isConfirm { border-color: var(--bioaz-agent-accent-border, var(--line)); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
-.draftTabs button.isConfirm > svg:first-child { flex: none; }
+.draftTabs button.isConfirm > svg:first-child,
+.draftTabs button.isChange > svg:first-child { flex: none; }
+/* 改价 / 改规则的 chip：琥珀色——它动的是账，跟填参数不是一回事 */
+.draftTabs button.isChange { border-color: var(--amber); background: var(--amber-soft); color: var(--amber); }
+
+/* ═══ 改动引导卡（09-28 会后：改价 / 改规则要说清楚"管多远"）═══════════════
+   三步一行一步：改什么 → 改成什么 → 管多远。定完落 composer 一颗 chip，发送才生效。
+   卡片本体沿用 .dmpkEditProposalCard 那副样子，这里只加步骤的骨架。 */
+.dmpkChangeGuide > header { position: relative; align-items: flex-start; }
+.dmpkChangeGuide > header small { display: block; color: var(--muted); font-size: 11.5px; line-height: 1.55; }
+.dmpkChangeGuideClose { position: absolute; top: -2px; right: -2px; display: inline-flex; border: 0; background: transparent; padding: 2px; color: var(--muted); cursor: pointer; }
+.dmpkChangeGuideClose:hover { color: var(--ink); }
+.dmpkChangeStep { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; align-items: start; }
+.dmpkChangeStep > i {
+  display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+  border-radius: 50%; background: var(--soft); color: var(--muted);
+  font-size: 11px; font-style: normal; font-weight: 700;
+}
+.dmpkChangeStep > div { display: grid; gap: 6px; min-width: 0; }
+.dmpkChangeStep label { color: var(--ink); font-size: 12px; font-weight: 650; }
+.dmpkChangeSegmented { display: inline-flex; gap: 0; border: 1px solid var(--line); border-radius: var(--bioaz-radius-full); padding: 2px; width: fit-content; }
+.dmpkChangeSegmented button {
+  border: 0; border-radius: var(--bioaz-radius-full); background: transparent; padding: 4px 12px;
+  color: var(--body); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.dmpkChangeSegmented button.isOn { background: var(--ink); color: var(--bioaz-text-inverse); }
+.dmpkChangeGuide .dmpkPriceChange { flex-wrap: wrap; gap: 8px; }
+.dmpkChangeGuide .dmpkPriceChange em { color: var(--muted); font-size: 11.5px; font-style: normal; }
+.dmpkChangeArrow { color: var(--muted); }
+.dmpkChangeGuide .dmpkPriceChange input {
+  width: 96px; border: 1px solid var(--bioaz-agent-accent-border, var(--line)); border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface); padding: 4px 8px; color: var(--ink); font: inherit; font-size: 12px;
+}
+.dmpkChangeGuide .dmpkRuleSentencePreview input {
+  width: 56px; margin: 0 4px; border: 1px solid var(--bioaz-agent-accent-border, var(--line)); border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface); padding: 4px 8px; color: var(--ink); font: inherit; font-size: 12px;
+}
+.dmpkChangeScopes { display: grid; gap: 6px; }
+.dmpkChangeScopes button {
+  display: grid; gap: 2px; width: 100%; text-align: left;
+  border: 1px solid var(--line); border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface); padding: 8px 10px; font: inherit; cursor: pointer;
+}
+.dmpkChangeScopes button:hover:not(:disabled) { border-color: var(--line-strong); }
+.dmpkChangeScopes button.isOn { border-color: var(--bioaz-agent-accent); background: var(--bioaz-agent-accent-soft); }
+.dmpkChangeScopes button.isLocked { opacity: .55; cursor: not-allowed; }
+.dmpkChangeScopes b { display: flex; align-items: center; gap: 6px; color: var(--ink); font-size: 12.5px; font-weight: 650; }
+.dmpkChangeScopes b > i {
+  border-radius: var(--bioaz-radius-full); background: var(--soft); padding: 1px 6px;
+  color: var(--muted); font-size: 10px; font-style: normal; font-weight: 600;
+}
+.dmpkChangeScopes small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.dmpkChangeGuide > footer button:disabled { opacity: .45; cursor: not-allowed; }
+/* 右栏同步：正在改的那一行点亮 */
+.dmpkSectionRow.isTarget { border-color: var(--bioaz-agent-accent); box-shadow: 0 0 0 3px var(--bioaz-agent-accent-soft); }
 .dmpkRecognizedSource { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; color: var(--bioaz-agent-accent); background: var(--bioaz-agent-accent-soft); cursor: help; outline: none; }
 .dmpkRecognizedSource:hover, .dmpkRecognizedSource:focus-visible { background: var(--bioaz-agent-accent); color: #fff; }
 .dmpkRecognizedManual { font-size: 10px; font-weight: 700; letter-spacing: .02em; }
