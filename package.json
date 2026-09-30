@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test:pricing": "node --experimental-strip-types --test modules/dmpk-quotation/pricing/engine.test.ts",
     "audit:ui": "node scripts/audit-ui.mjs"
   },
   "dependencies": {

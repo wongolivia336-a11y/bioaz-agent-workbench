@@ -1,3 +1,5 @@
+import { evaluatePricing, type PricingSpec } from "./pricingEngine";
+
 /**
  * 报价行。
  *
@@ -102,6 +104,8 @@ export type QuoteLine = {
    * 没有它的行是整单项（方法开发、报告），或者不该拆到组的（少于 30 按 30 是按化合物计的）。
    */
   groupShare?: Record<string, number>;
+  /** 新计价内核的输入。未迁移的旧行继续使用 qty × catalogPrice。 */
+  pricing?: PricingSpec;
 };
 
 /** 谁改的单价。甲方写的是「SD」，指谁没说清，收成一个常量，确认后改一处。
@@ -125,6 +129,10 @@ export function effectiveStatus(line: QuoteLine, manual?: ManualPrice): QuoteLin
 
 export function lineAmount(line: QuoteLine, manual?: ManualPrice): number | undefined {
   if (effectiveStatus(line, manual) !== "priced") return undefined;
+  if (line.pricing) {
+    const result = evaluatePricing(line.pricing, manual?.price);
+    return result ? round2(result.amount) : undefined;
+  }
   const unit = lineUnitPrice(line, manual);
   return unit === undefined ? undefined : round2(line.qty * unit);
 }
@@ -216,7 +224,7 @@ export function hasAdjustments(adjustments: QuoteAdjustments = {}): boolean {
 }
 
 export function formatCny(amount: number): string {
-  return `¥${amount.toLocaleString("zh-CN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `$${amount.toLocaleString("zh-CN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 /**

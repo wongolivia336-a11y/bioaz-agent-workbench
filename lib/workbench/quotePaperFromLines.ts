@@ -85,7 +85,7 @@ export function quotePaperFromLines(
       title,
       docTitle: `${title} · 报价书`,
       validity: "本报价自出具之日起 30 天内有效。",
-      currency: "CNY",
+      currency: "USD",
       packagePrice: withManual.total,
       otherFees: adjustments.otherFees ?? 0,
       totalPrice: finalTotal,
