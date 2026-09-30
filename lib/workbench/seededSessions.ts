@@ -17,7 +17,7 @@ export const seededSessionHistory: Record<string, SessionHistoryEntry[]> = {
     { id: "h1", role: "user", text: "Balb/c nude 小鼠 BA 试验，血浆样品 LC-MS/MS，2 组每组 3 只，周期 2 周，采血点 8 个。客户要 Word 加 Excel。" },
     { id: "h2", role: "agent", text: "已识别：检测类型 BA Only、动物种属 Balb/c nude、每组 3 只、2 组、试验周期 2 周、采血点 8。还需要补充化合物类别、分析方法、样品类型和报告语言。" },
     { id: "h3", role: "user", text: "普通小分子，LC-MS/MS，血浆，中文报告。" },
-    { id: "h4", role: "agent", text: "参数已齐全。已匹配 BA 动物实验与生物分析价格规则，管理费按 30% 口径计取。" },
+    { id: "h4", role: "agent", text: "参数已齐全。已按规则 2.0 匹配 BA 生物分析价格，并分别应用 BA 系数和地区系数。" },
     { id: "h5", role: "agent", text: "报价单已生成，Word 与 Excel 金额校验一致。" },
     { id: "h6", role: "user", text: "交接给 王林彬：客户催得急，麻烦优先看一下。" },
     { id: "h7", role: "agent", text: "已交接给 王林彬，本次的 Word 报价单与 Excel 报价明细已随行。对方将在站内信中收到。" },

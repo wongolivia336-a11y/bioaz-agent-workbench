@@ -46,6 +46,7 @@ import {
 import { dmpkGroupsFor, initialDmpkFields, type DmpkField } from "./fields";
 import { DmpkPackageCards } from "./packageBlocks";
 import type { ExtraPackage } from "./quoteLineFixtures";
+import type { AnimalGroupFact, CollectionEventFact } from "./pricing/facts";
 import {
   resolveInspectorPanels,
   type InspectorContentState,
@@ -78,6 +79,10 @@ export type DmpkInspectorContext = {
   onToggleGroup: (group: DmpkInspectorGroup) => void;
   errorMessage?: string;
   onEditField: (fieldId: string) => void;
+  animalGroups?: AnimalGroupFact[];
+  onAnimalGroupsChange?: (groups: AnimalGroupFact[]) => void;
+  collectionEvents?: CollectionEventFact[];
+  onCollectionEventsChange?: (events: CollectionEventFact[]) => void;
   editingFieldId?: string | null;
   onPreviewArtifact: (kind: "word" | "excel") => void;
   onPreviewQuotation: () => void;
@@ -387,7 +392,11 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
         const labels = summarizeLines(lines, context.manualPrices ?? {}).packages.filter((pkg) => pkg.id !== "animal" && pkg.id !== "report").map((pkg) => pkg.label.replace(" 样品采集", ""));
         return labels.length ? labels.join(" · ") : undefined;
       }}
-      groupExtra={(groupId) => groupId === "assay" && lines.length ? (
+      groupExtra={(groupId) => groupId === "animal" && context.animalGroups?.length ? (
+        <AnimalGroupsEditor groups={context.animalGroups} onChange={context.onAnimalGroupsChange} />
+      ) : groupId === "procedure" && context.collectionEvents?.length ? (
+        <CollectionEventsEditor events={context.collectionEvents} groups={context.animalGroups ?? []} onChange={context.onCollectionEventsChange} />
+      ) : groupId === "assay" && lines.length ? (
         <DmpkPackageCards
           summary={summarizeLines(lines, context.manualPrices ?? {})}
           fields={fields}
@@ -397,8 +406,77 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
           onRemovePackage={context.onRemovePackage}
           onEditField={context.onEditField}
         />
+      ) : groupId === "delivery" && lines.length ? (
+        <PricingGovernanceSummary lines={lines} />
       ) : null}
     />
+  );
+}
+
+function PricingGovernanceSummary({ lines }: { lines: QuoteLine[] }) {
+  const unresolved = lines.filter((line) => line.status !== "priced");
+  return (
+    <section className="dmpkPricingGovernance">
+      <header><div><strong>DMPK 计价规则 2.0</strong><small>USD · 实际量与计费量分开 · 系数可追溯</small></div><span className={unresolved.length ? "isWarning" : "isReady"}>{unresolved.length ? `${unresolved.length} 项待确认` : "可生成正式报价"}</span></header>
+      <ul>
+        <li><span>地区系数</span><b>亚太 1.3 · 欧美 1.5 · 硬成本不乘</b></li>
+        <li><span>样品检测</span><b>保底、按板、阶梯价按任务执行</b></li>
+        <li><span>输出币种</span><b>USD · 人民币价按 6.5 换算</b></li>
+      </ul>
+      {unresolved.length ? <div className="dmpkPricingPending"><strong>正式报价门禁</strong>{unresolved.slice(0, 4).map((line) => <p key={line.id}><span>{line.service}</span><em>{line.reason ?? "计价信息待确认"}</em></p>)}{unresolved.length > 4 ? <small>另有 {unresolved.length - 4} 项，请到报价明细查看</small> : null}</div> : null}
+    </section>
+  );
+}
+
+function CollectionEventsEditor({ events, groups, onChange }: { events: CollectionEventFact[]; groups: AnimalGroupFact[]; onChange?: (events: CollectionEventFact[]) => void }) {
+  const update = (id: string, patch: Partial<CollectionEventFact>) => onChange?.(events.map((event) => event.id === id ? { ...event, ...patch } : event));
+  const remove = (id: string) => onChange?.(events.filter((event) => event.id !== id));
+  const add = () => onChange?.([...events, { id: `collection-${Date.now()}`, label: "新增采血", kind: "blood", timepoint: "待填写", groupIds: groups.map((group) => group.id), animalCount: groups.reduce((sum, group) => sum + group.animalCount, 0) || 1, purposes: ["pk"] }]);
+  const togglePurpose = (event: CollectionEventFact, purpose: "pk" | "tk") => {
+    const purposes = event.purposes ?? [];
+    update(event.id, { purposes: purposes.includes(purpose) ? purposes.filter((item) => item !== purpose) : [...purposes, purpose] });
+  };
+  return (
+    <section className="dmpkCollectionEvents">
+      <header><div><strong>物理采集事件</strong><small>一次采集可同时服务 PK/TK，采集费只生成一行</small></div>{onChange ? <button type="button" onClick={add}>添加事件</button> : null}</header>
+      <div className="dmpkCollectionEventList">
+        {events.map((event) => (
+          <div className="dmpkCollectionEventRow" key={event.id}>
+            <div className="dmpkCollectionEventFields">
+              <input aria-label="采集名称" value={event.label} disabled={!onChange} onChange={(input) => update(event.id, { label: input.target.value })} />
+              <input aria-label={`${event.label}时点`} value={event.timepoint} disabled={!onChange} onChange={(input) => update(event.id, { timepoint: input.target.value })} />
+              <label><input aria-label={`${event.label}实际采集次数`} type="number" min={1} value={event.animalCount} disabled={!onChange} onChange={(input) => update(event.id, { animalCount: Math.max(1, Number(input.target.value) || 1) })} /><span>次</span></label>
+            </div>
+            <div className="dmpkCollectionPurposes"><span>服务任务</span>{(["pk", "tk"] as const).map((purpose) => <button type="button" key={purpose} className={event.purposes?.includes(purpose) ? "isOn" : ""} disabled={!onChange} onClick={() => togglePurpose(event, purpose)}>{purpose.toUpperCase()}</button>)}{event.purposes?.includes("pk") && event.purposes?.includes("tk") ? <em>共用一次采集</em> : null}{onChange && events.length > 1 ? <button className="isDanger" type="button" onClick={() => remove(event.id)}>删除</button> : null}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AnimalGroupsEditor({ groups, onChange }: { groups: AnimalGroupFact[]; onChange?: (groups: AnimalGroupFact[]) => void }) {
+  const update = (id: string, patch: Partial<AnimalGroupFact>) => onChange?.(groups.map((group) => group.id === id ? { ...group, ...patch } : group));
+  const remove = (id: string) => onChange?.(groups.filter((group) => group.id !== id));
+  const add = () => {
+    const index = groups.length + 1;
+    onChange?.([...groups, { id: `group-${Date.now()}`, label: `${index} 组`, species: groups[0]?.species ?? "大鼠", animalCount: groups[0]?.animalCount ?? 1, role: "main", services: ["pk"] }]);
+  };
+  return (
+    <section className="dmpkAnimalGroups">
+      <header><div><strong>分组明细</strong><small>逐组数量参与动物费、饲养费和采样计算</small></div>{onChange ? <button type="button" onClick={add}>添加组</button> : null}</header>
+      <div className="dmpkAnimalGroupList">
+        {groups.map((group) => (
+          <div className="dmpkAnimalGroupRow" key={group.id}>
+            <input aria-label="组名" value={group.label} disabled={!onChange} onChange={(event) => update(group.id, { label: event.target.value })} />
+            <input aria-label={`${group.label}种属`} value={group.species} disabled={!onChange} onChange={(event) => update(group.id, { species: event.target.value })} />
+            <label><input aria-label={`${group.label}动物数`} type="number" min={1} value={group.animalCount} disabled={!onChange} onChange={(event) => update(group.id, { animalCount: Math.max(1, Number(event.target.value) || 1) })} /><span>只</span></label>
+            <select aria-label={`${group.label}类型`} value={group.role} disabled={!onChange} onChange={(event) => update(group.id, { role: event.target.value as AnimalGroupFact["role"] })}><option value="main">主组</option><option value="satellite">卫星组</option></select>
+            {onChange && groups.length > 1 ? <button className="isDanger" type="button" onClick={() => remove(group.id)} aria-label={`删除${group.label}`}>删除</button> : null}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -406,7 +484,7 @@ function ParametersPanel({ context }: { context: DmpkInspectorContext }) {
     「报价规则」tab 撤了之后它们住在板块面板底部；draft 是点「改」时填进 composer 的现成句子。 */
 const matchedRules = [
   { id: "region", label: "国内报价区域", meta: "不含跨境与加急附加", draft: "本次报价改用欧美区域计价" },
-  { id: "template", label: "PK 报价模板 v8", meta: "Word 30% · Excel 15% 管理费", draft: "把本次报价的管理费比例改为 " },
+  { id: "template", label: "DMPK 复杂报价规则 2.0", meta: "美元明细 · 系数与硬成本分开", draft: "复核本次报价的地区系数和硬成本范围" },
 ];
 
 
@@ -772,7 +850,7 @@ function QuoteSectionsPanel({ context }: { context: DmpkInspectorContext }) {
             <span className="dmpkSectionAdjustTotal">调整后 <b>{formatCny(finalTotal)}</b></span>
           </div>
         ) : null}
-        {/* 本单命中的规则：区域、模板 / 管理费。原来在「报价规则」tab 里，那个 tab 撤了，
+        {/* 本单命中的规则：区域、模板与计价口径。原来在「报价规则」tab 里，那个 tab 撤了，
             这两条是它唯一不跟板块重复的东西。改仍然经对话确认。 */}
         <div className="dmpkSectionRules">
           <span className="dmpkSectionRulesLabel">本单规则</span>
@@ -1021,7 +1099,7 @@ function EvidencePanel({ onPreview }: { onPreview: () => void }) {
       <PanelIntro title="计价规则" meta="以已确认参数匹配当前发布版本" />
       <InspectorInfoRow icon={Calculator} title="动物实验" meta="种属、组数、数量与周期" />
       <InspectorInfoRow icon={Calculator} title="生物分析" meta="方法、样品与待测物数量" />
-      <InspectorInfoRow icon={Calculator} title="交付管理费" meta="Word 30% · Excel 15%" />
+      <InspectorInfoRow icon={Calculator} title="计价口径" meta="规则 2.0 · USD · 明细与总价一致" />
       <button className="dmpkInspectorTextAction" type="button" onClick={onPreview}>查看完整参数与金额校验</button>
     </div>
   );
@@ -1092,8 +1170,8 @@ function QuoteVersionCard({ version, current, total, stale, onRegenerate, onPrev
               {onRegenerate ? <button type="button" onClick={onRegenerate}>重新生成 <ArrowRight size={12} aria-hidden="true" /></button> : null}
             </p>
           ) : null}
-          <ArtifactRow icon={FileText} title="中文 Word 报价单" meta="30% 管理费" onPreview={() => onPreview("word")} />
-          <ArtifactRow icon={FileSpreadsheet} title="Excel 报价明细" meta="15% 管理费" onPreview={() => onPreview("excel")} />
+          <ArtifactRow icon={FileText} title="中文 Word 报价单" meta="USD · 规则 2.0" onPreview={() => onPreview("word")} />
+          <ArtifactRow icon={FileSpreadsheet} title="Excel 报价明细" meta="实际量 · 计费量 · 系数" onPreview={() => onPreview("excel")} />
         </div>
       ) : null}
     </section>

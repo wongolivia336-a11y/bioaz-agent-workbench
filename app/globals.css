@@ -9352,3 +9352,55 @@ button.dmpkRowFix.is-missing-param:hover, button.dmpkRowFix.is-missing-param:foc
 
 /* 台账组头标题后的一小句：「检测 PK / TK · TOX」——组折着也知道里面挂了什么 */
 .paramGroupHint { margin-left: 8px; color: var(--muted); font-size: 11px; font-style: normal; font-weight: 500; }
+.dmpkAnimalGroups {
+  margin: 8px 10px 12px;
+  padding: 10px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: 10px;
+  background: var(--bioaz-surface-subtle);
+}
+
+.dmpkAnimalGroups > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.dmpkAnimalGroups > header div { display: grid; gap: 2px; }
+.dmpkAnimalGroups > header small { color: var(--bioaz-text-secondary); font-size: 11px; }
+.dmpkAnimalGroups > header button { border: 1px solid var(--bioaz-border-strong); border-radius: 7px; background: var(--bioaz-surface); padding: 5px 8px; color: var(--bioaz-text-primary); cursor: pointer; }
+.dmpkAnimalGroupList { display: grid; gap: 6px; }
+.dmpkAnimalGroupRow { display: grid; grid-template-columns: minmax(62px, 1fr) minmax(62px, 1fr) 64px 72px auto; gap: 6px; align-items: center; }
+.dmpkAnimalGroupRow input, .dmpkAnimalGroupRow select { min-width: 0; height: 30px; border: 1px solid var(--bioaz-border-strong); border-radius: 7px; background: var(--bioaz-surface); color: var(--bioaz-text-primary); padding: 0 7px; }
+.dmpkAnimalGroupRow label { display: flex; align-items: center; gap: 3px; color: var(--bioaz-text-secondary); font-size: 11px; }
+.dmpkAnimalGroupRow label input { width: 44px; }
+.dmpkAnimalGroupRow button.isDanger { border: 0; background: transparent; color: var(--bioaz-text-secondary); cursor: pointer; font-size: 11px; }
+
+.dmpkCollectionEvents { margin: 8px 10px 12px; padding: 10px; border: 1px solid var(--bioaz-border); border-radius: 10px; background: var(--bioaz-surface-subtle); }
+.dmpkCollectionEvents > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.dmpkCollectionEvents > header div { display: grid; gap: 2px; }
+.dmpkCollectionEvents > header small { color: var(--bioaz-text-secondary); font-size: 11px; }
+.dmpkCollectionEvents > header button { border: 1px solid var(--bioaz-border-strong); border-radius: 7px; background: var(--bioaz-surface); padding: 5px 8px; color: var(--bioaz-text-primary); cursor: pointer; }
+.dmpkCollectionEventList { display: grid; gap: 8px; }
+.dmpkCollectionEventRow { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--bioaz-border); }
+.dmpkCollectionEventRow:first-child { padding-top: 0; border-top: 0; }
+.dmpkCollectionEventFields { display: grid; grid-template-columns: minmax(76px, 1fr) minmax(72px, 1fr) 76px; gap: 6px; align-items: center; }
+.dmpkCollectionEventFields input { min-width: 0; height: 30px; border: 1px solid var(--bioaz-border-strong); border-radius: 7px; background: var(--bioaz-surface); color: var(--bioaz-text-primary); padding: 0 7px; }
+.dmpkCollectionEventFields label { display: flex; align-items: center; gap: 3px; color: var(--bioaz-text-secondary); font-size: 11px; }
+.dmpkCollectionEventFields label input { width: 50px; }
+.dmpkCollectionPurposes { display: flex; align-items: center; gap: 5px; color: var(--bioaz-text-secondary); font-size: 11px; }
+.dmpkCollectionPurposes button { border: 1px solid var(--bioaz-border-strong); border-radius: 999px; background: var(--bioaz-surface); padding: 3px 8px; color: var(--bioaz-text-secondary); cursor: pointer; }
+.dmpkCollectionPurposes button.isOn { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+.dmpkCollectionPurposes em { color: var(--bioaz-success); font-style: normal; }
+.dmpkCollectionPurposes button.isDanger { margin-left: auto; border: 0; background: transparent; color: var(--bioaz-text-secondary); }
+
+.dmpkPricingGovernance { margin: 8px 10px 12px; padding: 10px; border: 1px solid var(--bioaz-border); border-radius: 10px; background: var(--bioaz-surface-subtle); }
+.dmpkPricingGovernance > header { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.dmpkPricingGovernance > header div { display: grid; gap: 2px; }
+.dmpkPricingGovernance > header small { color: var(--bioaz-text-secondary); font-size: 11px; }
+.dmpkPricingGovernance > header > span { flex: none; border-radius: 999px; padding: 3px 7px; font-size: 10px; }
+.dmpkPricingGovernance > header > span.isReady { background: var(--bioaz-success-soft); color: var(--bioaz-success); }
+.dmpkPricingGovernance > header > span.isWarning { background: var(--bioaz-warning-soft); color: var(--bioaz-warning); }
+.dmpkPricingGovernance > ul { display: grid; gap: 5px; margin: 10px 0 0; padding: 0; list-style: none; }
+.dmpkPricingGovernance > ul li { display: flex; justify-content: space-between; gap: 10px; color: var(--bioaz-text-secondary); font-size: 11px; }
+.dmpkPricingGovernance > ul b { color: var(--bioaz-text-primary); font-weight: 500; text-align: right; }
+.dmpkPricingPending { display: grid; gap: 5px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--bioaz-border); }
+.dmpkPricingPending > strong { font-size: 11px; }
+.dmpkPricingPending p { display: grid; gap: 1px; margin: 0; }
+.dmpkPricingPending p span { font-size: 11px; color: var(--bioaz-text-primary); }
+.dmpkPricingPending p em, .dmpkPricingPending small { font-size: 10px; color: var(--bioaz-warning); font-style: normal; }

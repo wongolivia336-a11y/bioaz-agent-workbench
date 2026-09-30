@@ -134,7 +134,7 @@ export const dmpkGroupDescriptions: Record<DmpkGroupId, string> = {
   animal: "种属、组数、每组几只。",
   procedure: "周期、采什么、采几次。",
   assay: "测什么、用什么方法、测多少。",
-  delivery: "确认交付格式、语言、区域和管理费规则。",
+  delivery: "确认交付格式、语言、报价区域和适用系数。",
 };
 
 export function getDmpkGroupTitle(id: DmpkGroupId, fields?: DmpkField[]) {

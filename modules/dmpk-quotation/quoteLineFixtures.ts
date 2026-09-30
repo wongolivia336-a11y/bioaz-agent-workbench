@@ -1,6 +1,8 @@
 import type { ParseResult } from "../../lib/workbench/sources";
 import type { QuoteLine, QuotePackage } from "../../lib/workbench/quoteLines";
 import type { DmpkField } from "./fields";
+import type { AnimalGroupFact, CollectionEventFact } from "./pricing/facts";
+import { DEFAULT_CNY_PER_USD, regionCoefficient, type DmpkRegion } from "./pricing/policy";
 
 /**
  * BB-001 那一单的报价行。
@@ -108,7 +110,7 @@ function buildProtocolLines(fields: DmpkField[]): QuoteLine[] {
     /* ── 报告 ── */
     region
       ? { id: "report", package: "report", scope: "整单", service: `28 天 DRF/毒理综合报告 · ${language || "中文"}${region === "国内" ? "" : ` · ${region}`}`, qty: 1, unit: "份", catalogPrice: language === "英文" || language === "中英双语" ? 4500 : 3000, catalogId: language === "英文" || language === "中英双语" ? "report-en" : "report-cn", status: "priced" }
-      : { id: "report", package: "report", scope: "整单", service: "28 天 DRF/毒理综合报告", qty: 1, unit: "份", status: "missing-param", reason: "报价区域未填，报告与管理费口径定不下来", dependsOn: "region" },
+      : { id: "report", package: "report", scope: "整单", service: "28 天 DRF/毒理综合报告", qty: 1, unit: "份", status: "missing-param", reason: "报价区域未填，地区系数无法确定", dependsOn: "region" },
   ];
 }
 
@@ -143,15 +145,17 @@ const toInt = (value: string) => {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 };
 
-function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
+function buildFieldLines(fields: DmpkField[], animalGroups: AnimalGroupFact[] = [], collectionEvents: CollectionEventFact[] = []): QuoteLine[] {
   const value = (id: string) => fields.find((field) => field.id === id)?.value ?? "";
   const assay = value("assayType");
   if (!assay) return [];
   const pkg: QuoteLine["package"] = assay === "BA Only" ? "ba" : assay === "TOX" ? "tox" : "pk-tk";
   const species = value("species");
   const perGroup = toInt(value("animalsPerGroup"));
-  const groups = toInt(value("groupCount"));
-  const animals = perGroup && groups ? perGroup * groups : undefined;
+  const groups = animalGroups.length || toInt(value("groupCount"));
+  const animals = animalGroups.length
+    ? animalGroups.reduce((total, group) => total + group.animalCount, 0)
+    : perGroup && groups ? perGroup * groups : undefined;
   const points = toInt(value("bloodPoints"));
   const analytes = toInt(value("analyteCount"));
   const method = value("method");
@@ -169,11 +173,30 @@ function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
   /* 十四项里的组是均匀的（每组 N 只），按组明细就是每组各分 1/组数；组 id 用「1」「2」… */
   const evenShare = (perGroupQty: number): Record<string, number> | undefined =>
     groups ? Object.fromEntries(Array.from({ length: groups }, (_, index) => [String(index + 1), perGroupQty])) : undefined;
+  const groupShareBy = (multiplier: number): Record<string, number> | undefined => animalGroups.length
+    ? Object.fromEntries(animalGroups.map((group) => [group.id, group.animalCount * multiplier]))
+    : perGroup ? evenShare(perGroup * multiplier) : undefined;
 
   /* 采血 + 样品检测 + 方法开发（BA Only 没有采血——样品是客户送来的） */
-  if (assay !== "BA Only") {
+  if (assay !== "BA Only" && collectionEvents.length) {
+    for (const event of collectionEvents) {
+      const purpose = event.purposes?.length ? ` · ${event.purposes.map((item) => item.toUpperCase()).join(" / ")} 共用` : "";
+      lines.push({
+        id: `f-collection-${event.id}`,
+        package: pkg,
+        scope: `${event.timepoint}${purpose}`,
+        service: `${event.label}（${sample || "血浆"}）`,
+        analyte: sample || undefined,
+        qty: event.animalCount,
+        unit: "次",
+        formula: `${event.timepoint} · 实际物理采集 ${event.animalCount} 次`,
+        catalogPrice: 130,
+        status: "priced",
+      });
+    }
+  } else if (assay !== "BA Only") {
     lines.push(animals && points
-      ? { id: "f-sampling", package: pkg, scope: `${groups} 组 · ${animals} 只`, service: `${assay === "TOX" ? "TK " : "PK "}采血（${sample || "血浆"}）`, analyte: sample ? `${sample}${analytes ? ` · ${analytes} 个待测物` : ""}` : undefined, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, groupShare: evenShare(perGroup! * points), status: "priced" }
+      ? { id: "f-sampling", package: pkg, scope: `${groups} 组 · ${animals} 只`, service: `${assay === "TOX" ? "TK " : "PK "}采血（${sample || "血浆"}）`, analyte: sample ? `${sample}${analytes ? ` · ${analytes} 个待测物` : ""}` : undefined, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, groupShare: groupShareBy(points), status: "priced" }
       : missing("f-sampling", pkg, `${assay === "TOX" ? "TK " : "PK "}采血`, "份", !animals ? (perGroup ? "groupCount" : "animalsPerGroup") : "bloodPoints", !animals ? "动物数与组数" : "采血点数"));
   }
   /* 每个化合物的实际样本数 = 只数 × 点数；P0 引擎规则「少于 30 按 30」按化合物各自执行，
@@ -189,21 +212,42 @@ function buildFieldLines(fields: DmpkField[]): QuoteLine[] {
     lines.push(missing("f-detection", pkg, "样品检测", "份", "method", "分析方法", { analyte: analyteLabel }));
     lines.push(missing("f-method-dev", pkg, "方法开发", "项", "method", "分析方法", { analyte: analyteLabel }));
   } else {
-    /* 样品检测按组拆只在没触发「少于 30 按 30」时成立——那条规则是按化合物计的，触发了就是整单项 */
-    const detectionShare = assay !== "BA Only" && perAnalyte !== undefined && perAnalyte >= MIN_BILLED_SAMPLES && perGroup && points && analytes ? evenShare(perGroup * points * analytes) : undefined;
-    lines.push(detectionQty
-      ? { id: "f-detection", package: pkg, scope: `${analytes} 个待测物`, service: `样品检测 · ${method}`, analyte: analyteLabel, method, qty: detectionQty, unit: "份", formula: detectionFormula, catalogPrice: 180, catalogId: "bio-plasma", groupShare: detectionShare, status: "priced" }
-      : missing("f-detection", pkg, `样品检测 · ${method}`, "份", !analytes ? "analyteCount" : !points ? "bloodPoints" : "animalsPerGroup", !analytes ? "待测物数量" : !points ? "采血点数" : "动物数", { analyte: analyteLabel, method }));
-    lines.push(methodPrice
-      ? { id: "f-method-dev", package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `方法开发 · ${method}`, analyte: analyteLabel, method, qty: analytes ?? 1, unit: "项", catalogPrice: methodPrice.price, catalogId: methodPrice.catalogId, status: "priced" }
-      : { id: "f-method-dev", package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `方法开发 · ${method}`, analyte: analyteLabel, method, qty: analytes ?? 1, unit: "项", status: "no-catalog", reason: `当前价目表没有 ${method} 方法开发这一档` });
+    if (perAnalyte !== undefined && analytes) {
+      for (let index = 1; index <= analytes; index += 1) {
+        const analyte = analytes === 1 ? (compound || "待测物") : `${compound || "待测物"} ${index}`;
+        const needsHomogenization = /组织|匀浆/.test(sample);
+        const pricing = method === "ELISA"
+          ? { mode: "tiered" as const, actualQty: perAnalyte, tiers: needsHomogenization ? [{ maxQty: 30, mode: "flat" as const, amount: 1350 }, { mode: "per-unit" as const, amount: 45 }] : [{ maxQty: 30, mode: "flat" as const, amount: 1000 }, { mode: "per-unit" as const, amount: 35 }], sourceCurrency: "USD" as const, outputCurrency: "USD" as const, rounding: "line-2dp" as const }
+          : { mode: "per-unit" as const, actualQty: perAnalyte, unitPrice: 180, minimumQty: method === "LC-MS/MS" ? MIN_BILLED_SAMPLES : undefined, sourceCurrency: "CNY" as const, outputCurrency: "CNY" as const, rounding: "line-2dp" as const };
+        lines.push({ id: `f-detection-${index}`, package: pkg, scope: analyte, service: `样品检测 · ${method}`, analyte: `${analyte} · ${sample || "基质待确认"}`, method, qty: perAnalyte, unit: "份", formula: `${perAnalyte} 份实际送检${pricing.minimumQty && perAnalyte < pricing.minimumQty ? `，按 ${pricing.minimumQty} 计费` : ""}`, catalogPrice: method === "ELISA" ? (needsHomogenization ? 45 : 35) : 180, catalogId: method === "ELISA" ? "bio-elisa-tier" : "bio-plasma", groupShare: perAnalyte >= MIN_BILLED_SAMPLES && points ? groupShareBy(points) : undefined, status: "priced", pricing });
+        lines.push(methodPrice
+          ? { id: `f-method-dev-${index}`, package: pkg, scope: analyte, service: `方法开发 · ${method}`, analyte: `${analyte} · ${sample || "基质待确认"}`, method, qty: 1, unit: "项", catalogPrice: methodPrice.price, catalogId: methodPrice.catalogId, status: "priced" }
+          : { id: `f-method-dev-${index}`, package: pkg, scope: analyte, service: `方法开发 · ${method}`, analyte: `${analyte} · ${sample || "基质待确认"}`, method, qty: 1, unit: "项", status: "no-catalog", reason: `当前价目表没有 ${method} 方法开发这一档` });
+      }
+    } else {
+      lines.push(missing("f-detection", pkg, `样品检测 · ${method}`, "份", !analytes ? "analyteCount" : !points ? "bloodPoints" : "animalsPerGroup", !analytes ? "待测物数量" : !points ? "采血点数" : "动物数", { analyte: analyteLabel, method }));
+      lines.push(methodPrice
+        ? { id: "f-method-dev", package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `方法开发 · ${method}`, analyte: analyteLabel, method, qty: analytes ?? 1, unit: "项", catalogPrice: methodPrice.price, catalogId: methodPrice.catalogId, status: "priced" }
+        : { id: "f-method-dev", package: pkg, scope: `${analytes ?? 1} 个待测物`, service: `方法开发 · ${method}`, analyte: analyteLabel, method, qty: analytes ?? 1, unit: "项", status: "no-catalog", reason: `当前价目表没有 ${method} 方法开发这一档` });
+    }
   }
   if (assay === "TOX") {
     lines.push({ id: "f-tox-endpoint", package: "tox", scope: "本单", service: "毒性终点分析", analyte: analyteLabel, method: method || undefined, qty: 1, unit: "项", status: "no-catalog", reason: "「毒性终点分析」价目还是草稿，未发布" });
   }
 
   /* 动物使用与饲养 */
-  if (assay !== "BA Only") {
+  if (assay !== "BA Only" && animalGroups.length) {
+    for (const group of animalGroups) {
+      const groupSpecies = group.species || species;
+      const speciesPrice = speciesCatalog[groupSpecies];
+      lines.push(speciesPrice
+        ? { id: `f-animal-${group.id}`, package: "animal", scope: group.label, service: `${groupSpecies}使用费`, qty: group.animalCount, unit: "只", formula: `${group.label} · ${group.animalCount} 只`, catalogPrice: speciesPrice.price, catalogId: speciesPrice.catalogId, groupShare: { [group.id]: group.animalCount }, status: "priced" }
+        : { id: `f-animal-${group.id}`, package: "animal", scope: group.label, service: `${groupSpecies || "动物"}使用费`, qty: group.animalCount, unit: "只", formula: `${group.label} · ${group.animalCount} 只`, groupShare: { [group.id]: group.animalCount }, status: "no-catalog", reason: `当前价目表没有${groupSpecies || "该种属"}这一档动物费` });
+      lines.push(days
+        ? { id: `f-housing-${group.id}`, package: "animal", scope: `${group.label} · ${days} 天`, service: "动物饲养", qty: group.animalCount * days, unit: "只·天", formula: `${group.animalCount} 只 × ${days} 天`, catalogPrice: 15, catalogId: "animal-housing", groupShare: { [group.id]: group.animalCount * days }, status: "priced" }
+        : missing(`f-housing-${group.id}`, "animal", "动物饲养", "只·天", "cycle", "试验周期", { scope: group.label, groupShare: { [group.id]: group.animalCount } }));
+    }
+  } else if (assay !== "BA Only") {
     const speciesPrice = speciesCatalog[species];
     lines.push(!species || !animals
       ? missing("f-animal", "animal", "动物使用费", "只", !species ? "species" : perGroup ? "groupCount" : "animalsPerGroup", !species ? "动物种属" : "动物数与组数")
@@ -280,11 +324,23 @@ function buildExtraPackageLines(pkg: ExtraPackage, fields: DmpkField[]): QuoteLi
           ? { id: "x-tox-tk-sampling", package: pkg, scope: groupScope, service: `TK 毒代采血（${sample}）`, analyte: sample, qty: animals * points, unit: "份", formula: `${animals} 只 × ${points} 点`, catalogPrice: 130, status: "priced" }
           : missing("x-tox-tk-sampling", "TK 毒代采血", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采血点数"),
         animals && points
-          ? { id: "x-tox-clinpath", package: pkg, scope: groupScope, service: "临床病理（血清生化 / 血液学 / 凝血 / 尿液）", analyte: "血清 · 全血 · 尿液", qty: animals * points, unit: "份·套", formula: `${animals} 只 × ${points} 点 · 四项打包`, catalogPrice: 1265, status: "priced" }
-          : missing("x-tox-clinpath", "临床病理（血清生化 / 血液学 / 凝血 / 尿液）", "份·套", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采样时点"),
-        animals
-          ? { id: "x-tox-necropsy", package: pkg, scope: groupScope, service: "终末解剖、脏器称重、标准组织固定", qty: animals, unit: "只", catalogPrice: 800, status: "priced" }
-          : missing("x-tox-necropsy", "终末解剖、脏器称重、标准组织固定", "只", animalsDep, "动物数与组数"),
+          ? { id: "x-tox-hematology", package: pkg, scope: groupScope, service: "血常规检查", analyte: "全血", qty: animals * points, unit: "份", status: "pending-confirm", reason: "需确认普通血常规 $30 还是含网织红血常规 $40，两档互斥" }
+          : missing("x-tox-hematology", "血常规检查", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采样时点"),
+        animals && points
+          ? { id: "x-tox-chemistry", package: pkg, scope: groupScope, service: "血生化检查", analyte: "血清", qty: animals * points, unit: "份", status: "pending-confirm", reason: "需确认对应种属套餐及套餐外单项，不能重复收费" }
+          : missing("x-tox-chemistry", "血生化检查", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采样时点"),
+        animals && points
+          ? { id: "x-tox-coagulation", package: pkg, scope: groupScope, service: "凝血检查", analyte: "血浆", qty: animals * points, unit: "份", catalogPrice: 40, pricing: { mode: "per-unit", actualQty: animals * points, unitPrice: 40, sourceCurrency: "USD", outputCurrency: "USD", rounding: "line-2dp" }, status: "priced" }
+          : missing("x-tox-coagulation", "凝血检查", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采样时点"),
+        animals && points
+          ? { id: "x-tox-urine", package: pkg, scope: groupScope, service: "尿液检查", analyte: "尿液", qty: animals * points, unit: "份", status: "pending-confirm", reason: "需确认半定量、定量、尿沉渣或组合，不自动选择" }
+          : missing("x-tox-urine", "尿液检查", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "采样时点"),
+        ...(animals ? [
+          { id: "x-tox-necropsy", package: pkg, scope: groupScope, service: "终末剖检", qty: animals, unit: "只", status: "no-catalog", reason: "剖检价目待确认" } as QuoteLine,
+          { id: "x-tox-tissue-collection", package: pkg, scope: groupScope, service: "病理组织采集", qty: animals, unit: "只", status: "no-catalog", reason: "需确认实际组织件数及是否已包含在组合价" } as QuoteLine,
+          { id: "x-tox-tissue-weighing", package: pkg, scope: groupScope, service: "病理组织称重", qty: animals, unit: "只", status: "no-catalog", reason: "需确认实际称重件数" } as QuoteLine,
+          { id: "x-tox-fixation", package: pkg, scope: groupScope, service: "病理组织固定", qty: animals, unit: "只", status: "pending-confirm", reason: "固定最低收费的适用范围待价目负责人确认" } as QuoteLine,
+        ] : [missing("x-tox-necropsy", "病理组织服务", "只", animalsDep, "动物数与组数")]),
         { id: "x-tox-endpoint", package: pkg, scope: "本单", service: "毒性终点分析", qty: 1, unit: "项", status: "no-catalog", reason: "「毒性终点分析」价目还是草稿，未发布" },
       ];
     case "ba":
@@ -299,7 +355,7 @@ function buildExtraPackageLines(pkg: ExtraPackage, fields: DmpkField[]): QuoteLi
           : missing("x-ada-sampling", "ADA 采血留样", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "留样时点"),
         { id: "x-ada-md", package: pkg, scope: "ADA", service: "方法开发 · ELISA 筛选", analyte: "ADA", method: "ELISA（筛选）", qty: 1, unit: "项", catalogPrice: 8000, catalogId: "bio-ligand", status: "priced" },
         animals && points
-          ? { id: "x-ada-assay", package: pkg, scope: "ADA", service: "ADA 筛选检测（确证与滴度不做）", analyte: "ADA", method: "ELISA（筛选）", qty: animals * points, unit: "份", formula: "复用 ADA 留样", catalogPrice: 150, status: "priced" }
+          ? { id: "x-ada-assay", package: pkg, scope: "ADA", service: "ADA 筛选检测", analyte: "ADA", method: "ELISA（筛选）", qty: animals * points, unit: "份", formula: "复用 ADA 留样", status: "pending-confirm", reason: "筛选板容量 42 与价表 40 冲突，需锁定价表版本；确认和滴度按实际触发范围另建任务" }
           : missing("x-ada-assay", "ADA 筛选检测", "份", !animals ? animalsDep : "bloodPoints", !animals ? "动物数与组数" : "留样时点", { analyte: "ADA", method: "ELISA（筛选）" }),
       ];
   }
@@ -311,7 +367,8 @@ function buildExtraPackageLines(pkg: ExtraPackage, fields: DmpkField[]): QuoteLi
  * 人在积木卡上加的板块（`extraPackages`）接在后面；账里本来就有的板块不重复加。
  */
 /** 按组明细的组标签：读过方案用表 2 的七个组；只靠十四项就是「1 组 · N 只」…。 */
-export function dmpkGroupLabels(fields: DmpkField[], sources: ParseResult[]): Record<string, string> {
+export function dmpkGroupLabels(fields: DmpkField[], sources: ParseResult[], animalGroups: AnimalGroupFact[] = []): Record<string, string> {
+  if (animalGroups.length) return Object.fromEntries(animalGroups.map((group) => [group.id, `${group.label} · ${group.animalCount} 只`]));
   if (sources.some((source) => source.role === "protocol")) return protocolGroupLabels;
   const value = (id: string) => fields.find((field) => field.id === id)?.value ?? "";
   const groups = toInt(value("groupCount"));
@@ -320,12 +377,58 @@ export function dmpkGroupLabels(fields: DmpkField[], sources: ParseResult[]): Re
   return Object.fromEntries(Array.from({ length: groups }, (_, index) => [String(index + 1), `${index + 1} 组${perGroup ? ` · ${perGroup} 只` : ""}`]));
 }
 
-export function buildDmpkQuoteLines(fields: DmpkField[], sources: ParseResult[], options: { fieldsOnly?: boolean; extraPackages?: ExtraPackage[] } = {}): QuoteLine[] {
+export function buildDmpkQuoteLines(fields: DmpkField[], sources: ParseResult[], options: { fieldsOnly?: boolean; extraPackages?: ExtraPackage[]; animalGroups?: AnimalGroupFact[]; collectionEvents?: CollectionEventFact[] } = {}): QuoteLine[] {
   const base = sources.some((source) => source.role === "protocol")
     ? buildProtocolLines(fields)
-    : options.fieldsOnly === false ? [] : buildFieldLines(fields);
-  if (!base.length || !options.extraPackages?.length) return base;
+    : options.fieldsOnly === false ? [] : buildFieldLines(fields, options.animalGroups, options.collectionEvents);
+  if (!base.length) return base;
   const present = new Set(base.map((line) => line.package));
-  const extra = options.extraPackages.filter((pkg) => !present.has(pkg)).flatMap((pkg) => buildExtraPackageLines(pkg, fields));
-  return [...base, ...extra];
+  const extra = (options.extraPackages ?? []).filter((pkg) => !present.has(pkg)).flatMap((pkg) => buildExtraPackageLines(pkg, fields));
+  const regionValue = fields.find((field) => field.id === "region")?.value;
+  const region: DmpkRegion = regionValue === "欧美" ? "europe-americas" : regionValue === "亚太" ? "apac" : "domestic";
+  const regional = regionCoefficient(region);
+  return [...base, ...extra].map((line): QuoteLine => {
+    if (line.status !== "priced" || line.catalogPrice === undefined) return line;
+    const hardCost = line.package === "animal" || /\bPD\b|病理|试剂|耗材/.test(line.service);
+    const ba = line.package === "ba" && /方法|检测/.test(line.service)
+      ? [{ id: "ba-1.5", label: "BA 方法与检测系数", value: 1.5 }]
+      : [];
+    const coefficients = [...ba, ...(regional ? [regional] : [])];
+    const usdUnitPrice = Math.round((line.catalogPrice / DEFAULT_CNY_PER_USD) * 100) / 100;
+    if (line.pricing) {
+      const sourceIsCny = line.pricing.sourceCurrency === "CNY";
+      const convert = (value: number | undefined) => value === undefined ? undefined : sourceIsCny ? Math.round((value / DEFAULT_CNY_PER_USD) * 100) / 100 : value;
+      return {
+        ...line,
+        catalogPrice: sourceIsCny ? usdUnitPrice : line.catalogPrice,
+        pricing: {
+          ...line.pricing,
+          unitPrice: convert(line.pricing.unitPrice),
+          flatAmount: convert(line.pricing.flatAmount),
+          platePrice: convert(line.pricing.platePrice),
+          tiers: line.pricing.tiers?.map((tier) => ({ ...tier, amount: convert(tier.amount)! })),
+          coefficients: [...(line.pricing.coefficients ?? []), ...coefficients],
+          hardCost,
+          sourceCurrency: "USD",
+          outputCurrency: "USD",
+          cnyPerUsd: DEFAULT_CNY_PER_USD,
+          rounding: "line-2dp",
+        },
+      };
+    }
+    return {
+      ...line,
+      catalogPrice: usdUnitPrice,
+      pricing: {
+        mode: "per-unit",
+        actualQty: line.qty,
+        unitPrice: usdUnitPrice,
+        coefficients,
+        hardCost,
+        sourceCurrency: "USD",
+        outputCurrency: "USD",
+        rounding: "line-2dp",
+      },
+    };
+  });
 }

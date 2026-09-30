@@ -894,7 +894,7 @@ function DmpkHandoffCard({ onHandoff, viewerName, unresolvedNotes = [], defaultN
           <input
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder={unresolvedNotes.length ? `例如：${unresolvedNotes[0].label} 已按 15% 口径重算` : "选填，例如：管理费按 30% 口径，请复核"}
+            placeholder={unresolvedNotes.length ? `例如：${unresolvedNotes[0].label} 已按新版规则复核` : "选填，例如：地区系数和硬成本范围已复核"}
             aria-label="交接说明"
           />
         </label>
@@ -918,7 +918,7 @@ function DmpkFinalConfirmCard({ onPreview, onGenerate, onOpenInspector, recogniz
 }
 
 function DmpkArtifactCards({ onPreview, onOpenInspector }: { onPreview: (kind: "word" | "excel") => void; onOpenInspector: (panelId: DmpkInspectorPanelId) => void }) {
-  return <section className="artifactCards" data-minimap="artifact" data-minimap-label="报价单产物"><div className="agentReply artifactReply"><span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span><p>报价单已生成。你可以<PanelLink panelId="artifacts" onOpen={onOpenInspector}>查看产物列表</PanelLink>，或直接预览下方文件。</p></div>{(["word", "excel"] as const).map((kind) => <article className="artifactCard" key={kind}><span className="artifactFileIcon">{kind === "word" ? <FileText size={24} /> : <FileSpreadsheet size={24} />}</span><div><strong>{kind === "word" ? "中文 Word 报价单" : "Excel 报价明细"}</strong><p>{kind === "word" ? "DMPK PK 检测正式报价单，包含项目范围、报价条目、管理费和交付说明。" : "报价明细表，包含计价项、数量、单价、管理费和金额一致性校验。"}</p><span>{kind === "word" ? "Document · DOCX · 管理费 30%" : "Spreadsheet · XLSX · 管理费 15%"}</span></div><button className="artifactActionButton" type="button" onClick={() => onPreview(kind)} aria-label="预览"><Eye size={16} /><span>预览</span></button></article>)}</section>;
+  return <section className="artifactCards" data-minimap="artifact" data-minimap-label="报价单产物"><div className="agentReply artifactReply"><span className="replyLogoMark"><img src="/logo/bioaz-logo.svg" alt="" /></span><p>报价单已生成。你可以<PanelLink panelId="artifacts" onOpen={onOpenInspector}>查看产物列表</PanelLink>，或直接预览下方文件。</p></div>{(["word", "excel"] as const).map((kind) => <article className="artifactCard" key={kind}><span className="artifactFileIcon">{kind === "word" ? <FileText size={24} /> : <FileSpreadsheet size={24} />}</span><div><strong>{kind === "word" ? "中文 Word 报价单" : "Excel 报价明细"}</strong><p>{kind === "word" ? "DMPK 正式报价单，包含服务范围、美元收费明细、系数和交付说明。" : "报价明细表，包含实际量、计费量、价格来源、系数及金额校验。"}</p><span>{kind === "word" ? "Document · DOCX · USD" : "Spreadsheet · XLSX · 规则 2.0"}</span></div><button className="artifactActionButton" type="button" onClick={() => onPreview(kind)} aria-label="预览"><Eye size={16} /><span>预览</span></button></article>)}</section>;
 }
 
 export function DmpkParameterPanel({ fields, activeGroup, openGroups, completedCount, totalRequired, stage, onToggle, onEdit }: { fields: DmpkField[]; activeGroup: DmpkGroupId; openGroups: Record<DmpkGroupId, boolean>; completedCount: number; totalRequired: number; stage: DmpkStage; onToggle: (id: DmpkGroupId) => void; onEdit: (id: string) => void }) {
@@ -929,7 +929,7 @@ export function DmpkParameterPanel({ fields, activeGroup, openGroups, completedC
 export function DmpkQuotationPreviewModal({ fields, onClose }: { fields: DmpkField[]; onClose: () => void }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   /* 遮罩、层级、Esc、关闭键都归 PreviewModal——这层皮原本在三处各手写一遍。 */
-  return <PreviewModal eyebrow="报价前确认" title="完整参数与计价规则预览" onClose={onClose}><div className="previewBody"><div className="previewContent" ref={scrollRef}><PreviewTable title="报价参数" rows={fields.map((field) => [getDmpkGroupTitle(field.group, fields), field.label, field.value])} /><div className="previewNotice"><Check size={17} /><span>计价关键字段已齐全。Word 报价单使用 30% 管理费，Excel 报价明细使用 15% 管理费，生成后将进行金额一致性校验。</span></div></div></div><ScrollTopButton targetRef={scrollRef} /></PreviewModal>;
+  return <PreviewModal eyebrow="报价前确认" title="完整参数与计价规则预览" onClose={onClose}><div className="previewBody"><div className="previewContent" ref={scrollRef}><PreviewTable title="报价参数" rows={fields.map((field) => [getDmpkGroupTitle(field.group, fields), field.label, field.value])} /><div className="previewNotice"><Check size={17} /><span>计价关键字段已齐全。正式报价按规则 2.0 输出美元明细，并校验实际量、计费量、系数和最终金额一致。</span></div></div></div><ScrollTopButton targetRef={scrollRef} /></PreviewModal>;
 }
 /* DmpkArtifactPreviewModal 已删除：它渲染的是一张四行摘要表，既不是 Word 也不是
    Excel，撰写人对着它核对不了任何一行。产物预览统一走 QuotePreviewModal。 */

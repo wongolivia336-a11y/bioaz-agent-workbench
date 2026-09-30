@@ -32,6 +32,7 @@ import {
   type DmpkStage,
 } from "./fields";
 import { getDmpkInspectorPanels } from "./inspectorPanels";
+import type { AnimalGroupFact, CollectionEventFact } from "./pricing/facts";
 import { QuotePreviewModal } from "../../components/workbench-shell/QuotePreviewModal";
 import {
   DmpkComposer,
@@ -191,6 +192,10 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   /* 积木：人在基础卡下面自己加的板块（八维 ⑥ 检测项目多选）。「检测类型」那一格仍是单选、定主板块；
      这里记的是再搭上去的。账里会长出对应的一段（quoteLineFixtures.buildExtraPackageLines）。 */
   const [extraPackages, setExtraPackages] = useState<ExtraPackage[]>([]);
+  const [animalGroups, setAnimalGroups] = useState<AnimalGroupFact[]>([]);
+  const [animalGroupsCustomized, setAnimalGroupsCustomized] = useState(false);
+  const [collectionEvents, setCollectionEvents] = useState<CollectionEventFact[]>([]);
+  const [collectionEventsCustomized, setCollectionEventsCustomized] = useState(false);
   const initialRequestHandledRef = useRef(false);
   const chatScrollerRef = useRef<HTMLDivElement>(null);
 
@@ -198,9 +203,40 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   const recognizedFields = useMemo(() => fields.filter((field) => field.value && fieldStatus[field.id] === "recognized"), [fields, fieldStatus]);
   /* 报价行从字段 + 来源推，每次渲染重算——它是账，不是状态。 */
   /* 退回会话不要账：它的纸面是批注锚着的固定件（见 quoteLineFixtures 末尾）。 */
-  const lineOptions = useMemo(() => ({ fieldsOnly: !rework, extraPackages }), [rework, extraPackages]);
+  const derivedAnimalGroups = useMemo<AnimalGroupFact[]>(() => {
+    const count = Number.parseInt(fields.find((field) => field.id === "groupCount")?.value ?? "", 10);
+    const perGroup = Number.parseInt(fields.find((field) => field.id === "animalsPerGroup")?.value ?? "", 10);
+    const species = fields.find((field) => field.id === "species")?.value ?? "";
+    if (!Number.isFinite(count) || count <= 0 || !Number.isFinite(perGroup) || perGroup <= 0 || !species) return [];
+    return Array.from({ length: count }, (_, index) => ({ id: String(index + 1), label: `${index + 1} 组`, species, animalCount: perGroup, role: "main" as const, services: ["pk" as const] }));
+  }, [fields]);
+  const effectiveAnimalGroups = animalGroupsCustomized ? animalGroups : derivedAnimalGroups;
+  const updateAnimalGroups = (next: AnimalGroupFact[]) => {
+    setAnimalGroups(next);
+    setAnimalGroupsCustomized(true);
+    const counts = new Set(next.map((group) => group.animalCount));
+    setFields((items) => items.map((field) => {
+      if (field.id === "groupCount") return { ...field, value: String(next.length) };
+      if (field.id === "animalsPerGroup") return { ...field, value: counts.size === 1 ? String(next[0]?.animalCount ?? "") : "逐组设置" };
+      return field;
+    }));
+  };
+  const derivedCollectionEvents = useMemo<CollectionEventFact[]>(() => {
+    const points = Number.parseInt(fields.find((field) => field.id === "bloodPoints")?.value ?? "", 10);
+    const assay = fields.find((field) => field.id === "assayType")?.value ?? "";
+    const totalAnimals = effectiveAnimalGroups.reduce((total, group) => total + group.animalCount, 0);
+    if (assay === "BA Only" || !points || !totalAnimals) return [];
+    return [{ id: "collection-plan", label: assay === "TOX" ? "TK 采血" : "PK 采血", kind: "blood", timepoint: `${points} 个时点`, groupIds: effectiveAnimalGroups.map((group) => group.id), animalCount: totalAnimals * points, purposes: assay === "TOX" ? ["tk"] : ["pk"] }];
+  }, [effectiveAnimalGroups, fields]);
+  const effectiveCollectionEvents = collectionEventsCustomized ? collectionEvents : derivedCollectionEvents;
+  const updateCollectionEvents = (next: CollectionEventFact[]) => {
+    setCollectionEvents(next);
+    setCollectionEventsCustomized(true);
+  };
+  const lineOptions = useMemo(() => ({ fieldsOnly: !rework, extraPackages, animalGroups: effectiveAnimalGroups, collectionEvents: effectiveCollectionEvents }), [rework, extraPackages, effectiveAnimalGroups, effectiveCollectionEvents]);
   const quoteLines = useMemo(() => buildDmpkQuoteLines(fields, sources, lineOptions), [fields, sources, lineOptions]);
   const quoteSummary = useMemo(() => summarizeLines(quoteLines, manualPrices), [quoteLines, manualPrices]);
+  const pricingBlockers = useMemo(() => quoteLines.filter((line) => line.status !== "priced" && !manualPrices[line.id]), [quoteLines, manualPrices]);
   /* 有账就把账折成纸；没账（退回会话）不传，纸面用固定件。 */
   const paperTitle = sources.find((source) => source.role === "protocol")?.title ?? taskTitle;
   const quotePaper = useMemo(
@@ -213,8 +249,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
      就跟眼前的账对不上。stage 记不住这件事：改参数会退回 collecting，改单价
      连 stage 都不动。所以单独算，而不是往 stage 里再塞一个值。 */
   const [generatedSnapshot, setGeneratedSnapshot] = useState<string | null>(null);
-  const snapshotOf = (nextFields: DmpkField[], nextManual: Record<string, ManualPrice>, nextAdjustments: QuoteAdjustments = adjustments, nextExtra: ExtraPackage[] = extraPackages) =>
-    JSON.stringify({ values: nextFields.map((field) => [field.id, field.value]), manual: nextManual, adjustments: nextAdjustments, extra: nextExtra });
+  const snapshotOf = (nextFields: DmpkField[], nextManual: Record<string, ManualPrice>, nextAdjustments: QuoteAdjustments = adjustments, nextExtra: ExtraPackage[] = extraPackages, nextGroups: AnimalGroupFact[] = effectiveAnimalGroups, nextCollections: CollectionEventFact[] = effectiveCollectionEvents) =>
+    JSON.stringify({ values: nextFields.map((field) => [field.id, field.value]), manual: nextManual, adjustments: nextAdjustments, extra: nextExtra, animalGroups: nextGroups, collectionEvents: nextCollections });
   const quoteStale = generatedSnapshot !== null && generatedSnapshot !== snapshotOf(fields, manualPrices, adjustments, extraPackages);
   const visibleCardFields = missingFields.filter((field) => !draftTabs.some((tab) => tab.fieldId === field.id));
   const editingField = fields.find((field) => field.id === editingFieldId) ?? null;
@@ -1075,6 +1111,13 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   };
 
   const startGeneration = () => {
+    if (pricingBlockers.length) {
+      appendMessage("agent", `还有 ${pricingBlockers.length} 项计价问题未解决，当前只能保存草稿，不能生成正式总价。请先在报价明细中处理：${pricingBlockers.slice(0, 3).map((line) => line.service).join("、")}${pricingBlockers.length > 3 ? "等" : ""}。`);
+      setPanelOpen(true);
+      setVisiblePanelIds((ids) => ids.includes("evidence") ? ids : [...ids, "evidence"]);
+      setInspectorPanelId("evidence");
+      return;
+    }
     const origin = rework ? `按 ${reworkNotes.length} 条批注重出` : quoteVersions.length ? "改参数后重出" : "首次生成";
     runGeneration(origin, recognizedFields.length ? `确认参数（含 ${recognizedFields.length} 项文件识别结果），生成正式报价单。` : quoteVersions.length ? "参数已更新，重新生成报价单。" : "确认参数，生成正式报价单。");
   };
@@ -1082,6 +1125,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
   /** 改了单价但没改参数：stage 还停在 generated，参数卡不会再弹，出口就是这颗。 */
   const regenerateQuote = () => {
     if (stage === "generating" || stage === "thinking") return;
+    if (pricingBlockers.length) {
+      appendMessage("agent", `报价仍有 ${pricingBlockers.length} 项待确认，已保留当前草稿，暂不重新发布正式报价。`);
+      setInspectorPanelId("evidence");
+      return;
+    }
     runGeneration("改动后重出", "按最新参数和单价重新生成报价单。");
   };
 
@@ -1099,7 +1147,7 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     { id: "preview", label: "预览完整参数与计价规则", run: () => setPreviewOpen(true), disabled: stage === "idle", disabledReason: "还没开始收参数" },
     quoteVersions.length
       ? { id: "regenerate", label: "重新生成报价单", meta: quoteStale ? "参数或单价改过，出的那版已经旧了" : "眼前的账和出的那版一致", run: regenerateQuote, disabled: busy || !quoteStale, disabledReason: "没有改动，不用重出" }
-      : { id: "generate", label: "生成报价单", meta: "Word 报价单 + Excel 报价明细", run: startGeneration, disabled: stage !== "ready", disabledReason: "参数还没齐" },
+      : { id: "generate", label: "生成报价单", meta: "Word 报价单 + Excel 报价明细", run: startGeneration, disabled: stage !== "ready" || Boolean(pricingBlockers.length), disabledReason: pricingBlockers.length ? `还有 ${pricingBlockers.length} 项计价问题未解决` : "参数还没齐" },
   ];
 
   /**
@@ -1171,7 +1219,11 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
     fieldStatus,
     quoteLines,
     manualPrices,
-    groupLabels: dmpkGroupLabels(fields, sources),
+    groupLabels: dmpkGroupLabels(fields, sources, effectiveAnimalGroups),
+    animalGroups: effectiveAnimalGroups,
+    onAnimalGroupsChange: identifiedAssayType === "BA Only" ? undefined : updateAnimalGroups,
+    collectionEvents: effectiveCollectionEvents,
+    onCollectionEventsChange: identifiedAssayType === "BA Only" ? undefined : updateCollectionEvents,
     highlightLineId,
     /* 积木：主板块之外命中的板块，在台账下面各长一张卡；「再搭一块」就在那儿 */
     extraPackages,
@@ -1326,8 +1378,8 @@ export default function DmpkQuotationSession({ projectName, taskTitle, initialRe
             onOpenCanvas={() => setReworkCanvas(true)}
           />
         ) : null} editProposal={editProposal} viewerName={viewerName} handoffDone={handedOff} handoffNote={handoffNote} onHandoff={(to, note) => { handOff(to, note); onHandoff?.({ to, kind: "dmpk-quotation", title: `请复核：${taskTitle}`, note, attachments: [
-          { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · 管理费 30%" },
-          { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 管理费 15%" },
+          { id: "quote-word", name: `${taskTitle}_报价单.docx`, meta: "Word · USD · 规则 2.0" },
+          { id: "quote-excel", name: `${taskTitle}_报价明细.xlsx`, meta: "Excel · 实际量 / 计费量 / 系数" },
         ], review: buildReviewBundle() }); }}
           /* 改动引导卡：三步定完落 chip，发送才生效（见 queueChange / sendDraft）。
              本单以外那两档要 SD——权限跟改价用同一个布尔。 */
