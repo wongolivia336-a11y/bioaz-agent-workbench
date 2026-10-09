@@ -157,9 +157,9 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
       {
         id: QA_MAIL_RUN_ID,
         role: "run",
-        text: "正在审核报告",
+        text: "正在审核文件",
         running: true,
-        steps: ["读取邮件要求与附件版本", "核对 7 页正文与页码", "校验时间逻辑与内容一致性", `生成 ${qaFindings.length} 条可定位审核意见`],
+        steps: ["读取工单要求与附件版本", "核对正文页码和关键字段", "校验时间逻辑与内容一致性", `生成 ${qaFindings.length} 条可定位审核意见`],
         doneTitle: `已完成${qaVersions[0].label}审核`,
       },
     ]);

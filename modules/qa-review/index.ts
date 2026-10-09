@@ -9,8 +9,8 @@ export const qaReviewModule: AgentModuleDefinition = {
   taskType: "审核",
   availability: "available",
   suggestedCoworker: qaReviewCoworker,
-  supportedIntents: [{ id: "qa-review", label: "QA 审核", examples: ["复核报告交付包"], keywords: /qa|审核|复核|检查.*交付包|交付包.*检查/i }],
-  quickStarts: [{ id: "qa-review", label: "QA 审核", prompt: "我要复核一份报告交付包", icon: Check }],
+  supportedIntents: [{ id: "qa-review", label: "QA 审核", examples: ["复核报告交付包", "审核合同文件"], keywords: /qa|审核|复核|合同|检查.*交付包|交付包.*检查/i }],
+  quickStarts: [{ id: "qa-review", label: "QA 文件审核", prompt: "我要复核一份合同或报告交付包", icon: Check }],
   stages: [
     { id: "upload", label: "上传文件" },
     { id: "ai-review", label: "AI 校验" },

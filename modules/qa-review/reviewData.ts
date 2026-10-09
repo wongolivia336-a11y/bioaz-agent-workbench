@@ -330,7 +330,7 @@ export const qaChatOpening: QaChatMessage[] = [
   {
     id: "qa-chat-open",
     role: "agent",
-    text: `已完成《${qaDocument.title}》全文校验：时间逻辑 3 条、页码逻辑 2 条、内容一致性 1 条，共 ${qaFindings.length} 条。右侧「AI文件审核」可以逐条定位到页，判定依据问我。`,
+    text: `已完成《${qaDocument.title}》全文校验：时间逻辑 3 条、页码逻辑 2 条、内容一致性 1 条，共 ${qaFindings.length} 条。右侧「AI文件审核」可以逐条定位到原文位置；你也可以问我判定依据，再决定通过、驳回或补人工批注。`,
   },
 ];
 

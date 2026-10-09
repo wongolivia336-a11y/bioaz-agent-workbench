@@ -7556,8 +7556,15 @@ button {
 .ticketDetailTitle h1 { margin: 0; font-size: 20px; }
 .ticketDetailTitle p { margin: 0; color: var(--body); font-size: 13px; }
 
-.ticketDetailFiles, .ticketDetailFlow, .quotationReviewPane { border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 16px 18px; }
-.ticketDetailFiles h2, .ticketDetailFlow h2, .quotationReviewPane h2 { margin: 0 0 12px; font-size: 13px; font-weight: 700; }
+.ticketDetailFiles, .ticketDetailFlow, .ticketQaBrief, .quotationReviewPane { border: 1px solid var(--line); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 16px 18px; }
+.ticketDetailFiles h2, .ticketDetailFlow h2, .ticketQaBrief h2, .quotationReviewPane h2 { margin: 0 0 12px; font-size: 13px; font-weight: 700; }
+.ticketQaBrief { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); align-items: start; gap: 18px; }
+.ticketQaBrief p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.65; }
+.ticketQaBrief dl { display: grid; gap: 8px; margin: 0; }
+.ticketQaBrief dl > div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.ticketQaBrief dl > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.ticketQaBrief dt { color: var(--muted); font-size: 12px; }
+.ticketQaBrief dd { min-width: 0; margin: 0; color: var(--body); font-size: 12.5px; font-weight: 600; }
 
 /* 附件行不再自带边框:外面这张卡已经把「随单产物」圈出来了,里面每条再描一圈
    就成了框套框——两层框说的是同一件事,而第二层只是把行挤窄。
@@ -7868,6 +7875,7 @@ button {
 
 @media (max-width: 860px) {
   .ticketDetailHead { grid-template-columns: minmax(0, 1fr); }
+  .ticketQaBrief { grid-template-columns: minmax(0, 1fr); }
   .ticketFlowMain time { margin-left: 0; flex-basis: 100%; }
   .ticketDetailActions { flex-direction: column; align-items: stretch; }
   .ticketDetailActions button { width: 100%; }

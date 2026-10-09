@@ -8,6 +8,7 @@ import { QuoteReviewCanvas } from "./QuoteReviewCanvas";
 import { TicketFilePreview, downloadTicketFile, ticketFileView, type TicketFileView } from "./TicketFilePreview";
 import type { MailResourceRef } from "../../lib/workbench/mailboxData";
 import { quoteAnchorLabel, quoteCurrentValue, quoteNoteLabel, quoteNoteSeverityLabel, seededNotesByTicket, type QuoteNote } from "../../lib/workbench/quoteData";
+import { isQaReviewTicket, qaTicketBrief } from "../../lib/workbench/qaReviewFocus";
 import {
   initialNotices,
   minutesFromLabel,
@@ -426,6 +427,8 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
   const noted = Object.values(notes);
   const blockingCount = noted.filter((note) => note.severity === "blocking").length;
   const isQuotation = ticket.kind === "dmpk-quotation";
+  const isQaReview = isQaReviewTicket(ticket);
+  const qaBrief = isQaReview ? qaTicketBrief(ticket) : null;
   const [preview, setPreview] = useState<{ file: MailResourceRef; view: TicketFileView } | null>(null);
 
   if (isQuotation && reviewing) {
@@ -455,6 +458,23 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
       </div>
 
       <TicketStageBar status={ticket.status} />
+
+      {qaBrief ? (
+        <section className="ticketQaBrief" aria-label="QA 审核包摘要">
+          <div>
+            <h2>{qaBrief.title}</h2>
+            <p>{qaBrief.description}</p>
+          </div>
+          <dl>
+            {qaBrief.checks.map((item) => (
+              <div key={item.label}>
+                <dt>{item.label}</dt>
+                <dd>{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
 
       {ticket.attachments.length ? (
         <section className="ticketDetailFiles">
@@ -555,6 +575,11 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
             <button className="primaryButton compact" type="button" onClick={() => { onAccept(); onReviewingChange(true); }}>
               <Highlighter size={15} />开始审核
             </button>
+          </>
+        ) : isQaReview ? (
+          <>
+            <p className="ticketDetailHint">进入 QA 审核会话后再逐条处理批注、查看版本比对，并落通过或驳回结论。</p>
+            <button className="primaryButton compact" type="button" onClick={onHandle}>进入 QA 审核会话</button>
           </>
         ) : (
           <>

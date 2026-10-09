@@ -37,6 +37,7 @@ type Props = {
   coworkers: CoworkerDefinition[];
   activeCoworkerId: string;
   quickStarts: QuickStartItem[];
+  homeFocus?: { title: string; body: string; quickStartLabel?: string };
   /* 进了某个空间时才有：空间首页 = 全局首页 + 这两样。
      没进空间（全局首页）不传，页面跟原来一模一样。 */
   spaceStats?: SpaceStats | null;
@@ -120,8 +121,8 @@ export function NewTaskHome(props: Props) {
           </>
         ) : (
           <>
-            <h1>今天要推进哪项工作？</h1>
-            <p>描述目标或从常用流程开始。任务会保留在所属空间中，过程与产物均可追溯。</p>
+            <h1>{props.homeFocus?.title ?? "今天要推进哪项工作？"}</h1>
+            <p>{props.homeFocus?.body ?? "描述目标或从常用流程开始。任务会保留在所属空间中，过程与产物均可追溯。"}</p>
           </>
         )}
       </div>
@@ -137,9 +138,9 @@ export function NewTaskHome(props: Props) {
       <div className="quickStartZone">
         {/* 空间首页上这一组卡片就是「本空间的专家」，给它一个名字——四张卡和下面的概览
             才分得出谁是动作、谁是说明。全局首页照旧不写：那里的卡是流程，不是谁的。 */}
-        {isSpaceHome ? (
+        {isSpaceHome || props.homeFocus?.quickStartLabel ? (
           <div className="quickStartEyebrowRow" style={{ "--quick-start-count": Math.min(props.quickStarts.length, 4) } as CSSProperties}>
-            <span className="quickStartEyebrow">本空间的专家</span>
+            <span className="quickStartEyebrow">{isSpaceHome ? "本空间的专家" : props.homeFocus?.quickStartLabel}</span>
             {/* 专家是这个空间可以配的——配置的门就开在专家旁边，不用回侧栏找那个 … 菜单。 */}
             {canConfigureCoworkers ? (
               <button type="button" className="quickStartConfigure" onClick={() => setCoworkersOpen(true)}>
