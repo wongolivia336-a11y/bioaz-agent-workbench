@@ -682,22 +682,22 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
             {!hasReviewContext ? (
               <section className="qaEntryGuide" aria-label="QA 审核入口">
                 <header>
-                  <span>QA 审核入口</span>
-                  <strong>选择一条路线开始</strong>
-                  <p>新会话先上传文件；站内信进入会带着工单和附件；负责人可直接看批注、比对和归档轨迹。</p>
+                  <span>文件审核</span>
+                  <strong>上传待审文件，或从待审工单继续</strong>
+                  <p>支持报告、合同与交付包。审核完成后会生成可追溯的批注、版本比对和审批记录。</p>
                 </header>
                 <div>
-                  <button type="button" onClick={() => setChatText("一线实验员新开 QA 审核任务，请审核我上传的报告/合同/交付包。")}>
-                    <b>直接上传文件</b>
-                    <small>适合一线实验员，从空会话开始</small>
+                  <button type="button" onClick={() => setChatText("请审核我上传的报告、合同或交付包。")}>
+                    <b>上传待审文件</b>
+                    <small>拖入文件后开始校验</small>
                   </button>
-                  <button type="button" onClick={() => setChatText("从站内信待审工单进入，请带着工单要求审核随行文件。")}>
-                    <b>站内信待审工单</b>
-                    <small>保留项目、版本和处理人上下文</small>
+                  <button type="button" onClick={() => setChatText("请按当前待审工单继续审核。")}>
+                    <b>待审工单</b>
+                    <small>保留项目与版本上下文</small>
                   </button>
                   <button type="button" onClick={() => { setPanelOpen(true); setPoppedPanelId("document"); setActivePanelId("notes"); }}>
-                    <b>查看审批记录</b>
-                    <small>适合负责人复核备注与归档</small>
+                    <b>审批记录</b>
+                    <small>查看批注、比对与流转</small>
                   </button>
                 </div>
               </section>

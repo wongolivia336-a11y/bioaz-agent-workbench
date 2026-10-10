@@ -60,6 +60,13 @@ type Props = {
   onToggleCollapsed: () => void;
 };
 
+function accountScopeLabel(account: InboxAccount, lens: DemoLens) {
+  if (lens !== "qa-review" && lens !== "tumor-report") return account.grade ? `${account.roleLabel} · ${account.grade}` : account.roleLabel;
+  if (account.role === "author") return `${account.roleLabel} · 上传送审`;
+  if (account.role === "approver") return `${account.roleLabel} · 处理待审`;
+  return `${account.roleLabel} · 复核归档`;
+}
+
 export function WorkspaceSidebar(props: Props) {
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({ "project-xx": true, "project-yy": true, "project-zz": false });
   const [searchOpen, setSearchOpen] = useState(false);
@@ -322,7 +329,7 @@ export function WorkspaceSidebar(props: Props) {
             {props.switchableAccounts.map((item) => (
               <button className={`accountSwitchRow ${item.id === props.account.id ? "isCurrent" : ""}`} type="button" key={item.id} onClick={() => { props.onAccountChange(item.id); setAccountMenuOpen(false); }}>
                 <span className="avatar">{item.name.slice(0, 1)}</span>
-                <span><strong>{item.name}</strong><small>{item.roleLabel}{item.grade ? ` · ${item.grade}` : ""}</small></span>
+                <span><strong>{item.name}</strong><small>{accountScopeLabel(item, props.lens)}</small></span>
                 {item.id === props.account.id ? <Check size={14} /> : null}
               </button>
             ))}
