@@ -506,18 +506,68 @@
   gap: 10px;
 }
 
+.qaDiffRow > header > span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.qaDiffRow > header em {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: #8a6b24;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .qaDiffRow > header strong { color: var(--bioaz-text-primary); font-size: var(--bioaz-type-small-size); }
 .qaDiffRow > header small { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+.qaDiffReason {
+  margin: 0;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: 18px;
+}
+
+.qaDiffReason b {
+  margin-right: 6px;
+  border-radius: 4px;
+  background: var(--bioaz-agent-accent-soft);
+  padding: 1px 6px;
+  color: var(--bioaz-agent-accent);
+  font-size: 10px;
+}
 
 .qaDiffPair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 
 .qaDiffBefore,
 .qaDiffAfter {
+  position: relative;
   overflow-wrap: anywhere;
   border-radius: var(--bioaz-radius-tool);
-  padding: 6px 10px;
+  padding: 18px 10px 6px;
   font-size: var(--bioaz-type-label-size);
   line-height: 18px;
+}
+
+.qaDiffBefore::before,
+.qaDiffAfter::before {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  color: currentColor;
+  content: attr(data-label);
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.7;
 }
 
 .qaDiffBefore {
@@ -530,6 +580,27 @@
 
 .qaDiffRow.kind-added .qaDiffPair { grid-template-columns: minmax(0, 1fr); }
 .qaDiffRow.kind-added .qaDiffBefore { display: none; }
+
+.qaDiffRow > footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qaDiffRow > footer button {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 4px 10px;
+  color: var(--bioaz-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.qaDiffRow > footer button:hover {
+  border-color: var(--bioaz-agent-accent-border);
+  color: var(--bioaz-agent-accent);
+}
 
 /* ---- 审批备注 ---- */
 
@@ -727,6 +798,79 @@
 }
 
 .qaChatComposerStack > .roleSelector { justify-self: start; }
+
+.qaEntryGuide {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-container);
+  background: var(--bioaz-surface);
+  padding: 16px;
+  box-shadow: var(--bioaz-shadow-subtle);
+}
+
+.qaEntryGuide header {
+  display: grid;
+  gap: 4px;
+}
+
+.qaEntryGuide header span {
+  color: #8a6b24;
+  font-size: var(--bioaz-type-label-size);
+  font-weight: 700;
+}
+
+.qaEntryGuide header strong {
+  color: var(--bioaz-text-primary);
+  font-size: var(--bioaz-type-body-size);
+}
+
+.qaEntryGuide header p {
+  margin: 0;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-small-size);
+  line-height: 20px;
+}
+
+.qaEntryGuide > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.qaEntryGuide button {
+  display: grid;
+  min-height: 74px;
+  gap: 5px;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-control);
+  background: var(--bioaz-surface);
+  padding: 12px;
+  color: var(--bioaz-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease),
+    background var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease),
+    box-shadow var(--bioaz-motion-fast, var(--bioaz-motion-standard)) var(--bioaz-ease-standard, ease);
+}
+
+.qaEntryGuide button:hover {
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+  box-shadow: 0 0 0 3px var(--bioaz-agent-focus-ring);
+}
+
+.qaEntryGuide button b {
+  font-size: var(--bioaz-type-small-size);
+}
+
+.qaEntryGuide button small {
+  color: var(--bioaz-text-tertiary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: 16px;
+}
 
 /* QA 与 DMPK 共用同一颗 panel 控件；打开态必须有足够对比度，
    否则 16px 的 PanelRightClose 会看起来像一个没渲染出来的空框。 */

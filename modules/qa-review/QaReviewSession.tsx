@@ -25,6 +25,7 @@ import {
   qaDocument,
   qaFindings,
   qaInitialNotes,
+  qaNewSessionOpening,
   qaPageFields,
   qaVersions,
   resolveQaReply,
@@ -81,11 +82,11 @@ const roleTitle: Record<QaViewerRole, string> = {
 
 export default function QaReviewSession({ projectName, taskTitle, initialRequest, viewerRole = "approver", coworkers, activeCoworkerId, onCoworkerChange, onHandoff, sessionOutcome, onSessionOutcomeChange }: AgentModuleSessionProps) {
   const role = viewerRole as QaViewerRole;
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(Boolean(initialRequest));
   const [activePanelId, setActivePanelId] = useState("ai-review");
   const [visiblePanelIds, setVisiblePanelIds] = useState(["document", "ai-review", "ai-diff", "notes"]);
-  /* 从收件箱进入默认把文档弹到主位；收回后主位恢复为标准 chatflow。 */
-  const [poppedPanelId, setPoppedPanelId] = useState<QaPoppedPanelId | null>(initialRequest ? null : "document");
+  /* 新会话先走入口引导；站内信进入则在跑批后自动打开原件。 */
+  const [poppedPanelId, setPoppedPanelId] = useState<QaPoppedPanelId | null>(null);
   const [versionId, setVersionId] = useState(qaVersions[0].id);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(100);
@@ -130,7 +131,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     role: "user",
     text: "审批流转邮件已接收，请审核随附报告。",
     attachments: [{ id: "mail-report", kind: "file", label: qaDocument.title, meta: "来自收件箱 · 第一版", origin: "library" }],
-  }] : qaChatOpening);
+  }] : qaNewSessionOpening);
   const [mailReviewRunning, setMailReviewRunning] = useState(Boolean(initialRequest));
   const chatScrollerRef = useRef<HTMLDivElement>(null);
   const [chatText, setChatText] = useState("");
@@ -142,6 +143,12 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
   const allFindings = useMemo(() => [...qaFindings, ...humanFindings], [humanFindings]);
   const openFindings = allFindings.filter((finding) => (findingStates[finding.id] ?? "open") === "open").length;
   const businessCoworkers = coworkers.filter((coworker) => coworker.id !== "bioaz-helper");
+  const hasReviewContext = initialRequest || mailReviewRunning || chatMessages.some((message) => (
+    message.id === "qa-chat-open"
+    || message.id === `mail-${qaChatOpening[0].id}`
+    || message.id === QA_MAIL_RUN_ID
+    || message.id.startsWith("qa-upload-run-")
+  ));
 
   /* 不用 ref 做"只跑一次"的闸。ref 会活过 StrictMode 的二次挂载，而 timer 不会——
      第一遍排了 timer、cleanup 清掉、第二遍因为 ref 已是 true 直接返回，于是
@@ -192,15 +199,44 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
 
   const sendChat = () => {
     const question = chatText.trim();
-    if (!question) return;
+    if (!question && !chatAttachments.length) return;
     const stamp = Date.now();
+    const userText = question || "请审核我上传的文件。";
     setChatMessages((current) => [
       ...current,
-      { id: `qa-chat-user-${stamp}`, role: "user", text: question, attachments: chatAttachments },
-      { id: `qa-chat-agent-${stamp}`, role: "agent", text: resolveQaReply(question) },
+      { id: `qa-chat-user-${stamp}`, role: "user", text: userText, attachments: chatAttachments },
     ]);
     setChatText("");
     setChatAttachments([]);
+    if (!hasReviewContext && chatAttachments.length) {
+      setMailReviewRunning(true);
+      setChatMessages((current) => [
+        ...current,
+        {
+          id: `qa-upload-run-${stamp}`,
+          role: "run",
+          text: "正在审核文件",
+          running: true,
+          steps: ["读取上传文件与版本信息", "识别报告字段和页码结构", "校验时间逻辑、内容一致性和版式", `生成 ${qaFindings.length} 条可定位审核意见`],
+          doneTitle: `已完成${qaVersions[0].label}审核`,
+        },
+      ]);
+      window.setTimeout(() => {
+        setMailReviewRunning(false);
+        setChatMessages((current) => [
+          ...current.map((message) => message.id === `qa-upload-run-${stamp}` ? { ...message, running: false } : message),
+          ...qaChatOpening,
+        ]);
+        setPanelOpen(true);
+        setPoppedPanelId("document");
+      }, 1200);
+      return;
+    }
+    if (!question) return;
+    setChatMessages((current) => [
+      ...current,
+      { id: `qa-chat-agent-${stamp}`, role: "agent", text: resolveQaReply(question) },
+    ]);
   };
 
   const focusFinding = (finding: QaFinding) => {
@@ -212,7 +248,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
      选中文字这个动作本身已经表达了"我要说这一处"，再要求先切模式
      等于让人把同一件事说两遍。 */
   const captureSelection = (event: React.MouseEvent<HTMLElement>) => {
-    if (!annotateMode || outcome !== null || role === "owner") return;
+    if (outcome !== null || role === "owner") return;
     const selection = window.getSelection();
     const quote = selection?.toString().trim() ?? "";
     if (!quote) return;
@@ -224,6 +260,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     });
     setAnnotationDraft("");
     setAnnotationKind("defect");
+    setAnnotateMode(true);
   };
 
   const submitAnnotation = () => {
@@ -307,6 +344,12 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     currentVersionId: versionId,
     onFindingState: (findingId, state) => setFindingStates((current) => ({ ...current, [findingId]: state })),
     onFocusFinding: focusFinding,
+    onFocusDiff: (row) => {
+      setPage(Math.min(row.page, qaDocument.pageCount));
+      setPoppedPanelId("document");
+      setPanelOpen(true);
+      setActivePanelId("ai-diff");
+    },
     onNoteDraftChange: setNoteDraft,
     onAddNote: addNote,
   // focusFinding / addNote 只读上面这些 state，跟着它们一起失效即可
@@ -636,7 +679,29 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                 : <UserBubble key={message.id} text={message.text} attachments={message.attachments} />)}
           </div></div>
           <footer className="qaChatComposerStack">
-            {!outcome ? (
+            {!hasReviewContext ? (
+              <section className="qaEntryGuide" aria-label="QA 审核入口">
+                <header>
+                  <span>QA 审核入口</span>
+                  <strong>选择一条路线开始</strong>
+                  <p>新会话先上传文件；站内信进入会带着工单和附件；负责人可直接看批注、比对和归档轨迹。</p>
+                </header>
+                <div>
+                  <button type="button" onClick={() => setChatText("一线实验员新开 QA 审核任务，请审核我上传的报告/合同/交付包。")}>
+                    <b>直接上传文件</b>
+                    <small>适合一线实验员，从空会话开始</small>
+                  </button>
+                  <button type="button" onClick={() => setChatText("从站内信待审工单进入，请带着工单要求审核随行文件。")}>
+                    <b>站内信待审工单</b>
+                    <small>保留项目、版本和处理人上下文</small>
+                  </button>
+                  <button type="button" onClick={() => { setPanelOpen(true); setPoppedPanelId("document"); setActivePanelId("notes"); }}>
+                    <b>查看审批记录</b>
+                    <small>适合负责人复核备注与归档</small>
+                  </button>
+                </div>
+              </section>
+            ) : !outcome ? (
               <section className="warningDecision qaApprovalCard">
                 <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "负责人视角为只读"}</strong><p>
                   {openFindings ? (
@@ -664,7 +729,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
               <div className="composerInputStack">
                 <input value={chatText} placeholder="问 QA 审核同事，例如：第 8 页那条时间逻辑怎么判的" onChange={(event) => setChatText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); sendChat(); } }} />
               </div>
-              <button className="sendIconButton" type="button" aria-label="发送" disabled={!chatText.trim()} onClick={sendChat}><Send size={18} /></button>
+              <button className="sendIconButton" type="button" aria-label="发送" disabled={!chatText.trim() && !chatAttachments.length} onClick={sendChat}><Send size={18} /></button>
             </WorkbenchComposer>
           </footer>
         </section>
@@ -703,8 +768,8 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                   在"接下来谁拿到它" */}
               <p>
                 {decision === "reject"
-                  ? `会把已确认的问题连同理由一起退回撰写人 ${version.author}，并生成一封邮件草稿供你过目。`
-                  : `会把本轮结论送交负责人 ${qaOwnerName} 做最终确认与归档，并生成一封邮件草稿供你过目。`}
+                  ? `会把已确认的问题连同理由一起退回撰写人 ${version.author}，并写入本任务的流转记录。`
+                  : `会把本轮结论送交负责人 ${qaOwnerName} 做最终确认与归档，并写入本任务的流转记录。`}
               </p>
             </header>
             <label className="qaRejectField">

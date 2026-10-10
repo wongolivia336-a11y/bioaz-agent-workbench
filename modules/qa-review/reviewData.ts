@@ -334,6 +334,14 @@ export const qaChatOpening: QaChatMessage[] = [
   },
 ];
 
+export const qaNewSessionOpening: QaChatMessage[] = [
+  {
+    id: "qa-chat-guide",
+    role: "agent",
+    text: "这里有三条进入 QA 审核的路线：一线实验员可以直接上传报告、合同或交付包；审批人可以从站内信/待审工单带着上下文进入；负责人可以查看已通过版本、审批备注和归档记录。新开会话时先把待审文件拖进输入框，我会先跑 AI 文件审核，再打开原文、批注和版本比对。",
+  },
+];
+
 const qaChatFallback = "这个我答不了——本次只跑了时间逻辑、页码逻辑、内容一致性三类校验，一共 6 条，全在右侧「AI文件审核」里。超出这三类的判断没有依据，得你自己看原件。";
 
 const qaReplies: Array<{ keywords: RegExp; text: string }> = [
