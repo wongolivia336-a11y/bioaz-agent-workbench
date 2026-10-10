@@ -31,7 +31,7 @@ export type DemoLensDefinition = {
 export const DEMO_LENSES: DemoLensDefinition[] = [
   { value: "all", label: "总览", moduleId: null, kindLabel: null, accountIds: [] },
   /* 撰写人是一线实验员林一一，审批人是王林彬。 */
-  { value: "qa-review", label: "QA 审核", moduleId: "qa-review", kindLabel: "QA 审核", accountIds: ["acct-lin", "acct-wang"] },
+  { value: "qa-review", label: "QA 审核", moduleId: "qa-review", kindLabel: "QA 审核", accountIds: ["acct-lin", "acct-wang", "acct-li"] },
   /* 撰写人是 DMPK 报价同事赵敏，审批人是王林彬。 */
   { value: "dmpk-quotation", label: "DMPK 报价", moduleId: "dmpk-quotation", kindLabel: "DMPK 报价", accountIds: ["acct-zhao", "acct-wang"] },
   /* 撰写人是肿瘤报价同事陈默，审批人同样是王林彬——两条报价线共用一位审批人，

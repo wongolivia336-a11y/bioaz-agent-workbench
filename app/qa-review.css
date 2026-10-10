@@ -506,18 +506,68 @@
   gap: 10px;
 }
 
+.qaDiffRow > header > span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.qaDiffRow > header em {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--bioaz-radius-full);
+  background: var(--bioaz-surface-subtle);
+  color: #8a6b24;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .qaDiffRow > header strong { color: var(--bioaz-text-primary); font-size: var(--bioaz-type-small-size); }
 .qaDiffRow > header small { color: var(--bioaz-text-tertiary); font-size: 11px; }
+
+.qaDiffReason {
+  margin: 0;
+  color: var(--bioaz-text-secondary);
+  font-size: var(--bioaz-type-label-size);
+  line-height: 18px;
+}
+
+.qaDiffReason b {
+  margin-right: 6px;
+  border-radius: 4px;
+  background: var(--bioaz-agent-accent-soft);
+  padding: 1px 6px;
+  color: var(--bioaz-agent-accent);
+  font-size: 10px;
+}
 
 .qaDiffPair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 
 .qaDiffBefore,
 .qaDiffAfter {
+  position: relative;
   overflow-wrap: anywhere;
   border-radius: var(--bioaz-radius-tool);
-  padding: 6px 10px;
+  padding: 18px 10px 6px;
   font-size: var(--bioaz-type-label-size);
   line-height: 18px;
+}
+
+.qaDiffBefore::before,
+.qaDiffAfter::before {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  color: currentColor;
+  content: attr(data-label);
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.7;
 }
 
 .qaDiffBefore {
@@ -530,6 +580,27 @@
 
 .qaDiffRow.kind-added .qaDiffPair { grid-template-columns: minmax(0, 1fr); }
 .qaDiffRow.kind-added .qaDiffBefore { display: none; }
+
+.qaDiffRow > footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qaDiffRow > footer button {
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  padding: 4px 10px;
+  color: var(--bioaz-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.qaDiffRow > footer button:hover {
+  border-color: var(--bioaz-agent-accent-border);
+  color: var(--bioaz-agent-accent);
+}
 
 /* ---- 审批备注 ---- */
 

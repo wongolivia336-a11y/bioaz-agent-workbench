@@ -334,6 +334,14 @@ export const qaChatOpening: QaChatMessage[] = [
   },
 ];
 
+export const qaNewSessionOpening: QaChatMessage[] = [
+  {
+    id: "qa-chat-guide",
+    role: "agent",
+    text: "请上传需要审核的报告、合同或交付包。我会完成文件识别与基础校验，并保留批注、版本比对和审批记录。",
+  },
+];
+
 const qaChatFallback = "这个我答不了——本次只跑了时间逻辑、页码逻辑、内容一致性三类校验，一共 6 条，全在右侧「AI文件审核」里。超出这三类的判断没有依据，得你自己看原件。";
 
 const qaReplies: Array<{ keywords: RegExp; text: string }> = [

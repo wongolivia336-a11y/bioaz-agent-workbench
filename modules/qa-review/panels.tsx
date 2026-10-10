@@ -6,9 +6,11 @@ import { Button, StatusChip } from "../../components/ui";
 import {
   diffBetween,
   formatPageRef,
+  qaFindings,
   qaFindingCategoryLabel,
   qaFindingStateLabel,
   qaVersions,
+  type QaDiffRow,
   type QaFinding,
   type QaFindingCategory,
   type QaFindingState,
@@ -39,6 +41,7 @@ type PanelContext = {
   currentVersionId: string;
   onFindingState: (findingId: string, state: QaFindingState) => void;
   onFocusFinding: (finding: QaFinding) => void;
+  onFocusDiff: (row: QaDiffRow) => void;
   onNoteDraftChange: (value: string) => void;
   onAddNote: () => void;
 };
@@ -166,7 +169,7 @@ function AiReviewPanel({ role, locked, findings, findingStates, activeFindingId,
   );
 }
 
-function AiDiffPanel({ baseVersionId, currentVersionId }: PanelContext) {
+function AiDiffPanel({ baseVersionId, currentVersionId, onFocusDiff }: PanelContext) {
   const rows = diffBetween(baseVersionId, currentVersionId);
   const base = qaVersions.find((item) => item.id === baseVersionId);
   const current = qaVersions.find((item) => item.id === currentVersionId);
@@ -182,7 +185,7 @@ function AiDiffPanel({ baseVersionId, currentVersionId }: PanelContext) {
         <div>
           {/* 标题由版本对推出来，不再写死「第二版 → 第三版」——基线是可改的 */}
           <strong>{base?.label ?? baseVersionId} → {current?.label ?? currentVersionId}</strong>
-          <small>{rows.length} 处差异</small>
+          <small>{rows.length} 处差异 · 先看差异点，再定位原文</small>
         </div>
       </header>
 
@@ -194,18 +197,32 @@ function AiDiffPanel({ baseVersionId, currentVersionId }: PanelContext) {
             <span className="kind-removed">删除 {summary.removed}</span>
           </div>
           <div className="qaDiffList">
-            {rows.map((row) => (
-              <article className={`qaDiffRow kind-${row.kind}`} key={row.id}>
-                <header>
-                  <strong>{row.field}</strong>
-                  <small>{formatPageRef(row.page, row.innerPage)}</small>
-                </header>
-                <div className="qaDiffPair">
-                  <span className="qaDiffBefore">{row.before}</span>
-                  <span className="qaDiffAfter">{row.after}</span>
-                </div>
-              </article>
-            ))}
+            {rows.map((row, index) => {
+              const finding = row.findingId ? qaFindings.find((item) => item.id === row.findingId) : null;
+              const kindLabel = row.kind === "added" ? "新增" : row.kind === "removed" ? "删除" : "修改";
+              return (
+                <article className={`qaDiffRow kind-${row.kind}`} key={row.id}>
+                  <header>
+                    <span>
+                      <em>{index + 1}</em>
+                      <strong>{row.field}</strong>
+                    </span>
+                    <small>{formatPageRef(row.page, row.innerPage)}</small>
+                  </header>
+                  <p className="qaDiffReason">
+                    <b>{kindLabel}</b>
+                    {finding ? `回应批注：${finding.text}` : "未关联原批注，属于额外改动，需要人工确认。"}
+                  </p>
+                  <div className="qaDiffPair" aria-label={`${row.field}改动前后`}>
+                    <span className="qaDiffBefore" data-label="改前">{row.before}</span>
+                    <span className="qaDiffAfter" data-label="改后">{row.after}</span>
+                  </div>
+                  <footer>
+                    <button type="button" onClick={() => onFocusDiff(row)}>定位到原文</button>
+                  </footer>
+                </article>
+              );
+            })}
           </div>
         </>
       ) : (
@@ -228,6 +245,9 @@ function NotesPanel({ role, locked, notes, noteDraft, onNoteDraftChange, onAddNo
       </header>
 
       <div className="qaNoteList">
+        {canWrite ? (
+          <p className="qaPanelHint">在左侧原文直接选中文字，会弹出批注小卡；选“问题”会进入 AI 文件审核清单，选“备注”会写入这里。</p>
+        ) : null}
         {notes.map((note) => (
           <article className={`qaNote source-${note.source}`} key={note.id}>
             <span className="qaNoteAvatar" aria-hidden="true">

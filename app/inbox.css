@@ -447,6 +447,19 @@
   font-weight: 400;
 }
 
+.accountMenu > button.accountSwitchRow .accountScopeHint {
+  display: block;
+  max-width: 178px;
+  overflow: hidden;
+  color: var(--bioaz-text-tertiary);
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .accountMenu > button.accountSwitchRow.isCurrent { background: var(--bioaz-surface-hover); }
 
 @media (max-width: 900px) {
