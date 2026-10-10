@@ -67,6 +67,13 @@ function accountScopeLabel(account: InboxAccount, lens: DemoLens) {
   return `${account.roleLabel} · 复核归档`;
 }
 
+function accountScopeHint(account: InboxAccount, lens: DemoLens) {
+  if (lens !== "qa-review" && lens !== "tumor-report") return null;
+  if (account.role === "author") return "可新建审核任务并上传报告、合同或交付包。";
+  if (account.role === "approver") return "从待审工单进入，完成批注、比对和审批结论。";
+  return "查看已通过版本、审批记录，并完成归档确认。";
+}
+
 export function WorkspaceSidebar(props: Props) {
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({ "project-xx": true, "project-yy": true, "project-zz": false });
   const [searchOpen, setSearchOpen] = useState(false);
@@ -329,7 +336,11 @@ export function WorkspaceSidebar(props: Props) {
             {props.switchableAccounts.map((item) => (
               <button className={`accountSwitchRow ${item.id === props.account.id ? "isCurrent" : ""}`} type="button" key={item.id} onClick={() => { props.onAccountChange(item.id); setAccountMenuOpen(false); }}>
                 <span className="avatar">{item.name.slice(0, 1)}</span>
-                <span><strong>{item.name}</strong><small>{accountScopeLabel(item, props.lens)}</small></span>
+                <span>
+                  <strong>{item.name}</strong>
+                  <small>{accountScopeLabel(item, props.lens)}</small>
+                  {accountScopeHint(item, props.lens) ? <em className="accountScopeHint">{accountScopeHint(item, props.lens)}</em> : null}
+                </span>
                 {item.id === props.account.id ? <Check size={14} /> : null}
               </button>
             ))}

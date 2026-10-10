@@ -679,29 +679,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                 : <UserBubble key={message.id} text={message.text} attachments={message.attachments} />)}
           </div></div>
           <footer className="qaChatComposerStack">
-            {!hasReviewContext ? (
-              <section className="qaEntryGuide" aria-label="QA 审核入口">
-                <header>
-                  <span>文件审核</span>
-                  <strong>上传待审文件，或从待审工单继续</strong>
-                  <p>支持报告、合同与交付包。审核完成后会生成可追溯的批注、版本比对和审批记录。</p>
-                </header>
-                <div>
-                  <button type="button" onClick={() => setChatText("请审核我上传的报告、合同或交付包。")}>
-                    <b>上传待审文件</b>
-                    <small>拖入文件后开始校验</small>
-                  </button>
-                  <button type="button" onClick={() => setChatText("请按当前待审工单继续审核。")}>
-                    <b>待审工单</b>
-                    <small>保留项目与版本上下文</small>
-                  </button>
-                  <button type="button" onClick={() => { setPanelOpen(true); setPoppedPanelId("document"); setActivePanelId("notes"); }}>
-                    <b>审批记录</b>
-                    <small>查看批注、比对与流转</small>
-                  </button>
-                </div>
-              </section>
-            ) : !outcome ? (
+            {hasReviewContext && !outcome ? (
               <section className="warningDecision qaApprovalCard">
                 <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "负责人视角为只读"}</strong><p>
                   {openFindings ? (

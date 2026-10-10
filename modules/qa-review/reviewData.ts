@@ -338,7 +338,7 @@ export const qaNewSessionOpening: QaChatMessage[] = [
   {
     id: "qa-chat-guide",
     role: "agent",
-    text: "请上传需要审核的报告、合同或交付包；也可以从待审工单进入，我会按文件版本保留校验结果、批注、比对和审批记录。",
+    text: "请上传需要审核的报告、合同或交付包。我会完成文件识别与基础校验，并保留批注、版本比对和审批记录。",
   },
 ];
 
