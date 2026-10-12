@@ -283,7 +283,7 @@ function NotesPanel({ role, locked, notes, noteDraft, onNoteDraftChange, onAddNo
         </div>
       ) : (
         <p className="qaPanelHint">
-          {locked ? "本版已有审批结论，备注冻结为只读。" : "负责人视角只读。备注由撰写人与审批人落笔，你看到的是最终轨迹。"}
+          {locked ? "本版已有审批结论，备注冻结为只读。" : "负责人在主对话区确认归档或退回复核；这里保留审批备注轨迹。"}
         </p>
       )}
     </div>

@@ -73,6 +73,12 @@ const versionStatusLabel: Record<string, string> = {
 /* 归档那一棒交给谁。从账号表里取，不写死名字——名字改了这里会跟着改，
    而"负责人"这个岗位是稳定的。 */
 const qaOwnerName = inboxAccounts.find((item) => item.role === "owner")?.name ?? "负责人";
+const qaApproverName = inboxAccounts.find((item) => item.role === "approver")?.name ?? "审批人";
+const qaRoleName: Record<QaViewerRole, string> = {
+  author: "林一一",
+  approver: qaApproverName,
+  owner: qaOwnerName,
+};
 
 const roleTitle: Record<QaViewerRole, string> = {
   author: "撰写人端",
@@ -372,32 +378,36 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     const lines = confirmed.map((finding) => `· ${formatPageRef(finding.docPage, finding.innerPage)}：${finding.text}`);
 
     if (decision === "reject") {
-      resolveWith("rejected", `驳回${version.label}：${text}${confirmed.length ? `\n随附已确认问题 ${confirmed.length} 条。` : ""}`);
+      resolveWith("rejected", `${role === "owner" ? "退回复核" : "驳回"}${version.label}：${text}${role !== "owner" && confirmed.length ? `\n随附已确认问题 ${confirmed.length} 条。` : ""}`);
       onHandoff?.({
-        to: version.author,
-        toRole: "撰写人",
+        to: role === "owner" ? qaApproverName : version.author,
+        toRole: role === "owner" ? "审批人" : "撰写人",
         kind: "qa-review",
-        title: `退回修订：${taskTitle}（${version.label}）`,
-        note: [
-          `驳回理由：${text}`,
-          ...(lines.length ? [`需要处理的问题（${confirmed.length} 条）：`, ...lines] : []),
-        ].join("\n"),
+        title: `${role === "owner" ? "退回复核" : "退回修订"}：${taskTitle}（${version.label}）`,
+        note: role === "owner"
+          ? `终审意见：${text}\n请复核审批结论、随行附件或归档信息后再提交负责人确认。`
+          : [
+              `驳回理由：${text}`,
+              ...(lines.length ? [`需要处理的问题（${confirmed.length} 条）：`, ...lines] : []),
+            ].join("\n"),
       });
     } else {
       /* 通过不是终点，是把这一版交给负责人做最终确认与归档。
          审批人签的是"内容我看过了"，负责人签的是"这一版可以入库"。 */
-      resolveWith("approved", `${text}\n已送 ${qaOwnerName} 做最终确认与归档。`);
-      onHandoff?.({
-        to: qaOwnerName,
-        toRole: "项目负责人",
-        kind: "qa-review",
-        title: `请归档：${taskTitle}（${version.label}）`,
-        note: [
-          `审核结论：${text}`,
-          `本轮共 ${allFindings.length} 条批注（AI ${allFindings.filter((item) => item.source === "ai").length} 条 · 人工 ${allFindings.filter((item) => item.source === "human").length} 条），已全部处置。`,
-          ...(lines.length ? [`其中确认成立并已修订 ${confirmed.length} 条：`, ...lines] : []),
-        ].join("\n"),
-      });
+      resolveWith("approved", role === "owner" ? `${text}\n负责人已确认归档。` : `${text}\n已送 ${qaOwnerName} 做最终确认与归档。`);
+      if (role !== "owner") {
+        onHandoff?.({
+          to: qaOwnerName,
+          toRole: "项目负责人",
+          kind: "qa-review",
+          title: `请归档：${taskTitle}（${version.label}）`,
+          note: [
+            `审核结论：${text}`,
+            `本轮共 ${allFindings.length} 条批注（AI ${allFindings.filter((item) => item.source === "ai").length} 条 · 人工 ${allFindings.filter((item) => item.source === "human").length} 条），已全部处置。`,
+            ...(lines.length ? [`其中确认成立并已修订 ${confirmed.length} 条：`, ...lines] : []),
+          ].join("\n"),
+        });
+      }
     }
 
     setDecision(null);
@@ -408,7 +418,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     setNotes((current) => [...current, {
       id: `note-${Date.now()}`,
       source: "human",
-      author: role === "author" ? "林一一" : "王林彬",
+      author: qaRoleName[role],
       time: "刚刚",
       text: noteText,
     }]);
@@ -485,7 +495,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
           ) : (
             <StatusChip tone={versionTone[version.status]} dot>{versionStatusLabel[version.status]}</StatusChip>
           )}
-          {role === "owner" && !outcome ? <StatusChip tone="neutral">只读</StatusChip> : null}
+          {role === "owner" && !outcome ? <StatusChip tone="running">终审确认</StatusChip> : null}
           <PanelToggle open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
         </div>
       </header>
@@ -681,7 +691,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
           <footer className="qaChatComposerStack">
             {hasReviewContext && !outcome ? (
               <section className="warningDecision qaApprovalCard">
-                <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "负责人视角为只读"}</strong><p>
+                <header className="warningDecisionHeader"><div><span>审批决策</span><strong>{role === "author" ? "处置完成后提交审批" : role === "approver" ? "确认本版审核结论" : "确认归档结论"}</strong><p>
                   {openFindings ? (
                     <>
                       <button className="qaApprovalJump" type="button" onClick={openFindingsForDecision}>
@@ -689,6 +699,8 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                       </button>
                       ，结论会写入审批记录。
                     </>
+                  ) : role === "owner" ? (
+                    <>请核对审批记录、随行附件和版本信息。发现归档前问题时可退回复核；无问题则确认归档。</>
                   ) : (
                     <>
                       <button className="qaApprovalJump" type="button" onClick={openFindingsForDecision}>
@@ -697,9 +709,10 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                       ，结论会写入审批记录。
                     </>
                   )}
-                </p></div><small>{role === "owner" ? "只读" : "待确认"}</small></header>
+                </p></div><small>待确认</small></header>
                 {role === "author" ? <div className="warningActions"><Button variant="primary" size="small" disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条 AI 批注未处置` : undefined} onClick={() => resolveWith("submitted", `已逐条处置 ${qaFindings.length} 条 AI 批注，提交${version.label}终审。`)}>提交审批</Button></div>
-                  : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => { setDecision("reject"); setDecisionNote(""); }}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条批注未处置，逐条处置后才能通过` : undefined} onClick={() => { setDecision("approve"); setDecisionNote("经最终审核，该文档内容严谨合规、信息准确无误，同意通过本次终审。"); }}>通过</Button></div> : null}
+                  : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => { setDecision("reject"); setDecisionNote(""); }}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条批注未处置，逐条处置后才能通过` : undefined} onClick={() => { setDecision("approve"); setDecisionNote("6 条批注均已处置，日期顺序、页码标记和样品名称已核对无误，同意通过。"); }}>通过</Button></div>
+                  : <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => { setDecision("reject"); setDecisionNote(""); }}>退回复核</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => { setDecision("approve"); setDecisionNote("已核对审批记录、随行附件与版本信息，确认归档。"); }}>确认归档</Button></div>}
               </section>
             ) : null}
             <CoworkerSelector coworkers={businessCoworkers} activeCoworkerId={activeCoworkerId} locked={outcome === null} onChange={onCoworkerChange} />
@@ -740,28 +753,38 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
           <section className="qaRejectDialog" role="dialog" aria-modal="true" aria-labelledby="qa-decision-title">
             <header>
               <h2 id="qa-decision-title">
-                {decision === "reject" ? `驳回${version.label}` : `通过${version.label}`}
-              </h2>
-              {/* 说清楚下一棒是谁。这两个动作真正的区别不在"同意与否"，
-                  在"接下来谁拿到它" */}
-              <p>
                 {decision === "reject"
-                  ? `会把已确认的问题连同理由一起退回撰写人 ${version.author}，并写入本任务的流转记录。`
-                  : `会把本轮结论送交负责人 ${qaOwnerName} 做最终确认与归档，并写入本任务的流转记录。`}
+                  ? role === "owner" ? `退回复核${version.label}` : `驳回${version.label}`
+                  : role === "owner" ? `确认归档${version.label}` : `通过${version.label}`}
+              </h2>
+              {/* 说清楚下一棒是谁。审批人和负责人都能"不通过"，但一个退给撰写人，
+                  一个退给审批人复核，责任位置不同。 */}
+              <p>
+                {decision === "reject" && role === "owner"
+                  ? `会把终审意见退回审批人 ${qaApproverName} 复核，并写入本任务的流转记录。`
+                  : decision === "reject"
+                    ? `会把已确认的问题连同理由一起退回撰写人 ${version.author}，并写入本任务的流转记录。`
+                    : role === "owner"
+                      ? "会确认本版归档，并写入本任务的流转记录。"
+                      : `会把本轮结论送交负责人 ${qaOwnerName} 做最终确认与归档，并写入本任务的流转记录。`}
               </p>
             </header>
             <label className="qaRejectField">
               <span>
-                {decision === "reject" ? "驳回理由" : "审核结论"}
+                {decision === "reject" && role === "owner" ? "退回原因" : decision === "reject" ? "驳回理由" : role === "owner" ? "归档结论" : "审核结论"}
                 <em>{decision === "reject" ? "必填" : "会写入审计轨迹"}</em>
               </span>
               <textarea
                 autoFocus
                 rows={4}
                 value={decisionNote}
-                placeholder={decision === "reject"
-                  ? "写明这一版为什么不能通过，例如：第 8 页盖章日期仍早于批准时间，流程顺序不成立。"
-                  : "写明通过的依据。"}
+                placeholder={decision === "reject" && role === "owner"
+                  ? "例如：交付包缺少已签字的审批记录，或版本号与流转记录不一致，需审批人复核后再归档。"
+                  : decision === "reject"
+                    ? "例如：第 8 页盖章日期仍早于批准时间，流程顺序不成立；请修订日期并重新提交。"
+                    : role === "owner"
+                      ? "例如：已核对审批记录、随行附件和版本号，确认归档。"
+                      : "例如：6 条批注均已处置，日期顺序、页码标记和样品名称已核对无误，同意通过。"}
                 onChange={(event) => setDecisionNote(event.target.value)}
               />
             </label>
@@ -787,7 +810,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                 leadingIcon={decision === "reject" ? <Undo2 size={14} /> : <Check size={14} />}
                 onClick={submitDecision}
               >
-                {decision === "reject" ? "确认驳回并退回" : "确认通过并送归档"}
+                {decision === "reject" && role === "owner" ? "确认退回复核" : decision === "reject" ? "确认驳回并退回" : role === "owner" ? "确认归档" : "确认通过并送归档"}
               </Button>
             </footer>
           </section>
