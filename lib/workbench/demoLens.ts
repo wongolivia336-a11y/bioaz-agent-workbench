@@ -30,7 +30,7 @@ export type DemoLensDefinition = {
 
 export const DEMO_LENSES: DemoLensDefinition[] = [
   { value: "all", label: "总览", moduleId: null, kindLabel: null, accountIds: [] },
-  /* 撰写人是一线实验员林一一，审批人是王林彬。 */
+  /* QA 审核要演三层视角：一线实验员提交/修订，审批人通过或驳回，项目负责人确认归档或退回复核。 */
   { value: "qa-review", label: "QA 审核", moduleId: "qa-review", kindLabel: "QA 审核", accountIds: ["acct-lin", "acct-wang", "acct-li"] },
   /* 撰写人是 DMPK 报价同事赵敏，审批人是王林彬。 */
   { value: "dmpk-quotation", label: "DMPK 报价", moduleId: "dmpk-quotation", kindLabel: "DMPK 报价", accountIds: ["acct-zhao", "acct-wang"] },

@@ -429,6 +429,7 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
   const isQuotation = ticket.kind === "dmpk-quotation";
   const isQaReview = isQaReviewTicket(ticket);
   const qaBrief = isQaReview ? qaTicketBrief(ticket) : null;
+  const isOwnerReview = isQaReview && ticket.assigneeRole.includes("负责人");
   const [preview, setPreview] = useState<{ file: MailResourceRef; view: TicketFileView } | null>(null);
 
   if (isQuotation && reviewing) {
@@ -578,12 +579,18 @@ function TicketDetailView({ ticket, isMine, notes, onNotesChange, onHandle, onAc
           </>
         ) : isQaReview ? (
           <>
-            <p className="ticketDetailHint">进入 QA 审核会话后再逐条处理批注、查看版本比对，并落通过或驳回结论。</p>
-            <button className="primaryButton compact" type="button" onClick={onHandle}>进入 QA 审核会话</button>
+            <p className="ticketDetailHint">
+              {isOwnerReview
+                ? "核对审批记录、随行附件和版本信息后，确认归档或退回复核。"
+                : "进入 QA 审核会话后再逐条处理批注、查看版本比对，并落通过或驳回结论。"}
+            </p>
+            <button className="primaryButton compact" type="button" onClick={onHandle}>
+              {isOwnerReview ? "进入终审确认" : "进入 QA 审核会话"}
+            </button>
           </>
         ) : (
           <>
-            <p className="ticketDetailHint">审核要跟 QA 数字同事一起看，会打开这条任务的会话。</p>
+            <p className="ticketDetailHint">审核要跟数字同事一起看，会打开这条任务的会话。</p>
             <button className="primaryButton compact" type="button" onClick={onHandle}>进入会话处理</button>
           </>
         )}
