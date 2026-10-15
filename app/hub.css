@@ -931,6 +931,208 @@
   white-space: nowrap;
 }
 
+/* 数据中枢内容随工作区展开，不再被全局阅读宽度 --content-max 卡在中间。
+   阅读型内容（文件预览 / 问答 panel）另行保留自己的舒适宽度。 */
+.knowledgeBaseView {
+  padding-inline: clamp(24px, 3vw, 52px) !important;
+}
+
+.knowledgeBaseView > .rootAllFiles,
+.knowledgeBaseView > .rootRecentOutputs,
+.knowledgeBaseView > .libraryListSurface,
+.knowledgeBaseView > .libraryFolderChips,
+.knowledgeBaseView > .knowledgeRootActions,
+.knowledgeBaseView > .projectFileLanes {
+  width: 100%;
+  max-width: none;
+}
+
+.knowledgeBaseView .projectFileLanes {
+  width: 100%;
+  max-width: none;
+}
+
+.knowledgeBaseView .knowledgeToolbar,
+.knowledgeBaseView .knowledgeAudienceTabs,
+.knowledgeBaseView .knowledgeTable {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.knowledgeBaseView .knowledgeTable,
+.knowledgeBaseView .projectFileLanes {
+  min-width: 0;
+}
+
+.knowledgeBaseView .projectOverviewLanes {
+  gap: clamp(12px, 1.4vw, 20px);
+}
+
+@media (max-width: 1200px) {
+  .knowledgeBaseView { padding-inline: 24px !important; }
+}
+
+@media (max-width: 900px) {
+  .knowledgeBaseView { padding-inline: 16px !important; }
+  .knowledgeBaseView .projectOverviewLanes { grid-template-columns: minmax(0, 1fr); }
+  .knowledgeRootView .knowledgeTable { overflow-x: auto; }
+  .knowledgeRootView .knowledgeTableHeader,
+  .knowledgeRootView .knowledgeFileRow { min-width: 720px; }
+}
+
+/* 文件行操作区：预览与更多是两个独立动作，不共用一颗紧贴的灰色胶囊。 */
+.knowledgeTable:not(.hasSourceTask) .knowledgeTableHeader,
+.knowledgeTable:not(.hasSourceTask) .knowledgeFileRow {
+  grid-template-columns: minmax(200px, 2fr) 100px 100px minmax(140px, 1.2fr) 100px 78px !important;
+}
+
+.knowledgeTable.hasSourceTask .knowledgeTableHeader,
+.knowledgeTable.hasSourceTask .knowledgeFileRow {
+  grid-template-columns: minmax(200px, 1.3fr) minmax(110px, 0.7fr) minmax(130px, 0.9fr) minmax(100px, 0.7fr) 100px 78px;
+}
+
+.knowledgeTable .rowActions {
+  min-width: 76px;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-left: 8px;
+}
+
+.knowledgeTable .rowActionButton,
+.knowledgeTable .rowMoreButton {
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: var(--bioaz-radius-tool);
+  background: transparent;
+  color: var(--bioaz-text-tertiary);
+}
+
+.knowledgeTable .rowActionButton:hover,
+.knowledgeTable .rowMoreButton:hover {
+  border-color: var(--bioaz-border);
+  background: var(--bioaz-surface-active);
+  color: var(--bioaz-text-primary);
+}
+
+/* -------------------------------------------------------------------------
+   文件上下文问答
+   -------------------------------------------------------------------------
+   这是文件预览的第二层工具，不是新的主对话。打开后只把预览横向收窄，
+   文件仍然是主角；关闭问答后回到原来的预览状态。
+ */
+.knowledgePreviewDialog.isQaOpen { width: min(1080px, calc(100vw - 48px)); }
+
+.knowledgePreviewHeaderActions { display: flex; align-items: center; gap: 6px; }
+
+.knowledgePreviewAiButton {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--bioaz-border);
+  border-radius: var(--bioaz-radius-tool);
+  background: var(--bioaz-surface);
+  color: var(--bioaz-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--bioaz-motion-standard) ease, background-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease;
+}
+
+.knowledgePreviewAiButton:hover,
+.knowledgePreviewAiButton.active {
+  border-color: var(--bioaz-agent-accent-border);
+  background: var(--bioaz-agent-accent-soft);
+  color: var(--bioaz-agent-accent);
+}
+
+.knowledgePreviewContent { display: grid; min-height: 460px; grid-template-columns: minmax(0, 1fr); }
+
+.knowledgePreviewDialog.isQaOpen .knowledgePreviewContent { grid-template-columns: minmax(0, 1fr) 340px; }
+
+.knowledgePreviewDialog.isQaOpen .knowledgeDocumentPreview {
+  min-width: 0;
+  background: var(--bioaz-surface-subtle);
+  padding: 24px;
+}
+
+.documentPreviewPage {
+  min-height: 390px;
+  border: 1px solid var(--bioaz-border);
+  background: var(--bioaz-surface);
+  padding: 34px 36px;
+  box-shadow: 0 10px 30px rgba(17, 19, 24, 0.05);
+}
+
+.documentPreviewPage h3 { max-width: 560px; margin: 14px 0 6px; color: var(--bioaz-text-primary); font-size: 17px; }
+.documentPreviewPage > p { max-width: 560px; margin: 0; color: var(--bioaz-text-secondary); font-size: 13px; line-height: 1.7; }
+
+.documentPreviewLines { display: grid; gap: 12px; margin-top: 34px; }
+.documentPreviewLines span { display: block; height: 9px; border-radius: 3px; background: var(--bioaz-surface-active); }
+.documentPreviewLines span:nth-child(2) { width: 82%; }
+.documentPreviewLines span:nth-child(3) { width: 92%; }
+.documentPreviewLines span:nth-child(4) { width: 66%; }
+.documentPreviewLines span:nth-child(5) { width: 88%; }
+
+.fileContextPanel {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border-left: 1px solid var(--bioaz-border);
+  background: var(--bioaz-surface);
+}
+
+.fileContextPanelHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--bioaz-border); padding: 13px 14px; }
+.fileContextPanelTitle { display: flex; min-width: 0; align-items: center; }
+.fileContextPanelTitle > div { display: grid; min-width: 0; gap: 2px; }
+.fileContextPanelTitle strong { color: var(--bioaz-text-primary); font-size: 13px; font-weight: 650; }
+.fileContextPanelTitle small { overflow: hidden; color: var(--bioaz-text-tertiary); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+
+.fileContextPanelBody { min-height: 0; overflow-y: auto; padding: 14px; }
+.fileContextScope { display: flex; min-width: 0; align-items: center; gap: 6px; margin-bottom: 18px; color: var(--bioaz-text-tertiary); font-size: 11px; }
+.fileContextScope span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.fileContextEmpty { display: grid; justify-items: center; gap: 8px; padding: 58px 8px 30px; text-align: center; }
+.fileContextEmpty strong { color: var(--bioaz-text-primary); font-size: 14px; }
+.fileContextEmpty p { margin: 0; color: var(--bioaz-text-tertiary); font-size: 12px; line-height: 1.6; }
+.fileContextSuggestions { display: grid; width: 100%; gap: 6px; margin-top: 10px; }
+.fileContextSuggestions button { border: 1px solid var(--bioaz-border); border-radius: var(--bioaz-radius-control); background: var(--bioaz-surface); padding: 8px 10px; color: var(--bioaz-text-secondary); font-size: 12px; text-align: left; cursor: pointer; transition: border-color var(--bioaz-motion-standard) ease, background-color var(--bioaz-motion-standard) ease, color var(--bioaz-motion-standard) ease; }
+.fileContextSuggestions button:hover { border-color: var(--bioaz-agent-accent-border); background: var(--bioaz-agent-accent-soft); color: var(--bioaz-agent-accent); }
+
+.fileContextMessages { display: grid; gap: 16px; }
+.fileContextMessage { display: flex; align-items: flex-start; gap: 8px; animation: fileContextMessageIn 180ms var(--bioaz-ease-standard, ease) both; }
+.fileContextMessage.user { justify-content: flex-end; }
+.fileContextMessage > div { min-width: 0; }
+.fileContextMessage p { margin: 0; color: var(--bioaz-text-secondary); font-size: 12px; line-height: 1.65; }
+.fileContextMessage.user p { border: 1px solid var(--bioaz-agent-accent-border); border-radius: 14px 14px 3px 14px; background: var(--bioaz-agent-accent-soft); padding: 8px 10px; color: var(--bioaz-text-primary); }
+.fileContextAgentMark { display: grid; width: 22px; height: 22px; flex: none; place-items: center; border: 1px solid var(--bioaz-border); border-radius: 8px; background: var(--bioaz-surface); }
+.fileContextAgentMark img { width: 15px; height: 14px; object-fit: contain; }
+.fileContextAgentMark.isThinking img { animation: bioazThinkingPulse 1500ms var(--bioaz-ease-in-out-2, ease-in-out) infinite; }
+.fileContextThinking { display: flex; align-items: center; gap: 8px; color: var(--bioaz-text-tertiary); font-size: 12px; }
+.fileContextReference { margin-top: 6px; border: 0; border-bottom: 1px solid currentColor; background: transparent; padding: 0; color: var(--bioaz-agent-accent); font-size: 11px; cursor: pointer; }
+
+.fileContextComposer { display: grid; grid-template-columns: minmax(0, 1fr) 30px; gap: 8px; border-top: 1px solid var(--bioaz-border); padding: 10px 12px 12px; }
+.fileContextComposer input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--bioaz-text-primary); font-size: 12px; }
+.fileContextComposer input::placeholder { color: var(--bioaz-text-tertiary); }
+.fileContextSend { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: var(--bioaz-radius-tool); background: var(--bioaz-action-primary); color: var(--bioaz-text-inverse); cursor: pointer; }
+.fileContextSend:disabled { background: var(--bioaz-surface-active); color: var(--bioaz-text-tertiary); cursor: default; }
+
+@keyframes fileContextMessageIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fileContextMessage { animation: none; }
+  .fileContextAgentMark.isThinking img { animation: none; }
+}
+
+@media (max-width: 760px) {
+  .knowledgePreviewDialog.isQaOpen { width: calc(100vw - 24px); }
+  .knowledgePreviewDialog.isQaOpen .knowledgePreviewContent { grid-template-columns: 1fr; }
+  .fileContextPanel { min-height: 310px; border-top: 1px solid var(--bioaz-border); border-left: 0; }
+  .knowledgePreviewDialog.isQaOpen .knowledgeDocumentPreview { min-height: 240px; padding: 14px; }
+  .documentPreviewPage { min-height: 220px; padding: 20px; }
+}
+
 @media (max-width: 900px) {
   .hubView { padding: 16px; }
   .hubScopeLayer { flex-wrap: wrap; gap: 8px; }

@@ -20,6 +20,7 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Sparkles,
   Trash2,
   Upload,
   X,
@@ -33,6 +34,7 @@ import { KnowledgeAsk } from "./KnowledgeAsk";
 import { Menu, MenuGroup, MenuItem, SegmentedControl } from "../ui";
 import { WorkspaceAssistant } from "./ShellControls";
 import { useDismissableLayer } from "./useDismissableLayer";
+import { FileContextPanel } from "../file-assistant/FileContextPanel";
 
 /* 这里曾经是「待我处理 / 动态 / 计划 / 资料」四个 tab。前三个搬进邮箱之后
    只剩一个，而**一个 tab 不是 tab，是标题**——一条只能选中它自己的 tab 栏
@@ -881,8 +883,72 @@ function TrashTable({ files, selectedIds, onToggle, onToggleAll, onRestore, onDe
 }
 
 function FilePreview({ file, onClose }: { file: KnowledgeFile; onClose: () => void }) {
-  useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; document.addEventListener("keydown", close); return () => document.removeEventListener("keydown", close); }, [onClose]);
-  return <div className="modalBackdrop knowledgePreviewBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="knowledgePreviewDialog" role="dialog" aria-modal="true" aria-labelledby="knowledge-preview-title"><header><div><span>{file.kind}</span><h2 id="knowledge-preview-title">{file.title}</h2></div><button className="iconButton" type="button" onClick={onClose} aria-label="关闭"><X size={16} /></button></header><div className="knowledgeDocumentPreview"><div className="documentPreviewMark">{file.title.endsWith(".xlsx") ? <FileSpreadsheet size={24} /> : <FileText size={24} />}</div><h3>{file.title.replace(/\.[^.]+$/, "")}</h3><p>文件预览区域。当前原型保留现有 Modal 结构，并为后续真实文档渲染预留空间。</p></div><footer><span className="previewContextChip">当前文件：{file.title}</span><button className="secondaryButton compact" type="button">询问此文件</button><button className="primaryButton compact" type="button" onClick={onClose}>完成</button></footer></section></div>;
+  const [qaOpen, setQaOpen] = useState(false);
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [onClose]);
+
+  const toggleQa = () => setQaOpen((open) => !open);
+
+  return (
+    <div
+      className="modalBackdrop knowledgePreviewBackdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className={`knowledgePreviewDialog ${qaOpen ? "isQaOpen" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="knowledge-preview-title"
+      >
+        <header>
+          <div>
+            <span>{file.kind}</span>
+            <h2 id="knowledge-preview-title">{file.title}</h2>
+          </div>
+          <div className="knowledgePreviewHeaderActions">
+            <button
+              className={`knowledgePreviewAiButton ${qaOpen ? "active" : ""}`}
+              type="button"
+              onClick={toggleQa}
+              aria-label={qaOpen ? "收起文件问答" : "询问此文件"}
+              title={qaOpen ? "收起问答面板" : "询问此文件"}
+              aria-pressed={qaOpen}
+            >
+              <Sparkles size={15} />
+            </button>
+            <button className="iconButton" type="button" onClick={onClose} aria-label="关闭文件预览" title="关闭文件预览">
+              <X size={16} />
+            </button>
+          </div>
+        </header>
+
+        <div className="knowledgePreviewContent">
+          <div className="knowledgeDocumentPreview">
+            <div className="documentPreviewPage">
+              <div className="documentPreviewMark">
+                {file.title.endsWith(".xlsx") ? <FileSpreadsheet size={24} /> : <FileText size={24} />}
+              </div>
+              <h3>{file.title.replace(/\.[^.]+$/, "")}</h3>
+              <p>文件预览区域。当前原型保留现有 Modal 结构，并为后续真实文档渲染预留空间。</p>
+              <div className="documentPreviewLines" aria-hidden="true">
+                <span /><span /><span /><span /><span />
+              </div>
+            </div>
+          </div>
+          {qaOpen ? <FileContextPanel file={file} onClose={() => setQaOpen(false)} /> : null}
+        </div>
+
+      </section>
+    </div>
+  );
 }
 
 function FileDetails({ file, onClose }: { file: KnowledgeFile; onClose: () => void }) {
