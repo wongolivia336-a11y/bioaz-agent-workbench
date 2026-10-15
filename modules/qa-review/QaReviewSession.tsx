@@ -426,6 +426,19 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
     setOutcome(next);
   };
 
+  const submitForApproval = () => {
+    if (openFindings > 0) return;
+    const note = `已逐条处置 ${qaFindings.length} 条 AI 批注，提交${version.label}终审。`;
+    resolveWith("submitted", note);
+    onHandoff?.({
+      to: qaApproverName,
+      toRole: "审批人",
+      kind: "qa-review",
+      title: `请审批：${taskTitle}（${version.label}）`,
+      note,
+    });
+  };
+
   /* 文档收进「更多」。常驻三个 tab 是三种**结论**：审核结果 / 文件比对 / 审批备注；
      文档是被审的那个东西，正常状态它占中间的画布，不该跟结论并列常驻。
      原来四个 panel 全是 primary，于是加号菜单里「更多」那组永远是空的。 */
@@ -710,7 +723,7 @@ export default function QaReviewSession({ projectName, taskTitle, initialRequest
                     </>
                   )}
                 </p></div><small>待确认</small></header>
-                {role === "author" ? <div className="warningActions"><Button variant="primary" size="small" disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条 AI 批注未处置` : undefined} onClick={() => resolveWith("submitted", `已逐条处置 ${qaFindings.length} 条 AI 批注，提交${version.label}终审。`)}>提交审批</Button></div>
+                {role === "author" ? <div className="warningActions"><Button variant="primary" size="small" disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条 AI 批注未处置` : undefined} onClick={submitForApproval}>提交审批</Button></div>
                   : role === "approver" ? <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => { setDecision("reject"); setDecisionNote(""); }}>驳回</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} disabled={openFindings > 0} title={openFindings > 0 ? `还有 ${openFindings} 条批注未处置，逐条处置后才能通过` : undefined} onClick={() => { setDecision("approve"); setDecisionNote("6 条批注均已处置，日期顺序、页码标记和样品名称已核对无误，同意通过。"); }}>通过</Button></div>
                   : <div className="warningActions"><Button variant="secondary" size="small" leadingIcon={<Undo2 size={14} />} onClick={() => { setDecision("reject"); setDecisionNote(""); }}>退回复核</Button><Button variant="primary" size="small" leadingIcon={<Check size={14} />} onClick={() => { setDecision("approve"); setDecisionNote("已核对审批记录、随行附件与版本信息，确认归档。"); }}>确认归档</Button></div>}
               </section>
@@ -1086,3 +1099,4 @@ function QaDocumentCompact({ page, versionId, onPageChange }: { page: number; ve
     </div>
   );
 }
+
