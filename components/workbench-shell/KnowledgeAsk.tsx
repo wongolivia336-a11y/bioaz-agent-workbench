@@ -152,7 +152,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
           而用户以为自己点开的是那颗小胶囊。
           全屏窗里收起键让位给窗头那颗，一个动作只留一个门。 */}
       {inWindow ? null : (
-        <button className="knowledgeAskCollapse" type="button" onClick={() => { setOpen(false); setFull(false); }} aria-label="收起助手">
+        <button className="knowledgeAskCollapse" type="button" onClick={() => { setOpen(false); setFull(false); }} aria-label="收起文件助手" title="收起文件助手">
           <ChevronDown size={14} />
         </button>
       )}
@@ -161,7 +161,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
         onChange={(event) => setText(event.target.value)}
         onKeyDown={(event) => { if (event.key === "Enter") submit(); }}
         placeholder="问一个问题，比如「血浆样本保存条件是什么」"
-        aria-label="向资料提问"
+        aria-label="向文件助手提问"
       />
       {/* 范围选择器就是那个"电子围栏"：圈定在哪批资料里回答 */}
       <div ref={inWindow ? windowScopeRef : scopeRef} className="knowledgeAskScope">
@@ -208,7 +208,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
         onClick={() => setOpen(true)}
       >
         <Sparkles size={15} />
-        <span>{dock === "floating" ? "问问项目助手" : "问问资料助手"}</span>
+        <span>问问文件助手</span>
         <em>{scope}</em>
       </button>
     );
@@ -218,7 +218,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
     <section
       ref={(node) => { rootRef.current = node; }}
       className={`knowledgeAsk dock-${dock} ${full ? "isFull" : ""}`}
-      aria-label="资料问答"
+      aria-label="文件助手"
     >
       {askBar(false)}
 
@@ -270,7 +270,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
           也随时能一步走开。这一屏没有对应的任务，关掉就没了。 */}
       {full && host
         ? createPortal(
-            <section className="knowledgeAskWindow" role="dialog" aria-label="资料问答 · 临时会话">
+            <section className="knowledgeAskWindow" role="dialog" aria-label="文件助手 · 临时会话">
               {/* 窗头只留一个出口。原来这条压在面包屑下面，于是顶上叠了两条头：
                   一条讲"你在数据中枢的哪儿"，一条讲"你在问答里"——而这一刻
                   前者已经不成立了，人根本不在文件表上。所以整块盖掉，
@@ -286,7 +286,7 @@ export function KnowledgeAsk({ projects, files, onOpenFile, dock = "inline", def
                 >
                   <ArrowLeft size={16} />
                 </button>
-                <span className="knowledgeAskWindowTitle"><Sparkles size={15} />资料问答</span>
+                <span className="knowledgeAskWindowTitle"><Sparkles size={15} />文件助手</span>
                 <span className="knowledgeAskWindowNote">临时会话，不会存进左侧任务</span>
               </header>
 
