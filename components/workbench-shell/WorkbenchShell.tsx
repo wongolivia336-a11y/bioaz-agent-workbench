@@ -189,21 +189,30 @@ export default function WorkbenchShell() {
     } : task));
   };
 
+  const clearInboxContext = () => {
+    setInboxTicketId(null);
+    setInboxNoticeTitle(null);
+    setInboxReviewing(false);
+  };
+
   const openNewTaskHome = () => {
-    setProject(null); setProjectNotice(null); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(false); setModuleRunStatus("active"); setRoute("newTask");
+    clearInboxContext();
+    setProject(null); setProjectNotice(null); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setInitialAttachments(undefined); setPendingAttachments([]); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(false); setModuleRunStatus("active"); setRoute("newTask");
   };
 
   const startTaskInProject = (projectName: string) => {
     const taskId = createRuntimeTask("新建任务", null, projectName);
     if (!taskId) return;
-    setProject(projectName); setProjectNotice(null); setTaskTitle("新建任务"); setActiveTaskId(taskId); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(true); setModuleRunStatus("active"); setRoute("newTask");
+    clearInboxContext();
+    setProject(projectName); setProjectNotice(null); setTaskTitle("新建任务"); setActiveTaskId(taskId); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setInitialAttachments(undefined); setPendingAttachments([]); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(true); setModuleRunStatus("active"); setRoute("newTask");
   };
 
   /* 空间首页（beta5 点空间进的那个入口）：带着空间进首页，但**不建任务**——
      任务在第一句话发出去时才存在。跟 startTaskInProject 的差别就在这一点：
      那个是「在这个空间里新建任务」，侧栏那行「新建任务」和菜单里的还是走它。 */
   const openProjectHome = (projectName: string) => {
-    setProject(projectName); setProjectNotice(null); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setInitialAttachments(undefined); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(false); setModuleRunStatus("active"); setRoute("newTask");
+    clearInboxContext();
+    setProject(projectName); setProjectNotice(null); setTaskTitle("新建任务"); setActiveTaskId(null); setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setInitialRequest(undefined); setInitialAttachments(undefined); setPendingAttachments([]); setHandoffNotice(undefined); setText(""); setClarification(null); setPendingRequest(null); setPendingModule(null); setHelperConversationStarted(false); setModuleRunStatus("active"); setRoute("newTask");
   };
 
   /* 「设置空间专家」：只改这一个空间的绑定，数据在 projects 上。 */
@@ -229,11 +238,14 @@ export default function WorkbenchShell() {
       return;
     }
     setProject(null);
+    clearInboxContext();
     setTaskTitle("新建任务");
     setActiveTaskId(null);
     setActiveModule(null);
     setActiveCoworkerId("bioaz-helper");
     setInitialRequest(undefined);
+    setInitialAttachments(undefined);
+    setPendingAttachments([]);
     setHandoffNotice(undefined);
     setText("");
     setClarification(null);
@@ -295,9 +307,12 @@ export default function WorkbenchShell() {
     if (!targetProject) { setProjectNotice("请先选择任务所属空间，再启动流程。"); setRoute("newTask"); return; }
     const taskId = createRuntimeTask(`${module.moduleName}任务`, module, targetProject);
     if (!taskId) return;
+    clearInboxContext();
     setActiveModule(module);
     setActiveCoworkerId(module.suggestedCoworker.id);
     setInitialRequest(undefined);
+    setInitialAttachments(undefined);
+    setPendingAttachments([]);
     setHandoffNotice(undefined);
     setText("");
     setClarification(null);
@@ -431,24 +446,57 @@ export default function WorkbenchShell() {
      带上 taskId：对方点进去时能直接落回这条会话，而不是从零开一个。 */
   const handoffFromSession = (handoff: SessionHandoff) => {
     const now = "刚刚";
-    setTickets((items) => [{
-      id: `TK-${2048 + items.length}`,
-      title: handoff.title,
-      kind: handoff.kind,
-      status: "open",
-      project: project ?? "未归属项目",
-      from: account.name,
-      fromRole: account.roleLabel,
-      assignee: handoff.to,
-      assigneeRole: handoff.toRole ?? "",
-      createdAt: now,
-      updatedAt: now,
-      attachments: (handoff.attachments ?? []).map((file) => ({ id: file.id, name: file.name, kind: "file" as const, meta: file.meta, source: "task-output" as const })),
-      taskId: activeTaskId ?? undefined,
-      moduleId: handoff.kind,
-      steps: [{ id: `s-${Date.now()}`, at: now, actor: account.name, actorRole: account.roleLabel, action: `交接给${handoff.to}`, note: handoff.note || undefined }],
-      review: handoff.review,
-    }, ...items]);
+    setTickets((items) => {
+      const settled = items.map((item) => !isCurrentQaTicket(item)
+        ? item
+        : {
+            ...item,
+            status: "done" as const,
+            updatedAt: now,
+            steps: [...item.steps, { id: `s-${Date.now()}`, at: now, actor: account.name, actorRole: account.roleLabel, action: `交接给${handoff.to}`, note: handoff.note || undefined }],
+          });
+      return [{
+        id: `TK-${2048 + items.length}`,
+        title: handoff.title,
+        kind: handoff.kind,
+        status: "open" as const,
+        project: project ?? "未归属项目",
+        from: account.name,
+        fromRole: account.roleLabel,
+        assignee: handoff.to,
+        assigneeRole: handoff.toRole ?? "",
+        createdAt: now,
+        updatedAt: now,
+        attachments: (handoff.attachments ?? []).map((file) => ({ id: file.id, name: file.name, kind: "file" as const, meta: file.meta, source: "task-output" as const })),
+        taskId: activeTaskId ?? undefined,
+        moduleId: handoff.kind,
+        steps: [{ id: `s-${Date.now()}`, at: now, actor: account.name, actorRole: account.roleLabel, action: `交接给${handoff.to}`, note: handoff.note || undefined }],
+        review: handoff.review,
+      }, ...settled];
+    });
+  };
+
+  const isCurrentQaTicket = (item: Ticket) => {
+    const matchesCurrent = inboxTicketId ? item.id === inboxTicketId : item.taskId === activeTaskId;
+    return matchesCurrent && item.assignee === account.name && item.status !== "done" && item.status !== "dropped";
+  };
+
+  const settleCurrentQaTicket = (action: string, note?: string) => {
+    if (!activeTaskId) return;
+    setTickets((items) => {
+      let changed = false;
+      const next = items.map((item) => {
+        if (!isCurrentQaTicket(item)) return item;
+        changed = true;
+        return {
+          ...item,
+          status: "done" as const,
+          updatedAt: "刚刚",
+          steps: [...item.steps, { id: `s-${Date.now()}`, at: "刚刚", actor: account.name, actorRole: account.roleLabel, action, note }],
+        };
+      });
+      return changed ? next : items;
+    });
   };
 
   /* 接手 = 我开始看了，记一笔流转。工单跟邮件的分野就在这里：
@@ -542,7 +590,8 @@ export default function WorkbenchShell() {
     const pending = pendingFinishRef.current.get(task.id);
     if (pending !== undefined) { window.clearTimeout(pending); pendingFinishRef.current.delete(task.id); }
     setUnreadTaskIds((ids) => ids.filter((id) => id !== task.id));
-    setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setInitialRequest(undefined); setHandoffNotice(undefined);
+    clearInboxContext();
+    setProject(task.project); setTaskTitle(task.title); setActiveTaskId(task.id); setInitialRequest(undefined); setInitialAttachments(undefined); setPendingAttachments([]); setHandoffNotice(undefined);
     if (task.moduleId === "bioaz-helper") {
       setActiveModule(null); setActiveCoworkerId("bioaz-helper"); setHelperConversationStarted(true); setRoute("newTask"); return;
     }
@@ -613,7 +662,7 @@ export default function WorkbenchShell() {
     if (coworkerId === "bioaz-helper") return;
     const module = getModuleForCoworker(coworkerId); if (!module || module.moduleId === activeModule?.moduleId) return;
     setHandoffNotice(`已从 ${activeModule?.suggestedCoworker.name ?? "当前数字同事"} 切换至 ${module.suggestedCoworker.name}`);
-    setActiveCoworkerId(coworkerId); setActiveModule(module); setInitialRequest(undefined); setModuleRunStatus("active");
+    setActiveCoworkerId(coworkerId); setActiveModule(module); setInitialRequest(undefined); setInitialAttachments(undefined); setPendingAttachments([]); setModuleRunStatus("active");
     if (activeTaskId) updateRuntimeTask(activeTaskId, module);
   };
   const handleRunStatusChange = useCallback((status: ModuleRunStatus) => {
@@ -702,7 +751,18 @@ export default function WorkbenchShell() {
       }));
     return [...runtimeTasks, ...staticTasks].filter((task) => !deletedTaskIds.includes(task.id));
   }, [deletedTaskIds, renamedTaskTitles, runtimeTasks, visibleProjects]);
-  const account = inboxAccounts.find((item) => item.id === accountId) ?? inboxAccounts[0];
+  const lensAccounts = useMemo(
+    () => activeLens.accountIds.length
+      ? inboxAccounts.filter((item) => activeLens.accountIds.includes(item.id))
+      : inboxAccounts,
+    [activeLens.accountIds],
+  );
+  const account = lensAccounts.find((item) => item.id === accountId) ?? lensAccounts[0] ?? inboxAccounts[0];
+  useEffect(() => {
+    if (account.role === "owner" && activeTaskId && sessionOutcomes[activeTaskId] === "approved") {
+      settleCurrentQaTicket("确认归档", "负责人已确认归档。");
+    }
+  }, [account.role, activeTaskId, sessionOutcomes]);
   /* 徽标数只算还没落动作的条目——未读和未处理是两件事。
      口径跟邮箱读同一份数据：之前侧栏按旧的 inboxItems 算、邮箱按自己的
      initialMail 算，两个数字碰巧都是 2，改任一边就会当场对不上。 */
@@ -722,9 +782,6 @@ export default function WorkbenchShell() {
   const lensTasks = activeLens.moduleId
     ? libraryTasks.filter((task) => task.moduleId === activeLens.moduleId)
     : libraryTasks;
-  const lensAccounts = activeLens.accountIds.length
-    ? inboxAccounts.filter((item) => activeLens.accountIds.includes(item.id))
-    : inboxAccounts;
   /* 首屏快捷入口默认不跟镜头收敛；唯一例外是 QA 镜头。
      这一轮要把 QA 审核作为单线走查原型，先减少无关业务入口的注意力噪声。 */
   /* 切镜头时当前账号可能不在这条线上(比如站在林一一的位置切到 DMPK),
@@ -733,7 +790,7 @@ export default function WorkbenchShell() {
     if (lensAccounts.some((item) => item.id === accountId)) return;
     const fallback = lensAccounts[0]?.id;
     if (fallback) setAccountId(fallback);
-  }, [lens, accountId, lensAccounts]);
+  }, [accountId, lensAccounts]);
 
   /* 换镜头、换账号都先回首页。
      ----------------------------------------------------------------------
@@ -757,6 +814,7 @@ export default function WorkbenchShell() {
   };
 
   const changeAccount = (nextId: string) => {
+    if (!lensAccounts.some((item) => item.id === nextId)) return;
     setAccountId(nextId);
     leaveToHome();
   };
@@ -803,3 +861,4 @@ export default function WorkbenchShell() {
     {route === "module" && Session && activeModule ? <Session key={activeTaskId ?? "session"} projectName={project ?? "未归属项目"} taskTitle={taskTitle} initialRequest={initialRequest} initialAttachments={initialAttachments} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} onCoworkerChange={changeCoworker} onRunStatusChange={handleRunStatusChange} onBackToNewTask={() => resetNewTask(project)} handoffNotice={handoffNotice} priorSessionSnapshots={(activeTaskId ? sessionSnapshots[activeTaskId] : undefined)?.filter((snapshot) => snapshot.moduleId !== activeModule.moduleId)} onSessionSnapshotChange={handleSessionSnapshotChange} onOpenQuotationManagement={(options) => setQuotationTarget({ business: "dmpk", ...options })} viewerRole={account.role} viewerName={account.name} viewerPermissions={quotePermissions} rework={activeTaskId ? reworkByTask[activeTaskId] : undefined} onReworkResolved={() => { if (activeTaskId) setReworkByTask((current) => { const next = { ...current }; delete next[activeTaskId]; return next; }); }} initialHistory={activeTaskId ? seededSessionHistory[activeTaskId] : undefined} initialFields={activeTaskId ? seededSessionFields[activeTaskId] : undefined} onHandoff={handoffFromSession} sessionOutcome={activeTaskId ? sessionOutcomes[activeTaskId] ?? null : null} onSessionOutcomeChange={(next) => { if (activeTaskId) setSessionOutcomes((current) => ({ ...current, [activeTaskId]: next })); }} /> : <section className="dmpkWorkspace workbenchMode"><header className="topbar"><div className="topbarPathLayer"><button className="mobileSidebarTrigger" type="button" onClick={() => setCollapsed(false)} aria-label="打开侧边栏"><Menu size={16} /></button><div className="breadcrumb">{route === "tasks" ? <><span>我的待办</span><ChevronRight size={14} /><strong>待处理</strong></> : route === "newTask" && helperConversationStarted ? <><span>{project ?? "未归属项目"}</span><ChevronRight size={14} /><strong>{taskTitle}</strong></> : route === "newTask" && project ? <strong>{project}</strong> : route === "inbox" && (inboxTicketId || inboxNoticeTitle) ? <><button type="button" onClick={() => { setInboxTicketId(null); setInboxNoticeTitle(null); setInboxReviewing(false); }}>站内信</button><ChevronRight size={14} />{inboxReviewing && inboxTicketId ? <><button type="button" onClick={() => setInboxReviewing(false)}>{inboxTicketLabel}</button><ChevronRight size={14} /><strong>报价复核</strong></> : <strong>{inboxTicketLabel ?? inboxNoticeTitle}</strong>}</> : route === "library" && libraryProject ? <><button type="button" onClick={() => { setLibraryProject(null); setLibraryFolderId(null); setLibraryView("overview"); }}>数据中枢</button><ChevronRight size={14} />{librarySectionLabel ? <><button type="button" onClick={() => { setLibraryFolderId(null); setLibraryView("overview"); }}>{libraryProject}</button><ChevronRight size={14} /><strong>{librarySectionLabel}</strong></> : <strong>{libraryProject}</strong>}</> : <strong>{route === "library" ? "数据中枢" : route === "inbox" ? "站内信" : route === "knowledgeBase" ? "知识库" : route === "digitalTeam" ? "数字团队" : "新建任务"}</strong>}</div><div className="topbarScopeSlot" id="workbench-topbar-scope" /><div className="topbarPrimarySlot" id="workbench-topbar-primary" /></div><div className="topbarSecondRow"><div id="workbench-topbar-tabs" className="topbarTabLayer" /><div id="workbench-topbar-actions" className="topbarToolLayer" /></div></header>{route === "tasks" ? <TaskList pinnedItemIds={pinnedItemIds} onTogglePinnedItem={togglePin} onStartTask={() => resetNewTask()} onOpenTask={openTask} /> : route === "inbox" ? <TicketsPage tickets={tickets} currentUser={account.name} projects={visibleProjects.filter((item) => item.type === "client").map((item) => item.name)} onHandle={handleTicket} onAccept={acceptTicket} reviewerRole={account.roleLabel} onReject={rejectTicket} onArchive={approveTicket} lensKind={activeLens.kindLabel} openTicketId={inboxTicketId} onOpenTicketChange={setInboxTicketId} openNoticeTitle={inboxNoticeTitle} onOpenNoticeChange={setInboxNoticeTitle} reviewing={inboxReviewing} onReviewingChange={setInboxReviewing} /> : route === "library" ? <FileManager projects={visibleProjects} selectedProject={libraryProject} selectedFolderId={libraryFolderId} folders={libraryFolders} view={libraryView} onSelectedProjectChange={(nextProject) => { setLibraryProject(nextProject); if (!nextProject) { setLibraryFolderId(null); setLibraryView("overview"); } }} onSelectedFolderChange={setLibraryFolderId} onViewChange={setLibraryView} onCreateProject={createProject} onOpenTask={openTaskById} initialRootTab={libraryRootTab} key={libraryRootTab} /> : route === "digitalTeam" ? <DigitalTeamPage projects={visibleProjects} tasks={runtimeTasks.filter((task) => !deletedTaskIds.includes(task.id))} onStartModule={startModuleDirect} onOpenLibrary={() => navigateShellRoute("library")} /> : route === "knowledgeBase" ? <KnowledgeBasePage /> : <NewTaskHome conversationStarted={helperConversationStarted} project={project} text={text} clarification={clarification} pendingRequest={pendingRequest} pendingTaskType={pendingModule?.taskType ?? null} suggestedCoworker={suggestedCoworker} coworkers={coworkerRegistry} activeCoworkerId={activeCoworkerId} quickStarts={spaceQuickStarts} homeFocus={activeLens.moduleId === QA_REVIEW_MODULE_ID ? qaReviewHomeFocus : undefined} spaceStats={spaceStats} spaceKind={currentProjectRecord?.type} onOpenSpaceFiles={project ? () => { setLibraryProject(project); setLibraryFolderId(null); setLibraryView("overview"); setRoute("library"); } : undefined} onOpenSpaceArtifacts={project ? () => { setLibraryProject(project); setLibraryFolderId(null); setLibraryView("outputs"); setRoute("library"); } : undefined} onOpenSpaceTasks={project ? () => { setCollapsed(false); setExpandProjectSignal((current) => ({ name: project, nonce: (current?.nonce ?? 0) + 1 })); } : undefined} spaceCoworkerOptions={currentProjectRecord ? businessCoworkerRegistry : undefined} spaceCoworkerIds={currentProjectRecord ? projectCoworkerIds(currentProjectRecord) : undefined} onSetSpaceCoworkers={currentProjectRecord ? (ids) => setProjectCoworkers(currentProjectRecord.id, ids) : undefined} projectOptions={visibleProjectOptions} projectNotice={projectNotice} onProjectChange={(nextProject) => { setProject(nextProject); setProjectNotice(null); }} onTextChange={setText} onSubmit={submitIntent} onQuickStart={startModuleDirect} onCoworkerChange={selectPendingCoworker} onConfirm={confirmDispatch} onCancel={cancelDispatch} />}</section>}
   </main></>;
 }
+
